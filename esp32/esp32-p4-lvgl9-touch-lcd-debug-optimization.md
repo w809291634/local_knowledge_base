@@ -200,3 +200,42 @@ apl_console.c 任务创建按宏选择 MALLOC_CAP_SPIRAM / MALLOC_CAP_INTERNAL�
 - 内容：7 步移植清单、UART CUSTOM 配置（只改波特率无效）、FreeRTOS 内核扩展（TCB cpuUsagePercent + 4 个 vTask 函数）、按板卡必改项、踩坑与安全项
 - 触发条件：新工程移植控制台/串口配置/CPU 使用率或相关异常排查时自动加载
 - 注意：技能在当前工作区 `.trae/skills/` 下，仅当前工程可见；若需全局可用，可拷贝至用户全局技能目录
+
+## 15. 经验分类索引（芯片级 / 板卡级 / 通用级）
+
+按适用范围分类，便于不同项目对号入座：
+
+### 【P4 芯片级】（换板卡仍适用，只要是 ESP32-P4）
+| 经验 | 节 |
+| --- | --- |
+| 芯片修订 rev v3.1+ 配置 CONFIG_ESP32P4_REV_MIN_301 | 1 |
+| 分区表偏移 0x10000（bootloader 体积超限） | 2 |
+| MIPI-DSI PHY PLL 时钟源必须用 0/XTAL（rev3 必踩 abort） | 3 |
+| PPA 加速强制 LV_DRAW_SW_DRAW_UNIT_CNT=1（不能多核渲染） | 8 |
+| use_psram=true 大块 128B 对齐分配不可靠（无 fallback） | 4 |
+| buffer_height 480/240 双缓冲失败 | 4 |
+| L2 缓存 256KB / 128B 行（影响 PSRAM 对齐与 msync） | 全文 |
+| SPIRAM XIP from PSRAM + -O2 + IRAM 优化组合 | 8 |
+| esp_lvgl_adapter 旋转路径行为（TRIPLE_FULL 稳定 / TRIPLE_PARTIAL 冻结） | 5 |
+
+### 【板卡级】（Waveshare ESP32-P4-WIFI6-Touch-LCD-4.3，换板卡要改）
+| 经验 | 节 |
+| --- | --- |
+| GT911 触摸复位时序（GPIO23 独立 RST，手动 50ms+150ms 复位） | 7 |
+| 控制台 UART 引脚 GPIO37/38、背光 26、LCD RST 27、触摸 I2C 8/7、SD、I2S 引脚 | 12、全文 |
+| 板卡启动日志特征（cpu_start 报 console UART 引脚） | 全文 |
+
+### 【通用级】（任意 ESP32 工程，非 P4 专属）
+| 经验 | 节 |
+| --- | --- |
+| 控制台移植 7 步清单（CMakeLists/board_config/board/main/Kconfig/defaults） | 13 |
+| 串口只改波特率无效，必须 UART CUSTOM+引脚 | 12.1 |
+| FreeRTOS 内核扩展（TCB cpuUsagePercent + vTask*） | 12.3 |
+| 控制台任务栈 8KB+ 、PSRAM/内部可配、优先级不宜过高 | 12.2、踩坑 |
+| CPU 监控堆损坏历史风险 | 12.3、踩坑 |
+| Kconfig.projbuild 正斜杠路径（反斜杠被当转义） | 13、踩坑 |
+| 构建/监视器环境、COM 口占用、sdkconfig 重生 | 11 |
+
+适用判断：
+- 新项目同样是 P4 芯片，但板卡不同 → 只须使用【芯片级】+【通用级】，【板卡级】引脚按新板卡改
+- 非 P4 苯（如 S3）→ 只用【通用级】；芯片级项目中 DSI/PPA/PSRAM 等按实际芯片核对
