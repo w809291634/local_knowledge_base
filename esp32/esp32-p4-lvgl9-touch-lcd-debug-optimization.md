@@ -124,3 +124,79 @@ i2c transaction failed -> GT911 read error! -> esp_lcd_touch_new_i2c_gt911: GT91
 - 烧录/监视：`idf.py -p COM20 flash/monitor`；COM20 (CH343) 会被残留 `idf.py monitor` 进程占用，需先杀进程释放
 - ninja 缓存损坏报 `failed recompaction: Permission denied` 时清 `build/.ninja_*` 重试
 - 每次改 `sdkconfig.defaults` 必须删旧 `sdkconfig` 再编译才生效
+
+## 12. 控制台 + CPU 使用率适配（UART 自定义引脚/波特率 + FreeRTOS 内核扩展）
+
+### 12.1 控制台 UART（只改波特率无效，必须 CUSTOM 模式）
+
+sdkconfig.defaults：
+```
+# CONFIG_ESP_CONSOLE_UART_DEFAULT is not set
+CONFIG_ESP_CONSOLE_UART_CUSTOM=y
+CONFIG_ESP_CONSOLE_UART_CUSTOM_NUM_0=y
+CONFIG_ESP_CONSOLE_UART_TX_GPIO=37
+CONFIG_ESP_CONSOLE_UART_RX_GPIO=38
+CONFIG_ESP_CONSOLE_UART_BAUDRATE=961200
+```
+- P4 板卡调试串口 = GPIO37(TX)/38(RX)（cpu_start 日志报 "GPIO 38 and 37 are used as console UART I/O pins"，TX/RX 以接线实测为准）
+- 监视器：idf.py -p COM20 monitor -b 961200
+- 只设 CONFIG_ESP_CONSOLE_UART_BAUDRATE 不会生效：DEFAULT 模式走 ROM 控制台配置，必须切 CUSTOM 显式指定引脚+波特率重建 UART0
+
+### 12.2 控制台任务栈内存位置可配
+
+components/board_config/board_config.h：
+```
+#define BOARD_CONFIG_CONSOLE_TASK_STACK_SIZE           8192
+#define BOARD_CONFIG_CONSOLE_TASK_PRIOR                10
+#define BOARD_CONFIG_CONSOLE_TASK_CPU                  0
+#define BOARD_CONFIG_CONSOLE_TASK_STACK_IN_PSRAM       1   // 1=PSRAM(MALLOC_CAP_SPIRAM)，0=内部RAM
+```
+apl_console.c 任务创建按宏选择 MALLOC_CAP_SPIRAM / MALLOC_CAP_INTERNAL。
+
+### 12.3 CPU 使用率监控（修改了 IDF FreeRTOS 内核，全局生效）
+
+改动点（IDF 全局源码，影响所有使用该 IDF 副本的工程）：
+- FreeRTOS-Kernel/include/freertos/FreeRTOS.h：TCB dummy 区增加 float cpuUsagePercent（受 configGENERATE_RUN_TIME_STATS 守卫）
+- FreeRTOS-Kernel/tasks.c：tskTCB 增加 float cpuUsagePercent；文件末尾新增 vTaskGetStackSize（读 uxSizeOfStack 返回真实栈大小）/vTaskResetRunTimeCounter（ulRunTimeCounter=0）/vTaskSetCpuUsagePercent/vTaskGetCpuUsagePercent（CPU 类受 configGENERATE_RUN_TIME_STATS 守卫）
+- 需 CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS=y
+
+使用方：
+- components/board/board.c：vTimerCallback（1s 软件定时器，uxTaskGetSystemState 遍历任务 → vTaskSetCpuUsagePercent/vTaskResetRunTimeCounter）+ setupCpuUsageMonitor()，在 hw_board_init() 里按 CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS 调用
+- common/APL/apl_console_cmd_system 的 tasks 命令：vTaskGetStackSize + vTaskGetCpuUsagePercent 显示
+- board_extra.c 已移除（符号由内核直接提供）
+
+注意：该监控每秒 uxTaskGetSystemState + pvPortMalloc，历史上曾与 TLSF 堆越界写损坏关联；若复现堆崩溃，先 #if 0 禁用排查。
+
+## 13. 控制台/CPU 使用率移植通用清单（跨项目复用）
+
+以下改动适用于任何基于该 IDF 副本 + common/APL 模板的 ESP32 工程（不限 P4 板卡）：
+
+### 移植步骤
+1. 顶层 CMakeLists.txt：
+   - set(APL_DIR "$ENV{IDF_PATH}/examples/<版本目录>/common/APL")、DRV_DIR 同理（版本目录按实际，如 idf_v555_my_exps）
+   - add_component_dirs() 注册 apl_console、apl_console_cmd_nvs/system/wifi、apl_utility（需要时加 drv_*）
+   - 注意：include(project.cmake) 之后只能用 list(APPEND EXTRA_COMPONENT_DIRS ...) 追加，不要 set 覆盖，否则 APL/DRV 组件丢失
+2. components/board_config：board_config.h（按板卡改引脚 + 任务宏）+ board.h；CMakeLists 用 idf_component_register(SRCS "" INCLUDE_DIRS .)
+3. components/board：board.c（hw_board_init：CONFIG_APP_ENABLE_CONSOLE 下 apl_console_init + RUN_TIME_STATS 下 setupCpuUsageMonitor）+ CMakeLists REQUIRES board_config apl_console apl_utility
+4. main：main.c 调 hw_board_init()（或 apl_console_init()，二选一避免双重初始化）；main/CMakeLists REQUIRES 加 apl_console
+5. main/Kconfig.projbuild：orsource 用正斜杠路径引 Kconfig.apl_console（反斜杠会被当转义符导致静默跳过）
+6. sdkconfig.defaults：CONFIG_APP_ENABLE_CONSOLE=y、CONFIG_CONSOLE_IGNORE_EMPTY_LINES=y、CONFIG_ESP_CONSOLE_UART_CUSTOM=y + CUSTOM_NUM_0=y + TX/RX GPIO（按板卡！）+ 波特率、CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS=y（CPU 使用率需要）
+7. vTask* 符号：由 IDF FreeRTOS 内核直接提供（见 12.3），无需再建 board_extra
+
+### 按板卡必改项
+- 控制台 UART 引脚/波特率（P4: 37/38 或 38/37 实测；S3 例: 43/44）
+- board_config.h 引脚宏（触摸/背光/复位/SD/I2S 等）
+- 波特率建议与监视器一致（如 961200 / 1000000）
+
+### 注意
+- FreeRTOS 内核修改（TCB cpuUsagePercent + 4 函数）是 IDF 全局的，所有工程共享，升级/替换 IDF 副本需重打补丁
+- CPU 监控历史上与堆损坏相关，移植后可先用 #if 0 关掉验证稳定
+
+## 14. 技能化：控制台移植知识已封装为 TRAE 技能
+
+为跨项目复用，已将 12/13 节的知识封装为技能：
+- 名称：`esp32-console-porting`
+- 位置：项目 `.trae/skills/esp32-console-porting/SKILL.md`
+- 内容：7 步移植清单、UART CUSTOM 配置（只改波特率无效）、FreeRTOS 内核扩展（TCB cpuUsagePercent + 4 个 vTask 函数）、按板卡必改项、踩坑与安全项
+- 触发条件：新工程移植控制台/串口配置/CPU 使用率或相关异常排查时自动加载
+- 注意：技能在当前工作区 `.trae/skills/` 下，仅当前工程可见；若需全局可用，可拷贝至用户全局技能目录
