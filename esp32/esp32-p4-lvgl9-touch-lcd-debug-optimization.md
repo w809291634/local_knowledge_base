@@ -61,11 +61,30 @@ CONFIG_PARTITION_TABLE_OFFSET=0x10000
 - 左右反 -> `mirror_x=1`
 - 旋转 90 度基础组合：`swap_xy=1` + 按实际镜像补 mirror_x/mirror_y
 
-## 7. 触摸偶发初始化失败
+## 7. 触摸初始化失败（热重启几乎100%复现）
 
-**症状**: `GT911 read error / Touch controller GT911 initialization failed`（偶发，重启可恢复）。
+板卡参考：https://docs.waveshare.net/ESP32-P4-WIFI6-Touch-LCD-4.3/FAQ/
 
-**处理**: 若允许触摸缺省运行，可将 `bsp_display_indev_init` 改为容错（失败仅 ESP_LOGW 不 assert，并让 `bsp_display_start_with_config` 不 BSP_NULL_CHECK indev）。用户实测触摸可用则保持原版。
+**症状**: 启动日志出现：
+```text
+i2c transaction failed -> GT911 read error! -> esp_lcd_touch_new_i2c_gt911: GT911 init failed -> Touch controller GT911 initialization failed! (0x103)
+```
+触摸不可用。**断电冷启动基本成功；软件复位（SW_CPU_RESET）、RTS 复位等热重启后几乎 100% 失败**。
+
+**根因**: ESP-IDF GT911 驱动（managed_components/espressif__esp_lcd_touch_gt911）内置复位 `touch_gt911_reset` 在复位脉冲（10ms 低 + 10ms 高）后**仅等约 20ms 就读取配置**（`touch_gt911_read_cfg` 读 0x8140 产品 ID）。冷启动时触摸早已上电就绪故读取成功；热重启时触摸处于"上电未复位"状态，复位后 20ms 内未就绪，I2C 读超时失败。
+
+**板卡引脚要点**（容易踩坑）：
+- 触摸复位 RST = **GPIO23**（独立引脚；BSP 源码里 `// Shared with LCD reset` 注释有误导，LCD 复位实际是 GPIO27）
+- 触摸 INT = `GPIO_NUM_NC`（未接）→ 驱动永远走 `I2C address initialization procedure skipped - using default GT9xx setup` 路径，不会做 INT 选址握手
+
+**修复**（components/esp32_p4_wifi6_touch_lcd_4_3/esp32_p4_wifi6_touch_lcd_4_3.c 的 `bsp_touch_new`）：
+1) 创建触摸前手动规范复位：GPIO23 拉低 50ms → 拉高 → 等待 150ms（GT911 完整启动时间）
+2) `tp_cfg.rst_gpio_num` 设为 `GPIO_NUM_NC`，让驱动跳过自身过短的 20ms 复位（rst=NC 时 `touch_gt911_reset` 不动作，直接读配置，此时触摸已就绪）
+3) 保留 5 次"探测 + `esp_lcd_touch_new_i2c_gt911`"重试（间隔 100-200ms）兜底
+
+**验证**: 修复后连续多次热重启触摸均稳定初始化成功。
+
+**备选（不做根因修复时）**: 若允许触摸缺省运行，可将 `bsp_display_indev_init` 改为容错（失败仅 ESP_LOGW 不 assert，并让 `bsp_display_start_with_config` 不 BSP_NULL_CHECK indev）。
 
 ## 8. 帧率优化清单（横屏+PPA 约束下已到顶）
 
