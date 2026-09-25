@@ -1,0 +1,104 @@
+version: '3'
+
+vars:
+  NOTES_DIR: notes
+  NOTES_FILE: '{{.NOTES_DIR}}/NOTES.md'
+  EDITOR: '{{.EDITOR | default "nvim"}}'
+
+tasks:
+  default:
+    desc: Show available commands
+    cmds:
+      - task --list
+
+  browse:list:
+    desc: Print deduped, newest-first TIL paths
+    silent: true
+    cmds:
+      - |
+        git log --diff-filter=A --name-only --pretty=format: -- '*/*.md' \
+          | grep -v '^$' \
+          | awk '!seen[$0]++'
+
+  browse:
+    desc: Pick from 5 most recent TILs (fzf) and open in browser
+    interactive: true
+    silent: true
+    cmds:
+      - |
+        LIST=$(task browse:list)
+        FILE=$(printf '%s\n' "$LIST" | head -5 | fzf --prompt="Open TIL: " --height=40% --reverse) || true
+        if [ -n "$FILE" ]; then
+          gh browse "$FILE"
+        fi
+
+  browse:latest:
+    desc: Open the single most recent TIL in the browser
+    silent: true
+    cmds:
+      - |
+        FILE=$(task browse:list | awk 'NR==1')
+        if [ -n "$FILE" ]; then
+          gh browse "$FILE"
+        fi
+
+  notes:
+    desc: Interactive picker for notes tasks
+    cmds:
+      - |
+        TASK=$(task --list | grep "^\* notes:" | sed 's/^\* notes://' | sed 's/\s\+/ - /' | fzf --prompt="Select notes task: " --height=40% --reverse) || true
+        if [ -n "$TASK" ]; then
+          TASK_NAME=$(echo "$TASK" | awk '{print $1}' | sed 's/:$//')
+          task notes:$TASK_NAME
+        fi
+    interactive: true
+    silent: true
+
+  notes:edit:
+    desc: All-in-one edit, commit, and push notes
+    cmds:
+      - task notes:open
+      - task notes:push
+
+  notes:sync:
+    desc: Sync latest changes from the notes submodule
+    cmds:
+      - cd {{.NOTES_DIR}} && git checkout main && git pull
+    silent: false
+
+  notes:open:
+    desc: Opens NOTES.md (syncs latest changes first) in default editor
+    deps: [notes:sync]
+    cmds:
+      - $EDITOR {{.NOTES_FILE}}
+    interactive: true
+
+  notes:push:
+    desc: Commit and push changes to notes submodule
+    dir: '{{.NOTES_DIR}}'
+    cmds:
+      - git add NOTES.md
+      - git commit -m "Update notes - $(date '+%Y-%m-%d %H:%M')"
+      - git pull --rebase
+      - git push
+    status:
+      - git diff --exit-code NOTES.md
+    silent: false
+
+  notes:status:
+    desc: Check status of notes submodule
+    dir: '{{.NOTES_DIR}}'
+    cmds:
+      - git status
+
+  notes:diff:
+    desc: Show uncommitted changes in notes
+    dir: '{{.NOTES_DIR}}'
+    cmds:
+      - git diff NOTES.md
+
+  notes:log:
+    desc: Show recent commit history for notes
+    dir: '{{.NOTES_DIR}}'
+    cmds:
+      - git log --oneline -10
