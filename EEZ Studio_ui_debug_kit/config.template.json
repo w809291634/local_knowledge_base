@@ -1,0 +1,129 @@
+{
+  "_comment": "ui_debug_kit 配置模板。复制到【你的工程里】（建议工程根目录，命名 ui_debug_kit.config.json），然后按 CONFIG.md 填写。路径可写相对本文件所在目录的相对路径，也可写绝对路径；工具会自动解析成绝对路径。本模板刻意只放占位符，不含任何具体工程信息。",
+
+  "project": {
+    "name": "<你的工程名，仅用于打印>",
+    "platform": "<技术栈与目标平台描述，帮助人和 AI 建立上下文>",
+    "root": ".",
+    "design_dir": "<设计源与工具目录，如 ./design>",
+    "design_src": "<设计源文件，如 ./design/ui.json>",
+    "project_file": "<目标工程/产物文件，若是 JSON 会被读取其中的字体声明>",
+    "gen_dir": "<生成的代码目录>",
+    "builder": "<可选：设计源生成器脚本，audit_ui A7 会扫它查『当前页标记』>"
+  },
+
+  "screen": {
+    "w": 0,
+    "h": 0,
+    "origin": "top-left",
+    "child_coords": "relative-to-parent",
+    "design_coords": "absolute",
+    "ink_threshold": 140,
+    "last_row_is_separator": false,
+    "safe_margin": 2
+  },
+
+  "runtime": {
+    "kind": "electron",
+    "exe": "<目标 IDE/运行时可执行文件的绝对路径>",
+    "args": [
+      "--no-sandbox",
+      "--disable-gpu",
+      "--enable-unsafe-swiftshader",
+      "--disable-dev-shm-usage"
+    ],
+    "debug_port": 9222,
+    "open_project_as_arg": true,
+    "unset_env": ["ELECTRON_RUN_AS_NODE"],
+    "exit_after_seconds": 0,
+    "capture_one_target_per_launch": true
+  },
+
+  "binaries": {
+    "python": "<python 解释器（需 Pillow）>",
+    "python_venv": "<可选：另装依赖的解释器>",
+    "node": "<node 解释器（需 18+，用于 CDP 抓图）>"
+  },
+
+  "fonts": {
+    "device_ttf": "<设备实际使用的正文字体文件>",
+    "icon_woff": "<图标字体（woff）>",
+    "icon_ttf": "<图标字体（ttf，用于量宽度）>",
+    "name_to_px": {},
+    "_builtin_patterns_note": "可选。留空则用命名约定启发式（形如 <前缀>_<数字> 视为运行时自带的内置字体）。若你的框架内置字体命名不满足该约定，再补通配模式。",
+    "builtin_patterns": [],
+    "metrics": {},
+    "ink_offset_from_box_top": {},
+    "icon_private_ranges": [[57344, 63743], [127744, 129791]]
+  },
+
+  "theme_defaults": {
+    "_comment": "默认主题给子控件带来的额外偏移（实测）。用于把『声明坐标』换算成『实际渲染坐标』。测法见 CONFIG.md。",
+    "container": { "dx": 0, "dy": 0 },
+    "button": { "dx": 0, "dy": 0 }
+  },
+
+  "tree_schema": {
+    "_comment": "组件树字段映射。换框架只改这里，tree_check.py 会自动适配。",
+    "pages": ["pages"],
+    "page_name": "name",
+    "page_root": "screen",
+    "children": "children",
+    "x": "x",
+    "y": "y",
+    "w": "w",
+    "h": "h",
+    "type": "type",
+    "text": "text",
+    "font": "font",
+    "goto": "goto",
+    "image": "texture",
+    "_extra_note": "以下为可选项，不写就用默认值。audit_ui / gen_clicks 依赖它们做类型与样式判定。",
+    "type_values": { "container": "container", "button": "button", "label": "label" },
+    "nav_types": ["button"],
+    "style_key": "style",
+    "main_part": "MAIN",
+    "default_state": "DEFAULT",
+    "width_unit_key": "wUnit",
+    "content_unit_value": "content"
+  },
+
+  "checks": {
+    "_gates_note": "可选：工程侧扩展闸门，由 run_gate.py 挂载。脚本留在你自己的工程里；不存在的脚本会被 SKIP 而不是报错。quick=true 表示 --quick 时也跑。",
+    "gates": [],
+    "_tab_bar_note": "可选：底栏识别规则 {y,h,w}，y=底栏顶边（须 >0 才生效；不配 / null / y<=0 都表示『没有底栏』，A5 与底栏回归用例自动跳过）。配了才会跑 audit_ui 的 A5（底栏侵占）与 gen_clicks 的底栏回归用例；底栏各项对应的页名会自动推导，推不出来时才需要 tab_pages。",
+    "tab_bar": null,
+    "tab_pages": [],
+    "pages": [],
+    "entry_page": "",
+    "expect_dead_links": 0,
+    "expect_overflow": 0,
+    "expect_wrap": 0,
+    "diff_big_threshold": 64,
+    "diff_accept_pct": 0.05,
+
+    "_font_note": "A6 专用。font_guard_aware：先剥掉 `#if LV_FONT_X … #endif` 守护块再统计（防假阳性，默认 true）。font_switch_ignore：工程自烘焙字体（如 ^ui_font_）不走 LV_FONT_* 开关，用正则列出后跳过。",
+    "font_symbol_prefix": "lv_font_",
+    "font_macro": "LV_FONT_%s",
+    "font_guard_aware": true,
+    "font_switch_ignore": [],
+
+    "_color_note": "A10 专用。颜色类样式值必须匹配 color_value_patterns。color_node_keys 用于『颜色直接写在节点上』的 DSL。",
+    "color_props": [
+      "bg_color", "bg_grad_color", "border_color", "outline_color", "shadow_color",
+      "text_color", "line_color", "arc_color", "img_recolor", "img_src"
+    ],
+    "color_node_keys": [],
+    "color_value_patterns": ["^#?[0-9a-fA-F]{3,6}$", "^0[xX][0-9a-fA-F]{6}$"]
+  },
+
+  "paths": {
+    "preview_dir": "./_ui_work/preview",
+    "render_dir": "./_ui_work/render",
+    "native_dir": "./_ui_work/native",
+    "work_dir": "./_ui_work/tmp",
+    "screens_c": "<可选：生成的 UI 代码主文件，audit_ui A6/A8 会扫它>",
+    "lv_conf": "<可选：运行时字体开关配置（如 lv_conf.h），A6 会与 screens_c 对账>",
+    "font_c": "<可选：生成的字体 C 文件，可写通配符，如 ./src/ui/ui_font_*.c，A2 用它算真实基线>"
+  }
+}

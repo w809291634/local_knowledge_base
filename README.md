@@ -90,6 +90,7 @@ If you've learned something here, support my efforts writing daily TILs by
 * [Taskfile](#taskfile)
 * [tmux](#tmux)
 * [TypeScript](#typescript)
+* [UI Debug Kit](#ui-debug-kit)
 * [Unix](#unix)
 * [Vercel](#vercel)
 * [Vim](#vim)
@@ -1747,6 +1748,28 @@ If you've learned something here, support my efforts writing daily TILs by
 - [Type Promise Results With The Awaited Type](typescript/type-promise-results-with-the-awaited-type.md)
 - [Use An Array Check For Type Narrowing](typescript/use-an-array-check-for-type-narrowing.md)
 - [Zero-Config Environments For Trying Out Types](typescript/zero-config-environments-for-trying-out-types.md)
+
+### UI Debug Kit
+
+- [UI 调试与验收工具箱 · 总览与上手](ui_debug_kit/README.md)
+- [通用方法论 PLAYBOOK（三层图 / 差异四步法 / 六类体检 / 十条红线）](ui_debug_kit/PLAYBOOK.md)
+- [操作手册 skills.md（自动设计 → 对照查验 → 仿真验证，含条例 D/G/R）](ui_debug_kit/skills.md)
+- [案例库索引（七段式沉淀，B1~B10）](ui_debug_kit/cases/README.md)
+- [案例 B1 · 字体源分配错误（图标全空白 / 正文变方框）](ui_debug_kit/cases/B1_字体源分配错误.md)
+- [案例 B2 · 保存时重算坐标（元素跑出画布边缘）](ui_debug_kit/cases/B2_保存时重算坐标.md)
+- [案例 B3 · 默认主题 padding 偏移（某类控件内子元素整体偏移）](ui_debug_kit/cases/B3_默认主题padding偏移.md)
+- [案例 B4 · 异步渲染拿到旧帧（批量抓图内容重复）](ui_debug_kit/cases/B4_异步渲染拿到旧帧.md)
+- [案例 B5 · 子控件二次偏移（嵌套容器，文字跑到卡片外）](ui_debug_kit/cases/B5_子控件二次偏移（嵌套容器）.md)
+- [案例 B6 · 样式值写错语法被静默吞掉（GUI 报 invalid color）](ui_debug_kit/cases/B6_样式值写错语法被静默吞掉.md)
+- [案例 B7 · 构建成功却零产出](ui_debug_kit/cases/B7_构建成功却零产出.md)
+- [案例 B8 · 仿真器出图的四个坑（颜色 / 内存 / 进程 / 配置路径）](ui_debug_kit/cases/B8_仿真器出图的四个坑.md)
+- [案例 B9 · 图标在父对象里没居中（手摆像素 vs 声明式居中）](ui_debug_kit/cases/B9_图标在父对象里没居中（手摆像素vs声明式居中）.md)
+- [案例 B10 · 布局助手给最后一项多加了一个间隔（纯图标偏中心）](ui_debug_kit/cases/B10_布局助手给最后一项多加了一个间隔（纯图标偏中心）.md)
+- [问题流水索引 P-0001~P-0016（现象 → 根因 → 修复 → 证据）](ui_debug_kit/intake/index.md)
+- [记录规约 INTAKE.md（新问题与提示词怎么留痕）](ui_debug_kit/INTAKE.md)
+- [工具索引（每个工具一句话 + 参数速查）](ui_debug_kit/tools/README.md)
+- [「元素没居中」检查器 center_check.py（可移植、可直接挂 CI）](ui_debug_kit/tools/center_check.py)
+- [工具箱迭代记录 CHANGELOG（v0.1 → v0.9）](ui_debug_kit/CHANGELOG.md)
 
 ### Unix
 
