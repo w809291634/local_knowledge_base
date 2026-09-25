@@ -1,4 +1,4 @@
-﻿# ESP32-P4 + LVGL v9 Touch LCD Debug & Optimization Notes
+# ESP32-P4 + LVGL v9 Touch LCD Debug & Optimization Notes
 
 Waveshare ESP32-P4-WIFI6-Touch-LCD-4.3 开发板（480x800 MIPI-DSI ST7701 屏 + GT911 触摸 + ESP-IDF v5.5.5 + LVGL v9.4 + esp_lvgl_adapter）调试经验总结。
 
@@ -217,6 +217,7 @@ apl_console.c 任务创建按宏选择 MALLOC_CAP_SPIRAM / MALLOC_CAP_INTERNAL�
 | L2 缓存 256KB / 128B 行（影响 PSRAM 对齐与 msync） | 全文 |
 | SPIRAM XIP from PSRAM + -O2 + IRAM 优化组合 | 8 |
 | esp_lvgl_adapter 旋转路径行为（TRIPLE_FULL 稳定 / TRIPLE_PARTIAL 冻结） | 5 |
+| LVGL PPA 绘制单元 DMA 越界写堆（需 enable_ppa_accel=false） | 16 |
 
 ### 【板卡级】（Waveshare ESP32-P4-WIFI6-Touch-LCD-4.3，换板卡要改）
 | 经验 | 节 |
@@ -239,3 +240,39 @@ apl_console.c 任务创建按宏选择 MALLOC_CAP_SPIRAM / MALLOC_CAP_INTERNAL�
 适用判断：
 - 新项目同样是 P4 芯片，但板卡不同 → 只须使用【芯片级】+【通用级】，【板卡级】引脚按新板卡改
 - 非 P4 苯（如 S3）→ 只用【通用级】；芯片级项目中 DSI/PPA/PSRAM 等按实际芯片核对
+
+## 16. LVGL PPA 绘制单元 DMA 越界写 → PSRAM 堆损坏崩溃（禁用 enable_ppa_accel 解决）
+
+**症状**: 启用 PPA（`.enable_ppa_accel = true`）时，启动后约 0.5s（LVGL 首帧整屏刷新期间）出现 `Guru Meditation Error: Core 0 panic'ed (Store access fault)`，崩溃栈在 TLSF 堆管理（`remove_free_block` / `block_trim_used` / `tlsf_malloc`，realloc 路径）。禁用 PPA 后完全稳定。
+
+**根因**: `esp_lvgl_adapter`（managed_components，v9 bridge）的 LVGL PPA 绘制单元 `lvgl_ppa_accel_v9.c` 的 fill/blend DMA 路径在帧缓冲边界越界写，覆盖 fb2 之后的 PSRAM 堆空闲块。
+
+**证据链**（全部吻合）:
+- 禁用 PPA → 稳定；启用 → 必崩（唯一变量）
+- 被覆盖的 TLSF free-list 链值为 `0xAEABAFDE`/`0xECBBABAA` 等 —— 典型 RGB565 像素颜色，即 DMA 写穿的像素数据
+- 损坏点紧邻 fb2 尾部之后 4~16KB（fb2 = LVGL 渲染目标 = DSI 第 3 帧缓冲，连续分配在 PSRAM 堆内，其后即堆空闲块）
+- 崩溃发生于下一次 malloc/realloc 遍历 free 块时（remove_free_block / block_trim_used 处解引用被覆盖指针）
+
+**精确机制（数字）**:
+- 一行 480px × 2B = **960B/行**；128B 缓存/DMA 块 = 64 像素
+- 960 ÷ 128 = **7.5 块/行，除不尽**（等价：480px ÷ 64px/块 = 7.5）
+- 整帧 768000B = 128 × 6000 **能整除** → 若硬件一次搬整帧不会越界；但 PPA 是**按行/块**操作，每行 960B 顶不到整块边界，行行积累，最后一行凑整时越过 fb2 末端 0~127B
+- 整屏刷新每秒几十帧，每帧多跨 0~127B → 累计成实测的 4~16KB 损坏区
+- 反证：若行宽是 128 的整数倍（如 512px/行 = 1024B = 8 整块），则不会越界
+- fb2 起始 `0x482E7B80` 与大小 768000B 均为 128B 对齐，故**不是 FB 没对齐**，而是行宽非 128 整数倍
+
+**为什么 CPU 路径不坏**: 禁用 PPA 后 fill/blend 回退软件渲染（`lv_draw_sw_blend_*`），严格按 `dest_w × dest_h` 循环逐像素写、步进用真实 `layer_stride`（960B/行），无"凑整块"动作，物理上不可能写出缓冲末尾。
+
+**修复/配置**: BSP 显示配置（esp32_p4_wifi6_touch_lcd_4_3.c `bsp_display_lcd_init`）：
+```c
+.profile = {
+    ...
+    .enable_ppa_accel = false,   // 必须关闭；PPA 只加速不透明 fill/大面积 blend，
+                                 // 小面积(<100px)/半透明/带 mask 本就走 CPU fallback，损失有限
+},
+```
+
+**注意**:
+- 这是官方 `espressif__esp_lvgl_adapter`（managed_components，v9 bridge）的 PPA 适配缺陷，与 **FULL 模式 + ROTATE_90 + 整屏刷新** 组合强相关（整屏刷新时 dirty 块才顶到缓冲末端；部分刷新/无旋转不触发）；勿在本机打补丁（组件升级会被覆盖），如需恢复 PPA 加速应升级组件或向 Espressif 反馈
+- 与第 8 节呼应：PPA 还强制 `LV_DRAW_SW_DRAW_UNIT_CNT=1`（不能开多核渲染），本就有互斥限制；若 PPA 关闭，理论上可尝试 `DRAW_UNIT_CNT=2` 多核渲染作为替代加速（未实测）
+- bridge 旋转路径（flush_full_rotate 的 PPA rotate）与本缺陷相互独立，不受该开关影响（profile 的 `enable_ppa_accel` 只控制 LVGL 绘制单元 PPA）
