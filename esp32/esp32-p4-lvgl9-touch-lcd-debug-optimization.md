@@ -218,6 +218,9 @@ apl_console.c 任务创建按宏选择 MALLOC_CAP_SPIRAM / MALLOC_CAP_INTERNAL�
 | SPIRAM XIP from PSRAM + -O2 + IRAM 优化组合 | 8 |
 | esp_lvgl_adapter 旋转路径行为（TRIPLE_FULL 稳定 / TRIPLE_PARTIAL 冻结） | 5 |
 | LVGL PPA 绘制单元 DMA 越界写堆（需 enable_ppa_accel=false） | 16 |
+| 内部 RAM 账：L2MEM 768KB / cache 256KB / 堆仅 373KB | 17 |
+| LVGL 内存走 PSRAM：CUSTOM_MALLOC + lv_mem_psram 组件 + --undefined 链接 | 17 |
+| 内部存储器全景（HP/LP 域、HP SPM、LP SRAM） | 17 |
 
 ### 【板卡级】（Waveshare ESP32-P4-WIFI6-Touch-LCD-4.3，换板卡要改）
 | 经验 | 节 |
@@ -230,6 +233,7 @@ apl_console.c 任务创建按宏选择 MALLOC_CAP_SPIRAM / MALLOC_CAP_INTERNAL�
 | 经验 | 节 |
 | --- | --- |
 | 控制台移植 7 步清单（CMakeLists/board_config/board/main/Kconfig/defaults） | 13 |
+| LVGL 自定义 malloc（CUSTOM_MALLOC）通用实现与静态库链接坑 | 17 |
 | 串口只改波特率无效，必须 UART CUSTOM+引脚 | 12.1 |
 | FreeRTOS 内核扩展（TCB cpuUsagePercent + vTask*） | 12.3 |
 | 控制台任务栈 8KB+ 、PSRAM/内部可配、优先级不宜过高 | 12.2、踩坑 |
@@ -310,3 +314,71 @@ apl_console.c 任务创建按宏选择 MALLOC_CAP_SPIRAM / MALLOC_CAP_INTERNAL�
 - 与第 8 节呼应：PPA 还强制 `LV_DRAW_SW_DRAW_UNIT_CNT=1`（不能开多核渲染），本就有互斥限制；若 PPA 关闭，理论上可尝试 `DRAW_UNIT_CNT=2` 多核渲染作为替代加速（未实测）
 - bridge 旋转路径（flush_full_rotate 的 PPA rotate）与本缺陷相互独立，不受该开关影响（profile 的 `enable_ppa_accel` 只控制 LVGL 绘制单元 PPA）
 - 排查堆损坏通用经验：优先怀疑紧邻大缓冲（帧缓冲/DMA buffer）末端的越界写；被覆盖的空闲链值若为像素颜色，基本可锁定是显示路径 DMA 写穿
+
+## 17. LVGL 内存管理：内部 RAM 耗尽分析与 PSRAM 方案（LVGL 对象走外部 RAM）
+
+### 17.1 症状与诊断
+
+`mem` 显示 Internal SRAM Free 仅 ~10KB（甚至 23B），但 PSRAM 29MB 空闲；`tasks` 命令报 `Failed to allocate memory for task status array`（内部堆碎片无法申请连续块）。启动日志加 `heap_caps_get_*` 打印后确诊：
+
+```
+INT:    free=23/373783 B     ← 内部堆 373783B 几乎耗尽
+SPIRAM: free=29762968/32090496 B  ← 外部 32MB 闲着
+LVGL pool: total=0            ← LV_MEM_CUSTOM（系统 malloc）模式，LVGL 无自带池，对象全走内部堆
+```
+
+**结论**：内部 RAM 被"LVGL 对象/样式（EEZ 11 屏）+ 系统"占满。绘制缓冲本就在 PSRAM，**LVGL 对象走系统 malloc（内部优先）才是真正大头**。
+
+### 17.2 内部 RAM 账（ESP32-P4）
+
+| 项 | 值 |
+| --- | --- |
+| HP L2MEM 总量 | 768 KB（200MHz，代码+数据+堆） |
+| L2 cache 配置 | `CONFIG_CACHE_L2_CACHE_256KB`（256KB 划给 cache） |
+| 系统可用 SRAM | ~512 KB（768-256） |
+| 堆（heap） | ~373 KB（其余 ~137KB 被静态/任务栈/驱动占） |
+| 实测 | 内部堆被 UI 占用 → 仅剩 23B~10KB |
+
+- 与 PSRAM（32MB，`0x48000000-0x4BFFFFFF`）相比，内部堆 373KB 根本装不下 EEZ 11 屏 UI（2~4MB）→ **LVGL 内存必须走 PSRAM**
+- ESP32-P4 内部存储器全景：HP ROM 128KB / **HP L2MEM 768KB** / LP ROM 16KB / LP SRAM 32KB / HP SPM 8KB / eFuse 4Kbit；HP=高性能域（跑主程序，400MHz 双核），LP=低功耗域（40MHz 唤醒监听）
+
+### 17.3 方案：LVGL CUSTOM_MALLOC + lv_mem_psram 组件（全部对象走 PSRAM）
+
+**配置**（sdkconfig.defaults 已固化，删 sdkconfig 重生成也保留）：
+```
+CONFIG_LV_USE_CUSTOM_MALLOC=y     # 关 CLIB_MALLOC，开 CUSTOM_MALLOC
+```
+
+**实现**：独立组件 `components/lv_mem_psram/`（CMakeLists REQUIRES lvgl__lvgl），提供 LVGL CUSTOM_MALLOC 要求的全部 core 符号，统一 `heap_caps_malloc(MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT)`：
+`lv_mem_init`（空）、`lv_malloc_core` / `lv_free_core` / `lv_realloc_core` / `lv_calloc_core`、`lv_mem_monitor_core`（报告 PSRAM 概览）、`lv_mem_test_core`（返回 LV_RESULT_OK）。
+
+**关键坑（链接顺序）**：LVGL 静态库 `liblvgl__lvgl.a` 需要 core 符号；`lv_mem_psram` 组件 .a 若"符号无引用"会被跳过 → `undefined reference to lv_malloc_core`。
+- ❌ 强制引用数组（`__attribute__((used))` 引用函数指针）——能用但 hack，且必须放在 main.c（自身引用无效）
+- ✅ **规范解法**：顶层 CMakeLists 在 `project()` 之后给最终链接目标加选项（必须用 `${PROJECT_NAME}.elf`，不是 `${PROJECT_NAME}`）：
+```cmake
+target_link_options(${PROJECT_NAME}.elf PRIVATE
+    "-Wl,--undefined=lv_mem_init"
+    "-Wl,--undefined=lv_malloc_core"
+    "-Wl,--undefined=lv_free_core"
+    "-Wl,--undefined=lv_realloc_core"
+    "-Wl,--undefined=lv_calloc_core"
+    "-Wl,--undefined=lv_mem_monitor_core"
+    "-Wl,--undefined=lv_mem_test_core")
+```
+- ❌ `--undefined` 加在组件库 `target_link_options(${COMPONENT_LIB} ...)` **不传播**到最终链接，无效
+- ⚠️ 环境：直接 `python idf.py build`（不走 export）会报 `ESP_ROM_ELF_DIR environment variable is not defined`，需先设 `$env:ESP_ROM_ELF_DIR = "$env:IDF_PATH\components\esp_rom\esp32p4"`
+
+**验证**：烧录后 `mem` 的 Internal SRAM Free 应大幅上涨（LVGL 对象全部进 PSRAM）。
+
+### 17.4 为什么 UI 需要 2~4MB 内存
+
+- **EEZ 生成代码全量创建**：`eez_flow_init` 末尾 `create_screens()` 把 11 个屏的全部控件一次性创建（screens.c：`create_screen_main()...create_screen_notifications()` 无条件下全建），之后 `replacePageHook(1,...)` 只切显示，**其余屏对象常驻内存**
+- **每对象结构 ~400~500B**：`lv_obj_t` 基结构 ~240B（坐标/标志/样式槽/事件/子对象链/扩展）+ 样式 ~200B（padding/背景/边框/阴影/半径…）+ 动画 ~100B；3300 对象 ≈ 1.3~1.7MB
+- **叠加项**：图片解码缓冲（PNG/JPG 按分辨率×色深）、字体位图缓存、渲染临时层（mask/layer）、flex/grid 布局数据 → 全算 2~4MB
+- **EEZ 无"按需/懒加载创建屏"配置**：生成代码硬编码全建，工程里没有开关能阻止；要省只能手改生成文件（`create_screens()` 只建首屏 + 交互式懒建），与"不改生成文件"约定冲突 → 不推荐，PSRAM 下 2~4MB 无压力
+
+### 17.5 相关要点
+
+- 绘制缓冲（DSI 帧缓冲 fb0/1/2 与 draw_buf=fb2）**本就在 PSRAM**（FULL+旋转下 draw_buf_primary=frame_buffers[2]），`use_psram` 开关只影响非 FULL 模式；实测改 use_psram 内部无变化，证明显示缓冲从不占内部
+- `CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=16384`（<16KB malloc 强制内部）保持默认，配合 CUSTOM_MALLOC 即可定向解决 LVGL 对象
+- 后续若加 WiFi（esp_wifi_remote/esp_hosted）需内部 RAM，此方案腾出的空间正好可用
