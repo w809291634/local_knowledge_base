@@ -42,6 +42,29 @@ python tools/log_entry.py next-id [problem|prompt]
 把「新问题」写进 `intake/P-####_*.md`（并更新 `intake/index.md`），把「提示词」追加进
 `prompts/PROMPT_LOG.md`。只用标准库、与工程解耦 —— **任何 AI 工具都能调**。完整规约见 `../INTAKE.md`。
 
+### `config_check.py` —— 工程配置适配体检 ★换工程先跑这个
+
+```bash
+python tools/config_check.py            # 在工程根目录跑（配置会自动向上查找）
+python tools/config_check.py --strict   # WARN 也算不通过（CI 用）
+```
+
+回答一个问题：**工具箱的配置真的对这个工程生效了吗？**
+四类一致性核对，任一对不上都会让门禁**静默降级**（看着 PASS，其实该查的没查）：
+
+| 类 | 核对什么 | 对不上的后果 |
+|---|---|---|
+| A 路径 | 里写的每个文件/目录是否存在 | 脚本跳过或直接崩 |
+| B 屏幕 | `screen.w/h` 是否等于设计源与工程文件实际尺寸 | 越界检查基准算错 |
+| C 字体 | `name_to_px` / 图标私有区是否覆盖实际用到的字体与码位 | 未声明字体误报、图标宽度算错 |
+| D 结构 | `tree_schema` 的键名与类型是否匹配设计源真实结构 | 组件树遍历不到，体检形同虚设 |
+| E 门禁 | `checks.gates` 挂的脚本是否存在 | 闸门被 SKIP，等于没挂 |
+
+顺带查出**旧工程的绝对路径残留**（换机器/迁目录后最常见的隐性失效）。
+运行时产物目录（`preview/render/work/native_dir`）缺失只报 INFO，不算错。
+
+退出码：`0` 通过，`1` 有 ERROR（`--strict` 下 WARN 也算）。
+
 ### `tree_check.py` —— 组件树静态体检
 
 ```bash

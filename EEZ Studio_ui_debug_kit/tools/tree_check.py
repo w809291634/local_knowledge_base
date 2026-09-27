@@ -76,8 +76,14 @@ def run(cfg, src=None):
                 net = tm.width(text, font)
                 boxw = float(w) if isinstance(w, (int, float)) and w else net
                 off = kit.ink_offset(cfg, px)
-                ink_top = y + (off[0] if off else 1)
-                ink_bot = y + (off[1] if off else px + 1)
+                if off:
+                    ink_top, ink_bot = y + off[0], y + off[1]
+                else:
+                    # 未配 fonts.ink_offset_from_box_top 时，用 PIL 对这串字形实测墨迹框，
+                    # 比 y+1..y+px+1 的保守估计准得多（后者会把下行 heightened 判成越界/反之漏判）。
+                    _w, gt, gb = tm.glyph_metrics(text, font)
+                    ink_top = y + (gt if gt is not None else 1)
+                    ink_bot = y + (gb if gb is not None else px + 1)
                 if x < -0.5 or ink_top < -0.5 or x + boxw > W - 0.5 or ink_bot > H - 0.5:
                     issue["overflow"].append(
                         (pname, (text or "")[:16],
