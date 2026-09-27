@@ -197,3 +197,9 @@
   - 产出/结论：新建 tools/config_check.py 做配置适配体检：最初 OK37/WARN2/ERROR0，修正后 OK38/WARN0/ERROR0 完全适配。修了三处：① tree_check 未配墨迹偏移时用 y+1..y+px+1 系统性低估下边界（13px 差 3px、54px 差 15px）→ 改为 PIL 实测，从严后 G4 仍全通过；② 配置 type_values 漏声明 bar(9)/switch(6)/screen(11)；③ 体检脚本自己把 11 页去重显示成 1 页。
   - 关联：（待补）
 
+### PR-0033 · 2026-09-27 20:37 · WorkBuddy
+  - 提示词：所有的按键单击，可以增加打印
+  - 诉求：UI 上每次按键单击都要打印日志，能看出点中了谁、要跳哪去
+  - 产出/结论：新增 click_trace 单击打印钩子（src/native/click_trace.{h,cpp} + 自动生成的 click_map.{h,cpp}）。运行时按命中对象中心点反查控件 id/goto，打印 [CLICK] 页 id goto 坐标。不动 EEZ 生成代码。顺带补上 G3 命中闸门：81 个控件 11 屏 0 未命中，门禁 3 组变 4 组全 PASS。
+  - 关联：（待补）
+
