@@ -426,6 +426,26 @@ EEZ 编辑器按自己的 `ascent` 画字，与固件里烘焙字体的真实基
 （`nm -u libui.a` vs `nm -g libnative.a`），再去
 `build/CMakeFiles/<elf>.rsp` 看**最后一次出现**的库相对顺序——只看第一次会误判。
 
+### 7.7 静态库链接顺序：通用解法（get_var_* 与 lv_mem_psram 同一坑）
+> **现象**：`undefined reference to <符号>`（链接期）。
+> **什么情况**：符号定义在组件 B（.cpp/.c），被组件 A 引用；但 `libb.a` 排在 `liba.a`
+> 被抽取**之前**，ld 单遍扫描时把 B 里那个 .o 整段跳过。
+> **怎么写**：让 A 显式依赖 B，拓扑排序把 `libb.a` 排到 `liba.a` 之后，实现即被抽到。
+
+```cmake
+cmake_policy(SET CMP0079 NEW)            # 跨目录改别人 target 必须开
+idf_component_get_property(a_lib <A>   COMPONENT_LIB)
+idf_component_get_property(b_lib <B>   COMPONENT_LIB)
+target_link_libraries(${a_lib} PUBLIC ${b_lib})
+```
+- **写哪里**：工程顶层 `CMakeLists.txt`、`project()` 之后。不能写进被 EEZ 重写的
+  `ui/CMakeLists.txt`，也不能写反方向（会造成循环依赖）。
+- **实例 1 — `ui → native`**：见 §7.6。EEZ 只生成 `vars.h` 声明，`get/set_var_*` 唯一定义在 `native/native_vars.cpp`。
+- **实例 2 — `lvgl → lv_mem_psram`**：`lv_mem_psram` 提供 LVGL 内存 core 的 PSRAM 实现
+  （`lv_malloc_core`/`lv_mem_init` 等），LVGL 默认内置实现未编入。**`lvgl` 是托管组件，
+  注册名 `lvgl__lvgl`**（库目标 `__idf_lvgl__lvgl`），写 `lvgl` 会报 `Failed to resolve component 'lvgl'`。
+- **备选**：`--undefined=<符号>` 强抽（顺序无关）也行，但要背符号名；本项目两处统一用上面的排序法。
+
 ---
 
 ## 8. 命令速查
