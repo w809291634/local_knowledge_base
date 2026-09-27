@@ -394,6 +394,38 @@ CDP 鼠标事件、直接派发 PointerEvent、窗口置顶——三种注入方
 EEZ 编辑器按自己的 `ascent` 画字，与固件里烘焙字体的真实基线可能差 2px。
 用实测值（`line_height - base_line`）做基准，配置里的值不要盲信。
 
+### 7.6 固件链接报 `undefined reference to get_var_*`（见 intake/P-0020）
+
+三层坑，缺一层都过不去：
+
+1. **EEZ 只生成 `src/ui/vars.h`（extern 声明），从不生成 `vars.cpp`。**
+   那 20 个 `get_var_*/set_var_*` 的唯一定义在 `native/native_vars.cpp` 里，
+   不存在"和 EEZ 生成的重复"。所以这个 **必须** 编进固件。
+2. **`src/native/CMakeLists.txt` 必须是真正的 IDF 组件**（有 `idf_component_register`）。
+   只 `set(NATIVE_SRCS ... PARENT_SCOPE)` 等别人 include 是不够的——目录虽在
+   `EXTRA_COMPONENT_DIRS` 里，没注册的组件会被直接跳过，一个 .cpp 都不会编。
+3. **必须显式建立 ui → native 的链接依赖**，否则 CMake 的库顺序会出问题：
+   `ui.c.obj` 是被 `main` 拉进来的，而 `main` 排在 ui 后面，ld 到**第二次**出现
+   `libui.a` 时才提取 `ui.c.obj`，此时 `libnative.a` 已经扫过去了。
+   ```cmake
+   # 工程顶层 CMakeLists.txt，project() 之后
+   cmake_policy(SET CMP0079 NEW)    # 跨目录改别人的 target 必须开
+   idf_component_get_property(ui_lib ui COMPONENT_LIB)
+   idf_component_get_property(native_lib native COMPONENT_LIB)
+   target_link_libraries(${ui_lib} PUBLIC ${native_lib})
+   ```
+   不能写在 `ui/CMakeLists.txt`（EEZ 每次导出会重写），也不能写在
+   `native/CMakeLists.txt`（那是反方向，会造成 ui ↔ native 循环）。
+   native 需要 ui 的头文件时，用 `INCLUDE_DIRS ../ui`，别用 `REQUIRES ui`。
+
+**另一个连带坑：`main` 组件一旦显式写 `REQUIRES/PRIV_REQUIRES`，就丢掉了
+"默认依赖全部组件"的 IDF 特例。** 只写 `ui native` 会让 `bsp/esp-bsp.h`、
+`board.h`、`lv_demos.h` 全部找不到，必须把 main.c 用到的组件列全。
+
+**排查手法**：链接报 undefined 时先双向 `nm` 比对确认符号真的存在
+（`nm -u libui.a` vs `nm -g libnative.a`），再去
+`build/CMakeFiles/<elf>.rsp` 看**最后一次出现**的库相对顺序——只看第一次会误判。
+
 ---
 
 ## 8. 命令速查
