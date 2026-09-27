@@ -99,6 +99,7 @@ If you've learned something here, support my efforts writing daily TILs by
 * [Workflow](#workflow)
 * [XState](#xstate)
 * [YAML](#yaml)
+* [YJT](#yjt)
 * [Zed](#zed)
 * [Zod](#zod)
 * [Zsh](#zsh)
@@ -2210,6 +2211,10 @@ If you've learned something here, support my efforts writing daily TILs by
 
 - [Create Multi-Line Strings Without The Line Breaks](yaml/create-multi-line-strings-without-the-line-breaks.md)
 - [YAML Is A Superset Of JSON](yaml/yaml-is-a-superset-of-json.md)
+
+### YJT
+
+- [CH571（CH57x）BLE 设备 ID：滚码 NV 格式、控制台/BLE 写法与校验](yjt/ch571/ble-device-id-rollcode-nv.md)
 
 ### Zed
 
