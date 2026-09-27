@@ -179,3 +179,9 @@
   - 产出/结论：（待补）
   - 关联：（待补）
 
+### PR-0030 · 2026-09-27 13:33 · WorkBuddy
+  - 提示词：读取当前工程，使用C:/Users/Administrator/Desktop/local_knowledge_base/EEZ Studio_ui_debug_kit 这个本地知识库
+  - 诉求：读取工程并以该本地知识库为方法论/工具集接管 UI 调试工作
+  - 产出/结论：验证知识库可从工程根经 cwd 向上找到 ui_debug_kit.config.json（kit.py 关键路径全 OK，仅预览/仿真目录未生成）。跑 G1 断言 A1/A2/A3/A4/A6/A8/A9 全 OK（A5/A7 无底栏跳过），G4 组件树 11 页/50 跳转全通过。G5 需先出仿真图。
+  - 关联：（待补）
+
