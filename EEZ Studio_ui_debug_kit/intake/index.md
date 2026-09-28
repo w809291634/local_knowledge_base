@@ -22,4 +22,10 @@
 | P-0016 | 2026-09-24 | 噪音过滤正则与真实时间戳不符（P-0010 的修复未真正生效，复发） | eez,ci,regex,false-positive,复发 | fixed |
 | P-0017 | 2026-09-27 | compare.py 在本机无 PIL 导致 G5 无法运行（受管 venv 未装 Pillow） | G5,依赖,PIL,venv | fixed |
 | P-0018 | 2026-09-27 | tree_check 未配墨迹偏移时把下边界系统性低估，越界长期漏判 | tree_check,越界,假通过,墨迹,精度 | fixed |
-| P-0019 | 2026-09-27 | 运行时对象框与设计框不一致，按严格坐标查表会把正确命中误判成未命中 | LVGL,坐标,命中,查表,框偏差 | fixed |
+| P-0021 | 2026-09-28 | EEZ tabview 吃默认亮色主题：整屏发白+tab文字豆腐块 | - | open |
+| P-0022 | 2026-09-28 | tabName 不进字形收集：tab 标签中文字形缺失（设了字体仍豆腐） | - | open |
+| P-0023 | 2026-09-28 | DSL 容器创建后未挂载：歌词块整块消失 | - | open |
+| P-0024 | 2026-09-28 | RAIL_TAB_IDS 用 build_ui 原始 id，被 prefix_ids 加前缀后永不命中，rail FA 图标全部烘焙缺失 | json2eez,字体,FA图标,prefix_ids,id前缀 | fixed |
+| P-0025 | 2026-09-28 | tabview 主题/字体需运行时补丁？实测 EEZ 原生三件套即可：darkTheme 字段 + LV_FONT_CUSTOM_DECLARE + tabName 图标字符 | EEZ原生,主题,字体,tabview,fix_tabview废除 | fixed |
+| P-0026 | 2026-09-28 | EEZ tab 栏原生定制：首子容器样式发射到 lv_tabview_get_tab_bar（rail 两行标签 / 设置左栏紧凑行） | EEZ原生,tabview,样式,tab栏,字体继承 | fixed |
+| P-0027 | 2026-09-28 | 动作 object 写了重写前 id：EEZ identifiers 只收录被引用 widget，assign_ids 加页面前缀 → 16 个 Widget index not found | json2eez,动作,identifier,tabviewSetActiveTab,tabSize | fixed |

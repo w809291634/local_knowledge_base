@@ -11,7 +11,7 @@ run_gate.py —— UI 改完必跑的一键门禁（L1 层，纯 Python，秒级
       G4  tree_check.py 通用体检：几何越界 / 文本折行 / 字体缺失 / 死链 / 入口页
 
   · 工程侧闸门（由配置 checks.gates 挂载，脚本留在你自己的工程里）
-      任意条，例如 G2 跳转体检、G3 命中仿真。脚本不存在就 SKIP，不阻断。
+      任意条，例如 G2 跳转体检。脚本不存在就 SKIP，不阻断。
 
 用法：
     python run_gate.py               # 全跑

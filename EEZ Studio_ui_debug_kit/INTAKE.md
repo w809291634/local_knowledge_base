@@ -35,7 +35,7 @@ python tools/log_entry.py problem --title "按钮点了没反应" \
     --repro "固定坐标 (160,136) 点击，命中对象是装饰容器" \
     --root "装饰 container 默认可点，盖在按钮上吃掉了点击" \
     --fix "给该容器 clickable=False" \
-    --evidence "命中仿真：修复前命中 ContainerA，修复后命中 Button" \
+    --evidence "修复前点 (160,136) 命中 ContainerA，修复后命中 Button" \
     --sink "新增断言 A5" --link PR-0007
 
 # 看看已经记了什么 / 下一个编号是多少

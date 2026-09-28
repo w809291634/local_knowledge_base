@@ -203,3 +203,45 @@
   - 产出/结论：新增 click_trace 单击打印钩子（src/native/click_trace.{h,cpp} + 自动生成的 click_map.{h,cpp}）。运行时按命中对象中心点反查控件 id/goto，打印 [CLICK] 页 id goto 坐标。不动 EEZ 生成代码。顺带补上 G3 命中闸门：81 个控件 11 屏 0 未命中，门禁 3 组变 4 组全 PASS。
   - 关联：（待补）
 
+### PR-0034 · 2026-09-28 06:48 · WorkBuddy
+  - 提示词：我不想用 examples\idf_v555_my_exps\p4_touch_lcd4_3_exp\lvgl_demo_ai\eez-test\src\native\click_map.cpp 这种方法，并本地知识库移除，因为这种方法显得很傻
+  - 诉求：放弃「运行时按坐标反查控件身份」的单击打印方案（click_trace/click_map/G3 命中仿真），项目与本地知识库一并移除
+  - 产出/结论：项目侧删 6 个文件（click_trace.{h,cpp}、click_map.{h,cpp}、gen_click_map.py、gate_g3.py）并清干净 9 处引用（main.c / native CMakeLists / native README / all.py / eez_check_build.py / sim.py --probe·--click-all / ui_debug_kit.config.json G3 门禁 / eez-test README / main CMakeLists），grep 复查 0 残留。知识库侧删 skills.md 全部命中仿真/G3 表述（L3/L4 重编号为 L2/L3）、config_check.py 与 run_gate.py 的 G3 引用、INTAKE.md 示例字样、intake/P-0019（坐标查表误判坑）；gen_clicks.py 保留（从设计源正向生成真点击用例，非坐标反查）。**后续方案：改用 EEZ 原生用户事件 executeLvglActionHook（控件身份由 EEZ 点击回调自带，无需坐标表），尚未实现。**
+  - 关联：P-0019（已随方案删除）
+
+### PR-0035 · 2026-09-28 08:52 · WorkBuddy
+  - 提示词：根据本地知识库，自己核对一下UI，我感觉图像都不对
+  - 诉求：（待补）
+  - 产出/结论：（待补）
+  - 关联：（待补）
+
+### PR-0036 · 2026-09-28 09:15 · WorkBuddy
+  - 提示词：我看了还是没有改好啊
+  - 诉求：对 G5 修复后的设置页仍不满意，指出 UI 没改到位
+  - 产出/结论：全分辨率复核发现设置左栏 tab 按钮被 LVGL 默认 pct(100)+grow(1) 撑成巨块，重写 fix_tabview.py 按四个 tabview 形态分别注入布局修复
+  - 关联：（待补）
+
+### PR-0037 · 2026-09-28 09:15 · WorkBuddy
+  - 提示词：我要求你把UI改好
+  - 诉求：明确要求把 UI 彻底改好而非停在平均差异数字
+  - 产出/结论：第二轮修复：rail 图标化 + 列表行 + 顶栏胶囊；复核再抓出 prefix_ids 前缀导致 rail 图标字形未烘焙（P-0024），修复后 11 屏全过、图标齐全
+  - 关联：P-0024
+
+### PR-0038 · 2026-09-28 09:46 · WorkBuddy
+  - 提示词：我要求都是使用 eez来生成UI，不要自己编写C代码 / 严格执行 EEZ 编辑，eez check \eez output，这样来生成代码
+  - 诉求：UI 全部由 EEZ 工程原生定义并走 EEZ 构建输出，废除往生成代码里注入 C 补丁的 fix_tabview 路线
+  - 产出/结论：反编译 EEZ 0.29 生成器模板确认：settings.general.darkTheme 可控 dark 参数（主/次色硬编码 BLUE/RED）；LV_FONT_DEFAULT 经 LV_FONT_CUSTOM_DECLARE 指向烘焙 13px 字体；rail tabName 直接写 FA 图标字符。fix_tabview.py 已删除，all.py 移除该步，G5=24.39%（原生形态与设计稿的形态差），11 屏图标/中文/深色全原生渲染
+  - 关联：P-0025
+
+### PR-0039 · 2026-09-28 10:40 · WorkBuddy
+  - 提示词：我发现 还有字体问题。UI界面不够美观，你仔细仔细核对
+  - 诉求：逐屏仔细核对字体与美观问题并修复
+  - 产出/结论：逐屏核对+放大裁剪定位三处：rail 图标 13px 偏小且无文字、设置左栏被 LVGL tab 按钮填满机制均分成 111px 整格、Home-5G 副标题被延迟胶囊遮挡。反编译发现 EEZ 内置 tab 栏定制口子——LVGLContainerWidget 作 tabview 第一个子对象时样式发射到 lv_tabview_get_tab_bar（第二个子对象→content）。json2eez 注入首子样式容器：rail 17px 字体+图标\\n中文两行、导航栏 15px、设置左栏 pad 收成 ~50px 紧凑行+页面底色；LVGL 源码实证 text_font/text_align 可继承。G5 24.39%→17.10%，11/11 屏过，EEZ 原生零 C 补丁
+  - 关联：P-0026
+
+### PR-0040 · 2026-09-28 11:20 · WorkBuddy
+  - 提示词：我要求修改后也要跟设计图效果一致 ，想想办法
+  - 诉求：UI 视觉必须与 designer/v1.0 设计稿一致，想办法把原生 tab 栏形态改成设计稿形态
+  - 产出/结论：四个 tabview 全 tabSize=0 隐藏原生栏，用设计稿 rail()/rail_cats() 容器重建导航，按钮绑 EEZ 原生动作 tabviewSetActiveTab(id 60) 切 tab，json2eez 新增 switchTab→LVGLActionComponent 生成。核心坑：动作 object 写重写前 id → 16 个 Widget index not found（identifiers 只收录被引用 widget + assign_ids 加页面前缀），修法=switchTab 持 DSL 节点引用、main() 在 assign_ids 后解析成最终 id。EEZ build 0 error，G5 17.10%→8.84%，11/11 屏全过
+  - 关联：P-0027  - 勘误（同日核对后补）：前缀重写发生在 build_ui.py 的 assign_ids（PAGE_ALIAS Main=m），非 json2eez；主 rail 全屏仅一份实例、高亮静态固定「对话」，切音乐/通知/设置 tab 不跟随（05 页实证，已知未修），「每 tab 挂副本」仅设置左栏 rail_cats 成立
+

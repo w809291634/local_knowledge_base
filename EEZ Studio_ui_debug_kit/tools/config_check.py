@@ -367,7 +367,7 @@ def check_schema(cfg, rep, design):
     if missing:
         rep.warn("D 结构", "type_values",
                  "设计源还有这些类型未在 type_values 声明：%s；"
-                 "tree_check 靠遍历而非类型过滤仍能查到，但 G2/G3 的 nav_types 判定会漏"
+                 "tree_check 靠遍历而非类型过滤仍能查到，但 G2 的 nav_types 判定会漏"
                  % ", ".join("%s(%d)" % (t, real[t]) for t in missing))
     else:
         rep.ok("D 结构", "type_values", "声明类型已覆盖设计源全部类型 %s"
@@ -375,7 +375,7 @@ def check_schema(cfg, rep, design):
 
     nav = sch.get("nav_types") or []
     if nav:
-        rep.info("D 结构", "nav_types", "%s（用于 G2/G3 跳转体检）" % nav)
+        rep.info("D 结构", "nav_types", "%s（用于 G2 跳转体检）" % nav)
     tabs = _get(cfg, "checks.tab_bar")
     if tabs is None:
         rep.info("D 结构", "tab_bar", "未配置 → A5/A7 底栏类断言自动跳过（本工程非底栏形态）")
@@ -397,7 +397,7 @@ def check_gates(cfg, rep):
         else:
             rep.warn("E 门禁", code, "脚本不存在，会被 SKIP：%s" % g.get("script"))
 
-    for code, script in (("G2", "./design/check_nav.py"), ("G3", "./design/sim_nav.py")):
+    for code, script in (("G2", "./design/check_nav.py"),):
         if any(c for c in gates if g.get("code") == code):
             continue
         p = _rel(cfg, script)

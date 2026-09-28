@@ -17,7 +17,7 @@ UI 开发最容易陷入的循环是：改一版 → 烧录 → 发现点不动/
 | 阶段 | 做什么 | 耗时 | 拦住什么 |
 |---|---|---|---|
 | **A 自动设计** | 一个 Python 脚本产出全部界面（DSL），效果图和固件代码同源 | 一次 | 「效果图好看、上机不一样」 |
-| **B 对照查验** | 秒级静态体检 + 命中仿真，把踩过的坑变成断言 | 秒 | 坐标偏移、字体回退、点击被遮挡、真机编译失败 |
+| **B 对照查验** | 秒级静态体检，把踩过的坑变成断言 | 秒 | 坐标偏移、字体回退、点击被遮挡、真机编译失败 |
 | **C 仿真验证** | PC 模拟器跑真 LVGL + 真生成代码，程序注入真鼠标事件 | 分 | 「点了跳错页」「点了没反应」 |
 
 **核心原则：唯一设计源。** 界面只在一处定义（DSL 构建脚本），效果图、EEZ 工程、
@@ -73,17 +73,15 @@ SDL2        <仿真器>/setup_env.bat 里记录了路径
 DSL 构建脚本  ──►  ui_voice.json  ──►  EEZ 工程  ──►  screens.c  ──►  固件
                         │                  │              │
         L1 静态体检 ◄────┘                  │              │
-        L2 命中仿真 ◄──────────────────────┘              │
-        L3 真点击（仿真器）◄────────────────────────────────┘
-        L4 真机烧录
+        L2 真点击（仿真器）◄────────────────────────────────┘
+        L3 真机烧录
 ```
 
 | 层 | 命令 | 拦什么 | 何时跑 |
 |---|---|---|---|
 | **L1** | `python ui_debug_kit/tools/run_gate.py` | 静态可查的一切 | 每次改完设计源 |
-| **L2** | 含在 L1 的 G1/G2/G3 | 见 §6 | 每次改完设计源 |
-| **L3** | 见 §5 | 真点击行为 | 提 PR 前 / 发版前 |
-| **L4** | `idf.py build flash` | 硬件相关 | 发版 |
+| **L2** | 见 §5 | 真点击行为 | 提 PR 前 / 发版前 |
+| **L3** | `idf.py build flash` | 硬件相关 | 发版 |
 
 ---
 
@@ -101,7 +99,6 @@ DSL 构建脚本  ──►  ui_voice.json  ──►  EEZ 工程  ──►  sc
     gen_fonts.py           重新生成字体 C（EEZ 构建会删掉它们）
     dsl2png.py             效果图
     check_nav.py           跳转体检（由配置挂到门禁 G2）
-    sim_nav.py             命中仿真（由配置挂到门禁 G3）
   ui_debug_kit/            可移植调试工具箱（本文件所在目录）
     INTAKE.md              记录规约（新问题 / 提示词怎么留痕）
     intake/                问题流水（P-####_*.md + index.md）
@@ -192,11 +189,10 @@ python ui_debug_kit/tools/run_gate.py --quick    # 只跑 G1 + 配置里标 quic
 |---|---|---|
 | G1 | `ui_debug_kit/tools/audit_ui.py` | 回归断言 A1~A10（见 §6.2） |
 | G2 | `design/check_nav.py`（配置挂载） | 跳转三要素、死链、跳自己、可达性、死胡同 |
-| G3 | `design/sim_nav.py`（配置挂载） | 按 LVGL 命中规则，逐按钮验证「点下去命中的是谁」 |
 | G4 | `ui_debug_kit/tools/tree_check.py` | 几何越界、文本折行、字体缺失、墨迹异常 |
 | G5 | `design/compare.py`（配置挂载） | 设计稿 vs 实机逐屏对照：缺屏或平均差异超阈值即阻断 |
 
-G2/G3 是**本工程专属**脚本，留在 `design/`，由 `ui_debug_kit.config.json` 的
+G2/G5 是**本工程专属**脚本，留在 `design/`，由 `ui_debug_kit.config.json` 的
 `checks.gates` 挂进门禁 —— 工具箱本身保持零工程痕迹。脚本不存在会被 SKIP 而非报错。
 
 退出码非 0 即为阻断，可直接挂到 git pre-commit。
@@ -230,7 +226,7 @@ node design/eez_pages.js <输出目录> <页面>  # 抓 EEZ 原生渲染图（�
 
 ### 5.1 为什么必须有这一层
 
-L1/L2 都是「算」出来的，能抓几何与结构问题，但抓不到**真实运行时行为**。
+L1 是「算」出来的，能抓几何与结构问题，但抓不到**真实运行时行为**。
 真点击用的是**真 LVGL 运行时 + 真生成的 C 代码 + 真 SDL 鼠标事件**，
 与真机的差别只有没有物理屏和触摸芯片。
 
@@ -275,7 +271,7 @@ python ui_debug_kit/tools/gen_clicks.py -o <仿真器>/clicks.txt    # 生成全
 
 ---
 
-### 5.6 零点击出图：逐屏快照（把 L3 做成可自动跑的截图流水线）
+### 5.6 零点击出图：逐屏快照（把 L2 做成可自动跑的截图流水线）
 
 真点击用来验「点下去会怎样」；**出图**只需要「每屏长什么样」。
 后者可以完全不用鼠标：在仿真器里逐屏 `load → 跑几帧 → 快照 → 写裸帧`。
@@ -348,14 +344,13 @@ python ui_debug_kit/tools/run_gate.py
 | G1-A9 | 部件开关 | `screens.c` 里 `lv_*_create()` 用到的部件，在 `lv_conf.h` 中开关均为 1 | 0 种被关闭 |
 | G1-A10 | 样式值语法 | 颜色类样式值必须形如 `0xRRGGBB`（`checks.color_props` / `color_node_keys` 可配） | 0 处不合法 |
 | G2 | 跳转体检 | 三要素完整 / 无死链 / 无跳自己 / 可达性 / 死胡同 | 无 ERROR |
-| G3 | 命中仿真 | 每个跳转按钮中心点下去命中的是它自己 | 0 遮挡 0 落空 |
 | G4 | 通用体检 | 几何越界 / 文本折行 / 字体缺失 / 墨迹异常 | 全部通过 |
 
 ### 6.3 R 段：发布前条例（真机）
 
 | 编号 | 条例 | 说明 |
 |---|---|---|
-| R1 | 全量真点击通过 | L3 跑出的报告 0 FAIL |
+| R1 | 全量真点击通过 | L2 跑出的报告 0 FAIL |
 | R2 | 真机编译通过 | 特别注意 A6 那类「本地能跑、上机炸」的字体开关 |
 | R3 | 固件周期调用 `ui_tick()` | 不调的话 EEZ flow 动作只入队不执行，**表现为按钮点了没反应** |
 | R4 | 启动页加载正确 | `ui_init()` → `create_screens()` → `lv_screen_load(objects.main)` |
@@ -467,7 +462,6 @@ python design/sim.py --ui-only  # 只换 UI 源码增量重编（引擎已编好
 python ui_debug_kit/tools/audit_ui.py            # 回归断言（可加 A3 A6 只跑指定项）
 python ui_debug_kit/tools/audit_ui.py A10        # 只看样式值语法
 python design/check_nav.py                       # 跳转体检
-python design/sim_nav.py Main                    # 某屏命中仿真
 
 # 真点击
 python ui_debug_kit/tools/gen_clicks.py -o <仿真器>/clicks.txt
@@ -585,7 +579,7 @@ CLI 日志里会混进 Chromium 自己的噪音：
 按 `^\[\d+:\d{4}/\d+:\d+:\d+\.\d+:(ERROR|WARNING|INFO):` 过滤掉再统计，
 否则会把「9 条 error」当成构建失败（实际项目零错误）。
 
-### 11.4 仿真器出图（把 L3 变成可自动跑的截图流水线）
+### 11.4 仿真器出图（把 L2 变成可自动跑的截图流水线）
 
 - 拷一份仿真器到临时目录改，**不污染仓库**；改 `CMakeLists.txt` 的 `UI_DIR`、
   `APL_LVGL_DIR`（版本必须与工程 `lvglVersion` 一致）、`SIM_H_RES/V_RES`；
@@ -604,3 +598,103 @@ CLI 日志里会混进 Chromium 自己的噪音：
 - **mingw64 的 bin 必须在 PATH 里**：缺了它 `gcc` 会**静默失败**（rc=1 且一条输出都没有，
   连 `bad.c` 这种明显错误都不报），极易误判成「编译器坏了」。
   排查编译问题第一步：`export PATH="/d/Program_Files/mingw64/bin:$PATH"` 再跑（`intake/P-0013`）。
+
+### 11.5 按 id 收集/匹配必须用 prefix_ids 之后的最终 id
+
+`build_ui.prefix_ids(nodes, prefix)` 会给 DSL 里所有**显式 id** 加分区前缀
+（如 `"tab_ai"` → ui.json 里的 `"m_tab_ai"`）。任何「按 id 收集字形 / 匹配控件」的
+字典（如 json2eez 的 `RAIL_TAB_IDS`）如果键写的是 build_ui 里的原始 id，
+**永不命中且无任何报错**——表现是 FA 图标字形从未进烘焙集合、整排缺字形方框，
+而个别恰好也在原有符号集里的码位（如 F001）正常渲染，极具迷惑性
+（会误判成 FA woff 缺字形，实测 cmap 四码位齐全）。
+规则：**写死 id 之前先 grep ui.json 拿实际 id**；排查时按
+「eez-project fonts[].lvglSymbols 是否含目标码位 → FA woff cmap 是否覆盖 → 烘焙产物 .c 是否含码位」
+三段逐级定位（`intake/P-0024`）。
+
+### 11.6 EEZ 原生主题三件套（fix_tabview 类运行时补丁的替代，`intake/P-0025`）
+
+用户纪律：**UI 一律 EEZ 原生定义，禁止往生成代码里注入 C 补丁**。EEZ 0.29 原生能力实测
+（反编译 `resources/app.asar` 生成器模板，`lv_theme_default_init(dispp` 全包唯一命中）：
+
+1. **深色主题**：生成器发
+   `lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), <dark>, LV_FONT_DEFAULT)`，
+   `<dark>` 取自工程 **`settings.general.darkTheme`**（布尔字段，json2eez 直接写 `true`）。
+   主/次色**硬编码** BLUE/RED，工程改不了（选中高亮即 LVGL 调色板蓝 #2196F3）。
+2. **默认字体**：`LV_FONT_DEFAULT` 在 lv_conf.h（平台配置，EEZ 不管）。要指向自定义烘焙字体，
+   用 LVGL 官方口子（lv_font.h 在 `lv_font_t` 定义之后展开）：
+   `#define LV_FONT_CUSTOM_DECLARE extern const lv_font_t ui_font_xxx;` +
+   `#define LV_FONT_DEFAULT &ui_font_xxx`。
+   **ESP-IDF 真机例外**：Kconfig（`CONFIG_LV_FONT_DEFAULT_*`）选不了自定义字体，需固件 main
+   在 `ui_init()` 之后补一次 `lv_theme_default_init(..., true, &ui_font_xxx)`（平台接线，非 UI 代码）。
+3. **tab 图标/中文标签**：EEZ 的 `tabName` 原样落到 tab 按钮 label 文本 —— 直接写 FA 私有区
+   字符即可（`json2eez` 对 rail tab 生成 `tabName=chr(0xF4AD)` 等），中文标题照常；
+   字形都必须烘进 `LV_FONT_DEFAULT` 指向的那份字体。
+
+**EEZ 画布预览 ≠ 运行时效果**：预览按工程 JSON 静态渲染，不执行 LVGL 运行时——
+darkTheme、LV_FONT_DEFAULT、tabview 内部主题样式在预览里统统看不到（预览发白 ≠ 工程坏了）。
+验收以 PC 仿真图（真 LVGL + 真 SDL 快照）为准；EEZ 预览只用来摆控件位置。
+
+### 11.7 EEZ tab 栏原生定制口子 + LVGL tabview 按钮填满机制（`intake/P-0026`）
+
+1. **tab 栏定制口子（asar 实证）**：EEZ 的 `LVGLContainerWidget.toLVGLCode` 有专门分支——
+   容器若是 tabview 的**第一个子对象**，生成器不为它建对象，而是把它的 localStyles 发射到
+   `lv_tabview_get_tab_bar()`（V9；V8 是 get_tab_btns）；**第二个子对象** → `lv_tabview_get_content()`。
+   即：给 tabview 前插一个空 container 承载 localStyles（text_font/text_align/pad_*/bg_color...），
+   就能纯 EEZ 原生控制 tab 栏字体、内边距、背景，无需任何 C 补丁。
+2. **LVGL 9.4 tab 按钮永远填满按钮栏**（lv_tabview.c 实证）：按钮是 `lv_button` 且
+   `lv_obj_set_size(button, lv_pct(100), lv_pct(100))` + `flex_grow(1)`——按钮栏多高按钮就
+   均分多高（446px ÷ 4 = ~111px 整格大块的根因）。收紧凑行的唯一原生手段 = 在按钮栏上垫
+   `pad_top/pad_row/pad_bottom`（pad_row 即 column flex 间距），把内容区压到顶部。
+3. **tab 按钮 label 的字体与对齐靠继承**：label 自身不设字体，沿「label → button → 按钮栏」
+   继承 `text_font`；`text_align` 是**可继承属性**（lv_style.c:126 实证），设在按钮栏上即可让
+   按钮文本居中。因此 tab 栏一个 text_font 就能同时改图标与文字大小。
+4. **混合字体的妙用**：本工程字体同含中文+FA 图标字形，rail 的 `tabName` 写
+   「图标字符+`\n`+中文」两行即可原生实现设计稿「图标在上、文字在下」的形态——
+   一个 label 只能一个字号，图标与文字同字号是此路线的已知取舍。
+5. **字体兜底**：tab 栏主字体（如 15/17px）与 `LV_FONT_DEFAULT` 兜底字体（13px）都要收齐
+   tabName 字形——首子容器机制万一失效，tab 栏退回默认字体也不出 tofu。
+6. **坑**：注入的样式容器 x/y 必须写父 tabview 的绝对坐标（to_relative 按「子绝对−父绝对」
+   换算，写 (0,0) 会变负相对坐标被 check_bounds 拦下）；工程门禁要求容器必须有 identifier。
+
+### 11.8 隐藏原生 tab 栏 + 自定义导航 + tabviewSetActiveTab 动作（`intake/P-0027`）
+
+1. **tabSize=0 是隐藏原生 tab 栏的实测标准手段**：tabview 属性 `tabSize`（tabviewSize）
+   设 0 → 生成 `lv_tabview_set_tab_bar_size(obj, 0)`，tab 栏不占位，content 原点即 tabview
+   原点（tab 锚点坐标按父原点写）。§11.7 的首子容器样式口子在此配置下自然失效（栏没了）。
+2. **自定义导航 = 普通 container/button 容器 + `tabviewSetActiveTab` 动作**。asar 逐字实锤
+   （registerAction）：`id:60, name:"tabviewSetActiveTab", group:"Tabview", properties:
+   [{object, widget:Tabview}, {tab, integer, 0-based}, {animated, boolean}], defaults:{animated:true}`。
+   运行时 eez-flow.cpp `actions[]` 函数表（表长 65）index 60 = `&tabviewSetActiveTab`，
+   经 `executeLVGLApiComponent` 调度，LVGL 9 生成 `lv_tabview_set_active(obj, tab, anim)`。
+   json2eez 侧与 goto/changeScreen 同机制：`LVGLActionComponent` + connectionLine
+   （source=按钮 objID, output=CLICKED, target=动作 objID, input=@seqin）。
+3. **核心坑（16 errors 根因）——动作里引用控件禁止手写 id 字符串**：EEZ identifiers 表
+   在 finalizeObjectAccessibleFromSourceCodeTable 里只 push「第一遍扫描中被
+   markObjectAccessibleFromSourceCode 标记的对象」（即生成器会输出 `objects.xxx` 引用的
+   widget）；且 **identifier 名就是工程 JSON 里 identifier 字段的原值**（UnderscoreLowerCase
+   规范化）。而本工程的前缀重写发生在 **build_ui.py 的 assign_ids/prefix_ids**（不是
+   json2eez——json2eez 只是消费 ui.json），显式 id 被加页别名前缀（`main_nav` → `m_main_nav`，
+   PAGE_ALIAS["Main"]="m"）。动作 object 字段写重写前的名字 → 第二遍扫描
+   getWidgetObjectIndexByName 里 `identifiers.indexOf(t)` 落空 → EEZ build 报
+   `Widget index not found for "xxx"`（每个动作组件一条，共 N 条），并伴随
+   `TypeError: Cannot read properties of undefined (reading 'selectTab')`。
+   注意 getWidgetObjectIndexByName 第一遍直接 return 0，报错只出现在第二遍——
+   报错数=动作组件数，别误当成更多处引用。
+   **修法（结构级）**：DSL 里 switchTab 写 `{"tv_ref": <tabview DSL 节点引用>, "tab": N}`，
+   build_ui `main()` 在 json.dump 前递归 `_resolve_switchtabs()` 把 tv_ref 换成 `tv_ref["id"]`
+   ——assign_ids 是原地改写节点 id，且在导航容器挂进 screen 之后调用，此刻解析拿到的
+   必是最终 id。与 §11.5（按 id 收集必须用最终 id）同源，这次上升到机制层：
+   **凡跨节点引用控件，一律「节点引用 + assign_ids 后统一解析」**。
+4. **选中态高亮的真实实现（两处形态不同，勿混写）**：
+   - **设置左栏 rail_cats：每个子 tab 首位挂一份副本**（4 份，高亮 wifi/wifi/sun/mic），
+     z 序压内容，各副本静态高亮自己的分类——子 tab 内不动导航，所以副本方案成立。
+   - **主 rail：全屏只有一份实例**（挂 screen 级，z 序在 main_nav 之上），高亮**静态固定
+     在「对话」**——切到音乐/通知/设置 tab 后**高亮不跟随**（05 音乐页实证：高亮仍在
+     对话项）。这是当前实现的**已知视觉偏差**（对应设计稿 05 等屏），修复需走
+     selectedTab 绑变量 + hidden/样式表达式，或每主 tab 一份副本，尚未做。
+5. **设计稿形态还原**：AI/音乐等页设计稿本无顶部 tab 栏——此前凭空加的 30px 原生栏
+   是差异大头。tabSize=0 + 设计稿 rail 容器后，G5 17.10% → 8.84%（11/11 屏全过）。
+6. **验证清单**：screens.c 每个 tabview 一处 `lv_tabview_set_tab_bar_size(obj, 0)`；
+   EEZ build 0 error（动作 identifier 全解析）；仿真图确认 rail 形态与设计稿一致；
+   **跨主 tab 的屏要单独放大看 rail 高亮**（如 05 音乐页），平均差异分会掩盖
+   60×55 高亮块的错位。
