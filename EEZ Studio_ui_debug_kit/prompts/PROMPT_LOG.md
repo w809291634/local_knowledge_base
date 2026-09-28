@@ -244,4 +244,15 @@
   - 诉求：UI 视觉必须与 designer/v1.0 设计稿一致，想办法把原生 tab 栏形态改成设计稿形态
   - 产出/结论：四个 tabview 全 tabSize=0 隐藏原生栏，用设计稿 rail()/rail_cats() 容器重建导航，按钮绑 EEZ 原生动作 tabviewSetActiveTab(id 60) 切 tab，json2eez 新增 switchTab→LVGLActionComponent 生成。核心坑：动作 object 写重写前 id → 16 个 Widget index not found（identifiers 只收录被引用 widget + assign_ids 加页面前缀），修法=switchTab 持 DSL 节点引用、main() 在 assign_ids 后解析成最终 id。EEZ build 0 error，G5 17.10%→8.84%，11/11 屏全过
   - 关联：P-0027  - 勘误（同日核对后补）：前缀重写发生在 build_ui.py 的 assign_ids（PAGE_ALIAS Main=m），非 json2eez；主 rail 全屏仅一份实例、高亮静态固定「对话」，切音乐/通知/设置 tab 不跟随（05 页实证，已知未修），「每 tab 挂副本」仅设置左栏 rail_cats 成立
+### PR-0041 · 2026-09-28 11:25 · WorkBuddy
+  - 提示词：最近添加的经验库中添加的经验，你要仔细核对确认一下是否正确，不要瞎添加结论
+  - 诉求：逐条实证核对最近写入的 P-0027/§11.8/PR-0040，不许有无证据的结论
+  - 产出/结论：全部断言重新取证——动作 schema（asar registerAction id:60 逐字）、actions[] 表长65/index60（脚本计数）、identifiers 机制（finalize 只 push 被 mark 对象）均证实；查出 2 处错误（assign_ids 归因写成 json2eez，实为 build_ui.py；「每 tab 挂 rail 副本」仅设置左栏成立，主 rail 单实例高亮静态固定）+ 1 处遗漏（主 rail 高亮不跟随 tab，05 页实证，已知未修）。P-0027/§11.8/PR-0040/MEMORY/日志均已修正
+  - 关联：P-0027
+
+### PR-0042 · 2026-09-28 11:40 · WorkBuddy
+  - 提示词：再仔细检查一下 经验库，有没有有问题的，有问题的要修复
+  - 诉求：全库体检（不止最近条目），发现问题就修
+  - 产出/结论：① P-0021/0022/0023 状态 open 但实际已修且字段大片待补——补全工程/复现/沉淀/标签/关联提示词，状态改 fixed（P-0021 注明终版=P-0025 原生路线，初版补丁已废除）；② cases/README 索引 B5/B6 挤在同一表格行（多余竖线）——拆开；③ cases 索引 B8/B9 引 PLAYBOOK §5.6/§5.7、PLAYBOOK 内部自引 §5.6 均为失效锚点——改为实际存在节（§4.5 / skills §5.6 / 场景C/D）；④ §11.7 加「已停用（现行=§11.8 路线，机制留档）」标注；⑤ §8 check_nav.py 命令与 §4.1/§6.2 G2 行加「本工程未挂载」注记；⑥ README 目录树 cases 补「B1~B10」说明。历史条目中的 fix_tabview/click_trace/sim_nav 引用属当时事实，按只追加纪律保留不改
+  - 关联：P-0021,P-0022,P-0023
 

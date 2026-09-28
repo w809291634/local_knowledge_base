@@ -188,7 +188,7 @@ python ui_debug_kit/tools/run_gate.py --quick    # 只跑 G1 + 配置里标 quic
 | 组 | 脚本 | 查什么 |
 |---|---|---|
 | G1 | `ui_debug_kit/tools/audit_ui.py` | 回归断言 A1~A10（见 §6.2） |
-| G2 | `design/check_nav.py`（配置挂载） | 跳转三要素、死链、跳自己、可达性、死胡同 |
+| G2 | `design/check_nav.py`（配置挂载） | 跳转三要素、死链、跳自己、可达性、死胡同（**本工程未挂载：脚本未写、config.gates 无此条，当前跳转仅由 A8+G4 覆盖**） |
 | G4 | `ui_debug_kit/tools/tree_check.py` | 几何越界、文本折行、字体缺失、墨迹异常 |
 | G5 | `design/compare.py`（配置挂载） | 设计稿 vs 实机逐屏对照：缺屏或平均差异超阈值即阻断 |
 
@@ -343,7 +343,7 @@ python ui_debug_kit/tools/run_gate.py
 | G1-A8 | 链路忠实性 | DSL goto 数 == EEZ 连线数 == `screens.c` 回调数 | 三者相等 |
 | G1-A9 | 部件开关 | `screens.c` 里 `lv_*_create()` 用到的部件，在 `lv_conf.h` 中开关均为 1 | 0 种被关闭 |
 | G1-A10 | 样式值语法 | 颜色类样式值必须形如 `0xRRGGBB`（`checks.color_props` / `color_node_keys` 可配） | 0 处不合法 |
-| G2 | 跳转体检 | 三要素完整 / 无死链 / 无跳自己 / 可达性 / 死胡同 | 无 ERROR |
+| G2 | 跳转体检 | 三要素完整 / 无死链 / 无跳自己 / 可达性 / 死胡同（**本工程未挂载**，暂由 A8+G4 覆盖） | 无 ERROR |
 | G4 | 通用体检 | 几何越界 / 文本折行 / 字体缺失 / 墨迹异常 | 全部通过 |
 
 ### 6.3 R 段：发布前条例（真机）
@@ -461,7 +461,7 @@ python design/sim.py --ui-only  # 只换 UI 源码增量重编（引擎已编好
 # 单独跑某项
 python ui_debug_kit/tools/audit_ui.py            # 回归断言（可加 A3 A6 只跑指定项）
 python ui_debug_kit/tools/audit_ui.py A10        # 只看样式值语法
-python design/check_nav.py                       # 跳转体检
+python design/check_nav.py                       # 跳转体检（**本工程暂缺此脚本**，run_gate 会 SKIP；G2 仍缺）
 
 # 真点击
 python ui_debug_kit/tools/gen_clicks.py -o <仿真器>/clicks.txt
@@ -635,6 +635,12 @@ darkTheme、LV_FONT_DEFAULT、tabview 内部主题样式在预览里统统看不
 验收以 PC 仿真图（真 LVGL + 真 SDL 快照）为准；EEZ 预览只用来摆控件位置。
 
 ### 11.7 EEZ tab 栏原生定制口子 + LVGL tabview 按钮填满机制（`intake/P-0026`）
+
+> **⚠ 状态（2026-09-28 第五轮后）**：本条的 inject_tabbar_styling 路线**已停用**
+> （json2eez.py 里函数保留、main() 调用已注释）——现行方案是 §11.8 的
+> 「tabSize=0 隐藏原生栏 + 设计稿 rail 容器 + tabviewSetActiveTab 动作」。
+> 但本条机制本身仍然成立：首子容器样式口子、按钮填满机制、可继承样式在
+> 「tabSize>0 的原生 tab 栏」场景（或口子复用）时依然有效，留档备用。
 
 1. **tab 栏定制口子（asar 实证）**：EEZ 的 `LVGLContainerWidget.toLVGLCode` 有专门分支——
    容器若是 tabview 的**第一个子对象**，生成器不为它建对象，而是把它的 localStyles 发射到
