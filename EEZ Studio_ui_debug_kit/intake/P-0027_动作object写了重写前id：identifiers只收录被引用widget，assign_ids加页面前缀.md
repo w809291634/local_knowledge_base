@@ -31,6 +31,8 @@ EEZ build **No error and no warning**（16 errors 与 selectTab TypeError 全部
 
 主 rail 高亮**静态固定「对话」**：rail() 全屏只挂一份实例（screen 级，z 序在 main_nav 之上），切到音乐/通知/设置 tab 后高亮不跟随（05 音乐页放大实证：高亮仍在对话项，与设计稿不符）。设置左栏 rail_cats 则是每个子 tab 首位挂一份副本（4 份：wifi/wifi/sun/mic），子 tab 内静态高亮成立。主 rail 高亮跟随需 selectedTab 绑变量/样式表达式或每主 tab 一份副本——尚未实现；G5 平均分掩盖该偏差（60×55 高亮块错位仅占全屏 ~0.9%），验收时必须跨主 tab 单独放大看 rail。
 
+> **2026-09-28 更新**：本条遗留已由 **P-0028** 一并解决（rail_cats 副本案反而被用户实测否定——副本在内容区里会跟着页滑；统一改为单实例 + CHECKED 两态 + objClearState/objAddState 动作链，见 skills §11.9）。
+
 ## 沉淀（新增断言 / 案例 / 文档）
 
 skills.md 新增 §11.8（tabSize=0 隐藏原生 tab 栏 + tabviewSetActiveTab 动作路线 + 「凡跨节点引用控件一律节点引用 + assign_ids 后统一解析」原则，与 §11.5/P-0024 同源上升机制层）

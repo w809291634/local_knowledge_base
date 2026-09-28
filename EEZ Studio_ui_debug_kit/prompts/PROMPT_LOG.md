@@ -256,3 +256,15 @@
   - 产出/结论：① P-0021/0022/0023 状态 open 但实际已修且字段大片待补——补全工程/复现/沉淀/标签/关联提示词，状态改 fixed（P-0021 注明终版=P-0025 原生路线，初版补丁已废除）；② cases/README 索引 B5/B6 挤在同一表格行（多余竖线）——拆开；③ cases 索引 B8/B9 引 PLAYBOOK §5.6/§5.7、PLAYBOOK 内部自引 §5.6 均为失效锚点——改为实际存在节（§4.5 / skills §5.6 / 场景C/D）；④ §11.7 加「已停用（现行=§11.8 路线，机制留档）」标注；⑤ §8 check_nav.py 命令与 §4.1/§6.2 G2 行加「本工程未挂载」注记；⑥ README 目录树 cases 补「B1~B10」说明。历史条目中的 fix_tabview/click_trace/sim_nav 引用属当时事实，按只追加纪律保留不改
   - 关联：P-0021,P-0022,P-0023
 
+### PR-0043 · 2026-09-28 12:30 · WorkBuddy
+  - 提示词：我再EEZ中启动测试了，发现有点不对，再设置界面中，小tab为什么点击，为什么是 tab页也动作，应该tab健固定才对，以后所有这种类型的tab pager,tab固定，页滑动
+  - 诉求：设置界面点小 tab（分类行）时整个页面（含 tab 栏）跟着滑——要求 tab 键固定、只有页滑动；并确立为以后所有 tab pager 类型的通用规则
+  - 产出/结论：rail_cats 4 份副本挂各 set 子 tab 首位（在内容区里）是根因——改单实例外置挂 sett_nav 兄弟位；高亮跟随用 CHECKED 状态链：导航项两态样式（DEFAULT 灰/CHECKED 高亮，子 label 不写色走 text_color 父链继承）+ 初始高亮 checkedState（LVGLWidget 基类属性，asar 实证）+ 点击动作链 objClearState→objAddState→tabviewSetActiveTab（executeLVGLApiComponent 对 actions[] 顺序执行实证，rail 链 9 动作/cats 链 4 动作）；sim.py 改优先模拟真实点击（lv_obj_send_event）+ 补 lv_tick_inc + 截图时间片 400ms。EEZ build 0 error，G5 8.84%→8.54%，10/05 屏目检高亮跟随全对；P-0027 遗留「主 rail 高亮不跟随」同步解决
+  - 关联：P-0028,P-0027
+
+### PR-0044 · 2026-09-28 13:30 · WorkBuddy
+  - 提示词：总结一下经验到 经验库，方便后续快速修改，同时下次对于这种界面时候，要求主要询问我，实现什么效果
+  - 诉求：① 把 tab pager 本轮（P-0028）经验以「方便后续快速修改」为导向固化进经验库；② 确立交互约定——下次遇到这类界面（tab pager / 导航类），AI 必须先主动询问用户要实现什么效果，再动手
+  - 产出/结论：PLAYBOOK §0 新增第 8 条（先问后做）+ §5 新增场景 E（第 0 步确认清单：固定/滑动、高亮跟随、指示条、挂载位置、子元素颜色、动画；通用规则 4 条：导航单实例外置兄弟位、两态样式+继承+动作链做高亮跟随、验收走真实点击并等动画结束、快速修改三处同步且其余项清除名单必补新项）；skills §11.9 补第 8 条快速修改清单（改动点索引表：build_ui rail()/rail_cats()/s_home()/_resolve_switchtabs、json2eez 动作链段、sim.py nav_btn_for；常见需求最小改动；自检链）与第 9 条交互约定；项目 MEMORY.md 同步交互约定
+  - 关联：P-0028
+

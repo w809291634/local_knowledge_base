@@ -691,16 +691,85 @@ darkTheme、LV_FONT_DEFAULT、tabview 内部主题样式在预览里统统看不
    ——assign_ids 是原地改写节点 id，且在导航容器挂进 screen 之后调用，此刻解析拿到的
    必是最终 id。与 §11.5（按 id 收集必须用最终 id）同源，这次上升到机制层：
    **凡跨节点引用控件，一律「节点引用 + assign_ids 后统一解析」**。
-4. **选中态高亮的真实实现（两处形态不同，勿混写）**：
-   - **设置左栏 rail_cats：每个子 tab 首位挂一份副本**（4 份，高亮 wifi/wifi/sun/mic），
-     z 序压内容，各副本静态高亮自己的分类——子 tab 内不动导航，所以副本方案成立。
-   - **主 rail：全屏只有一份实例**（挂 screen 级，z 序在 main_nav 之上），高亮**静态固定
-     在「对话」**——切到音乐/通知/设置 tab 后**高亮不跟随**（05 音乐页实证：高亮仍在
-     对话项）。这是当前实现的**已知视觉偏差**（对应设计稿 05 等屏），修复需走
-     selectedTab 绑变量 + hidden/样式表达式，或每主 tab 一份副本，尚未做。
+4. **选中态高亮（2026-09-28 起统一为 CHECKED 动作链方案，见 §11.9）**：
+   - **旧案已废除**：设置左栏 rail_cats 曾在每个子 tab 首位挂副本（4 份）——副本在
+     tabview 内容区里，点击切 tab 时左栏跟着页面一起滑动（用户实测指出），违反
+     「tab 固定、页滑动」规则；主 rail 高亮静态钉死「对话」不跟随，也是已知偏差。
+   - **现案（单实例 + 两态 + 动作链）**：rail 与 rail_cats 都只挂一份（外置固定，
+     rail 挂 screen 级、rail_cats 挂 set_nav 的兄弟位），每项 DEFAULT/CHECKED 两态样式，
+     初始高亮用 checkedState，点击走 objClearState→objAddState→tabviewSetActiveTab
+     动作链。详细机制与 asar 实证见 §11.9。
 5. **设计稿形态还原**：AI/音乐等页设计稿本无顶部 tab 栏——此前凭空加的 30px 原生栏
    是差异大头。tabSize=0 + 设计稿 rail 容器后，G5 17.10% → 8.84%（11/11 屏全过）。
 6. **验证清单**：screens.c 每个 tabview 一处 `lv_tabview_set_tab_bar_size(obj, 0)`；
    EEZ build 0 error（动作 identifier 全解析）；仿真图确认 rail 形态与设计稿一致；
    **跨主 tab 的屏要单独放大看 rail 高亮**（如 05 音乐页），平均差异分会掩盖
    60×55 高亮块的错位。
+
+### 11.9 tab pager 通用规则：导航外置固定 + CHECKED 高亮跟随（`intake/P-0028`）
+
+用户 2026-09-28 实测确立的通用规则：**以后所有 tab pager 类型，tab 键固定、只有页滑动**。
+任何导航（rail / rail_cats / 未来的分段条）都不许挂进 tabview 内容区，否则点击切 tab 时
+导航跟着页面横滑（P-0028 的根因：rail_cats 4 份副本挂在各 set 子 tab 首位）。
+
+1. **结构**：导航单实例，挂 tabview 的**兄弟位**（rail 挂 screen 级、rail_cats 挂
+   `sett["children"] = [sett_nav, rail_cats(...)]`，z 序压在 tabview 上）。高亮跟随不再
+   靠副本，靠状态样式 + 动作链。
+2. **两态样式**：每个导航项 DEFAULT/CHECKED 两态都写全（默认主题给 CHECKED 定义过样式，
+   只写 DEFAULT 会被主题盖住——与 switch 同坑）。工程 JSON 样式 definition 的 state 键是
+   **字符串**（asar LVGL_STYLE_STATES：DEFAULT/CHECKED/PRESSED/…），LVGL 9 数值 CHECKED=4
+   （lvglStates_V9_5_0 表；LVGL 8 是 1，别混）。
+3. **文字/图标色跟随 = LVGL text_color 父链继承**：按钮样式里写
+   `text_color`（DEFAULT 灰 / CHECKED 亮），内部 icon/label **不写 color**（DSL color=None
+   时不落 text_color 样式键）。text_color 是继承属性，label 沿父链取最近定义、状态位按
+   `(state & sel)==sel` 匹配且高位优先 → CHECKED 自动压过 DEFAULT。不要给子 label 单独
+   add/clear state（动作数会翻倍）；**例外**：继承链上没有状态样式兜底的静态项（如
+   rail_cats 不可点行）必须写死颜色，否则一路继承到 screen 主题白。
+4. **初始高亮 = checkedState（LVGLWidget 基类属性）**：所有 widget（含 button/container）
+   工程 JSON 都可写 `"checkedState": true, "checkedStateType": "literal"` → codegen 生成
+   `lv_obj_add_state(obj, LV_STATE_CHECKED)`（asar classInfo
+   `makeLvglExpressionProperty("checkedState","boolean")` 实证）。不需要 screen LOAD 事件。
+5. **点击动作链（单 LVGLActionComponent 多 actions）**：`executeLVGLApiComponent`
+   （eez-flow.cpp:4191）对 `component->actions[]` **逐条顺序执行** → 一个动作组件装下：
+   `objClearState(其余项, CHECKED)` ×N → `objAddState(自己, CHECKED)` →
+   `tabviewSetActiveTab(tv, idx)`。asar 实证：`id:20 objAddState` / `id:21 objClearState`
+   （properties: object(widget) + state(enum:LV_STATE)，字面量写 `"state":"CHECKED"`）；
+   另有 id:15/16 objAddFlag/objClearFlag（flag enum，默认 "HIDDEN"）、id:18
+   objSetStateChecked（object+boolean）。json2eez：switchTab =
+   `{"tv_ref":<节点引用>, "tab":N, "add":[<节点引用>...], "clear":[<节点引用>...]}`，
+   `_resolve_switchtabs` 统一解析成最终 id（铁律同 §11.8.3）。
+6. **仿真截图必须走真实点击**：sim.py 原来直调 `lv_tabview_set_active` 绕过动作链 →
+   高亮不跟随、G5 虚高（9.09%）。改为 `lv_obj_send_event(导航按钮, LV_EVENT_CLICKED, NULL)`
+   优先（无导航按钮的层才直调），截图行为 = 真机点击行为，G5 回落 8.54%。
+   顺带补了 `lv_tick_inc` 驱动 + shoot 时间片加长到 400ms（tabviewSetActiveTab 默认
+   animated:true，动画 180ms 要走完再截屏，否则截到切换中间态）。
+7. **验收结果（2026-09-28）**：EEZ build 0 error；G5 平均 8.54%（11/11 屏过，上轮 8.84%）；
+   10_display/05_now_playing 目检：rail 高亮跟随 + cats 高亮跟随 + 其余项灰字，全对。
+   已知边界：AI/音乐子 tab 当前无导航 UI（设计稿无顶部 tab 栏，仅初始 actTab 定页）——
+   后续若要可切换需按本节规则补顶部导航条。
+8. **快速修改清单（下次同类需求直接按单改，2026-09-28 沉淀）**。改动点索引（本工程）：
+
+   | 需求 | design/build_ui.py | design/json2eez.py | design/sim.py |
+   |---|---|---|---|
+   | 导航项定义 / 两态样式 | `rail()` / `rail_cats()`（button 的 `checked_style` 参数；label `color=None` 走继承） | — | — |
+   | 挂载位置（兄弟位） | `s_home()`：`sett["children"] = [sett_nav, rail_cats(...)]`；rail 挂 screen 级 | — | — |
+   | 点击动作链 | switchTab 节点 `{"tv_ref","tab","add":[],"clear":[]}` | `build_widget` 尾部（checkedState 通用生成）+ `build_page` 动作链段（单 LVGLActionComponent 多 actions） | — |
+   | 节点引用 → 最终 id | `_resolve_switchtabs()`（assign_ids 之后跑） | — | — |
+   | 截图点击驱动 | — | — | `nav_btn_for()`（layer0=主 rail / layer3=set cats）+ `set_tv_layer()` + shoot 时间片 |
+
+   常见需求 → 最小改动：
+   - **加一个导航项**：rail/rail_cats 里加两态按钮（switchTab 引用一律写节点引用，
+     铁律 §11.8.3）→ **所有既有项的 `clear` 列表补上新项引用、新项 `clear` 补既有项、
+     `add` 补自己**（动作链是全名单式，漏一项 = 高亮叠两块）→ 确认初始 `checked:true`
+     该挪到哪一项。动作数基线：rail 9 动作/项、cats 4 动作/项。
+   - **改高亮样式**：只改 CHECKED 态（bg/bgOpa/text_color），子 icon/label 保持不写色。
+   - **加指示条**：nav_marker 两态显隐（DEFAULT bg_opa 0 / CHECKED 255），
+     marker 引用必须进**每一项**动作链的 add/clear 名单。
+   - **新页面要 tab pager**：整页按本节 1~7 条实施，导航挂 tabview 兄弟位；
+     动手前先走 PLAYBOOK 场景 E 第 0 步确认清单。
+   改完自检链：`build/verify_center.py` → EEZ build 0 error（动作 id 全解析）→
+   `python design/all.py --sim` 全量 → G5 门禁 → **逐屏目检高亮跟随**
+   （平均差异分会掩盖高亮块错位，§11.8.6）。
+9. **交互约定（用户 2026-09-28 确立）**：下次遇到 tab pager / 导航类界面，**动手前先询问
+   用户要实现什么效果**（哪个固定/哪个滑动、高亮怎么跟随、有无指示条、挂载位置、要不要
+   动画），确认后再按本节实施。确认清单见 PLAYBOOK §0 第 8 条 / 场景 E 第 0 步。

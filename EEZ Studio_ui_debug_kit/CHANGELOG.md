@@ -7,7 +7,33 @@
 
 ---
 
-## v0.8.1 — 记录区全库体检：状态同步 + 失效锚点修复（当前）
+## v0.8.3 — tab pager 经验固化为快速修改 SOP + 「先问后做」交互约定（当前）
+
+- 用户要求（PR-0044）：经验总结以"方便后续快速修改"为导向，且**下次遇到这类界面
+  先主动询问用户要实现什么效果再动手**。
+- `PLAYBOOK.md`：§0 新增第 8 条（tab pager / 导航类界面先问后做）；§5 新增
+  **场景 E**——第 0 步确认清单（固定/滑动、高亮跟随、指示条、挂载位置、子元素
+  颜色、动画）+ 通用规则四条（导航单实例外置兄弟位、两态样式+继承+动作链、
+  验收走真实点击并等动画结束、快速修改三处同步）。规则来自 P-0028，写成
+  跨框架通用形态，工程专属改动点索引放工程侧。
+- `skills.md`：§11.9 新增第 8 条「快速修改清单」（改动点索引表 + 常见需求最小
+  改动 + 自检链）与第 9 条交互约定。
+- `prompts/PROMPT_LOG.md`：PR-0044。
+
+## v0.8.2 — tab pager 通用规则：导航外置固定 + CHECKED 高亮跟随
+
+- 用户 EEZ 实测确立通用规则：**所有 tab pager 类型，tab 键固定、只有页滑动**。
+  导航挂进 tabview 内容区 = 结构性错误（P-0028：rail_cats 4 副本随页滑）。
+- `skills.md`：§11.8.4 重写（副本案废除标注）+ 新增 **§11.9**——单实例外置挂载、
+  DEFAULT/CHECKED 两态样式（state 键为字符串、LVGL9 CHECKED=4）、text_color 父链
+  继承做子元素颜色跟随、checkedState（LVGLWidget 基类属性）做初始高亮、单
+  LVGLActionComponent 多 actions 动作链（objClearState→objAddState→tabviewSetActiveTab，
+  executeLVGLApiComponent 顺序执行实证）、仿真截图必须走真实点击。
+- `intake/P-0027`：遗留段补「已由 P-0028 解决」闭环标注；`intake/P-0028` 新建、
+  `intake/index.md` 同步。
+- `prompts/PROMPT_LOG.md`：PR-0043。
+
+## v0.8.1 — 记录区全库体检：状态同步 + 失效锚点修复
 
 - `intake/P-0021/0022/0023`：状态 open→fixed（修复早已落地，登记未同步），补全
   工程/复现/沉淀/标签/关联提示词；P-0021 注明终版修复=P-0025 原生路线（初版
