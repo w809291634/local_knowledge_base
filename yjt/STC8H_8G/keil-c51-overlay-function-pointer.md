@@ -72,3 +72,19 @@ void InputLite_Scan(void)
 
 - 调度函数里"重量级"局部数组（如 11 字节的进制转换 buf）直接挪 `xdata`，不参与 overlay 争用（apl_kprintf 的做法）。
 - 指向 xdata 对象的指针**必须写明 `xdata`**（`input_lite_obj_t xdata *`），否则退化成 3 字节通用指针、每次访问走 `?C?PSTOPTR` 运行时分派，白占几百字节 ROM。
+
+
+## 7. 检查脚本的两个盲区（2026-09-28 实测补记）
+
+`check_overlay_safety.py` 是必要的但不充分，两个盲区必须人工补：
+
+1. **Check 1 的"调度函数"正则识别不了裸标识符形式的函数指针调用。** 脚本靠 `obj->f()` / `arr[i].f()` / `(*fp)()` / `subs[id]()` 四种写法识别调度者；而本工程的真实写法是
+   ```c
+   if (g_evt_cb) g_evt_cb(i, INPUT_LITE_EVT_TOUT1);   /* 裸标识符 + 括号 */
+   if (s_on_phase && s_toggle_cb) s_toggle_cb();       /* 同上 */
+   ```
+   结果脚本**没把 `InputScanLite_Scan`、`Buzzer_ISR_Tick` 列为调度者**（只在"疑似回调"里列出了被取地址的函数），自然也没检查它们。
+   → **脚本报"未发现"时，要自己 grep 一遍源码里形如 `<标识符>(` 的函数指针调用点。**
+2. **Check 4 只统计片内 DATA 的地址重叠，完全不覆盖 XDATA overlay。** 本工程 overlay 主要发生在 XDATA（244 B），所以"Check 4 共享地址 0 个"≠ 安全。手工核法：在 map 的 `OVERLAY MAP OF MODULE` 段里 grep 形如 `----- -----  00xxH 00xxH` 的行（DATA 列 `-----`、XDATA 列非空），逐个确认重叠的两个函数不会同时存活。
+
+**另一条更彻底的做法（推荐）**：中断里通过函数指针调回调时（Timer2 ISR → `Buzzer_ISR_Tick()` → `s_toggle_cb()`），比"给调度者加 `static`"更干净的是——**让调度者和回调都不带任何局部变量**。本项目 `Buzzer_ISR_Tick()` / `buzzer_silence()` / `buzzer_toggle()` / `buzzer_off()` 全都没有局部变量，因此根本不参与 overlay 分配（map 里 DATA/XDATA 组均为 `-----`），**从根上不可能踩主循环的存储**。

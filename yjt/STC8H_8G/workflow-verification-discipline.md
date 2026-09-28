@@ -65,5 +65,13 @@ python check_overlay_safety.py Listings/<工程>.map
 | `project/stc8h_project/CLAUDE.md` | 核心技术坑复盘（三层配置/OVERLAY/变参/TM1650/GPIO 安全网），改 SDK 前必读 |
 | `project/stc8h_project/工程通用提示词.md` | 模块勾选清单 + 本工作流原文 |
 | `STC8H1Kxx_template/MDK/check_overlay_safety.py` | overlay 自动体检脚本（每个工程 MDK 目录一份） |
+| `yjt/STC8H_8G/stc8h-rom-budget-and-keil-optimize.md` | ROM 预算怎么看、Keil 编译/链接选项怎么选（含实测数据与验证四件套，2026-09-28） |
 
 本知识库同目录其余文件是上述 CLAUDE.md 各专题的整理版。
+
+
+## 8. 补记（2026-09-28 实测）
+
+1. **"没有新增警告"必须用全量重编判定**：`UV4 -b`（增量）只重编改动过的文件，**未重编的文件不产生警告**，日志里会出现 "0 Warning(s)" 的假象；同一次改动换 `UV4 -r` 全量重编，7 条历史警告又都出现。**验证三件套里"确认 0 Error / 警告无新增"要用 `-r`。**
+2. **动手前先确认"改什么对象"**：同一句"帮我优化一下打印""这个逻辑写简单点"，可能指改代码、也可能指改文档。**先问一句"是改代码还是改文档"，比事后回退便宜得多**（本次两边各返工过一次）。
+3. **共享 SDK 里的公共组件（printf、定时器框架）不要优先动**：省空间的正确顺序是"配置 → 源码 → 公共库"；公共组件牵动其它工程，且往往是使用方明确不希望被改的部分。详见 `stc8h-rom-budget-and-keil-optimize.md`。
