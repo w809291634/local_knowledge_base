@@ -7,7 +7,27 @@
 
 ---
 
-## v0.8.3 — tab pager 经验固化为快速修改 SOP + 「先问后做」交互约定（当前）
+## v0.8.4 — 全 AI 兼容声明 + 机器相关路径「必问用户」机制（当前）
+
+- 用户要求（PR-0045）：① 经验库不绑定 WorkBuddy，所有 AI 都要兼容；② 仿真器等
+  **机器相关路径**必须提示用户指定——本机明确 ≠ 换机有效，配置缺失或失效时
+  AI 必须停下来问，禁止扫盘猜。
+- 全 AI 兼容：README/INTAKE/skills 主体本就是「任何 AI 工具」口径；`INTAKE.md`
+  示例 `--tool WorkBuddy` 改为 `<AI 工具名>` 占位；`prompts/PROMPT_LOG.md` 头部
+  补「不限工具、标题照实写工具名」约定（历史条目不动）。
+- 路径必问机制：
+  - `config.template.json` 新增 **`sim` 段**（template_dir/lvgl_src 必填，
+    mingw/cmake/sdl2_bin 可选），注释写明「必须向用户询问，禁止猜」。
+  - `tools/config_check.py` 新增 **"F 仿真器"** 强校验：sim 段缺失 / 还是占位符 /
+    路径在本机不存在 → **ERROR 阻断**，提示向用户询问新路径。
+  - 文档同步：`CONFIG.md`（§1 sim 字段说明 + §2 迁移清单 + §3 常见错误表）、
+    `PLAYBOOK.md`（§1.3 采集清单 + §1.4 环境雷区）、`README.md`（30 秒上手）。
+- 工程侧配套：`design/sim.py` 硬编码的 SIM_SRC/APL_LVGL/MINGW/CMAKE/SDL2 全部
+  改为从 `ui_debug_kit.config.json` 的 sim 段读取，缺失或失效硬停并打印
+  「请向用户确认新路径」；本机路径经用户确认后写入工程配置。
+- `prompts/PROMPT_LOG.md`：PR-0045。
+
+## v0.8.3 — tab pager 经验固化为快速修改 SOP + 「先问后做」交互约定
 
 - 用户要求（PR-0044）：经验总结以"方便后续快速修改"为导向，且**下次遇到这类界面
   先主动询问用户要实现什么效果再动手**。

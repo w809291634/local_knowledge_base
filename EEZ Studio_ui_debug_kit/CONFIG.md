@@ -66,6 +66,21 @@
 | `python_venv` | 另装依赖的解释器（可选） |
 | `node` | 跑 `tools/cdp/*.js`（需 18+，内置 fetch/WebSocket） |
 
+### `sim` —— PC 仿真器与工具链路径（★ 机器相关，换电脑必失效）
+
+| 字段 | 含义 | 必填 |
+|---|---|---|
+| `template_dir` | PC 仿真器模板目录（使用时拷到临时目录再改，不污染原件） | ★ |
+| `lvgl_src` | 与工程同版本的 LVGL 源码目录 | ★ |
+| `mingw` / `cmake` / `sdl2_bin` | 编译工具链 bin 目录 | 可选 |
+
+**硬规则（用户 2026-09-28 确立）**：这些路径**因机器而异** —— 在这台电脑上明确，
+换一台电脑就未必存在。因此：
+
+1. 建配置时，这些字段**必须向用户询问**后填写，**禁止 AI 自己扫盘猜路径**；
+2. `tools/config_check.py` 发现缺失 / 还是占位符 / 路径在本机不存在 → **ERROR 阻断**，
+   提示重新询问用户。看到这个错不要绕过，先问用户要新路径、更新配置后重跑。
+
 ### `fonts` —— 字体（**最容易填错，务必实测**）
 
 | 字段 | 含义 | 关键点 |
@@ -163,6 +178,8 @@
 [ ] 填 screen.*（分辨率；ink_threshold 与 last_row_is_separator 必须实测）
 [ ] 填 runtime.*（exe / args / debug_port / unset_env）
 [ ] 填 binaries.*（python / node 解释器路径）
+[ ] ★ 填 sim.template_dir / lvgl_src（机器相关路径：**向用户询问**后填，禁止扫盘猜；
+    换电脑失效时 config_check 的 "F 仿真器" 会 ERROR 阻断并提示重新问用户）
 [ ] 填 fonts.device_ttf / icon_* / name_to_px / builtin_patterns
 [ ] ★ 实测 fonts.metrics（读生成物里的 line_height / base_line → 换算 ascent）
 [ ] ★ 实测 fonts.ink_offset_from_box_top（ink_check.py --against）
@@ -193,3 +210,4 @@
 | 抓图拿到重复图 | 没有"等画面变化"；或需要一目标一次启动 | 用 `grab.js`（内置去重）；打开 `capture_one_target_per_launch` |
 | 静态体检说坐标越界但肉眼没越界 | 用 `design_coords`/`child_coords` 未换算 | 检查是否需要"绝对→相对"的换算步骤 |
 | 内置字体被报"未声明" | 命名不满足启发式，且 `builtin_patterns` 没覆盖到 | 按框架的内置字体命名补通配（如 `<前缀>_*`） |
+| config_check 报 "F 仿真器"：占位符 / 路径本机不存在 | `sim` 段是**机器相关**路径，换电脑/搬目录后必失效 | **向用户询问新路径**并更新 `sim` 段，禁止 AI 扫盘猜；不跑仿真的工程可留可选项为空 |

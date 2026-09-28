@@ -21,6 +21,8 @@
 
 # 2) 在工程里建配置：从模板复制一份，按 CONFIG.md 填写
 cp ui_debug_kit/config.template.json ./ui_debug_kit.config.json
+#    ★ sim 段（仿真器/工具链路径）是【机器相关】的：必须向用户询问后填写；
+#      换电脑后失效 → config_check.py 会 ERROR 阻断并提示重新问用户，禁止 AI 猜路径
 
 # 3) 自检：确认路径解析与关键路径存在性
 python ui_debug_kit/tools/kit.py

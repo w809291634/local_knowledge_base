@@ -45,6 +45,15 @@
     "node": "<node 解释器（需 18+，用于 CDP 抓图）>"
   },
 
+  "sim": {
+    "_comment": "PC 仿真器/工具链路径。★ 机器相关：在这台电脑上明确，换一台电脑就未必存在。这些占位符【必须向用户询问】后填写，禁止 AI 自己扫盘猜路径；换电脑后路径失效，config_check.py 会 ERROR 阻断并提示重新询问用户。",
+    "template_dir": "<必填：PC 仿真器模板目录（会被拷到临时目录再改，不污染原件）——问用户要>",
+    "lvgl_src": "<必填：与工程同版本的 LVGL 源码目录——问用户要>",
+    "mingw": "<可选：MinGW bin 目录>",
+    "cmake": "<可选：CMake bin 目录>",
+    "sdl2_bin": "<可选：SDL2 bin 目录>"
+  },
+
   "fonts": {
     "device_ttf": "<设备实际使用的正文字体文件>",
     "icon_woff": "<图标字体（woff）>",

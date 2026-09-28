@@ -25,12 +25,13 @@
 
 ```bash
 # 记一条提示词（通常在每一轮对话结束时做）
+# --tool 写【实际使用的 AI 工具名】（WorkBuddy / Claude Code / Cursor / Codex / …）——本库不限工具
 python tools/log_entry.py prompt "用户的原始提示词" \
-    --tool WorkBuddy --ask "用户想达成什么" --out "这轮做了什么/结论" --link P-0001
+    --tool "<AI 工具名>" --ask "用户想达成什么" --out "这轮做了什么/结论" --link P-0001
 
 # 记一个新问题
 python tools/log_entry.py problem --title "按钮点了没反应" \
-    --project "<你的工程名>" --tool WorkBuddy --tags "点击,遮挡" --status open \
+    --project "<你的工程名>" --tool "<AI 工具名>" --tags "点击,遮挡" --status open \
     --symptom "点按钮中央无反应，只有边缘有效" \
     --repro "固定坐标 (160,136) 点击，命中对象是装饰容器" \
     --root "装饰 container 默认可点，盖在按钮上吃掉了点击" \

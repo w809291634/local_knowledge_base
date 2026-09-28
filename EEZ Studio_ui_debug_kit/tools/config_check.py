@@ -408,6 +408,38 @@ def check_gates(cfg, rep):
 
 
 # --------------------------------------------------------------------------- #
+# F. 仿真器/工具链路径（机器相关：换电脑必失效，必须向用户询问）
+# --------------------------------------------------------------------------- #
+def check_sim(cfg, rep):
+    sim = _get(cfg, "sim")
+    if not isinstance(sim, dict) or not sim:
+        rep.err("F 仿真器", "sim 段",
+                "缺失 → 仿真/工具链路径无出处。**必须向用户询问**本机路径后写入 config（禁止扫盘猜测）")
+        return
+    fields = [("template_dir", True, "PC 仿真器模板目录"),
+              ("lvgl_src", True, "LVGL 源码目录（与工程同版本）"),
+              ("mingw", False, "MinGW bin"),
+              ("cmake", False, "CMake bin"),
+              ("sdl2_bin", False, "SDL2 bin")]
+    for key, required, label in fields:
+        v = str(sim.get(key) or "").strip()
+        if not v:
+            if required:
+                rep.err("F 仿真器", "sim." + key, "缺失（%s）→ 向用户询问后填写" % label)
+            continue
+        if v.startswith("<") and v.endswith(">"):
+            rep.err("F 仿真器", "sim." + key,
+                    "还是占位符（%s）→ **先向用户询问本机路径**，禁止自行猜测" % label)
+            continue
+        p = _rel(cfg, v)
+        if not os.path.isdir(p):
+            rep.err("F 仿真器", "sim." + key,
+                    "本机不存在：%s（换电脑/搬目录后常见）→ **必须向用户确认新路径**再继续" % p)
+        else:
+            rep.ok("F 仿真器", "sim." + key, "%s 存在" % label)
+
+
+# --------------------------------------------------------------------------- #
 def main():
     ap = argparse.ArgumentParser(description="工程配置适配体检（ui_debug_kit）")
     ap.add_argument("--config", default=None)
@@ -434,6 +466,7 @@ def main():
     check_fonts(cfg, rep, design)
     check_schema(cfg, rep, design)
     check_gates(cfg, rep)
+    check_sim(cfg, rep)
 
     cur_g = None
     for lv, g, item, detail in rep.rows:
