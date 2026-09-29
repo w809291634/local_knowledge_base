@@ -773,3 +773,88 @@ darkTheme、LV_FONT_DEFAULT、tabview 内部主题样式在预览里统统看不
 9. **交互约定（用户 2026-09-28 确立）**：下次遇到 tab pager / 导航类界面，**动手前先询问
    用户要实现什么效果**（哪个固定/哪个滑动、高亮怎么跟随、有无指示条、挂载位置、要不要
    动画），确认后再按本节实施。确认清单见 PLAYBOOK §0 第 8 条 / 场景 E 第 0 步。
+
+### 11.10 按钮→写变量：SetVariableActionComponent（onClick 机制，2026-09-28 按钮全适配）
+
+功能按钮（非导航）要"点了有反应"，EEZ LVGL 项目的正路是 **EEZ 原生 SetVariable 组件**，
+不是手写 C 回调（产物只读铁律，PLAYBOOK §0.9）。全套机制（EEZ Studio 0.29 实证）：
+
+1. **DSL**：按钮节点配 `"onClick": {"setVar": "<输出变量名>", "value": <常量/表达式>}`。
+   与 switchTab 并列；同一个节点别同时配 goto（会被 place() 的 strip_goto 剥掉，
+   且 goto/switchTab/onClick 共用 eventHandlers 字段，覆盖关系脆弱——配新动作时
+   显式 `pop("goto")`）。
+2. **json2eez 编译**：收集 (path, onClick) → 生成组件
+   `{"type": "SetVariableActionComponent", "entries": [{"variable": <名>, "value": <表达式字符串>}]}`
+   + connectionLine(source=控件 oid, output=CLICKED, input=@seqin)。
+   variable 必须是 **ui.json variables[] 里声明过的 native 输出变量**（声明同步链见
+   工程侧约定：variables[] → 工程 globalVariables → vars.h extern → native_vars.cpp 定义）。
+3. **运行时（关键认知）**：LVGL 项目的 flow 是「**组件数据打包进 ui.c assets 数组 +
+   eez-flow.cpp 运行时解释**」——生成产物里**没有** `set_var_xxx(1);` 这样的 C 直调
+   （那是 EEZ GUI 项目的编译期路线，别被 asar 里的 genFlowCode 误导）。组件类型
+   `COMPONENT_TYPE_SET_VARIABLE_ACTION=1007`（eez-flow.h:271），运行时函数表已注册
+   （eez-flow.cpp executeSetVariableComponent），变量赋值走 ui.c native 注册表的
+   set 函数指针。**EEZ build 0 error + grep 不到直调 = 正常**，链路要靠运行时冒烟验证。
+4. **验收（必做）**：仿真 main 里 `lv_obj_send_event(控件, LV_EVENT_CLICKED, NULL)`
+   真实点击 → 跑时间片（排空命令队列）→ 看 io 层回显打印；tab 跳转类断言用
+   `lv_tabview_get_tab_active`（**LVGL 9.4 没有 lv_tabview_get_active**，链接会炸）。
+5. **新增输出变量的同步清单（六处，漏一处就链接期炸）**：ui.json variables[] →
+   native_vars.cpp get/set → app_model.h APP_OUT 枚举 → app_model.cpp 排空 switch →
+   io_iface.h 声明 → io_pc.cpp/io_esp.cpp 实现。
+6. **盘点工具**：只读扫描 ui.json，按 type∈{button,slider,switch,...} 分「已配
+   （goto/switchTab/onClick）/未配」两列（工程 design/_audit_buttons.py 可直接抄）。
+   「未配」按钮点起来静默无反应——新界面交付前必须跑一遍盘点，未配数为 0 才算完。
+
+### 11.11 用户事件：EEZ 官方 User Action（native 实现，2026-09-29 语音页光球 voice_stop 实战）
+
+官方依据（用户要求细读官方手册）：Reference Guide PDF（GitHub eez-open/studio
+`docs/reference guide/`，784 页）P7.3「Working with Actions」：LVGL 工程也有
+Actions 调色板（Fig.78），底部列 User Actions；A34.2.16「Event handlers」：控件
+事件 Handler type = **Flow | Action**，Action 需填 User action 名。源码交叉验证：
+`features/action/action.tsx`（Action{implementationType:"flow"|"native"}）、
+`lvgl/build.ts::buildActionsDecl/buildActionsArrayDef`、`lvgl/widgets/Base.tsx`
+（native action 生成直调）、asar 内 findAsset（`maps.name` 按 **名字** 索引）。
+
+1. **生成产物三件套**（EEZ build 对 native User Action）：
+   `actions.h`（`extern "C" void action_<name>(lv_event_t * e);`，下划线小写）、
+   `ui.c`（`ActionExecFunc actions[] = { action_<name>, ... };` 传给 eez_flow_init）、
+   `screens.c`（控件 `event_handler_cb_<页>_<控件>` 里 `action_<name>(e);` **直调**
+   ——不经 flow 解释器、不经变量；ui.c 里空表 `{ 0 }` = 工程无 User Action）。
+2. **DSL 约定**：顶层 `"actions": [{"name","implementationType":"native","userProperties":[]}]`
+   （json2eez `sync_actions` 同步进 project["actions"]，objID 用 oid("actions/"+名)）；
+   控件 `"onAction": "<动作名>"`（与 goto/switchTab/onClick 互斥）。编译成
+   `eventHandlers:[{eventName:"CLICKED", handlerType:"action", action:"<名>", userData:0}]`。
+3. **两个静默坑**：① 装饰性 `circle()` 默认 clickable=False——交互体必须显式
+   `clickable=True`，否则生成 `lv_obj_remove_flag(CLICKABLE)`，点击永远落空；
+   ② eventHandler.action 存 **动作名**，存 objID 会生成**空 CLICKED 分支**（findAsset
+   按 maps.name 查不到），EEZ build 0 error 不报错，必须看产物核对回调体非空。
+4. **固件接入**：`src/native/native_actions.cpp` 实现 `action_<name>(lv_event_t*)`
+   （include 生成的 actions.h，extern "C" 对齐）→ `app_set_output(APP_OUT_*)` 入
+   输出命令队列 → user_io_tick 排空 → io_*。与 setVar 路线分工：setVar=声明式
+   状态写入（开关/翻转）；User Action=命令式回调（拿得到 lv_event_t，无需声明变量）。
+   真机 `src/native/CMakeLists.txt` 的 NATIVE_SRCS 必须补 native_actions.cpp
+   （actions.h 只有声明，唯一定义在此；漏了链接期炸，P-0020 同款）。
+5. **与 executeLvglActionHook 的关系**：eez-flow.cpp `executeActionFunction(actionId)`
+   → `executeLvglActionHook(actionId - 1)` 是 flow 内 CallAction/ACTION 组件的运行时
+   兜底；控件事件绑 native action 走的是更直接的生成期直调（screens.c），**不需要**
+   设钩子。别把两条路线混为一谈。
+6. **★「按钮触发外部逻辑」官方有三条合法路径，别只讲 User Action（2026-09-29 补）**：
+   官方手册**没有任何「推荐用哪个」的表述**（检索 recommended / should be used 全是
+   不相关命中），native 变量专章在手册里还是 "explained in Chapter XX" **占位符**
+   （官方未写完）——所以选型只能按**工程特性**，不要冒充官方口径。三条路：
+   · **① 事件 Handler type = Action（native）** → 生成期直调 `action_x(lv_event_t*)`，
+     不经 flow 解释器，**能拿到事件上下文**（区分来源控件/事件码），开销最小；
+   · **② 事件 Handler type = Flow → 内置 SetVariable 组件**（P8.1 明列三个变量组件：
+     Evaluate / Watch / SetVariable）→ 运行时解释执行，调 `set_var_x(v)`，
+     **拿不到事件上下文**，但变量值可用 `get_var_x()` 回读、可回显到 UI；
+   · **③ Watch 组件（A91，P.329）**：「monitors the change in the value... every value
+     change is sent」= **变量变化驱动后续逻辑，官方一等公民**，不是什么野路子。
+   **选型判据**：需状态回显（开关/亮度/时钟/电量/信号）→ native 变量；
+   一次性命令或需要 lv_event_t → User Action；**若计划关闭 Flow 支持，
+   SetVariable 组件会消失而 native Action 依然工作**（架构级差异，影响选型）。
+   ⚠ **两个已被证伪的错判，别再写进任何总结**：
+   (a) 「用变量触发外部逻辑属于官方语义之外」——错，②③都是官方明列机制；
+   (b) 「变量 setter 会被固件回写触发、塞命令易自激」——**至少 EEZ-test 工程不成立**：
+       输入变量（wifi_state/rssi/battery/clock/wifi_icon/bars）的 `set_var_*` 全是
+       **空实现**（native_vars.cpp `/* input: UI must not write */`），固件更新走自己的
+       g_in_*、UI 用 `get_var_*` 拉，根本不经过 setter；输出变量固件只排空不回写。
+       **一般化论断必须先回本工程源码验证，别把「理论上可能」当成事实。**

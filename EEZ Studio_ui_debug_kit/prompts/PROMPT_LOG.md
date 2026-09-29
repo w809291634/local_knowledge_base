@@ -277,3 +277,21 @@
   - 产出/结论：确认库主体已是「任何 AI」口径（README/INTAKE/skills），INTAKE 示例 --tool WorkBuddy 改为 <AI 工具名> 占位，PROMPT_LOG 头部补「不限工具、照实写工具名」约定；新增 sim 配置段（template_dir/lvgl_src 必填 + mingw/cmake/sdl2_bin 可选），config_check.py 新增 "F 仿真器" 强校验（缺失/占位符/本机不存在 → ERROR 阻断并提示向用户询问），sim.py 硬编码路径全部改为从 ui_debug_kit.config.json 读、失效硬停打印「请向用户确认新路径」；PLAYBOOK §1.3/§1.4、CONFIG.md §1/§2/§3、README 上手步骤同步规则；本机路径经用户确认后写入工程配置
   - 关联：P-0028（先问后做同族约定）
 
+### PR-0046 · 2026-09-28 22:40 · WorkBuddy
+  - 提示词：所以我也要求，在运行仿真时，不能修改EEZ生成的代码，试图修改它生产代码就是错误的，examples\idf_v555_my_exps\p4_touch_lcd4_3_exp\lvgl_demo_ai\eez-test\src\ui 也就是这个里面生成的文件，你不能更改，写进本地经验中
+  - 诉求：把「src/ui 等 EEZ 生成目录绝对不可修改」立为铁律——范围不限于平时，运行仿真/调试期间同样禁止；「试图修改生成代码」这个行为本身就是错误；要求写进本地经验库
+  - 产出/结论：PLAYBOOK §0 新增第 9 条「代码生成器产物只读（最高优先级铁律）」：{GEN_DIR} 及一切生成器产物只读，调试/仿真/临时验证/"顺手修一下"全禁止；发现生成代码有问题唯一正路是修上游设计源或生成器再重新生成；手改产物三重害处（下次生成静默覆盖蒸发、掩盖真因失去可追溯性、让回归门禁失义）；用户逻辑走生成器预留扩展点或独立目录（native 桥接层/用户事件钩子），不碰产物。工程侧 MEMORY.md 铁律段同步强化（绝对化表述 + 通用版指针，与既有「UI 一律 EEZ 原生定义」铁律并列：前者管产出方式、本条管产物只读）
+  - 关联：P-0025（EEZ 全原生路线的延伸约束）
+
+### PR-0047 · 2026-09-28 22:54 · WorkBuddy
+  - 提示词：我发现界面中还有很多按钮还没有适配，你自己都适配一次啊
+  - 诉求：界面上大量按钮点了没反应，要求 AI 自主把全部未适配按钮配上动作，闭环验收
+  - 产出/结论：盘点 27 可交互控件（7 导航已配 / 20 未适配）——根因是 place() 的 strip_goto 剥掉旧页面名 goto 后无替代动作。适配 20 个：12 个 switchTab（待机 p2/p1→ai_nav 对话/记录、4 tile→main_nav 分区+rail 高亮同步 rail_sync、语音返回/历史继续对话→ai_nav 对话、设置 4 行→set_nav 子 tab+cats 高亮同步）、7 个 onClick 写输出命令（fab→chat_send、wifi 总开关→wifi_command 复用、mic/dnd/wake/wake_dnd/auto_brightness 开关→新 toggle 命令）；勿扰行无对应页也输出 dnd_toggle。机制扩展：json2eez 新增 onClick→SetVariableActionComponent（asar 实证 native 变量 codegen 直生 set_var_<name>(value);），新 6 输出变量进 ui.json variables[]+native_vars.cpp 12 函数+app_model 枚举/排空+io_iface+io_pc 回显+io_esp stub。全程零碰 src/ui（铁律 §0.9 首次实战检验：改动全部在上游 design/ 与 src/native/）
+  - 关联：P-0027（节点引用铁律）、P-0028（tab pager 规则）
+
+
+### PR-0048 · 2026-09-29 03:50 · WorkBuddy
+  - 提示词：那么请问我看里面除了变量之外，还有用户事件，可以使用用户事件吗，如果可以的话，你帮我举例使用用户事件看看 ／ 要求仔细阅读官方手册
+  - 诉求：确认 EEZ「用户事件」（User Events，官方术语 User Actions）在 LVGL 工程的可用性，要求以官方手册为依据（不得只凭 asar 逆向或记忆），并实战举例一条完整链路
+  - 产出/结论：仔细读了官方手册（GitHub eez-open/studio docs/reference guide/EEZ Studio reference guide.pdf，784 页，P7.3 Working with Actions / P7.3.2 Creating a User Action / A34.2.16 Event handlers：控件事件 Handler type = Flow|Action，Action 绑工程 Actions 面板 User Action），并交叉验证官方源码（features/action/action.tsx Action{implementationType:"flow"|"native"}；lvgl/build.ts buildActionsDecl 生成 extern void action_<name>(lv_event_t*)、buildActionsArrayDef 生成 ActionExecFunc actions[] 表；lvgl/widgets/Base.tsx native action 生成直调 action_<name>(e)；asar findAsset 实证 eventHandler.action 按名字索引）。结论：**LVGL 工程可用，native User Action 是官方正路**。实战：语音页聆听光球配 voice_stop（native），DSL 顶层 actions[]+onAction → json2eez sync_actions+handlerType:"action" → EEZ build 生成 actions.h/ui.c 动作表/screens.c 直调 → src/native/native_actions.cpp 实现 action_voice_stop→app_set_output(APP_OUT_VOICE_STOP)→io_voice_stop 回显。踩两个坑：①circle() 默认不可点击，光球需显式 clickable=True 否则生成 remove_flag(CLICKABLE) 点击永远落空；②eventHandler.action 必须存动作名（findAsset 按 maps.name 索引），存 objID 生成空 CLICKED 分支且无报错。另踩并行 Edit 同文件覆盖（旧教训复发，orb["onAction"] 被吃掉一轮）。冒烟：[io_pc] UI user-action voice_stop (v=1) 闭环，11/11 截图 G5=8.61% 无回归；真机侧 native/CMakeLists.txt NATIVE_SRCS 补 native_actions.cpp（P-0020 同款坑预防）
+  - 关联：PR-0046（§0.9 产物只读——本轮全程只改 design/ 与 src/native/）、§11.11（用户事件机制沉淀）
