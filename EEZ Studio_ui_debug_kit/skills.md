@@ -1060,3 +1060,102 @@ GUI 路径。**正确顺序**：先查配置开关（`embedFonts` / `renderingEn
 
 一句话：**产物有真值比对，代码有指纹比对**，两头都锁住，"和 GUI 一致"才是个
 可长期依赖的结论，而不是某一次跑出来的运气。
+
+### 11.14 ★ 回调/变量框架：四层隔离 + 命令/变量双通道 + 代码归属标记（2026-09-29，实战复盘）
+
+> 用户问「UI 里按钮触发回调和变量，有没有软件设计框架图」「框架里要标明哪些是用户添加的
+> 代码」「这个框架好不好」。下面把可复用的骨架与方法论提炼出来（工程专属的信号清单见
+> 工程侧 `design/architecture/framework.md`，本库只沉淀骨架与纪律）。
+
+#### 一、核心原则：生成代码与用户代码只通过一份契约对话
+
+EEZ 生成的 UI（**不可手改，铁律见 §0.9**）和你的业务代码（可写）**互相看不见**，
+只通过一份头文件 `app_model.h` 对话。这份头是**唯一**被两边 `#include` 的文件——
+UI 侧调 `app_set_output` / `app_get_input_*`，硬件侧实现 `io_*`，中间状态全在
+`app_model` 里。任何把逻辑塞进生成代码、或让生成代码直接调业务函数的做法都违反此原则。
+
+#### 二、四层结构（含「代码归属」标记约定）
+
+用户要求「框架里必须标明哪些是自己加的代码」。落地约定：
+
+> **标记规则**：凡画框架图，用**颜色**区分归属 ——
+> 紫色带 = EEZ 生成（标注「不可手改」），绿色带 = 用户添加的代码（标注「只做转发/薄层」）。
+> 配套一张**归属速查表**，逐层逐文件写明「EEZ 生成 / 用户添加 / 能否手改」。
+
+```
+┌──── ① 生成层  src/ui/                  【EEZ Studio 生成，紫色，不可手改】 ────┐
+│  screens.c / actions.h / ui.c / vars.h / ui_font_*.c                    │
+└──────┬─────────────────────────── get_/set_var_* · action_* ────┬──────┘
+┌──────▼ ② 适配层  src/native/native_actions.cpp · native_vars.cpp ┐【用户添加，绿色】│
+│  薄转发：action_* → app_set_output；get/set_var_* ↔ app_get/set_* │
+└──────┬────────────────────────────── app_set_*/app_get_* ─────┬─┘
+┌──────▼ ③ 契约层  src/native/app_model.h · app_model.cpp ───────┐【用户添加，绿色】│
+│  唯一被两边 include 的头：状态数组 + 输出命令环形队列 + 主循环两函数 │
+└──────┬────────────────────────── io_sample_inputs / io_* ────┬─┘
+┌──────▼ ④ 平台层  src/native/platform/io_iface.h · io_pc.cpp · io_esp.cpp ┐【用户添加，绿色】│
+│  唯一因环境而不同的层：io_pc=仿真假数据；io_esp=真机驱动              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**归属速查（铁律级）**：
+- EEZ **只**生成 `src/ui/*`（含 `ui_font_*.c`）。**绝不**生成 `app_model.*` /
+  `native_*.cpp` / `io_*.cpp` —— 这些全是用户代码，加信号时缺一不可。
+- 漏了任何一处用户侧定义 → **链接期** `undefined reference to action_* / get_var_*`
+  （P-0020 同款坑）。
+
+#### 三、两条命令通道 + 一条输入通道（A/B/C，命令 vs 变量的边界纪律）
+
+这是框架最容易用错的地方，用户特别强调要理清「触发 user action 和 native 变量」的区别：
+
+| 通道 | 语义 | 路径 | 是否声明变量 |
+|---|---|---|---|
+| **A · User Action**（按钮 = 一次性命令） | 发送/扫描/翻转开关/停止聆听 | `action_*(e)` 直调 → `app_set_output` → 队列 → `io_*` | **不声明**；EEZ `implementationType:"native"` |
+| **B · native 变量（输出）** | 会回写的真状态（如背光 `brightness`） | `set_var_*` → `app_set_output` → 队列 → `io_*` | 声明一个 native 输出变量 |
+| **C · native 变量（输入）** | 硬件状态回显到 Label（时间/电量/wifi 图标） | `io_sample_inputs` → `app_set_input_*` → `get_var_*` → 表达式绑定 | 声明一个 native 输入变量 |
+
+**选型判据（人肉纪律，机器不强制）**：
+- 命令类（`APP_OUT_*`，值恒 1，收到即执行/翻转）→ 走 **A**；
+- 真状态（会被 UI 显示、外部改变量要推回控件）→ 走 **B/C**。
+- **别把「点击下发命令」做成变量**：变量 getter 若是 `app_get_output_last` 回声，
+  设备端执行失败时 UI 仍显示「已执行」（命令与状态挤在同一变量的后遗症）。
+- 官方有三条合法触发路径（§11.11 第 6 条）：native Action 直调 / Flow→SetVariable /
+  Watch 组件，**官方无「推荐用哪个」明文**，按工程特性选。
+
+**实战教训（PR-0049）**：本工程曾把 7 个命令型变量（`chat_send` / `wifi_command` /
+`mic_toggle` / `dnd_toggle` / `auto_brightness_toggle` / `wake_toggle` / `wake_dnd_toggle`）
+做成 native 输出变量，结果它们的 getter 全是回声、无 UI 绑定、不反映真状态 ——
+全部迁回 A 通道（onClick→onAction），变量从 16 删到 9（只留真状态）。**这是框架
+走向成熟的关键一步**：方向对，但「命令 vs 变量」的边界靠人守，不是机器拦。
+
+#### 四、仿真 / 硬件：靠编译期切换，运行时零分支
+
+上三层（生成/适配/契约）两边**字节级一致**，唯一不同的就是平台层：
+`io_pc.cpp`（仿真，假数据 + `printf("[io_pc] ...")`）vs `io_esp.cpp`（真机，读真
+GPIO/ADC/WiFi/RTC）。由 `EEZ_SIM` 在 CMake 期选定（`native/CMakeLists.txt`
+`if(EEZ_SIM)` 选 pc，否则选 esp；`sim.py` 生成的 CMake 跳过 `io_esp.cpp`）。
+**因此加新信号时，`io_iface.h` 加了声明，`io_pc.cpp` 和 `io_esp.cpp` 两边都必须补本体。**
+
+#### 五、扩展信号的标准做法（防链接期炸的同步清单）
+
+加一个信号（动作或变量）必须同步 **4 处**，漏一处即 `undefined reference`：
+1. `ui.json` / EEZ 工程（声明动作或变量，`native:true`）；
+2. `native_actions.cpp` / `native_vars.cpp`（函数本体，**唯一定义处**）；
+3. `app_model.h`（`app_output_id_t` / `app_input_id_t` 枚举）；
+4. `io_iface.h` + **两个后端** `io_pc.cpp` / `io_esp.cpp`（实现）。
+
+**缓解工程（建议）**：把这套同步清单固化成 `design/all.py` 的校验——
+① `vars.h` 里已删变量**残留数 = 0**（防 `sync_variables` 复活旧变量，PR-0049 第 7 条）；
+② `actions.h` 声明与 `native_actions.cpp` 实现符号**逐一 diff 一致**；
+③ `screens.c` 里回调体**非空**（防 `eventHandler.action` 写成 objID 生成空 CLICKED 分支，§11.11 第 2 条）。
+
+#### 六、框架评价（用户问「好不好」的诚实回答）
+
+**优点**：隔离干净（唯一契约 `app_model.h`）、仿真/硬件可互换（编译期切换、运行时零
+`#ifdef`）、A/B/C 通道语义清晰互不污染、派生输入归 UI 侧现算保持契约最小。
+**缺点**：① 输出变量 getter 是「回声」非「真状态」，脆弱（见 §三判据）；② 扩展要改
+4 处、漏则链接期炸；③ 无运行时类型安全（`app_value_t` 联合体 + 整型枚举）；④ 两套管接
+命名（`"integer"` vs `NATIVE_VAR_TYPE_INTEGER`）易漂移；⑤ 「生成声明 + 手写定义」天然
+有裂缝，需长期断言守。
+**结论**：方向对、工程化收益明确，但「命令 vs 变量」边界是人肉纪律非机器强制——把
+「加信号向导 + 残留符号断言」固化进构建脚本、输出变量 getter 改成「回声 + 真值回采(走 C)
+分离」，是优先级最高的两个加固项。
