@@ -2215,6 +2215,7 @@ If you've learned something here, support my efforts writing daily TILs by
 ### YJT
 
 - [CH571（CH57x）BLE 设备 ID：滚码 NV 格式、控制台/BLE 写法与校验](yjt/ch571/ble-device-id-rollcode-nv.md)
+- [移植实战：把「滚码设备 ID」落到一个新 CH571 工程（ZY0_BLE_CH571）](yjt/ch571/port-rollcode-device-id-to-new-project.md)
 
 ### Zed
 
