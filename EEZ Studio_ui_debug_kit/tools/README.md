@@ -175,9 +175,72 @@ python tools/text_measure.py          # 不带参数 → 跑自检样本
 
 输出**净宽**（用于居中/右对齐）与**含余量宽度**（用于换行判定）—— 两者别混用。
 
+### `font_verify.py` —— 「后台烘焙的字体 == EEZ Studio GUI 产物吗」★
+
+自己搭了旁路生成（解包官方引擎 / 任何脚本烘焙）之后，**最大的风险不是跑不起来，
+而是「跑起来了但和官方产物不一样」** —— 差几个空行、一个 include、几个字形，
+编译照样过、上屏才豆腐，肉眼根本看不出来。
+
+```bash
+# 1) 在 EEZ Studio 里 Check and Build 之后，立刻存真值
+python tools/font_verify.py snapshot --src src/ui --golden .golden_fonts \
+       --note "EEZ Studio 1.22.10 GUI Check and Build 产物"
+
+# 2) 换成后台产物后比对（--metrics 顺带比 line_height/base_line）
+python tools/font_verify.py check --src src/ui --golden .golden_fonts --metrics
+
+python tools/font_verify.py metrics --src src/ui        # 只看度量
+```
+
+- **黄金样本必须来自 GUI**。自己烘一份当真值 = 自己给自己当裁判，一致也证明不了任何事。
+- 不一致时自动定位并**猜成因**（成因表见 `skills.md §11.13` 第四节）：
+  base64 误解码 / `lv_include` / 空行折叠 / 末尾空白 / `Opts` 参数 / 字形集合 / CRLF。
+  优先级从具体到泛化，先命中先报。**CRLF 会淹没真实差异，工具先归一化再诊断。**
+- 退出码：0 全一致，1 有不一致，2 用法/环境错误。
+- ⚠ 逐字节比对**不充分**（文件没被覆盖时也全绿），必须再做「清空重建实验」——
+  步骤见文件末尾 `EXPERIMENT` 注释与 `skills.md §11.13` 第三节。
+
 ---
 
-## 三、抓原生渲染图（Chromium / Electron 系）
+## 三、构建类（工程无关内核）
+
+### `eez_font_bake.py` —— 调 EEZ Studio **官方**字体引擎烘焙 ★
+
+EEZ 的 headless CLI `--build-project` **不烘焙字体**，而「必须手工点 GUI Build」又进不了
+CI。这个工具把 EEZ 安装目录 `app.asar` 里的**官方引擎本身**解出来跑，**纯后台、不开 GUI**，
+产出与 GUI 点 Build **逐字节一致**（判据与验证方法见 `skills.md §11.13`）。
+
+```bash
+python tools/eez_font_bake.py --info                  # 探测 asar / node / 引擎缓存
+python tools/eez_font_bake.py <工程文件> <输出目录>      # 烘全部 LVGL 字体
+python tools/eez_font_bake.py <工程文件> <输出目录> 名1 名2
+python tools/eez_font_bake.py --clean                  # 清引擎缓存（EEZ 升级后必做）
+```
+
+输出：`<输出目录>/ui_font_*.c` + `manifest.json`（变量名清单，由 EEZ 的 `getName()` 算出）。
+**只写输出目录，不碰任何工程目录** —— 落到哪、要不要增量，都是工程侧胶水的事。
+
+作为库用（工程侧脚本推荐这么调，别复制一份 `BAKE_JS`）：
+
+```python
+import eez_font_bake
+names = eez_font_bake.bake(proj_path, out_dir)     # -> ["ui_font_xxx", ...]
+if eez_font_bake.kernel_hash() != EXPECTED_HASH:   # 内核被改过就报警
+    raise SystemExit("字体内核已分叉，重新验证")
+```
+
+`kernel_hash()` 是内核 `BAKE_JS` 的 sha256：**改了烘焙行为指纹就变**，
+工程侧拿它做防分叉检查，避免"工具箱升级了、工程里那份还在偷偷跑旧逻辑"。
+
+环境变量：`EEZ_STUDIO_ASAR` 指定 `app.asar`；`EEZ_NODE` 指定 node。
+引擎解包缓存落在 `%LOCALAPPDATA%/eez-font-engine/<asar 指纹>`，**EEZ Studio 升级后要 `--clean`**。
+
+> 分工：本文件 = **内核**（工程无关，进工具箱）；落盘 / 增量 / 写 `src/ui` /
+> 孤儿清理 = **胶水**（工程专属，留在工程里）。详见 `skills.md §11.12`。
+
+---
+
+## 四、抓原生渲染图（Chromium / Electron 系）
 
 ### `cdp/launch.sh` —— 按配置启动并等端口
 
@@ -213,5 +276,7 @@ node tools/cdp/grab.js --text                            # 只 dump 界面文本
 - 目标工程 → 图片的**交叉验证渲染器**
 - 字体/资源**离线生成器**
 - 目标 IDE 的 CLI 构建**封装脚本**
+- 把内核产物搬到工程目录的**胶水脚本**（例：本工程 `design/eez_font_engine.py`，
+  它 import 本工具箱的 `eez_font_bake.py`，自己只管落盘/增量/孤儿清理）
 
 这样工具箱保持"拷到哪都一样"，工程换框架也不用改工具箱。

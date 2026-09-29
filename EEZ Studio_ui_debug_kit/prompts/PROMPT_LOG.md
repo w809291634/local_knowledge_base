@@ -295,3 +295,191 @@
   - 诉求：确认 EEZ「用户事件」（User Events，官方术语 User Actions）在 LVGL 工程的可用性，要求以官方手册为依据（不得只凭 asar 逆向或记忆），并实战举例一条完整链路
   - 产出/结论：仔细读了官方手册（GitHub eez-open/studio docs/reference guide/EEZ Studio reference guide.pdf，784 页，P7.3 Working with Actions / P7.3.2 Creating a User Action / A34.2.16 Event handlers：控件事件 Handler type = Flow|Action，Action 绑工程 Actions 面板 User Action），并交叉验证官方源码（features/action/action.tsx Action{implementationType:"flow"|"native"}；lvgl/build.ts buildActionsDecl 生成 extern void action_<name>(lv_event_t*)、buildActionsArrayDef 生成 ActionExecFunc actions[] 表；lvgl/widgets/Base.tsx native action 生成直调 action_<name>(e)；asar findAsset 实证 eventHandler.action 按名字索引）。结论：**LVGL 工程可用，native User Action 是官方正路**。实战：语音页聆听光球配 voice_stop（native），DSL 顶层 actions[]+onAction → json2eez sync_actions+handlerType:"action" → EEZ build 生成 actions.h/ui.c 动作表/screens.c 直调 → src/native/native_actions.cpp 实现 action_voice_stop→app_set_output(APP_OUT_VOICE_STOP)→io_voice_stop 回显。踩两个坑：①circle() 默认不可点击，光球需显式 clickable=True 否则生成 remove_flag(CLICKABLE) 点击永远落空；②eventHandler.action 必须存动作名（findAsset 按 maps.name 索引），存 objID 生成空 CLICKED 分支且无报错。另踩并行 Edit 同文件覆盖（旧教训复发，orb["onAction"] 被吃掉一轮）。冒烟：[io_pc] UI user-action voice_stop (v=1) 闭环，11/11 截图 G5=8.61% 无回归；真机侧 native/CMakeLists.txt NATIVE_SRCS 补 native_actions.cpp（P-0020 同款坑预防）
   - 关联：PR-0046（§0.9 产物只读——本轮全程只改 design/ 与 src/native/）、§11.11（用户事件机制沉淀）
+
+
+### PR-0049 · 2026-09-29 16:55 · WorkBuddy
+  - 提示词：你在 本地 经验库 的总结是对的吗 ／ 按照官方文档，你绝的哪些按键使用action ，哪些使用 vars ／ 好的，那就帮我修改当前代码，要求修改准确
+  - 诉求：先核验知识库总结是否有误，再按官方语义给出按钮「用 User Action 还是 native 变量」的分类，最后执行迁移（要求准确）
+  - 产出/结论：①**知识库 §11.11 五条技术事实全部正确**（三件套、`{ 0 }` 空表经 lvgl-build.ts:2722-2724 实证、DSL 约定、两个静默坑、固件接入、executeLvglActionHook 辨析），PR-0048 亦无错误结论；但**缺口**是只讲了 User Action 一条路 → 已补第 6 条（官方三条合法路径：Action 直调 / Flow→SetVariable / Watch 组件 A91；官方无推荐明文、native 变量专章仍是 "Chapter XX" 占位符）+ 第 7 条（sync_variables 坑）。②**分类前的三条实测硬数据**改变了结论：ui.json 里 `"var":` 只命中 clock_text/clock_date 共 4 处（→ 7 个命令型变量**无任何 UI 绑定**）；8 个输出变量 getter 全是 app_get_output_last 回声（不反映真实状态）；四个 slider_row 是纯绘制无事件（→ brightness 变量无控件使用）。③**执行迁移**：7 个命令型（chat_send / wifi_command / mic_toggle / dnd_toggle / auto_brightness_toggle / wake_toggle / wake_dnd_toggle）onClick→onAction，变量从 16 删到 9（只留真状态）。**关键设计：APP_OUT_* 枚举与 app_model / io_* 出口一律不动**——两条路线共用同一条命令队列，这是零风险的关键。④**新踩坑**：json2eez 的 sync_variables 有「保留工程里多出来的变量」逻辑（kept），把 DSL 已删变量当成手工变量复活 → vars.h 仍生成 extern 而 native_vars.cpp 实现已删 → 链接期 undefined reference；已改为与 sync_actions 一致的整体重建（单向管线原则）。验收：EEZ build 0 error，actions.h/ui.c 8 项，vars.h 残留 0，screens.c 9 处回调体非空（防静默空分支），声明与实现符号 diff 一致；冒烟 8 条命令回显全触发 + 11/11 屏，G5=8.58%（上轮 8.61%）无回归，G4/G5 PASS。G1 的 A8 FAIL 经查为**既有口径过时**（本工程单屏架构已废 goto，design 统计恒为 0；改动前后 ui.json 的 goto 数都是 0），非本次引入
+  - 关联：PR-0048（User Action 机制）、§11.11 第 6/7 条
+
+
+---
+
+## PR-0050 字体生成结论纠错：GUI 会烘焙，headless CLI 不会（2026-09-29）
+
+**用户质疑（原话）**：「EEZ CLI build 会删掉 ui_font_*.c 且不重，我看了会重建啊」
+/ 「你的结论错误了，我在 eez 的 ui 中，使用 check 和 build 会生产文件，你弄错了，
+你的验证方法是不是错误了」。
+
+**结论：用户是对的，我的验证方法有错。** 错在「用单次观察否定能力」——
+我删掉一个字体文件后跑了一次 CLI build，见它没回来，就推出「EEZ 不生成字体」。
+「这一次没发生」只能证明这条路径这次没触发，不能证明 EEZ 没有该能力，
+更不能覆盖 GUI 路径。下结论前应先查配置开关与产物清单，再对 GUI / CLI 分别下判断。
+
+**实测三层事实（已可复现）**：
+
+1. EEZ **有**烘焙能力（源码级）：app.asar 内 `getName("ui_font_", ...)` +
+   lv_font_conv 全套参数（size/bpp/no_compress/lcd/lv_fallback/opts_string），
+   交给 `new Worker(path.join(__dirname,"lvgl-worker.js"))` 执行。
+   工程侧 `embedFonts=True`、`renderingEngine='LVGL'`、fonts[] 11 条 TTF 路径有效，
+   `fonts.h` 里 11 条声明也是 EEZ 写的 → **GUI Check and Build 确实产出 ui_font_*.c**。
+2. headless CLI `--build-project` **不烘焙**（3 次一致）：删光 11 个 ui_font_*.c
+   与 `.eez-project-build` 再 build → 产出 0 个字体、0 报错、2.2s、无 `Extracting font` 日志。
+3. **orphan 清理会删字体**（最坑）：EEZ 收尾 unlink「上次清单里有、本次没重写」的文件
+   （`s = t.filter(e => !r.has(e))` + `Deleted orphaned file: ${t}`，unlink 失败被 catch 吞）。
+   GUI 构建后清单含 11 个字体 → 紧接跑 CLI 打 10 条 `Deleted orphaned file:` 全删；
+   CLI 构建后清单不含字体 → 再跑 CLI 不删。缺文件那个 unlink 抛错被吞，所以是 10 不是 11。
+
+**改到的地方**：`design/gen_fonts.py` 头部注释、`design/eez_build.py` 踩坑第 4 条、
+`design/all.py` 步骤 4 说明、项目 MEMORY.md（新增「字体到底谁生成」+ 方法论教训）、
+kit `skills.md` §3.2 命令行注释 + **新增 §11.12**。
+
+**工作区状态**：实验删掉的字体已由 `gen_fonts.py` 全部重建（11 个），
+`.eez-project-build` 现为 CLI 真实清单（不含字体，后续 CLI 不会再删）。
+
+**关联**：PR-0049（User Action 迁移）、skills.md §11.11、§11.12
+
+
+---
+
+## PR-0051 改用 EEZ Studio 官方生成字体（2026-09-29，用户原则性要求）
+
+**用户要求**：「我不想你使用脚本生成字体，应该使用官方软件生成字体」。
+
+**执行**：把字体产出权交回 EEZ Studio，脚本彻底停止烘焙。
+
+**根因查明（反编译 app.asar）**：`project-editor/store/fonts-cache.js`
+```
+getFontsCacheFilePath(){ return this.projectStore.filePath + "-fonts-cache" }
+async load(){ if (settings.general.cacheFonts) { ...读缓存... } }
+```
+`cacheFonts=False` → EEZ **不加载任何字体缓存**，只能现场跑 Worker 烘焙；而现场烘焙
+这条链在 headless CLI 下不产出（PR-0050 实测 0 个字体 / 0 报错 / 2.2s）。
+本工程当时正是 `cacheFonts:False` 且 `test.eez-project-fonts-cache` 不存在。
+
+**改动**：
+- `design/json2eez.py`：`ensure_build_settings` 新增 `settings.general.cacheFonts = True`
+  （附完整根因注释；保持「ui.json/脚本为真值源」的单向管线，未手改工程）。
+- `design/gen_fonts.py`：**重写** —— 删除 lv_font_conv 调用与 NODE/FA_FONT 常量，
+  不再生成任何字体；改为 ①校验 `src/ui/ui_font_*.c` 齐全 ②从已生成文件读实测度量
+  → `design/font_metrics.json` ③缺失时打印「去 EEZ Studio Check and Build」指引并返回非 0。
+- `design/all.py` / `eez_build.py` / `eez_check_build.py`：注释与错误提示同步
+  （`eez_check_build.py` 是 CMake 编译前钩子，缺字体直接中断编译）。
+
+**验证**：`json2eez.py` → 工程 `cacheFonts=True`；`eez_build.py` → 0 error、2.1s、
+字体未丢（当前清单不含字体，orphan 不触发）；`gen_fonts.py` → 11/11 ok、度量回写、无烘焙。
+
+**待用户执行（GUI 只能人工操作）**：在 EEZ Studio 打开 `test.eez-project`
+执行 Check and Build → 官方烘焙字体并写出 `test.eez-project-fonts-cache`；
+之后 CLI build 即可直接取官方结果输出字体。**注意**：GUI 构建会重写
+`.eez-project-build` 清单使其含字体，紧接着的一次 CLI build 可能把字体当 orphan 删掉
+—— 此时回 GUI 再 Build 一次即可，不要用脚本兜底。
+
+**关联**：PR-0050（字体结论纠错）、skills.md §11.12 第 4/5 条
+
+
+---
+
+## PR-0052 字体官方生成 + 后台自动触发（2026-09-29）
+
+**用户补充要求**：「我就是不想非要我 GUI 编译，而是通过后台触发」。
+即：字体仍要 EEZ Studio 官方生成，但**不能要求人去点菜单**。
+
+**先排除的死路（都实测过）**：
+- headless CLI `--build-project`：cacheFonts 改 True 后重测，删光字体+清单再 build，
+  仍产出 **0 个字体、0 报错、2.3s**，缓存文件也不生成 → CLI 的提取链彻底不工作。
+- 单纯「脚本拉起 EEZ Studio 打开工程」：等 **150s**，缓存与字体**均未出现**
+  → 打开工程本身不触发烘焙，必须触发 Build 动作。
+
+**可行解（已落地 `design/eez_gui_build.py`）**：
+asar 反编译发现主菜单带快捷键
+`{label:"Check", accelerator:"CmdOrCtrl+K"}` / `{label:"Build", accelerator:"CmdOrCtrl+B"}`。
+于是脚本：拉起 `EEZ Studio.exe <工程>` → PowerShell `Get-Process | MainWindowTitle`
+轮询等窗口 → `WScript.Shell.AppActivate(pid)` + `SendKeys("^b")` → 等 ui_font_*.c 落盘
+→ `taskkill`。**实测 4 秒生成 11 个字体，全程无人干预。**
+坑：① 只发 Ctrl+B，先发 Ctrl+K 会因 Check 结果框挡住后续按键；
+    ② 启动前必须 `env.pop("ELECTRON_RUN_AS_NODE")`，否则 Electron 退化成 Node 起不来 GUI。
+
+**接入**：`all.py` 与 `eez_check_build.py`（CMake 编译前钩子）顺序改为
+`eez_build(CLI) → eez_gui_build(官方字体) → gen_fonts(校验+度量)`。
+脚本默认「字体齐全就跳过」，正常编译不弹窗口；`--force` 强制重跑。
+
+**产物核对**：官方字体比旧脚本烘焙版小 28~80B（头部差异），
+**11 个字号实测度量与旧版完全一致** → 布局无需改动。
+src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens.c 978KB。
+
+**关联**：PR-0050（字体结论纠错）、PR-0051（改用官方生成）、skills.md §11.12 第 5/6 条
+
+---
+
+## PR-0053 字体方案 C：解包调 EEZ 自带引擎（2026-09-29 定稿）
+
+**诉求**：用户明确选 C ——「解包调 EEZ 自带引擎」。要求：官方引擎产出、
+纯后台可触发（不开 GUI）、最好有官方文档依据。
+
+**官方文档核查**：784 页 Reference Guide 对 `headless` / `build-project` /
+`command line` / `cacheFonts` / `embedFonts` **零命中**；P11.2 只说字体用
+`https://github.com/lvgl/lv_font_conv`。即：**官方没有推荐的命令行字体路径**，
+只能自己搭。`useDockerDesktop` 是「full simulator」（Emscripten 仿真），与字体无关。
+
+**结论**：把 app.asar 里的引擎解出来在 Node 里跑。组件：
+`build/.../font-extract/lvgl-worker.js` + `node_modules/lv_font_conv`
+（freetype wasm 以 base64 内嵌在 ft_render.js，自包含）+ opentype.js / make-error / bit-buffer。
+调用：`global.self = ctx` → `require(worker)` → `ctx.onmessage({data:{args,output}})`。
+**一个进程连烘 11 个字体约 2 秒**（`ft_render.destroy()` 不影响下一个）。
+
+**结果**：与 EEZ Studio GUI 点 Build 的产物 **11/11 逐字节完全一致**。
+清空 src/ui 全部字体后重烘、再跑全链路 `design/all.py`，两次校验均 11/11 一致。
+字号度量不变（12/3/9 … 55/12/43），布局无需改动。
+
+**7 个必须踩准的点**（错一个就对不上）：
+1. asar 头部 JSON 长度在第 4 个 uint32（offset 16 起），`BASE=16+header_size`
+2. C 源码**没被** base64 编码（`String.prototype.toString(enc)` 忽略参数）
+3. 主字体 symbols 取顶层 `lvglSymbols`；`lvglGlyphs.symbols` 含 FontAwesome，烘会报错
+4. 附加源字段是 `{filePath, lvglRanges, lvglSymbols}`
+5. `lv_include` 来自 `settings.build.lvglInclude`
+6. `opts_string`：`--symbols` 在 `--range` 前，附加源在 `--format lvgl` 后
+7. 落盘后处理：折叠 3+ 换行为 2 个 + 去掉末尾空白（官方产物末尾无换行）
+
+**落地**：新增 `design/eez_font_engine.py`（解包+烘焙+落盘+增量跳过）；
+`all.py` / `eez_check_build.py` 顺序改为
+`eez_build(CLI) → eez_font_engine(官方引擎) → gen_fonts(校验+度量)`；
+**删除** `design/eez_gui_build.py`（旧方案 B，已废）；
+`gen_fonts.py` 的缺失指引改为引导跑 `eez_font_engine.py --force`。
+引擎缓存 `%LOCALAPPDATA%/eez-font-engine/<hash>`，不污染工程。
+
+**关联**：PR-0050/0051/0052、skills.md §11.12 第 5/6 条
+
+---
+
+## PR-0054 — 「刚生成的脚本要不要进本地知识库」：内核进库，胶水留工程
+
+- **工具**：WorkBuddy　**日期**：2026-09-29　**关联**：PR-0053、skills.md §11.12/§11.13
+
+**诉求**：用户问「刚刚生成的这些脚本是不是也要保留到本地知识经验库中」（问了两遍）。
+
+**冲突点**：工具箱自己的规矩是「工程专属的构建流水线不属于工具箱」，
+但「解包 + 调 EEZ 官方引擎烘焙」这件事**并不工程专属** —— 换任何 EEZ 工程都一样能用。
+整份拷进库会违反规矩，不拷进来下次又要从零反编译一遍 asar。
+
+**定案（拆两层）**：
+- `tools/eez_font_bake.py` = **内核**（工程无关，进库）：
+  `find_asar / find_node / extract_engine / ensure_engine / bake / kernel_hash`，
+  多平台路径候选 + `EEZ_STUDIO_ASAR` / `EEZ_NODE` 环境变量覆盖，
+  `bake()` 只写 out_dir + manifest.json，**不碰任何工程目录**。
+- `design/eez_font_engine.py` = **胶水**（工程专属，留在工程）：
+  调内核 → 搬到 `src/ui` → 增量状态 `.font_bake_state.json` → 孤儿清理。
+
+**防分叉**：`kernel_hash()` = 内核 `BAKE_JS` 的 sha256，改烘焙行为指纹就变
+（本轮 `242c651b…c50af`）。工程侧应 import 内核并校验指纹，**不要复制 BAKE_JS** ——
+否则工具箱升级后工程里那份还在跑旧逻辑，且产物看着"正常"，无从发现。
+
+**验收**：`--info` 正确定位本机 asar/node/引擎缓存；独立烘焙 11 个字体全部 OK
+（44546 … 446836 B，单字体 100–180 ms）。
+
+**方法论**（值得记住的一条）：判断「代码该放知识库还是工程」时，
+别按"是不是这次写的脚本"来分，按**"换一个工程还要不要改"**来分。
+要改的留在工程，不用改的抽出来进库 —— 边界划在**可复用性**上，不划在产生时间上。
+
+**关联**：PR-0053、skills.md §11.12 第 6 点「代码分两层」、§11.13 第六节

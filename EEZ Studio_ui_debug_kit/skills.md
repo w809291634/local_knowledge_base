@@ -118,8 +118,9 @@ DSL 构建脚本  ──►  ui_voice.json  ──►  EEZ 工程  ──►  sc
 ```bash
 python design/build_voice_ui.py          # 1. 生成 DSL
 python design/json2eez.py --dsl ui_voice.json   # 2. 编译进 EEZ 工程
-python design/eez_build.py               # 3. 生成 screens.c（会删掉 ui_font_*.c）
-python design/gen_fonts.py               # 4. 重新生成字体 C
+python design/eez_build.py               # 3. 生成 screens.c（headless CLI 不烘焙字体，
+                                         #    还会把上次清单里的 ui_font_*.c 当 orphan 删）
+python design/gen_fonts.py               # 4. 补生成字体 C（必须紧跟第 3 步）
 python ui_debug_kit/tools/run_gate.py    # 5. 门禁
 ```
 
@@ -526,7 +527,7 @@ python ui_debug_kit/tools/log_entry.py list
 
 ---
 
-## 11. 实测补充（2026-09，EEZ Studio 0.29 / 800×480 / LVGL 9.4）
+## 11. 实测补充（2026-09，EEZ Studio 1.22.10 / 800×480 / LVGL 9.4）
 
 > 一次「按设计稿生成 11 屏」的实战里新踩出来的坑，都带可复现证据，
 > 流水见 `intake/P-0005` ~ `P-0010`；已提炼成案例：
@@ -613,7 +614,7 @@ CLI 日志里会混进 Chromium 自己的噪音：
 
 ### 11.6 EEZ 原生主题三件套（fix_tabview 类运行时补丁的替代，`intake/P-0025`）
 
-用户纪律：**UI 一律 EEZ 原生定义，禁止往生成代码里注入 C 补丁**。EEZ 0.29 原生能力实测
+用户纪律：**UI 一律 EEZ 原生定义，禁止往生成代码里注入 C 补丁**。EEZ 1.22.10 原生能力实测
 （反编译 `resources/app.asar` 生成器模板，`lv_theme_default_init(dispp` 全包唯一命中）：
 
 1. **深色主题**：生成器发
@@ -777,7 +778,7 @@ darkTheme、LV_FONT_DEFAULT、tabview 内部主题样式在预览里统统看不
 ### 11.10 按钮→写变量：SetVariableActionComponent（onClick 机制，2026-09-28 按钮全适配）
 
 功能按钮（非导航）要"点了有反应"，EEZ LVGL 项目的正路是 **EEZ 原生 SetVariable 组件**，
-不是手写 C 回调（产物只读铁律，PLAYBOOK §0.9）。全套机制（EEZ Studio 0.29 实证）：
+不是手写 C 回调（产物只读铁律，PLAYBOOK §0.9）。全套机制（EEZ Studio 1.22.10 实证）：
 
 1. **DSL**：按钮节点配 `"onClick": {"setVar": "<输出变量名>", "value": <常量/表达式>}`。
    与 switchTab 并列；同一个节点别同时配 goto（会被 place() 的 strip_goto 剥掉，
@@ -858,3 +859,204 @@ Actions 调色板（Fig.78），底部列 User Actions；A34.2.16「Event handle
        **空实现**（native_vars.cpp `/* input: UI must not write */`），固件更新走自己的
        g_in_*、UI 用 `get_var_*` 拉，根本不经过 setter；输出变量固件只排空不回写。
        **一般化论断必须先回本工程源码验证，别把「理论上可能」当成事实。**
+7. **★ 迁移动作时 `sync_variables` 会把已删变量「复活」（2026-09-29 实测）**：
+   变量同步若写成「保留工程里多出来的变量」（`kept = [g for g in old
+   if g.name not in decls]`），本意是保护 EEZ GUI 里手工加的变量，但它**无法区分
+   「手工加的」和「DSL 里已删掉的」**——从 ui.json 删掉一个变量后，它会被当成
+   手工变量永久残留：vars.h 仍生成 `extern` 声明，而 native_vars.cpp 里的实现已删
+   → **链接期 undefined reference**（EEZ build 本身 0 error，看不出来）。
+   **修法**：变量同步与动作同步保持一致，都以 DSL 为准**整体重建**
+   （单向管线，ui.json 是唯一真值源），并打印被移除的变量名以便核对。
+   **验收动作**：迁移后必查 `vars.h` 里已删变量残留数为 0，
+   且 `actions.h` 声明与固件实现的符号名**逐一 diff 一致**。
+
+### 11.12 EEZ 字体烘焙：GUI 会，headless CLI 不会（2026-09-29 实测，**推翻旧结论**）
+
+旧笔记写的「EEZ 根本不生成字体 / 烘焙只在 GUI 里做」是**错的二分法**，正确事实分三层：
+
+1. **EEZ 有烘焙能力（源码级证据）**：app.asar 里 `getName("ui_font_", this.params.name,
+   UnderscoreLowerCase)` + lv_font_conv 全套参数（size / bpp / no_compress / lcd /
+   lv_fallback / opts_string），交给 `new Worker(path.join(__dirname,"lvgl-worker.js"))`
+   执行。工程侧 `settings.general.embedFonts=True`、`renderingEngine='LVGL'`、
+   fonts[] 的 TTF 路径有效、`fonts.h` 里的声明也是 EEZ 写的。
+   **用户在 GUI 里 Check and Build 确实会产出 `ui_font_*.c`。**
+2. **headless CLI `--build-project` 不烘焙（3 次实测一致）**：把 11 个 `ui_font_*.c`
+   连同 `src/ui/.eez-project-build` 一起删光再跑 build → 产出 **0 个字体文件、
+   0 报错、耗时 2.2s**，日志里连 `Extracting font "..."` 都没有。
+3. **★ orphan 清理会把字体删掉（最坑的一条）**：EEZ 构建收尾会 unlink
+   「**上一次清单里有、本次没重写**」的文件（asar 源码：
+   `const r=new Set(i), s=t.filter(e=>!r.has(e)); ... \`Deleted orphaned file: ${t}\``，
+   unlink 失败被 `catch` 吞掉）。推论：
+   · GUI 构建过 → 清单含 11 个字体 → **紧接着跑 CLI build 会打 10 条
+     `Deleted orphaned file:` 把字体全删**（缺的那个 unlink 抛错被吞，所以是 10 不是 11）；
+   · CLI 构建过 → 清单不含字体 → 再跑 CLI **不删**（此时字体是 gen_fonts.py 补的，安全）。
+   **所以 `eez_build.py` 之后必须紧跟 `gen_fonts.py`**（`design/all.py` 已是这个顺序）。
+
+4. **★ 根因 + 正解（2026-09-29 反编译 asar，已落实到脚本）**：
+   源码 `project-editor/store/fonts-cache.js`：
+   ```js
+   getFontsCacheFilePath(){ return this.projectStore.filePath + "-fonts-cache" }
+   async load(){ if (this.projectStore.project.settings.general.cacheFonts) { ...读缓存... } }
+   ```
+   **`cacheFonts=False` → EEZ 不加载任何字体缓存**，每次都得现场跑 Worker 烘焙；
+   而现场烘焙这条链在 headless CLI 下不产出 → 永远 0 个字体文件。
+   （当时本工程正是 `cacheFonts:False` 且 `test.eez-project-fonts-cache` 不存在。）
+   **修法**：`json2eez.py` 的 `ensure_build_settings` 里置 `settings.general.cacheFonts=True`
+   → 由 **EEZ Studio GUI 烘焙一次**写入缓存 → 之后 CLI build 直接取官方结果输出
+   `ui_font_*.c`。**字体数据始终由官方软件烘焙，脚本不代劳。**
+   排查同类问题记住先验三项：`embedFonts` / `cacheFonts` / 缓存文件是否存在。
+
+5. **用户原则（2026-09-29 确立）**：**字体必须由 EEZ Studio 官方生成，禁止脚本自己烘焙。**
+   三条路的定性（都已实测过）：
+   · A 脚本自己调 lv_font_conv **—— 违反原则，已废**
+   · B 后台拉起 EEZ Studio GUI 按 Ctrl+B —— 能用，但要开 GUI、依赖窗口焦点，已废
+   · **C 解包调 EEZ 自带引擎 —— 当前方案**（第 6 点），纯后台且产出即官方产物
+   `gen_fonts.py` 已删除 lv_font_conv 调用，改为「校验 ui_font_*.c 齐全 + 回写实测度量」，
+   缺字体 → 报错并引导跑 `eez_font_engine.py --force`（不代劳、不兜底生成）。
+   `eez_check_build.py`（CMake 编译前钩子）缺字体会直接中断编译。
+
+6. **★★ 正解：解包调 EEZ 自带引擎（2026-09-29 定稿，`design/eez_font_engine.py`）**：
+   `cacheFonts` 那条路（第 4 点）**没能**让 CLI 烘焙（实测仍是 0 个字体），
+   后台拉 GUI 按 Ctrl+B（旧第 6 点）能用但**要开窗口、依赖焦点**，脆弱。
+   最终方案 C：**把 app.asar 里的官方引擎整个解出来，在 Node 里以 Worker 语义直接调用** ——
+   纯后台、不开 GUI、不弹窗，**产出与 GUI 点 Build 逐字节一致（11/11 IDENTICAL 实测）**。
+   组件（都在 `.../eezstudio/resources/app.asar` 内）：
+   ```
+   build/project-editor/features/font/font-extract/lvgl-worker.js   ← 引擎入口（EEZ 原文件）
+   node_modules/lv_font_conv/lib/freetype/build/ft_render.js        ← freetype（wasm 内嵌 base64，自包含）
+   node_modules/{opentype.js, make-error, bit-buffer}               ← 运行时依赖
+   ```
+   调用方式：`global.self = ctx`（worker 里 `const ctx=self; ctx.onmessage=...`），
+   然后 `require(引擎)` 拿到 `ctx.onmessage`，用 `{data:{args, output}}` 触发，`ctx.postMessage` 收结果。
+   **一个 Node 进程可连续烘 11 个字体（约 2 秒）**，`collect_font_data` 结尾的
+   `ft_render.destroy()` 不影响下一个。
+
+   ★★ **要让产出逐字节一致，有 7 个必须踩准的点（全部实测，错一个就对不上）**：
+   1. asar 头部：前 16 字节是 4 个 uint32，**第 4 个**才是 header JSON 长度；
+      `BASE = 16 + header_size`，叶子节点 offset 相对 BASE。
+      （用 `data.find(b'{"files"')` 找起点 + `data[4:8]` 当长度是错的。）
+   2. **C 源码没有被 base64 编码**：worker 里两个返回值都写 `.toString("base64")`，
+      但 `String.prototype.toString(enc)` **忽略参数原样返回**；只有 bin 是 Buffer、才是真 base64。
+      按首字符是否是 `/` 区分，否则解出二进制乱码。
+   3. **主字体的 symbols 取顶层 `lvglSymbols`**（本工程为空）。`lvglGlyphs.symbols`
+      是 UI 展示用的合集，**含 FontAwesome**，拿去烘会报
+      `Font "..." doesn't have any characters included in "..."` —— FA 属于附加源。
+   4. 附加源工程字段名是 `{filePath, lvglRanges, lvglSymbols}`，**不是** `encodings/symbols`。
+   5. `lv_include` 取自 **`settings.build.lvglInclude`**（不是字体条目上的字段）。
+   6. `opts_string` 顺序：`--symbols` 在 `--range` **之前**，附加源追加在 `--format lvgl` **之后**
+      （见 `features/font/font.js` 的 `_lvglExtractFontParams`）。
+   7. **落盘后处理**：连续 3+ 换行折叠成 2 个 + 去掉末尾所有空白
+      （官方产物末尾**不带换行**）。不做这两步会差 8 个空行 + 末尾换行。
+
+   脚本默认「字体定义没变就跳过」（key 存 `design/.font_bake_state.json`），`--force` 强制重烘，
+   `--clean` 清引擎缓存。引擎缓存放 `%LOCALAPPDATA%/eez-font-engine/<asar size-mtime hash>`，
+   不污染工程、EEZ 升级会自动重建。找不到 asar 可用 `EEZ_STUDIO_ASAR` 环境变量指定。
+
+   **★ 代码分两层：内核进工具箱，胶水留工程（2026-09-29 用户问「脚本要不要入库」后的定案）**。
+   这套东西里只有「解包 + 烘焙」是**工程无关**的，其余（写哪个目录、要不要增量、
+   孤儿清理、接不接 `all.py`）全是**工程专属**的。混在一起就会拷不动、改不动。
+   ```
+   tools/eez_font_bake.py      内核：find_asar/find_node/extract_engine/bake/kernel_hash
+                               只写 out_dir + manifest.json，不碰任何工程目录
+   design/eez_font_engine.py   胶水：调内核 → 搬到 src/ui → 增量状态 → 孤儿清理
+   ```
+   工具箱 README 「五、栈专属工具放哪里」已把胶水脚本明确列为工程侧该放的东西。
+   **防分叉**：工程侧别复制 `BAKE_JS`，而是 import 内核，并校验
+   `eez_font_bake.kernel_hash()`（= `BAKE_JS` 的 sha256）——
+   改了烘焙行为指纹就变，能立刻发现"工具箱升级了、工程里那份还在跑旧逻辑"。
+
+   （旧方案「后台拉 GUI 按 Ctrl+B」保留要点备用：只发 Ctrl+B 不要先发 Ctrl+K ——
+    Check 会弹结果框挡按键；启动前 `env.pop("ELECTRON_RUN_AS_NODE")`；
+    单纯打开工程不会烘焙。已被本方案取代，`eez_gui_build.py` 已删除。）
+
+⚠ **方法论教训（这条比结论本身更值钱）**：当时我从「删掉一个字体文件后跑了一次
+CLI build，它没回来」直接推出「EEZ 不生成字体」——这是**单次观察否定能力**的谬误。
+「这一次没发生」只能证明这条路径这次没触发，不能证明 EEZ 没有该能力、更不能覆盖
+GUI 路径。**正确顺序**：先查配置开关（`embedFonts` / `renderingEngine`）和产物清单
+（`.eez-project-build`），再对 GUI / CLI **分别**下结论；下结论前先问「我的观察覆盖了
+几条路径、几次」。
+
+---
+
+### 11.13 ★ 怎么证明「后台产物 == 官方产物」（2026-09-29 定稿，配套 `tools/font_verify.py`）
+
+上一节讲的是**怎么让产物对得上**；这一节讲的是**怎么证明它对得上**。
+结论会过期、参数会变，但验证方法不过期 —— 换 EEZ 版本、换字体、换机器后
+**第一件事就是重跑这一节**，而不是相信「上次是对的」。
+
+#### 一、先立真值：黄金样本只能来自 GUI
+
+    python tools/font_verify.py snapshot --src src/ui --golden <dir> \
+           --note "EEZ Studio 1.22.10 GUI Check and Build 产物"
+
+★ **黄金样本的唯一合法来源是 EEZ Studio GUI 点 Build**，不能是任何脚本产物。
+自己烘一份当真值 = 自己给自己当裁判，一致也证明不了任何事。
+`_manifest.json` 会记下时间/来源标注/每个文件的 sha256 —— 下次比对时打印出来，
+一眼能看出样本是不是被脚本产物覆盖过。
+
+#### 二、逐字节比对（必要，但不充分）
+
+    python tools/font_verify.py check --src src/ui --golden <dir> --metrics
+
+`--metrics` 顺带比对 `line_height / base_line`。**这一项必须零漂移** ——
+字节层面差两个空行不影响显示，但度量一变整屏文字就画高，而它恰恰最容易静默变化。
+
+⚠ 为什么比对**不充分**：万一 `src/ui` 里的字体根本没被覆盖（增量跳过、路径写错、
+写入失败被吞），比对照样全绿。**所以必须做第三步。**
+
+#### 三、清空重建实验（最硬的一条）
+
+    rm src/ui/ui_font_*.c           # 连增量状态一起删，逼它真的重烘
+    rm design/.font_bake_state.json
+    python design/eez_font_engine.py --force
+    python tools/font_verify.py check --src src/ui --golden <dir> --metrics
+
+    # 再跑完整链路后复校 —— 这一步验证「管线顺序」也是对的
+    python design/all.py
+    python tools/font_verify.py check --src src/ui --golden <dir> --metrics
+
+**两轮都全 IDENTICAL + 度量零漂移**，才能下「后台产物 == 官方产物」的结论。
+第二轮不是冗余：CLI build 有可能把字体当 orphan 删掉、再由后一步补烘，
+只有跑完整链路才知道「顺序」对不对。
+
+#### 四、不一致时怎么定位（工具已自动化，这里是原理）
+
+按**从具体到泛化**的顺序排，先命中先报：
+
+| 症状 | 成因 | 修法 |
+|---|---|---|
+| 产物是可打印字符 < 90% 的乱码 | C 源码被当 base64 解了（`String.prototype.toString(enc)` 忽略参数） | 按首字符是不是 `/` 区分，别解码 |
+| 只有 `#include` 那行不同 | `lv_include` 没取到 | 读 `settings.build.lvglInclude` |
+| 去掉空行后两边相同 | 漏做空行折叠 | `replace(/\n{3,}/g,'\n\n')` |
+| 只差文件末尾 | 漏做去末尾空白 | `replace(/\s+$/,'')` |
+| 头部 `Opts:` 行不同 | 参数拼错 | `--symbols` 在 `--range` 前；附加源在 `--format lvgl` 后 |
+| `/* U+` 计数不同 | 字形集合变了 | 主字体 symbols 取顶层 `lvglSymbols`；附加源字段是 `lvglSymbols` |
+| 换行符不同（CRLF vs LF） | Python 默认 newline 转换 | `newline='\n'`；EEZ 产物是 LF |
+| 以上都不是 | 人工二分 | 先看头部注释（参数层），再看首处不同行落在 BITMAPS / GLYPH / KERNING 哪一段 |
+
+**★ CRLF 是诊断杀手**：一旦换行符不同，首处不同必落在第 0 行的 `\r` 上，
+真正的差异全被淹没。所以工具里**先归一化换行符再诊断**，把它单独列为一个症状。
+
+#### 五、三条容易忘的原则
+
+1. **别信单一观察**（上一节末尾那条教训的推论）。「删掉一个文件跑一次 CLI build
+   它没回来」只能推出「这条路径这次没触发」。下结论前先问：我覆盖了几条路径
+   （GUI / CLI / 后台引擎）、跑了几次。
+2. **失败要能复现才算数**。烘焙报错时先确认是「参数错」还是「环境错」——
+   附加源路径不存在、asar 找不到、node 版本不对，都会伪装成参数问题。
+3. **差异分类要写回工具**。这次踩的 7 个坑全部编码进了 `font_verify.py` 的成因表，
+   下次同类问题直接出结论，不用重新推理一遍。**经验只有变成可执行检查才不会丢。**
+
+#### 六、代码本身怎么保证不退化（内核 / 胶水分层）
+
+验证对的是**产物**，但产物对了不代表**代码**不会悄悄跑偏 —— 复制一份脚本到工程里、
+过几周改一点，两条链就分叉了。所以：
+
+- 烘焙逻辑**只有一份**，在 `tools/eez_font_bake.py`；工程侧 `import` 而不是复制。
+- `eez_font_bake.kernel_hash()` = `BAKE_JS` 的 sha256，**任何改动都会变指纹**。
+  工程侧胶水在调用前比对一次硬编码的期望值，不一致就报错停机，
+  逼着人重跑本节的验证，而不是"好像能跑就继续"。
+- 判定基准同样只有一份：真值在 `.golden_fonts/`，判据在 `font_verify.py`。
+
+一句话：**产物有真值比对，代码有指纹比对**，两头都锁住，"和 GUI 一致"才是个
+可长期依赖的结论，而不是某一次跑出来的运气。

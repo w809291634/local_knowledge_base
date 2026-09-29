@@ -7,6 +7,56 @@
 
 ---
 
+## v0.8.6 — 官方字体烘焙内核 `eez_font_bake.py` 入库 + 内核/胶水分层（当前）
+
+- 背景（PR-0054）：用户问「刚生成的这些脚本是不是也要保留到本地知识经验库」。
+  按工具箱自身规矩（"工程专属的不属于工具箱"）不能整份拷进来，但
+  **「解包 + 调用 EEZ 官方引擎烘焙」这件事本身是工程无关的** —— 于是拆两层。
+- 新增 `tools/eez_font_bake.py`（只依赖标准库 + 系统 node）：
+  - 通用路径候选：`ASAR_CANDIDATES`（Win/macOS/Linux + Program Files）、
+    `NODE_CANDIDATES`，可用 `EEZ_STUDIO_ASAR` / `EEZ_NODE` 覆盖。
+  - API：`kernel_hash()` / `find_asar()` / `find_node()` / `extract_engine()` /
+    `ensure_engine()` / `bake(proj, out_dir, names)`。
+  - `bake()` **只写 out_dir + manifest.json，不碰任何工程目录** ——
+    落盘位置、增量状态、孤儿清理全交给工程侧胶水。
+  - CLI：`--info` / `--clean` / `<工程> <输出目录> [字体名...]`。
+- **防分叉机制**：`kernel_hash()` = 内核 `BAKE_JS` 的 sha256，改烘焙行为指纹就变。
+  工程侧胶水应 `import` 内核 + 比对期望指纹，而不是复制一份 `BAKE_JS`。
+  本轮实测指纹 `242c651b143060ef89b6c8f08c8d79dc6354a5a744e7e7f5d0ce9b55f88c50af`。
+- 文档：
+  - `tools/README.md` 新增 **「三、构建类（工程无关内核）」**，`eez_font_bake.py` 条目
+    （含作为库调用的示例 + 内核/胶水分工说明），原三/四节顺延为四/五节。
+  - `skills.md §11.12` 第 6 点补「代码分两层」小节（内核 vs 胶水、`kernel_hash` 防分叉）；
+    §11.13 新增 **第六节「代码本身怎么保证不退化」** ——
+    产物有真值比对（`font_verify.py`），代码有指纹比对（`kernel_hash()`），两头锁住。
+- 验收：`--info` 正确定位本机 asar/node；独立烘焙 11 个字体全部 OK
+  （44546 … 446836 B，单字体 100–180 ms）。
+
+---
+
+## v0.8.5 — 字体一致性判据：`font_verify.py` + 验证方法论
+
+- 背景（PR-0053）：工程侧新增 `design/eez_font_engine.py`（解包 EEZ 自带引擎后台烘焙）。
+  结论进库了，但**「怎么证明产物和官方一致」这一层没进库** —— 用户指出后补齐。
+- 新增 `tools/font_verify.py`（只依赖标准库）：
+  - `snapshot` 存黄金样本（记时间/来源标注/sha256 清单到 `_manifest.json`）
+  - `check` 逐字节比对 + **自动定位并猜成因** + `--metrics` 比 line_height/base_line
+  - `metrics` 只打印度量
+  - 退出码 0/1/2，可直接挂 CI
+- 成因表把本轮踩的坑编码成可执行检查（见 `skills.md §11.13` 第四节）：
+  base64 误解码 / `lv_include` / 空行折叠 / 末尾空白 / `Opts` 参数 / 字形集合 / CRLF /
+  人工二分。★ CRLF 会淹没真实差异（首处不同落在第 0 行的 `\r` 上），
+  工具先归一化换行符再诊断，并把它单列为一个症状。
+- 文档：
+  - `skills.md` 新增 **§11.13 怎么证明「后台产物 == 官方产物」**（立真值 / 逐字节比对 /
+    清空重建实验 / 定位表 / 三条原则）。核心是**逐字节比对不充分**——
+    文件没被覆盖时也全绿，必须再做清空重建 + 全链路复校两轮。
+  - `tools/README.md` 对照类新增 `font_verify.py` 条目。
+- 自测：真实场景 11/11 IDENTICAL、度量零漂移；注入 3 种故障（lv_include / 末尾空白 /
+  连续空行）全部被正确识别。
+
+---
+
 ## v0.8.4 — 全 AI 兼容声明 + 机器相关路径「必问用户」机制（当前）
 
 - 用户要求（PR-0045）：① 经验库不绑定 WorkBuddy，所有 AI 都要兼容；② 仿真器等
