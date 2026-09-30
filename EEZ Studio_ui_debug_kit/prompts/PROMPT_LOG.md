@@ -505,3 +505,44 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
     迁回 A 通道是成熟关键）；最高优先级加固 = 加信号向导+残留符号断言固化进 all.py、输出
     变量 getter 回声与真值回采(走 C)分离
   - 关联：PR-0049（命令迁回 A 通道）、PR-0054（内核/胶水分层）、§11.11、§11.14
+
+## PR-0056 · 2026-09-29/30 · 滑动高亮跟随 + 无线网络下拉浮层 + 自查
+
+- 提示词（原话）：「1、现在UI设计的还不是很好，比如 上下滑动时候，左边的tab没有跟着变动，
+  设置界面也是一样 2、点击无线网络时候，可以产生一个下拉窗口，而不是屏幕往下滑，
+  下拉时候，将其他选项往下移的效果， 3、我希望有些问题你自己检查」
+  （同轮前序补充：「UI中所有按钮和界面点击测试一下，同时按照正常行业页面设计和动画，
+  要求好看同时准确」）
+- 诉求：① 滑动切 tab 左侧 rail/设置 cats 高亮要跟随；② 无线网络行改弹下拉浮层，
+  不推挤其他行；③ AI 自查问题（不要只报告，要自己验证）。
+- 产出/结论：① tabview VALUE_CHANGED → native `sync_rail_main/cats`（onTabChange DSL
+  新字段）+ **程序切页 animated:false 铁律**（陈旧 SCROLL_END 竞态 P-0029，
+  冒烟断言抓到 off-by-one 后修上游 json2eez.py）；② json2eez 新增 onShow/onHide →
+  objClearFlag/objAddFlag(HIDDEN)，wifi_dropdown 遮罩+卡片绝对定位零推挤，
+  工程 JSON 14 条 HIDDEN 动作（2 show + 12 hide）；③ 自查闭环：grep HIDDEN
+  screens.c=0 误判 → 澄清 flow 动作在 eez-flow.cpp 运行时解释 → native printf 插桩 +
+  冒烟全量状态 dump 一次定位 → 修复复跑全绿 → 移除临时代码。最终 sim 冒烟
+  8/8 断言全过 + G5 11/11 屏平均 8.67%（阈值 25%）。知识库 §11.15 + CHANGELOG v0.8.8
+  + intake P-0029。
+- 关联：PR-0055、§11.9、§11.10、§11.15、P-0028、P-0029
+
+## PR-0057 · 2026-09-30 · 纯 EEZ flow 重构 + 选型铁律定稿 + 经验入库
+
+- 提示词（原话，按序合并）：
+  ①「所以以后明确规定，能够在eez中能实现的动画，不要填写到用户程序中」
+  ②「你重新打开，我关闭了」（要求重开交互仿真窗口）
+  ③「我测试可以的，你帮我总结一下，后期要求优先输出用EEZ里面控制UI，包括各个控件的
+    联动，仅仅控制外部硬件的允许使用用户代码，如果实在没有办法的话，需要通知我，
+    同时将当前经验总结到经验库中」
+- 诉求：① 定铁律：EEZ 能实现的不进用户程序；② 铁律定稿（EEZ 优先 / 硬件才用户代码 /
+  实在没办法先通知）；③ 验收 P-0029 高亮同步 native 方案 → 推翻重做纯 EEZ flow；
+  ④ 经验总结进经验库。
+- 产出/结论：native `sync_rail_main/cats` 退役，换页高亮同步改**纯 EEZ flow 链**
+  （VALUE_CHANGED → objClearState×N + tabviewGetActiveTab→页面局部变量 → @seqout →
+  CompareActionComponent(var,i,"=").True → objAddState 第 i 组）；asar 序列化四要点
+  实证（assignable 无 Type 后缀 / Compare 结构 / @seqout 传播时机 / localVariables），
+  一次通过零试错。回归：6 条 [swipe] 断言全绿（一字未改）+ 11 屏对照 8.59%
+  （阈值 25%）；用户交互仿真实测「我测试可以的」。知识库：skills.md §11.17 +
+  CHANGELOG v0.9.0 + intake P-0030 + 契约新增选型铁律节；铁律另落项目/用户级
+  MEMORY.md 与当日日志。
+- 关联：PR-0056、§11.14、§11.15、§11.17、P-0029、P-0030

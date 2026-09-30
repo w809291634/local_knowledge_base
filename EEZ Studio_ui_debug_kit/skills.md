@@ -1159,3 +1159,164 @@ GPIO/ADC/WiFi/RTC）。由 `EEZ_SIM` 在 CMake 期选定（`native/CMakeLists.tx
 **结论**：方向对、工程化收益明确，但「命令 vs 变量」边界是人肉纪律非机器强制——把
 「加信号向导 + 残留符号断言」固化进构建脚本、输出变量 getter 改成「回声 + 真值回采(走 C)
 分离」，是优先级最高的两个加固项。
+
+### 11.15 滑动高亮跟随 + 程序切页 animated:false 铁律 + 下拉浮层（2026-09-29/30，实战复盘）
+
+用户原始诉求（eez-test）：①「上下滑动时候，左边的tab没有跟着变动，设置界面也是一样」
+②「点击无线网络时候，可以产生一个下拉窗口，而不是屏幕往下滑（推挤其他选项）」③要自查。
+
+#### 一、滑动/程序切页高亮跟随（§11.9 的缺口补全）
+
+§11.9 的高亮跟随只覆盖**点击动作链**；手势滑动切 tab 时没人改 CHECKED。补法（EEZ 原生）：
+
+1. **tabview VALUE_CHANGED → native User Action**：LVGL 9.4 tabview 在
+   `button_clicked_event_cb`（lv_tabview.c:330，点自带 tab 栏按钮）和
+   `cont_scroll_end_event_cb`（:376，**手势滑动松手落定**）都发
+   `lv_obj_send_event(tv, LV_EVENT_VALUE_CHANGED)`，target 就是 tabview 本体。
+   本工程 tab 栏 tabSize=0 不可能点，滑动路径就是唯一入口。
+2. **DSL**：tabview 节点 `"onTabChange": "sync_rail_main"`（json2eez 新增 handlerType:"action"
+   的 VALUE_CHANGED handler，与 onAction 同款直调）；顶层 actions[] 声明 native 动作。
+3. **native 实现**（src/native/native_actions.cpp）：`lv_tabview_get_tab_active(tv)`
+   读 idx（LVGL 9.4 没有 _get_active，§11.10.4），按索引表
+   `rail_set_checked()`：main 0..3 ↔ m_nav_chat/music/bell/tune（含 navmk）；
+   sett 0=通用(无) 1=wifi 2=sun 3=mic。**rail 索引表必须与 add_tab 顺序一致**。
+4. **★ animated:false 铁律（本轮最大的坑，P-0029）**：程序切页
+   （EEZ 链 tabviewSetActiveTab / sim 的 lv_tabview_set_active）**必须 animated:false**。
+   `true` 时 lv_tabview_set_active 起 180ms 滚动动画，动画未完又来下一次切换/事件时，
+   tabview 的 SCROLL_END 处理器拿 `lv_obj_get_scroll_end`（**旧动画目标位**）算出
+   **旧 tab**，`set_active(旧值)` 把页面拉回去、再发 **VALUE_CHANGED(旧值)**——
+   表现为「高亮/页面整体慢一拍」（sync 收到 idx=2 而刚切到 1，off-by-one；
+   冒烟实测 `rail@tab1: bell=1 music=0`）。改成 false 后：程序切换即时完成、
+   SCROLL_END 恒有 t==tab_cur → 不再发事件；**手势滑动仍由 LVGL 滚动自然跟手动画**，
+   松手 SCROLL_END 拿新鲜 t 发 VALUE_CHANGED → sync 正确跟随。
+   行业惯例亦然：点导航即时切，滑动才动画。**别用「加长等待时间」掩盖竞态**。
+5. **验收必须加运行时断言**（sim.py click_smoke_test 扩展）：
+   `set_tv_layer()` 切页后 dump 四项 `lv_obj_has_state(obj, LV_STATE_CHECKED)`，
+   断言恰好一项为 1（0100/0010…）。G5 截图对照会掩盖单项错位（§11.8.6 同理）。
+
+#### 二、下拉浮层（dropdown / popup）通用模式
+
+诉求②的「点无线网络弹下拉，不推挤其他行」。EEZ 原生做法（json2eez 新增
+onShow/onHide → 内置动作 id:16 objClearFlag / id:15 objAddFlag，flag=HIDDEN）：
+
+1. **结构**：浮层 = 两兄弟节点挂内容区容器末尾（z 序天然最高）——
+   `pop_bg` 半透明遮罩（盖内容区，点击=收起）+ `pop` 卡片（标题/关闭/列表/扫描）。
+   **不进任何会随滚动/推挤的流式布局**，绝对定位，出现时零位移。
+2. **DSL**：触发体 `"onShow": [pop引用, pop_bg引用]`（显示=clear HIDDEN）；
+   每个收起入口（关闭按钮/遮罩/选中的网络行）`"onHide": [pop, pop_bg]`（隐藏=add HIDDEN）；
+   浮层两节点 `hidden: true`（codegen `lv_obj_add_flag(HIDDEN)` 初始收起）；
+   json2eez 把每处编译成「CLICKED connectionLine + 单 LVGLActionComponent 多 actions」。
+   **onShow/onHide 与 onAction/goto/switchTab/onClick 互斥**（json2eez 有守卫）。
+3. **可点击性**：json2eez `default_clickable = wtype not in ("label","arc")`——
+   **container 默认可点**，遮罩 box 不用显式 clickable；行/关闭用 button() 天然可点。
+4. **★ 验证认知（别再被 grep 坑）**：flag 动作和 SetVariable 一样走
+   「组件数据 + eez-flow.cpp 运行时解释」，**不会**在 screens.c 出现
+   `lv_obj_add_flag(HIDDEN)` 字面量（grep HIDDEN screens.c=0 是正常的）；
+   真值在 test.eez-project 里（grep `"flag": "HIDDEN"` 应 = onShow 目标数 + onHide 入口数×2，
+   本工程 2+12=14）。**最终以仿真运行时断言为准**（has_flag(HIDDEN) 翻转）。
+5. **验收断言**（sim.py）：点行 → `has_flag(pop,HIDDEN)==0 && bg==0`；
+   点关闭/遮罩 → 都回 1。实测三连全过。
+
+#### 三、自查方法论（用户③「希望有些问题你自己检查」的落法）
+
+- **先读生成物再下结论**：本轮一开始就误信了「screens.c 无 HIDDEN = 动作没生成」，
+  实际是表示层不同；反例教训同 §11.10.3。
+- **编译 ≠ 行为**：native C 编译链接通过（sim build 0 error）只说明引用合法；
+  高亮 off-by-one 是运行时竞态，**只有运行时断言能抓到**。
+- **调试闭环**：native 动作里临时 printf(idx/指针) + 冒烟 dump 全部四项状态
+  （只断言两项时恰好漏看 bell=1，差点误判）→ 一次复跑定位根因 → 修上游
+  （json2eez animated:false）→ 复跑全绿 → 移除临时 printf。
+
+### 11.16 switch 两态样式：OFF 态也要分化（2026-09-30）
+
+**症状**：开关打开是蓝色（对），关闭还是蓝（应灰）。
+**根因**：DSL 里 INDICATOR 的 DEFAULT 与 CHECKED 都写了 on 色。LVGL 开关
+OFF 时画的是 INDICATOR 的 **DEFAULT** 样式 —— 两态同色 = 关闭态看不出变化。
+**修法**：MAIN / INDICATOR 都按状态写：DEFAULT=off 色、CHECKED=on 色；
+KNOB 恒白即可。只写 DEFAULT 会被主题 CHECKED 盖住（§428 track 同坑），
+所以**两态都必须显式写**。
+**验证坑**：静态稿若所有开关都是同一状态，截图无法验证另一态 —— 临时把
+一个开关置反跑 `--shots` 截图确认后还原。同屏放一开一关对照最直观。
+
+### 11.17 换页高亮同步纯 EEZ flow 化：user action 退役 + asar 序列化四要点（2026-09-30，实战复盘）
+
+P-0029 用 native User Action 实现的滑动高亮跟随，被用户铁律推翻、重做为纯 EEZ flow。
+本节是重做的完整配方（intake P-0030 / PR-0057）。
+
+#### 一、★ 选型铁律（用户 2026-09-30 定稿，原话存档）
+
+> 「后期要求优先输出用EEZ里面控制UI，包括各个控件的联动，仅仅控制外部硬件的允许使用
+> 用户代码，如果实在没有办法的话，需要通知我」
+
+落成选型判据：
+- **UI 控制 + 控件联动**（高亮/显隐/样式/切页/联动）→ **EEZ 优先**：flow 链、
+  LVGL 内置动作、状态样式（DEFAULT/CHECKED…）。
+- **外部硬件控制**（发命令给 wifi/音频/RTC/传感器）→ 用户代码（A 通道 user action /
+  B/C 变量，见 §11.14）。
+- **EEZ 实在表达不了** → **先通知用户**，不要默默走 native。
+
+判例：高亮同步 = 控件联动 → EEZ；`mic_toggle` 命令 = 硬件 → user action。
+「EEZ 能不能表达」拿不准时先做 asar 取证（下）再选型，别凭直觉走捷径。
+
+#### 二、纯 EEZ flow 同步链结构（替代 §11.15 的 native sync_rail）
+
+```
+tabview VALUE_CHANGED (handlerType:"flow", userData:0)
+  → LVGLActionComponent ①: objClearState(CHECKED)×N + tabviewGetActiveTab(result=页面局部变量)
+      ── @seqout（① 全部 actions 执行完才传播）──→
+  → CompareActionComponent(局部变量, i, "=")   ×每个非空页码 i
+      ── True → LVGLActionComponent ②: objAddState(CHECKED)×第 i 组
+```
+
+要点：
+- 连线：tabview → ① 用 output `VALUE_CHANGED` / input `@seqin`；① → Compare 用
+  `@seqout`；Compare → ② 用 `True`（boolean 序列输出的连线名就叫 True）。
+- 空组（如 sett 索引 0=通用左栏无对应行）跳过，不建 Compare/AddState 组件。
+- 局部变量写 `page.localVariables`：`{name, type:"integer", defaultValue:"0"}`；
+  表达式里裸名即按局部变量解析。
+- 本工程产物：Main 页 LVGLActionComponent×28 + CompareActionComponent×7，
+  连线 CLICKED 19 / VALUE_CHANGED 2 / @seqout 7 / True 7。
+
+#### 三、asar 序列化四要点（写 DSL 编译器的硬依据）
+
+1. **assignable 参数没有 Type 后缀**：LVGL 动作类工厂
+   `e.isAssignable || (o[e.name+"Type"]="literal")` —— 只有非 assignable 参数才写
+   `<nameType>:"literal"`；`tabviewGetActiveTab` 的 `result` 就是裸表达式字符串，
+   误加 `resultType` 会破坏序列化。
+2. **CompareActionComponent**（flowComponentId 1009）：A/B/C 是 makeExpressionProperty
+   裸串；operator 用枚举字符串 `"="`；输出 @seqout / True / False。
+3. **@seqout 传播时机**：eez-flow.cpp `executeLVGLApiComponent`（4188–4196）末尾才
+   `propagateValueThroughSeqout` —— 同组件全部 actions 执行完才向后传播，
+   下游 Compare 读到的变量一定已写好，无需手工排序。
+4. **局部变量**：`page.localVariables`（Flow.typeClass=Variable）。
+
+取证方法：解包 EEZ Studio 的 asar，看动作类定义（`isAssignable`）与
+CompareActionComponent 定义 + 运行时 eez-flow.cpp 对应分支；用 Studio 手搭一条
+最小链保存后对照 JSON。**先取证再写编译器 —— 取证充分则零试错。**
+
+#### 四、DSL 与代码归属变化
+
+- `onTabChange` 从字符串动作名升级为结构化：
+  `{"tv_ref":…, "var":"main_page_idx", "clear":[…全部要熄的控件…],
+    "add":[[第0页组],[第1页组],…]}`（与 onAction 互斥，json2eez 有守卫）。
+- `build_ui.py` 里 clear/add 都写**解析后的最终 id 串**（`_resolve_switchtabs`
+  统一处理，注意 prefix_ids 前缀坑 → P-0027）。
+- **native 退役要删干净**：DSL actions[] 声明、native_actions.cpp 函数、
+  （自动再生成覆盖）三处同步删，留墓碑注释指路 json2eez 的 onTabChange 注释。
+- screens.c 的 VALUE_CHANGED 分支正确形态是
+  `flowPropagateValueLVGLEvent(flowState, <componentIndex>, 0, e)`；
+  再见到 `action_*` 直调就是还有残留。
+
+#### 五、验收（沿用 P-0029 建立的运行时断言，一个不改）
+
+6 条 [swipe] 断言（确定性滑动 `lv_obj_scroll_to_y + SCROLL_END + pump(60)`）：
+main tile 跳转 0/1000→1/0100→0/1000；sett 上滑 1/100、下滑 0/000。
+外加 11 屏视觉对照（本轮 8.59% < 25% 阈值）。**重构不改行为时断言一字不动，
+本身就是「重构等价」最硬的证明。**
+
+#### 六、方法论：为什么当初走了 native、以后怎么避免
+
+- 当初「不确定 EEZ 能不能表达」就直接走 native —— 正确顺序是**先取证（asar 序列化
+  / Studio 手搭对照）再选型**；拿不准就通知用户，别默默扩大用户代码面。
+- 铁律的本质：**EEZ 工程要能脱离开发者自解释**（打开 Studio 能看到全部 UI 逻辑），
+  用户代码只留机器边界（外部硬件）。这条比「少写代码」更重要。

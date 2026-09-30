@@ -7,7 +7,54 @@
 
 ---
 
-## v0.8.7 — 回调/变量框架：四层隔离 + 命令/变量双通道 + 代码归属标记（当前）
+## v0.9.0 — 选型铁律：UI 控制一律 EEZ 优先，user action 只留外部硬件（当前）
+
+- 背景（PR-0057 / intake P-0030）：用户在 P-0029 native 方案验收后两次加码，最终定稿
+  「后期要求优先输出用EEZ里面控制UI，包括各个控件的联动，仅仅控制外部硬件的允许使用
+  用户代码，如果实在没有办法的话，需要通知我」。
+- **§11.15 的 native `sync_rail_*` 方案被推翻退役**（按约定保留旧条目，写明改动）：
+  高亮同步属纯 UI 控件联动，重做为**纯 EEZ flow 链** —— VALUE_CHANGED →
+  objClearState×N + tabviewGetActiveTab(result=页面局部变量) → @seqout →
+  CompareActionComponent(var,i,"=").True → objAddState(第 i 组)。
+  新增 `skills.md` **§11.17** 完整配方，含 **asar 序列化四要点**：
+  ① assignable 参数无 Type 后缀（tabviewGetActiveTab 的 result 是裸表达式串）；
+  ② CompareActionComponent：A/B/C 裸串、operator "="、输出口 True/False；
+  ③ @seqout 在组件全部 actions 执行完才传播（eez-flow.cpp:4188–4196）；
+  ④ 页面局部变量 page.localVariables。
+- DSL：`onTabChange` 从字符串动作名升级为结构化 `{tv_ref, var, clear, add}`；
+  native 退役删干净（actions[] 声明 + native_actions.cpp 函数 + screens.c 再生成）。
+- 方法论：**先取证再选型** —— 「EEZ 能不能表达」不靠直觉，解包 asar 看动作类定义 +
+  Studio 手搭最小链对照 JSON，取证充分则零试错；拿不准先通知用户，不默默走 native。
+- 铁律落盘：UI_BEHAVIOR_CONTRACT.md 新增选型铁律节（§0/§7 的 sync_rail 引用同步更新）；
+  项目/用户级 MEMORY.md 同步。
+- 验收基线不变：6 条 [swipe] 运行时断言原样通过 + 11 屏对照 8.59% < 25% ——
+  重构不改行为时断言一个字不动，即等价性证明。
+
+## v0.8.8 — 滑动高亮跟随 + 程序切页 animated:false 铁律 + 下拉浮层模式
+
+- 背景（PR-0056 / intake P-0029）：用户反馈 ①「上下滑动时左侧 tab 高亮不跟随
+  （设置页同理）」②「点无线网络要弹下拉窗，不要整屏下滑推挤其他选项」③要求自查。
+- 新增 `skills.md` **§11.15**，沉淀三块：
+  ① **滑动高亮跟随**：tabview VALUE_CHANGED（手势滑动 SCROLL_END 落定发出，
+     lv_tabview.c:330/376）→ native User Action `sync_rail_*` 按
+     `lv_tabview_get_tab_active` 重排 CHECKED——补上 §11.9 只覆盖点击动作链的缺口；
+  ② **★ 程序切页 animated:false 铁律（P-0029 根因）**：`tabviewSetActiveTab(animated:true)`
+     的 180ms 滚动动画未完成时再来事件，tabview 的 SCROLL_END 处理器会按
+     **旧动画目标位**算出旧 tab，`set_active(旧值)` 拉回页面并发
+     **VALUE_CHANGED(旧值)** → 高亮/页面 off-by-one（运行时冒烟实测抓到，
+     G5 截图对照掩盖不了也发现不了）。程序切换一律即时，滑动动画留给真实手势；
+     「加长等待」是掩盖不是修复；
+  ③ **下拉浮层模式**：onShow/onHide → 内置 objClearFlag/objAddFlag(HIDDEN)，
+     pop_bg 遮罩 + pop 卡片挂内容区末尾绝对定位（零推挤），隐藏入口多点（关闭/
+     遮罩/选中行）；flag 动作同 SetVariable 走 eez-flow.cpp 运行时解释，
+     **screens.c grep 不到 HIDDEN 是正常的**，真值在工程 JSON + 运行时断言。
+- 验收基线升级：sim.py `click_smoke_test` 从「io 回显 + tab 序号」扩到
+  **rail 四项 CHECKED 恰一为真** + **浮层 has_flag(HIDDEN) 翻转**运行时断言
+  （高亮竞态、显隐链路只有运行时断言能抓）。
+- 方法论：编译/链接通过 ≠ 行为正确；临时 printf + 全量状态 dump 一次定位竞态，
+  修上游（json2eez）而非等待/重试，修完移除临时代码。
+
+## v0.8.7 — 回调/变量框架：四层隔离 + 命令/变量双通道 + 代码归属标记
 
 - 背景（PR-0055）：用户要「UI 按钮回调和 native 变量的软件设计框架图」，
   并明确要求**框架里标明哪些是用户添加的代码** + 问「这个框架好不好」。

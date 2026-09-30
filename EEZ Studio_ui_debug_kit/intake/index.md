@@ -30,3 +30,5 @@
 | P-0026 | 2026-09-28 | EEZ tab 栏原生定制：首子容器样式发射到 lv_tabview_get_tab_bar（rail 两行标签 / 设置左栏紧凑行） | EEZ原生,tabview,样式,tab栏,字体继承 | fixed |
 | P-0027 | 2026-09-28 | 动作 object 写了重写前 id：EEZ identifiers 只收录被引用 widget，assign_ids 加页面前缀 → 16 个 Widget index not found | json2eez,动作,identifier,tabviewSetActiveTab,tabSize | fixed |
 | P-0028 | 2026-09-28 | 设置左栏随页滑动：tab pager 导航必须外置固定 + CHECKED 两态/初始 checkedState/多动作链跟随（副本案废除） | EEZ原生,tabview,动作,objAddState,checkedState,样式状态,导航固定 | fixed |
+| P-0029 | 2026-09-30 | 程序切页 animated:true 时高亮/页面 off-by-one：陈旧 SCROLL_END 按旧动画目标位拉回旧 tab | tabview,VALUE_CHANGED,高亮跟随,竞态,动画,冒烟断言 | fixed |
+| P-0030 | 2026-09-30 | 滑动同步 native user action 退役改纯 EEZ flow（asar 序列化四要点 + 选型铁律） | EEZ-flow,tabview,VALUE_CHANGED,user-action,asar取证,Compare,localVariables,铁律 | fixed |
