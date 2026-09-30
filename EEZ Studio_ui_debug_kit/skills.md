@@ -1389,3 +1389,70 @@ if (new_val != cur_val) lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);   /* 或 remov
 `all.py --shots` 全绿（EEZ build **No error and no warning**、11 屏出图、
 6 条 swipe 断言全过）+ 四态截图核对（列表+已连接 / 扫描中 / 连接中 / 失败+重试）。
 **状态机的正确性靠「四态出图逐张看」，不是靠断言** —— 断言只覆盖点击链是否闭环。
+
+### 11.19 设置页布局铁律：外置左栏让位 `RAIL_W+206` + 对照门禁的均值盲区（2026-09-30，P-0032）
+
+#### 一、几何契约（不可变）
+
+- 设置左栏 `rail_cats()` 是**外置单实例**（§11.9 tab pager 规则），固定盖内容区左侧
+  `[CONTENT_X, CONTENT_X+206]`（= 76..282）。
+- 设置三子页（通用 / 显示 / 唤醒）的 pane 一律
+  `place(pane_xxx(SW, CONTENT_H), RAIL_W+206, SB_H)`，`SW = CONTENT_W-206`（=518），
+  内容占 282..800。
+- 为什么容易踩：撤掉某个子页时「没有子页了 → 内容占满内容区」的直觉是**错的** ——
+  左栏是外置的、不在 tabview 里，它永远占着左侧 206px，跟 tabview 有几页无关。
+
+#### 二、症状
+
+内容 76..594，左半压在 rail_cats 分类列表上（两组文字叠字），右缘 594..800 空一截。
+07 / 08 / 09（背景）/ 10 四屏同病（同一条链路生成的三张设置子页 + 以它为背景的浮层）。
+
+#### 三、两层门禁为什么都没拦住（重要方法论）
+
+1. `check_bounds`（json2eez）只查「**子超出父**」，不查「**兄弟重叠**」——
+   「内容压左栏」对它是合法结构。
+2. `compare.py` 对照门禁只看 **11 屏平均**明显差异（阈值 25%）：单屏结构性错位
+   只把 07 拉到 12.90%，均值 10.05% 照样绿。
+3. **结论：数字绿 ≠ 画面对。出图必须分区放大目检**（浮层 / 遮罩压暗的背景也要看，
+   不能只看主角控件）。修复后回归：07 12.90→6.54%、08 →7.65%、10 →6.47%，
+   平均 10.05→8.62%。
+
+#### 四、修复形态
+
+```python
+SET_X = RAIL_W + 206   # 外置 rail_cats 盖住左侧 76..282，内容让位
+set_gen["children"]  = place(pane_settings(...), SET_X, SB_H, "set_")
+set_disp["children"] = place(pane_display(...),  SET_X, SB_H, "disp_")
+set_wake["children"] = place(pane_wake(...),     SET_X, SB_H, "wake_")
+```
+
+同构的隐藏钉态页 / 截图页要**一起改**（x 同步 +206、w 收成 SW），否则
+`check_bounds` 会拦「282+724=1006>800」。
+
+### 11.20 DSL 结构不变量：tab 只能是 tabview 的直接子对象（2026-09-30，P-0033）
+
+#### 一、规则与取证
+
+- EEZ 规定 `LVGLTabWidget` 必须挂在 `LVGLTabviewWidget` 下。Screen 直下挂 tab，
+  GUI 打开工程报
+  **`Invalid position of Tab widget inside Widgets Structure`**。
+- **headless CLI build 不做这层结构校验**：编过、仿真正常、对照全绿 ——
+  「**headless build 过 ≠ 结构合法**」。DSL 生成端（build_ui / json2eez）要
+  自己保证结构不变量，不能指望 EEZ headless 帮你查。
+
+#### 二、案例：四张「钉态」隐藏页的始末
+
+- 当初为给仿真脚本提供「干净背景出图」，往 Screen 直下挂了 4 张隐藏 tab
+  （显示/唤醒/通知/浮层 · 钉态）。
+- 复盘发现 `m_shot_*` 在 sim.py / 冒烟脚本里**零引用**：四态图实际走 §11.18 配方
+  （真实页 + `EEZ_SIM_STATE` 钉态钩子）—— 钉态页是废弃中间方案 + 死代码
+  （ui.json / 生成 C 白多约两千行），且正是它们触发 GUI 结构报错。**整体删除**。
+- **以后再要「干净背景截图页」**：包进一个**隐藏 tabview**（tabSize=0、页填满内容区）
+  或改普通 container，不能裸挂 Screen。
+
+#### 三、校验手法
+
+遍历工程 JSON，断言每个 `type:"LVGLTabWidget"` 的 parent type 是
+`LVGLTabviewWidget`（本次手工执行：13 tab / 4 tabview / 违例 0）。
+**遗留建议**：把该断言做进 `json2eez.py` 的 check_bounds 邻位，成为常驻门禁。
+

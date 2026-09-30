@@ -7,7 +7,24 @@
 
 ---
 
-## v0.9.1 — 声明式显隐 hiddenExpr：状态机 UI 的正解（当前）
+## v0.9.2 — 设置页布局铁律 + tab 结构不变量（当前）
+
+- 背景（PR-0059 / intake P-0032、P-0033）：用户指出「界面发生重叠，你自己截图
+  没看出来有问题吗」，随后又贴出 EEZ GUI 四条
+  `Invalid position of Tab widget inside Widgets Structure` 报错。
+  两问分别撕开两块盲区：对照门禁的均值盲区、headless 构建的结构校验盲区。
+- 新增 `skills.md` **§11.19 设置页布局铁律**：外置左栏 `rail_cats` 固定盖 76..282，
+  设置三子页 pane 起点必须 `RAIL_W+206`（撤子页 ≠ 内容可以占满内容区）；
+  `check_bounds` 只查「子超出父」不查「兄弟重叠」；**对照门禁只看 11 屏平均，
+  单屏结构错位（07 才 12.90%）静默通过 → 出图必须分区放大目检，数字绿 ≠ 画面对**。
+- 新增 `skills.md` **§11.20 DSL 结构不变量**：tab 只能是 tabview 的直接子对象；
+  **headless build 过 ≠ 结构合法**（GUI 校验更严）。Screen 直下挂 tab 的四张
+  「钉态」隐藏页已删（零引用死代码，四态图走 §11.18 配方 + `--states`）；
+  再要干净背景截图页须包进隐藏 tabview 或改 container。遗留：把
+  「tab 必须在 tabview 内」做进 json2eez 常驻断言。
+- 新增 intake **P-0032 / P-0033** + index 两行 + **PR-0059**（用户原话逐字）。
+
+## v0.9.1 — 声明式显隐 hiddenExpr：状态机 UI 的正解
 
 - 背景（PR-0058 / intake P-0031）：用户要求 Wi-Fi 扫描/连接 UI 按行业标准重做，
   并明确「先按照行业标准做法来做，你先执行」——不要停在方案阶段。

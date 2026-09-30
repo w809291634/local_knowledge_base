@@ -581,3 +581,33 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
 - 遗留待用户确认：① 槽位数 5 是否够（可改 6/8）② 是否做密码输入面板 + 屏上数字键盘
   ③ 形态用页内三区（已采用）还是弹层 `wifi_pop`。
 - 关联：PR-0057（选型铁律）、§11.14（A/B/C 通道）、§11.17、§11.18、P-0031
+
+## PR-0059 · 2026-09-30 · 补浮层设计稿 →「界面重叠」修复 → 钉态页删除 → 经验入库
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：
+  1. 「可以设计可以的，你先执行看看」（批准补 Wi-Fi 浮层设计稿并直接执行）
+  2. 「界面发生重叠，你自己截图没看出来有问题吗」
+  3. 「Pages / Main / Components / Screen / Children 显示 · 钉态 Invalid position of
+     Tab widget inside Widgets Structure 唤醒 · 钉态 Invalid position of Tab widget
+     inside Widgets Structure 通知 · 钉态 Invalid position of Tab widget inside
+     Widgets Structure 浮层 · 钉态 Invalid position of Tab widget inside Widgets
+     Structure 出现这个错误」
+  4. 「是否可以总结经验到经验库中」
+- **想达成**：① 把 Wi-Fi 浮层设计稿补齐、解除 NO_REF 豁免；② 修掉界面重叠；
+  ③ 修掉 EEZ GUI 结构报错；④ 本轮经验入库。
+- **产出 / 结论**：
+  - 设计稿 `09_设置 · Wi-Fi 浮层.png` 落地（初版目检抓出两处翻车并修：「可用网络」
+    标签重复、Neighbor_5G 行溢出浮层底边——重写时对齐 pane_network(580,359) 精确几何）；
+    `compare.py` NO_REF 清空，09 进真实像素对照（7.83%）。旧稿「09_设置 · 网络.png」
+    随构建清目录消失。
+  - 重叠根因 = 撤「设置 · 网络」子页时 pane 起点 `RAIL_W+206` 被顺手改成 `RAIL_W`
+    （外置左栏让位铁律被破坏）→ **P-0032**（07 12.90→6.54%、08→7.65%、10→6.47%，
+    平均 10.05→8.62%）。
+  - EEZ 报错根因 = 四张钉态页是 Screen 直下 tab + 零引用死代码 → 删除，**P-0033**
+    （13/13 tab 归位、结构校验 0 违例、verify_center 58/58）。
+  - 入库：skills.md **§11.19 / §11.20**、intake **P-0032 / P-0033** + index 行、
+    CHANGELOG v0.9.2。
+- **方法论教训（AI 自省）**：上一轮对照「全绿」就交差，没做分区放大目检——
+  用户一眼看出的重叠藏在遮罩压暗的背景里。数字绿 ≠ 画面对。
+- 关联：P-0031、PR-0058、§11.9、§11.18、§11.19、§11.20
