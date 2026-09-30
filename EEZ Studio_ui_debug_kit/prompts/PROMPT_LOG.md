@@ -546,3 +546,38 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   CHANGELOG v0.9.0 + intake P-0030 + 契约新增选型铁律节；铁律另落项目/用户级
   MEMORY.md 与当日日志。
 - 关联：PR-0056、§11.14、§11.15、§11.17、P-0029、P-0030
+
+## PR-0058 · 2026-09-30 · Wi-Fi 扫描/连接状态机：按行业标准落地（hiddenExpr 实战）
+
+- 提示词（原话，按序合并）：
+  ①「wifi连接时候应该会有扫描，这个扫描和连接逻辑的UI我看不行，你觉的应该怎么设计」
+  ②「先按照行业标准做法来做，你先执行」
+  ③（会话续接）「Please continue with the conversation based on the summarized context above」
+- 诉求：① 重新设计 Wi-Fi 扫描/连接的 UI 形态与流程；② **按行业标准做法做，直接执行**
+  （不要停在方案阶段等确认）；③ 承接被打断的任务 50（native 侧扫描/连接）。
+- 产出/结论：**5 态状态机**（`wifi_state` 0 列表(空闲) / 1 扫描中 / 2 连接中 / 3 已连接 /
+  4 连接失败）+ `wifi_conn_slot` + 每槽 ssid/sub/rssi/lock，槽位固定 5 个
+  （`NET_SLOTS` 与 `APP_WIFI_SLOTS` 两处同步——EEZ 是静态 UI，无法动态生成不定长列表）。
+  **UI 侧全部走 EEZ 声明式 `hiddenExpr`**，零用户代码，符合 PR-0057 选型铁律；
+  native 只管三条硬件命令 `io_wifi_scan` / `io_wifi_disconnect` / `io_wifi_pick(slot)`。
+  工程侧改动：`app_model.h`（APP_IN_COUNT 7→31；字符串缓冲从 `g_in_str[2][48]`
+  靠 `(int)id - APP_IN_CLOCK_TEXT` 隐式下标，改为**每个输入 id 一个独立 64B 缓冲**，
+  避免加 13 个字符串后改枚举顺序就串位）、`io_iface.h`/`io_pc.cpp`/`io_esp.cpp`、
+  `native_actions.cpp` 新增 7 个动作（`wifi_pick_0..4` 用宏生成，函数体只有一行
+  `app_set_output`）、`native_vars.cpp` 24 个槽位 getter 用宏生成（不手抄）。
+  仿真侧：io_pc 假 Wi-Fi 从「每 5 tick 无脑轮 0/1/2」改为**真流程**（AP_LIST 5 个、
+  扫描 2s / 连接 2s、TP-LINK 首次连超时让人看到失败态）+ **`EEZ_SIM_STATE=<n>[,slot]`
+  钉态钩子**（`_putenv("")` 刷新 CRT 环境后 getenv 才读得到；`s_pinned` 阻止时间推进覆盖）。
+- **四个坑（§11.18）**：① hiddenExpr **禁嵌套括号**（嵌套会落盘成
+  `!(!(...))` 导致判定失真 → 互斥控件叠字），要展开成独立条件用 `&&` 串；
+  ② **pill 宽度必须 x=0 锚点**：先 `pill(0,0)` 取 w → 反推 `pill_x = rx - w` → 再 shift，
+  邻居用 `pill_x` 定位（用 `fw` 反推会算进 pill 内部，`wifi_err` x 702 → 656）；
+  ③ 行容器与行内按钮**禁绑同一 action**（事件冒泡发两条命令），改「行纯展示 +
+  独立透明热区按钮」且 hiddenExpr 互补；④ 右对齐 `label_right` 飘 1~2px →
+  用 `label(rx - tw(text, px), ...)`。另：`·` 类分隔符必须进 `NET_GLYPHS` 预收集字形。
+- 验收：`design/all.py --shots` 全绿（EEZ build `No error and no warning`、11 屏出图、
+  6 条 `[swipe]` 运行时断言全过）；四态拼版图 `build/sim_shots/09b_wifi_states.png`
+  （列表+已连接 / 扫描中 / 连接中 / 失败+重试）逐态核对无叠字。
+- 遗留待用户确认：① 槽位数 5 是否够（可改 6/8）② 是否做密码输入面板 + 屏上数字键盘
+  ③ 形态用页内三区（已采用）还是弹层 `wifi_pop`。
+- 关联：PR-0057（选型铁律）、§11.14（A/B/C 通道）、§11.17、§11.18、P-0031

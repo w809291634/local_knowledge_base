@@ -1320,3 +1320,72 @@ main tile 跳转 0/1000→1/0100→0/1000；sett 上滑 1/100、下滑 0/000。
   / Studio 手搭对照）再选型**；拿不准就通知用户，别默默扩大用户代码面。
 - 铁律的本质：**EEZ 工程要能脱离开发者自解释**（打开 Studio 能看到全部 UI 逻辑），
   用户代码只留机器边界（外部硬件）。这条比「少写代码」更重要。
+
+### 11.18 ★ 声明式显隐 hiddenExpr：状态机 UI 的正解（2026-09-30，网络页实战）
+
+§11.17 的选型铁律往前推了一步：**「状态 → 界面」切换根本不需要 flow 链，也不需要
+user action，EEZ 自己就有声明式开关 —— hiddenFlag 表达式（`hiddenExpr`）。**
+
+#### 一、机制（asar / 生成代码实证）
+
+DSL 节点加 `hiddenExpr="<表达式>"` → 工程 JSON 写
+`hiddenFlagType:"expression"` + `hiddenFlag:"<表达式>"`。EEZ Studio build 在
+`tick_screen_<page>()` 生成：
+
+```c
+bool new_val = evalBooleanProperty(flowState, 464, 3, "Failed to evaluate Hidden flag");
+bool cur_val = lv_obj_has_flag(obj, LV_OBJ_FLAG_HIDDEN);
+if (new_val != cur_val) lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);   /* 或 remove */
+```
+
+**每帧求值 + 自动 add/remove HIDDEN。** 硬件侧只改 native 输入变量，界面自己切画面，
+**UI 逻辑零用户代码** —— 铁律下「控件联动」的最优解，优先于 flow 链（更声明式、
+工程里一眼看得见、不用建 Watch/Compare 组件）。网络页一次落了 54 处。
+
+- 表达式引用的变量**必须在 `ui.json` 的 `variables[]` 声明**，否则 build 找不到变量。
+- 引擎支持 `== != < > <= >= && ||`（`eez-flow.cpp` 表驱动 `do_OPERATION_TYPE_*`）。
+- 改 hiddenExpr 后**必须重跑 `all.py` 全链路**（只有 build 才会把表达式编进
+  `evalBooleanProperty`），只改 ui.json 不 build 是没用的。
+
+#### 二、★ 四个坑（都实测踩过，症状 → 原因 → 规则）
+
+| # | 症状 | 原因 | 规则 |
+|---|---|---|---|
+| 1 | 两个**本该互斥**的控件同时显示、叠字 | 表达式写成 `"A \|\| (%s)" % cond`（给子条件顺手加括号），落盘被再包一层成 `"A \|\| !(!(B && C))"` → 判定恒真/恒假 | **禁止嵌套括号**：只写扁平 `&&`/`\|\|` 串；分组结果**预先展开**成 `!X && !Y && !Z`；`!` 直接贴比较式写 |
+| 2 | 文字骑在 pill 上（如「连接超时」压在「重试」上） | `pill()` 返回的 `w` 是**给 `x=0` 锚点**算的；先 `shift` 再用 `fw` 反推邻居位置 = 算进 pill 内部 | 顺序固定：**先 `pill(0,0)` 拿 w → 用 w 反推 `pill_x = rx - w` → 最后才 `shift`**；邻居用 `pill_x` 定位 |
+| 3 | 右对齐的文字右边缘飘 1~2px | `label_right(rx,…)` 内部按 Pillow 量宽反推 x，与实渲有差（`…` 更明显） | 严格右对齐用 `label(rx - tw(text, px), …)`，别用 `label_right` |
+| 4 | 一次点击发了**两条**命令 | 行容器绑 `action`，行内失败态「重试」pill 也绑同一 `action` → 事件冒泡触发两遍 | 行容器**纯展示不绑动作**；另加一层 `bgOpa=0` 的**透明热区按钮**铺满整行负责点击，与行内按钮的 hiddenExpr **互补**（失败态让位给 pill） |
+
+#### 三、状态机页配方（网络页模板，其他硬件页照抄）
+
+```
+状态：wifi_state 0 列表 / 1 扫描中 / 2 连接中 / 3 已连接 / 4 失败
+      wifi_conn_slot 当前槽位     wifi_slot{i}_ssid/_sub/_rssi/_lock  ← 5 个固定槽
+```
+
+- **EEZ 生不出不定长列表** → 结果列表**必须预置固定槽位**；空槽 = `ssid == ""`，
+  UI 用 `wifi_slot{i}_ssid == ''` 自动藏掉那行 + 那条分隔线。
+  **槽位数在 DSL（`NET_SLOTS`）和 native（`APP_WIFI_SLOTS`）两处，必须同步改。**
+- 归属分层（对齐 §11.14 双通道）：
+  - 状态切换 / 显隐 / 样式 → **hiddenExpr**（EEZ，零用户代码）
+  - 真扫描 / 真连接 / 断开 → **User Action**（函数体只有一行 `app_set_output`）
+  - 结果回显 → **native 输入变量**（`app_set_input_*`，UI 只读）
+- native 侧省事写法：槽位变量函数对**用宏生成**（`WIFI_SLOT_ALL(i)`）；
+  `pick` 用**一个**输出枚举 `APP_OUT_WIFI_PICK` + 槽位号，**不要 5 个枚举**；
+  `app_model.cpp` 的字符串输入缓冲按 **id 直接索引**（`g_in_str[APP_IN_COUNT][64]`），
+  **不要靠 `id - 基准值` 算下标** —— 加字段必然串位（旧代码只认 2 个串）。
+- 运行时才填入的字符串必须**预先用 `glyphs=` 收字形**（网络页 `NET_GLYPHS`，
+  含中文错误原因 + `·` 分隔符），漏了就是豆腐块。
+- **中间态截图**：仿真的 `shoot()` 每屏只拍一张，扫完/连完就回列表态，**拍不到
+  扫描中/连接中/失败**。做法：`platform/io_pc.cpp` 认环境变量
+  `EEZ_SIM_STATE=<n>[,slot]` **钉住**状态（`s_pinned` 让时间推进不再改状态）。
+  - Windows 下 `getenv` 读不到 shell 设的环境变量，**先 `_putenv("")` 刷新 CRT 环境**。
+  - 手动跑 exe 需把 `SDL2.dll` + `libstdc++-6.dll` + `libgcc_s_seh-1.dll` +
+    `libwinpthread-1.dll` 拷到 exe 同目录，否则 missing shared libraries。
+  - 出图目录参数必须是 Windows 风格路径（`C:/…`）；`/foo` 会被当根路径解析而静默失败。
+
+#### 四、验收
+
+`all.py --shots` 全绿（EEZ build **No error and no warning**、11 屏出图、
+6 条 swipe 断言全过）+ 四态截图核对（列表+已连接 / 扫描中 / 连接中 / 失败+重试）。
+**状态机的正确性靠「四态出图逐张看」，不是靠断言** —— 断言只覆盖点击链是否闭环。

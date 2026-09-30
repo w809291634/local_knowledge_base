@@ -32,3 +32,4 @@
 | P-0028 | 2026-09-28 | 设置左栏随页滑动：tab pager 导航必须外置固定 + CHECKED 两态/初始 checkedState/多动作链跟随（副本案废除） | EEZ原生,tabview,动作,objAddState,checkedState,样式状态,导航固定 | fixed |
 | P-0029 | 2026-09-30 | 程序切页 animated:true 时高亮/页面 off-by-one：陈旧 SCROLL_END 按旧动画目标位拉回旧 tab | tabview,VALUE_CHANGED,高亮跟随,竞态,动画,冒烟断言 | fixed |
 | P-0030 | 2026-09-30 | 滑动同步 native user action 退役改纯 EEZ flow（asar 序列化四要点 + 选型铁律） | EEZ-flow,tabview,VALUE_CHANGED,user-action,asar取证,Compare,localVariables,铁律 | fixed |
+| P-0031 | 2026-09-30 | 状态机 UI 用 hiddenExpr 声明式显隐：表达式禁嵌套括号（互斥控件叠字）+ pill 宽度必须 x=0 锚点（文字骑 pill）+ 行容器与行内按钮禁绑同一动作（冒泡双命令） | hiddenExpr,hiddenFlag,声明式显隐,状态机,互斥显隐,pill宽度,事件冒泡,表达式嵌套 | fixed |

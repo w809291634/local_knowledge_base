@@ -7,7 +7,37 @@
 
 ---
 
-## v0.9.0 — 选型铁律：UI 控制一律 EEZ 优先，user action 只留外部硬件（当前）
+## v0.9.1 — 声明式显隐 hiddenExpr：状态机 UI 的正解（当前）
+
+- 背景（PR-0058 / intake P-0031）：用户要求 Wi-Fi 扫描/连接 UI 按行业标准重做，
+  并明确「先按照行业标准做法来做，你先执行」——不要停在方案阶段。
+  这是 PR-0057 选型铁律落地后的第一个完整页级实战。
+- 新增 `skills.md` **§11.18 声明式显隐 hiddenExpr**，沉淀机制 + 四个坑 + 状态机页配方：
+  - **机制（取证充分，非推测）**：DSL 节点 `hiddenExpr="<表达式>"` → `json2eez.py` 写
+    `hiddenFlagType:"expression"` + `hiddenFlag:"<表达式>"` → EEZ build 在
+    `tick_screen_<page>()` 生成 `evalBooleanProperty(flowState, N, 3, "Failed to evaluate
+    Hidden flag")` 并与 `lv_obj_has_flag(obj, LV_OBJ_FLAG_HIDDEN)` 比对，不同就
+    add/remove。**每帧求值、自动翻转 HIDDEN** —— hardware 侧改输入变量 UI 自动切换，
+    UI 逻辑零用户代码。表达式引擎支持 `== != < > <= >= && ||`（`eez-flow.cpp` 表驱动
+    `do_OPERATION_TYPE_*`）；表达式引用的变量必须在 `ui.json` 的 `variables[]` 声明。
+  - **状态机页配方**：一个 `wifi_state` 整数 + 各态专属容器，容器 hiddenExpr 互斥
+    （如 `net_cur_on` → `wifi_state != 3`、`net_cur_off` → `wifi_state == 3`）；
+    列表用**固定槽位**预置（EEZ 静态 UI 无法动态生成不定长列表），空槽用
+    `wifi_slot{i}_ssid == ''` 自隐藏。
+  - **归属分层**（与 §11.14 一致）：状态切换/显隐/样式 = EEZ 声明式；真扫描/连接/断开
+    = A 通道 User Action；结果回显 = C 通道输入变量。
+- **四个坑（对照表形式写进 §11.18）**：① 表达式**禁嵌套括号**（嵌套括号落盘后判定失真，
+  表现为互斥控件叠字）→ 展开成独立条件用 `&&` 串；② **pill 宽度必须 x=0 锚点**：
+  先取宽再 shift，邻居按 `pill_x` 定位，不能用 `fw` 反推（会算进 pill 内部）；
+  ③ 行容器与行内按钮禁绑同一 action（冒泡双命令）→ 行纯展示 + 独立透明热区按钮；
+  ④ 右对齐别用 `label_right`（飘 1~2px），用 `label(rx - tw(text, px), ...)`。
+- **仿真侧配套**：中间态截图钩子 `EEZ_SIM_STATE=<n>[,slot]`（Windows 需先
+  `_putenv("")` 刷新 CRT 环境，`getenv` 才读得到），配 `s_pinned` 阻止时间推进覆盖
+  —— 状态机的中间态（扫描中/连接中）靠时间推进才能截到，必须有钉态手段。
+- 验收：`design/all.py --shots` 全绿 + 四态拼版图逐态人工核对（叠字类问题
+  像素 diff 阈值抓不到，必须看图）。
+
+## v0.9.0 — 选型铁律：UI 控制一律 EEZ 优先，user action 只留外部硬件
 
 - 背景（PR-0057 / intake P-0030）：用户在 P-0029 native 方案验收后两次加码，最终定稿
   「后期要求优先输出用EEZ里面控制UI，包括各个控件的联动，仅仅控制外部硬件的允许使用
