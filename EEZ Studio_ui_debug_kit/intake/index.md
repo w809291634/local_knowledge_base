@@ -35,3 +35,4 @@
 | P-0031 | 2026-09-30 | 状态机 UI 用 hiddenExpr 声明式显隐：表达式禁嵌套括号（互斥控件叠字）+ pill 宽度必须 x=0 锚点（文字骑 pill）+ 行容器与行内按钮禁绑同一动作（冒泡双命令） | hiddenExpr,hiddenFlag,声明式显隐,状态机,互斥显隐,pill宽度,事件冒泡,表达式嵌套 | fixed |
 | P-0032 | 2026-09-30 | 设置页内容压左栏：撤子页时把 pane 起点 RAIL_W+206 改成 RAIL_W（外置左栏让位铁律）；对照门禁只看 11 屏平均，单屏错位不报警 → 出图必分区放大目检 | 布局,外置左栏,place起点,RAIL_W,tab pager,对照门禁,均值盲区,目检 | fixed |
 | P-0033 | 2026-09-30 | Screen 直下挂 tab：EEZ GUI 报 Invalid position of Tab widget（headless build 不查结构）；钉态页零引用死代码已删，再要干净背景页须包进隐藏 tabview | EEZ结构校验,tab,tabview,headless,GUI校验,钉态页,死代码,结构不变量 | fixed |
+| P-0034 | 2026-09-30 | 滑动点亮组空缺：无子页的入口行（pop）不归组，滑回通用页左栏全灭；pop 行点击不动高亮；swipe 断言把 bug 写成规格（expect 0/000） | 高亮跟随,rail_cats,onTabChange,点亮组,tab=None,pop行,断言写成规格 | fixed |
