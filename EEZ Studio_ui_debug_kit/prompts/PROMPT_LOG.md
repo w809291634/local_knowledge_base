@@ -628,3 +628,18 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   `down=100`/`base=(info)`。验证：`all.py --shots` EXIT=0，sett down 100 ✓，
   对照 8.62% 无缺屏。入库 P-0034 + §11.19 点亮组完备性。
 - 关联：P-0032、P-0028、§11.9、§11.17、§11.19
+
+## PR-0061 · 2026-09-30 · 字体 Opts 行路径不一致（GUI 相对 vs 后台绝对）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「EEZ 生成的 应该 是 * Opts: --bpp 8 --size 26 --no-compress
+  --font design\fonts\YaHei_Consolas_Hybrid.ttf --range 32-127 --forma ，而你生产的都是
+  Opts: --bpp 8 --size 26 --no-compress --font D:/esp32_.../design/fonts/YaHei_Consolas_Hybrid.ttf」
+- **想达成**：后台引擎产物与 GUI 产物在 Opts 头注释上也逐字节一致。
+- **产出 / 结论**：asar 取证 font.js `_lvglExtractFontParams` —— opts_string 用工程
+  filePath **原文**（无相对化），Opts = 工程里存的形式。修复三层：①json2eez 主/附加源
+  filePath 写相对工程根（上游正解）；②内核 BAKE_JS 读文件以工程目录为基准 + opts_string
+  用原文（逐字符复刻）；③ensure_engine 缓存命中时不重写 bake.js 的缺陷（内核更新不生效）。
+  KERNEL_HASH 242c651b→7c210f0d。验证：11 个 Opts 全相对、绝对路径残留 0、
+  all.py --shots 全绿（8.62%/swipe 全过/58 居中）。入库 P-0035 + §11.12 第 8 条。
+- 关联：P-0035、§11.12、§11.13、PR-0053/0054

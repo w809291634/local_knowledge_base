@@ -931,7 +931,7 @@ Actions 调色板（Fig.78），底部列 User Actions；A34.2.16「Event handle
    **一个 Node 进程可连续烘 11 个字体（约 2 秒）**，`collect_font_data` 结尾的
    `ft_render.destroy()` 不影响下一个。
 
-   ★★ **要让产出逐字节一致，有 7 个必须踩准的点（全部实测，错一个就对不上）**：
+   ★★ **要让产出逐字节一致，有 8 个必须踩准的点（全部实测，错一个就对不上）**：
    1. asar 头部：前 16 字节是 4 个 uint32，**第 4 个**才是 header JSON 长度；
       `BASE = 16 + header_size`，叶子节点 offset 相对 BASE。
       （用 `data.find(b'{"files"')` 找起点 + `data[4:8]` 当长度是错的。）
@@ -947,6 +947,12 @@ Actions 调色板（Fig.78），底部列 User Actions；A34.2.16「Event handle
       （见 `features/font/font.js` 的 `_lvglExtractFontParams`）。
    7. **落盘后处理**：连续 3+ 换行折叠成 2 个 + 去掉末尾所有空白
       （官方产物末尾**不带换行**）。不做这两步会差 8 个空行 + 末尾换行。
+   8. **（P-0035）opts_string 的 `--font` 用工程 filePath 的原文**（font.js 实证：
+      `--font ${this.source.filePath}` / `--font ${e.filePath}`，无任何相对化）——
+      所以工程里 filePath **必须存相对工程根**（GUI 保存的工程就是相对的），
+      内核读文件以**工程目录**为基准（等价 getAbsoluteFilePath，不依赖 cwd）。
+      连带：`ensure_engine` 缓存命中也必须校验 bake.js 内容（驱动代码 ≠ 引擎，
+      内核更新后旧 bake.js 还在跑 = 改动静默失效）。
 
    脚本默认「字体定义没变就跳过」（key 存 `design/.font_bake_state.json`），`--force` 强制重烘，
    `--clean` 清引擎缓存。引擎缓存放 `%LOCALAPPDATA%/eez-font-engine/<asar size-mtime hash>`，

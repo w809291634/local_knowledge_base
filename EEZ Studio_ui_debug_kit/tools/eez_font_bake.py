@@ -137,8 +137,11 @@ function bake(args, output) {
 }
 
 // -------- 复刻 font-extract/lvgl.js 的 ExtractFont.start() --------
-function buildArgs(font, LVGL_INCLUDE) {
-    const abs = path.resolve(font.source.filePath);
+// ★ 路径语义（2026-09-30 深夜取证 font.js：opts_string 用工程里 filePath **原文**，
+//   无任何相对化 → Opts 行 = 工程里存的形式，GUI 保存的工程是相对工程根的路径）。
+//   读文件以工程目录为基准（等价 EEZ getAbsoluteFilePath），不依赖 process.cwd()。
+function buildArgs(font, LVGL_INCLUDE, projDir) {
+    const abs = path.resolve(projDir, font.source.filePath);
     if (!fs.existsSync(abs)) throw new Error("font source not found: " + abs);
     const buf = fs.readFileSync(abs);
 
@@ -156,7 +159,7 @@ function buildArgs(font, LVGL_INCLUDE) {
     }];
 
     for (const s of font.lvglAdditionalSources || []) {
-        const sab = path.resolve(s.filePath);
+        const sab = path.resolve(projDir, s.filePath);
         if (!fs.existsSync(sab)) throw new Error("additional font source not found: " + sab);
         const se = [];
         (s.encodings || []).forEach(t => se.push(t.from, t.to, t.mapped_from ?? t.from));
@@ -169,8 +172,10 @@ function buildArgs(font, LVGL_INCLUDE) {
 
     const output = getName("ui_font_", font.name || "");
 
-    // 复刻 font.js 的 _lvglExtractFontParams
-    let opts = `--bpp ${font.bpp} --size ${font.source.size} --no-compress --font ${abs}`;
+    // 复刻 font.js 的 _lvglExtractFontParams —— ★ --font 用 filePath **原文**
+    //（EEZ: `--font ${this.source.filePath}` / `--font ${e.filePath}`），
+    // 工程里存相对路径 Opts 就是相对，存绝对就是绝对。
+    let opts = `--bpp ${font.bpp} --size ${font.source.size} --no-compress --font ${font.source.filePath}`;
     const symStr = (font.lvglSymbols || "").replace(/\s/g, "");
     if (symStr) opts += ` --symbols ${symStr}`;
     const rngStr = (font.lvglRanges || "").replace(/\s/g, "");
@@ -179,7 +184,7 @@ function buildArgs(font, LVGL_INCLUDE) {
     opts += " --format lvgl";
     for (const e of font.lvglAdditionalSources || []) {
         if (!e.filePath) continue;
-        opts += ` --font ${path.resolve(e.filePath)}`;
+        opts += ` --font ${e.filePath}`;
         const es = (e.lvglSymbols || "").replace(/\s/g, "");
         if (es) opts += ` --symbols ${es}`;
         const er = (e.lvglRanges || "").replace(/\s/g, "");
@@ -210,6 +215,7 @@ function buildArgs(font, LVGL_INCLUDE) {
 (async () => {
     const projPath = process.argv[2];
     const outDir = process.argv[3];
+    const projDir = path.dirname(path.resolve(projPath));
     const proj = JSON.parse(fs.readFileSync(projPath, "utf8"));
     const LVGL_INCLUDE = (((proj.settings || {}).build) || {}).lvglInclude || "lvgl.h";
     const fonts = (proj.fonts || []).filter(f => (f.renderingEngine || "LVGL") === "LVGL");
@@ -218,7 +224,7 @@ function buildArgs(font, LVGL_INCLUDE) {
     const manifest = [];
     for (const f of fonts) {
         const t0 = Date.now();
-        const { args, output } = buildArgs(f, LVGL_INCLUDE);
+        const { args, output } = buildArgs(f, LVGL_INCLUDE, projDir);
         const r = await bake(args, output);
         // C 源码是字符串（没被真 base64 编码）；bin 才是 Buffer
         const rawSrc = r.lvglSourceFile;

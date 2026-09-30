@@ -36,3 +36,4 @@
 | P-0032 | 2026-09-30 | 设置页内容压左栏：撤子页时把 pane 起点 RAIL_W+206 改成 RAIL_W（外置左栏让位铁律）；对照门禁只看 11 屏平均，单屏错位不报警 → 出图必分区放大目检 | 布局,外置左栏,place起点,RAIL_W,tab pager,对照门禁,均值盲区,目检 | fixed |
 | P-0033 | 2026-09-30 | Screen 直下挂 tab：EEZ GUI 报 Invalid position of Tab widget（headless build 不查结构）；钉态页零引用死代码已删，再要干净背景页须包进隐藏 tabview | EEZ结构校验,tab,tabview,headless,GUI校验,钉态页,死代码,结构不变量 | fixed |
 | P-0034 | 2026-09-30 | 滑动点亮组空缺：无子页的入口行（pop）不归组，滑回通用页左栏全灭；pop 行点击不动高亮；swipe 断言把 bug 写成规格（expect 0/000） | 高亮跟随,rail_cats,onTabChange,点亮组,tab=None,pop行,断言写成规格 | fixed |
+| P-0035 | 2026-09-30 | 字体 Opts 行路径形式：EEZ 用工程里 filePath 原文拼 opts_string（无相对化），工程必须存相对路径；内核读文件基准改工程目录 + ensure_engine 的 bake.js 缓存缺陷修复 | 字体烘焙,Opts,filePath,相对路径,KERNEL_HASH,bake.js缓存,黄金样本 | fixed |
