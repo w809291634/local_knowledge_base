@@ -298,6 +298,38 @@
    Invalid position of Tab widget（headless 过 ≠ 结构合法）。
 9. 无 identifier 的 flow 组件没进 check_identifiers 白名单 → 生成期 FAIL
    （自己管线里的检查，非 EEZ 报错）。
+10. bitmaps 条目缺 `bpp` → 该位图生成 TypeError（.c 不产出），其余文件照常
+    构建成功，容易漏看（§12.5）。
+11. 图片控件 `image` 名与 bitmaps[].name 不一致 → 不报错、运行时图片空白
+    （构建期不校验引用，§12.5）。
+
+## 12.5 位图与图片控件（LVGLImageWidget）✅（2026-10-01 唱片转动实测）
+
+**project.bitmaps 条目**（官方 eez_lvgl_demo 实证）：
+
+```json
+{ "objID": "…", "name": "np_disc",
+  "image": "data:image/png;base64,…",   // PNG 以 data URL 内嵌
+  "bpp": 16, "alwaysBuild": false }
+```
+
+- ⚠ **`bpp` 必填**——缺了 EEZ 位图生成器直接报
+  `TypeError: Cannot read properties of undefined (reading 'toString')`，
+  且该位图的 .c 不产出（其余文件照常构建，容易漏看）。
+- EEZ CLI build 据此重写 `src/ui/images.c`（PNG→LVGL C 数组，RGBA 带 alpha）。
+
+**图片控件**（TYPE_MAP `"image"` → `LVGLImageWidget`）：
+
+```json
+{ "type": "LVGLImageWidget", "identifier": "m_np_disc",
+  "image": "np_disc",          // ← 位图 name（⚠ 必须与 bitmaps[].name 一致，
+                               //   写错不报错、运行时图片空白）
+  "pivotX": 46, "pivotY": 46,  // 旋转轴（绕中心转 = 宽高一半）
+  "zoom": 256, "angle": 0 }
+```
+
+- 只有 image 能转：旋转走 `SET_PROPERTY targetType:"image" property:"angle"`
+  （0.1° 单位，一圈 3600；`lv_img_set_angle` 收 int16，别超 32767）。
 
 ## 13. 画布布局（flow 组件摆位，2026-10-01 实测）✅
 
