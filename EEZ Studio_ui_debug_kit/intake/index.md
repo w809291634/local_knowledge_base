@@ -37,3 +37,8 @@
 | P-0033 | 2026-09-30 | Screen 直下挂 tab：EEZ GUI 报 Invalid position of Tab widget（headless build 不查结构）；钉态页零引用死代码已删，再要干净背景页须包进隐藏 tabview | EEZ结构校验,tab,tabview,headless,GUI校验,钉态页,死代码,结构不变量 | fixed |
 | P-0034 | 2026-09-30 | 滑动点亮组空缺：无子页的入口行（pop）不归组，滑回通用页左栏全灭；pop 行点击不动高亮；swipe 断言把 bug 写成规格（expect 0/000） | 高亮跟随,rail_cats,onTabChange,点亮组,tab=None,pop行,断言写成规格 | fixed |
 | P-0035 | 2026-09-30 | 字体 Opts 行路径形式：EEZ 用工程里 filePath 原文拼 opts_string（无相对化），工程必须存相对路径；内核读文件基准改工程目录 + ensure_engine 的 bake.js 缓存缺陷修复 | 字体烘焙,Opts,filePath,相对路径,KERNEL_HASH,bake.js缓存,黄金样本 | fixed |
+| P-0036 | 2026-09-30 | EEZ flow 孤岛动作组件：空 switchTab 链被无条件生成（pop 行 P-0034 后为空）；连带修复 17 处 tabviewSetActiveTab animated:true 违反 LV_ANIM_OFF 铁律 | EEZ-flow,孤岛组件,connectionLines,switchTab,animated,LV_ANIM_OFF,铁律 | fixed |
+| P-0037 | 2026-10-01 | 动作画布按导航分区分列重排（json2eez _bucket/_slot）；tab pager 编辑态结论：多页叠放无法全显，属性面板 Active tab 秒切；审计基准修正（widget 名字段=identifier） | EEZ-flow,画布布局,分区,tabview,Active-tab,编辑态,identifier,审计基准 | fixed |
+| P-0038 | 2026-10-01 | 动作组件按页面分组（ComponentGroup）：json2eez 自动生成 {description, components[]}（boundingRect computed 免存坐标）；白名单含 CompareActionComponent（首版漏） | EEZ-flow,ComponentGroup,组件分组,分区布局,白名单,asar取证 | fixed |
+| P-0039 | 2026-10-01 | 动作画布组间距/堆叠：EEZ 组件渲染高度随 actions 数增高（行距须动态）；列距收紧 420；分区改名字制（数字桶+重映射曾致组名错位） | EEZ-flow,画布布局,渲染高度,堆叠,组间距,名字制分区,分区键 | fixed |
+| P-0040 | 2026-10-01 | 变量死活审计：三态合并判据（JSON 结构化绑定/表达式裸引用/native 读写），唯一死变量 battery_pct 已删（33→32）；GUI 里 hiddenExpr/native 引用不可见易误判 | 变量审计,hiddenExpr,Label绑定,native读写,死变量,battery_pct | fixed |
