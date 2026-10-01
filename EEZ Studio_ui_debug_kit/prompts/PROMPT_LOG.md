@@ -720,3 +720,16 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   教训：**批量写知识库后遇系统级事件（重启/断电），必须全量 NUL 扫描 +
   交叉引用对账**。
 - 关联：P-0038、P-0040
+
+## PR-0068 · 2026-10-01 · native 变量死活审计（io 写/UI 不读的 4 个白写变量）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「有些变量我看到没有什么实质作用，这些变量本来是用于给
+  外部使用的，有些变量没有实质使用意义」
+- **产出 / 结论**：四点闭环判据（UI 表达式/EEZ 生成代码消费/io 写入/io 读回）
+  逐变量核查：删 4 个（wifi_rssi/wifi_icon/wifi_bars_visible/battery_charging
+  ——状态栏信号格/电池一族预留，UI 从未绑定），保留 brightness（滑块接口
+  暂留，注释明确）。六文件同步（build_ui/native_vars.cpp/.h/io_pc/io_esp/
+  app_model.h），全局变量 32→28，vars.h 28 对。all.py --shots EXIT=0
+  （8.62%/断言全过）。入库 P-0041 + index。
+- 关联：P-0040、P-0020、§11.14

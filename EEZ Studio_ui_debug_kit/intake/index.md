@@ -42,3 +42,4 @@
 | P-0038 | 2026-10-01 | 动作组件按页面分组（ComponentGroup）：json2eez 自动生成 {description, components[]}（boundingRect computed 免存坐标）；白名单含 CompareActionComponent（首版漏） | EEZ-flow,ComponentGroup,组件分组,分区布局,白名单,asar取证 | fixed |
 | P-0039 | 2026-10-01 | 动作画布组间距/堆叠：EEZ 组件渲染高度随 actions 数增高（行距须动态）；列距收紧 420；分区改名字制（数字桶+重映射曾致组名错位） | EEZ-flow,画布布局,渲染高度,堆叠,组间距,名字制分区,分区键 | fixed |
 | P-0040 | 2026-10-01 | 变量死活审计：三态合并判据（JSON 结构化绑定/表达式裸引用/native 读写），唯一死变量 battery_pct 已删（33→32）；GUI 里 hiddenExpr/native 引用不可见易误判 | 变量审计,hiddenExpr,Label绑定,native读写,死变量,battery_pct | fixed |
+| P-0041 | 2026-10-01 | native 变量死活审计：四点闭环判据（UI表达式/EEZ消费/io写入/io读回），删 wifi_rssi/wifi_icon/wifi_bars_visible/battery_charging（io写UI不读）；brightness 保留（滑块接口暂留）；六文件同步删除 | native变量,APP_IN,io写入,死变量,三向审计,变量删除,双向绑定 | fixed |
