@@ -834,3 +834,122 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
 - **产出 / 结论**：INTAKE.md/README.md/intake/TEMPLATE.md 三处示例清单补全
   （+Trae/Claude Code/Codex）并显式声明「本库不限工具、永不绑定，同一问题允许
   不同工具接力记录，各自如实填写工具名」；历史条目的工具名保持事实不改。
+## PR-0084 · 2026-10-01 · 质询：写 EEZ JSON 非要 Python 脚本吗
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「你编写 EEZ json 程序时候，非要使用python 脚本来写吗」
+- **产出 / 结论**：答：语言非必须（Node 等均可，json2eez 本质是 load→改→dump）；
+  必须的是「脚本生成」模式——工程 JSON 大且强约束（objID/相对坐标/引用名），
+  需要可重复的真值源（GUI 手改会被重新生成冲掉）与机器校验（identifier 唯一、
+  引用解析、防重叠）；AI 改少量 DSL 比裸生成 2 万行 JSON 可靠。小工程直接 GUI
+  手搭即可不依赖脚本。架构说明，无代码改动。
+## PR-0085 · 2026-10-01 · 全工程图标枚举编号（用户按索引点单交互）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「界面中UI 好多信息图标，比如上一首，下一首，设置 ，你可以看看很多图标设计感觉是一个图标，没有任何交互，你可以这样，明显应该设置一些功能的图标，应该全部实现，你可以将所有图标都使用1、2、3、4...标注出来，然后我来根据索引号码告诉你，哪些需要有交互，需要什么交互 ，一次性做完」
+- **产出 / 结论**：design/icon_survey.py 枚举全工程 FA 图标（108 个）：
+  绝对坐标/码点/identifier/所属视图/真实交互状态（本体 handler / 所在按钮 /
+  无——tabview 祖先的 VALUE_CHANGED 是换页同步不算图标交互）；
+  逐视图标注到 build/icon_index/*.png（红圈+黄底编号）+ 图标索引.md 分屏表格；
+  等用户按编号点单后一次性实现。
+## PR-0086 · 2026-10-01 · 图标批量交互 + 音乐数据支撑（一次性点单实现）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「音乐库中，不需要歌单，弄一个简单一点的，只需要显示多少歌曲即可，歌曲肯定从单片机中进行读取的。所以需要维护一个链表信息，使用lv链表管理即可。   47  43  46  44  48  的音量调节和喇叭图标可以切换静音，41  42 可以不要，看看显示其他什么的，仅仅显示的，40 估计也不要，然后 wifi 需要通过单片机获取信号强度，5G不需要，电量也是需要从单片机获取电量 ，音乐播放进度条 和  音量条 都要有数据支撑，然后你看看其他地方需要调节的」
+- **产出 / 结论**：
+  ① 曲库简化：歌单/搜索/随机撤掉，LVGLListWidget + native 链表（song_node_t）
+  灌行（6 首），song_count 回显，点行 = APP_OUT_MUSIC_SELECT；两个坑：
+  List 不生成 objects 条目（运行时 lv_obj_check_type 查找）、运行时中文需
+  glyphs_seed 预烘（否则豆腐块）。
+  ② 05 页：43/44 prev/next、47/48 shuffle/repeat（命令+CHECKED 两态）、
+  46 播放/暂停经 music_play_cmd 输出变量发命令（flow 中段桥）、49 喇叭静音
+  （CHECKED 红显）；41/42 换纯展示 pill（无损·44.1kHz / 320kbps）；40 撤。
+  ③ 数据支撑：进度条绑 music_progress、音量条/百分比绑 volume_pct、时间绑
+  music_time_cur；状态栏 wifi 三档（wifi_level hiddenExpr）、5G 撤、
+  电量百分比绑 battery_pct——io_pc 全套假数据（播放推进/电量递减/信号轮换）。
+  验证：[music]/[np] 断言全绿、8.51~9.26% 无回归、EXIT=0。
+- 关联：P-0043、P-0042
+## PR-0087 · 2026-10-01 · 音乐控制钮缺按压反馈
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「上一下下一个等等没有点击效果」
+- **产出 / 结论**：shuffle/prev/next/repeat 四钮 + 静音钮统一加 PRESSED 态
+  （蓝色系 bg_opa 48/28 高亮）；查证 EEZ LVGL_STATE_CODES 支持 PRESSED，样式
+  落盘位置=screens.c 内联（非 styles.c，先查错文件以为失败）；sim 断言
+  PRESSED bg_opa=48 实证生效；9.27% 无回归 EXIT=0。经验入 07（状态键透传 +
+  落盘位置备注）。
+## PR-0088 · 2026-10-01 · 网络与连接改回 tab 子页（浮层退役）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「点击 这个网络和连接，不应该弹出 wifi 连接界面 ，而是 tab pager 页激活即可」（附设置左栏行截图）
+- **产出 / 结论**：推翻 P-0034 的弹窗形态 —— sett_nav 恢复四页
+  （通用0/网络1/显示2/唤醒3），pane_network 整页承载（页头=标题+Wi-Fi 总开关
+  net_sw），wifi_popup 整体删除；rail 行与通用页无线网络行都改普通 switchTab；
+  高亮归属：wifi 行同时挂通用(0)/网络(1)两组（P-0034 教训延续）。
+  ★ 新坑：sim.py nav_btn_for 的设置层映射没跟着页数变 —— idx1/2 还指向
+  sun/mic，截图全部串一位（09 出显示页、10 出唤醒页），断言只查 tab 序号
+  抓不住内容串位，靠目检截图抓到。教训入 P-0044。
+  验证：EXIT=0、[wifi] 双入口切页 tab=1、[swipe] 全对、9.47% 无回归。
+## PR-0089 · 2026-10-01 · 用户推翻网络子页改动并自行修复（复核）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「你修改错误了，我现在修改好了，你可以看看」
+- **复核结论**：用户 git 回退了 PR-0088 的网络子页改动（build_ui/sim 恢复弹窗形态、
+  PRESSED 保留），并在 EEZ GUI 里：①律动链唱片角度步骤改为**原生 imageSetAngle**
+  组件（与我的 SET_PROPERTY(image,angle) 等价，GUI 属性面板可正常编辑——我的自定义
+  序列化在 GUI 里不可视/编辑，这可能就是"错误"所在）；②删掉 flow 画布 6 个组名
+  标题条 Comment；③调整编辑器选中/缩放。复验（现有 src/ui 直编，未重新生成）：
+  [pop][np][music][swipe] 全绿、11 屏出图正常。
+- **⚠ 分叉警示**：test.eez-project（GUI 18:02 保存）与 build_ui.py 真值源已分叉
+  （imageSetAngle vs SET_PROPERTY、标题条有无）——**下次跑 all.py 会覆盖 GUI 改动**；
+  需用户决定：DSL 回流同步 or 接受重生成。
+## PR-0090 · 2026-10-01 · 真机固件构建失败（io_esp 注释吞码）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：（贴 idf.py build 报错全文）「-Werror=comment ... 'cmd' was not declared in this scope」
+- **产出 / 结论**：io_esp.cpp:54 wifi TODO 注释漏 `*/` 吞掉 battery 段 +
+  io_sample_inputs 收尾 `}` + io_wifi_command 函数头；补回注释收尾即修
+  （29/29 配平、签名恢复、io_iface.h 声明齐全）。教训入 P-0045：
+  设备侧专属文件是 PC 门盲区，改后必须配平检查或跑一次真机构建。
+## PR-0091 · 2026-10-01 · 真机硬件适配：时间/wifi 扫描连接/信号强度/自动连接
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「现在已经将 AI 对话模块 加到 我的工程中了，  你可以同步适配 硬件了，比如时间 ，比如 wifi 扫描 ，wifi 连接，wiff 信号强度，wifi 是启动了自动连接，所以你要适配一下，又不懂的问我」
+- **澄清**（AskUserQuestion）：时间=SNTP 对时；电池=先假数据（引脚后定）；
+  聊天文本=简单化（UI 文本输入不接，对话记录后续从 xiaozhi 拉）。
+- **取证**：主工程 = xiaozhi-esp32（esp-wifi-connect 3.2.2，P4+C6 via esp_hosted/
+  esp_wifi_remote）；WiFi 由 WifiBoard::StartNetwork → WifiManager 单例全权管理
+  （SsidManager NVS + 指数退避自动重连 = 用户说的"自动连接"）；xiaozhi 无 SNTP
+  （ota.cc settimeofday 而已）；扫描先例 = blufi/cardputer 直调 esp_wifi_scan_start。
+- **实现**：io_esp.cpp 重写 —— ①观察者原则：只读 WifiManager 状态（IsConnected/
+  GetSsid/GetIpAddress/GetRssi），绝不 SetEventCallback（那是 xiaozhi 的）；
+  ②UI 触发扫描 = 独立 task（阻塞 scan ~2s 不卡 LVGL）+ 静态快照，io_sample_inputs
+  （LVGL 上下文）发布（app_model 输入无锁，禁止跨线程写）；③SNTP 首连启动
+  （ntp.aliyun.com，TZ=CST-8，未同步显示 --:--）；④断开=esp_wifi_disconnect；
+  pick=开放网络 AddSsid+StartStation，加密未保存 → WIFI_ERR 提示（无密码面板，
+  09-30 决议）；⑤音乐/电量镜像 io_pc 假数据。main.c 挂 user_io_init/user_io_tick
+  （真机上此前从未被调！）；native CMakeLists 补 REQUIRES（esp_wifi/nvs_flash/
+  esp_netif/lwip/esp-wifi-connect）；sdkconfig+defaults 开 CONFIG_LWIP_SNTP。
+- **验证**：真机完整构建必须在用户 IDF 环境跑（本沙箱 ninja 重配置会触发组件
+  管理器重解析、误删 managed_components，已拦截未遂）；改用 compile_commands
+  单文件语法检查 —— API 全部对照真实头文件核名通过（SsidItem.ssid、
+  esp_sntp_setoperatingmode/setservername/init、WifiManager 全套）。
+- 关联：P-0045（设备侧盲区）、P-0017
+## PR-0092 · 2026-10-01 · 重新适配 + 主动断开记忆（用户还原后二次适配）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「我刚刚还原了，你重新适配一下，我发现 界面中操作断开wifi后，又自动重连，可以增加一个记忆如果主动断开的是上一个链接的wifi，重启后可以再次连接，本次连接到xinwifi，没有主动断开的情况下，允许自动连接」
+- **需求语义**：主动断开 → 本次开机内不再自动重连（状态显示空闲不显示"连接中"）；
+  不删 NVS 记忆 → 重启后照常自动连上次网络（xinwifi）；未主动断开 → xiaozhi
+  原生自动重连照旧。
+- **实现**：在用户还原后的模板态上重做全套适配（io_esp v2 / main.c 挂钩 /
+  CMake 依赖 / sdkconfig SNTP），新增 RAM 标志 s_user_disconnected：
+  - 断开 = `WifiManager::StopStation()`（实证：注销事件处理器 → esp_wifi_stop
+    → 拆 netif，自动重连彻底停止；SsidManager/NVS 不动 = "记忆"）；
+  - 重试/点选网络 = 清标志 + StartStation（Start 在 Stop 后可完整重启：
+    重建 netif + 重挂事件 + esp_wifi_start，源码实证）；
+  - 主动断开态下扫描：task 里先 esp_wifi_start（事件已注销不会引发连接），
+    扫完再 esp_wifi_stop 回到断开态。
+- 验证：注释 58/58 配平、大括号平衡、四处落盘 grep 全中；真机构建由用户
+  IDF 环境执行（沙箱不跑全量重配置，P-0045/PR-0091 教训）。
+- 关联：PR-0091、P-0045

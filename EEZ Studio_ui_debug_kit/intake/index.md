@@ -45,3 +45,5 @@
 | P-0041 | 2026-10-01 | native 变量死活审计：四点闭环判据（UI表达式/EEZ消费/io写入/io读回），删 wifi_rssi/wifi_icon/wifi_bars_visible/battery_charging（io写UI不读）；brightness 保留（滑块接口暂留）；六文件同步删除 | native变量,APP_IN,io写入,死变量,三向审计,变量删除,双向绑定 | fixed |
 | P-0042 | 2026-10-01 | 画布组件重叠：渲染高度公式低估（EEZ 组件渲染高 ≈ 40+n*30，行距须按渲染高+间距）+ 律动链区起点相撞（新链区起点=前一链区右缘之外，单行排布） | 画布布局,渲染高度,行距,堆叠,律动链,tabsync,防重叠 | fixed |
 | P-0043 | 2026-10-01 | EEZ 动画能力边界与纯 flow 律动模式：PLAY_ANIMATION 一次性无循环；Loop+Delay+SET_PROPERTY 循环链（Run 预览真实执行）；三坑=Loop 输入 start/next、`/` `%` 返回 double、停止检查须帧级 | EEZ-flow,动画,Loop,Delay,SET_PROPERTY,预览,Run模式,double陷阱 | fixed |
+ | P-0044 | 2026-10-01 | 设置 tab 页数/顺序变更的三处同步点：CATS 表、onTabChange 分组、sim nav_btn_for+VIEWS —— 漏一处就内容串位；断言只查序号抓不住，必须目检子页截图 | tabview,页序,nav_btn_for,VIEWS,串位,目检 | fixed |
+ | P-0045 | 2026-10-01 | 设备侧专属文件（io_esp.cpp）是 PC 构建盲区：TODO 注释漏 */ 吞掉下游函数签名，潜伏到真机 idf.py build 才爆且报错点远离病灶；改后必须配平检查/跑一次真机构建 | io_esp,注释,潜伏,Werror=comment,真机构建,盲区 | fixed |

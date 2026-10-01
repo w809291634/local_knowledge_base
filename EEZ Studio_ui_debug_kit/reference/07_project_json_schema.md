@@ -57,6 +57,14 @@
 
 - `type` 稳定可用的只有 **`"integer"` / `"string"`**；⚠ **布尔用 integer 0/1**
   （EEZ 对 bool 的 native get/set 签名不稳定）。
+- **样式状态键透传**：DSL style 的 `MAIN` 下除 DEFAULT/CHECKED 外，`PRESSED` /
+  `FOCUSED` / `DISABLED` 等均可直接用（EEZ LVGL_STATE_CODES 支持）；带状态覆盖的
+  样式 EEZ 生成时**内联在 screens.c 对象创建处**（`lv_obj_set_style_*` 带
+  `LV_STATE_*` 参数），**不在 styles.c** ——查生成代码别找错文件（实测 2026-10-01）。
+  瞬时命令按钮（prev/next 类）无 CHECKED，必须有 PRESSED 否则点击零反馈。
+- **flow 链中段向 native 发命令的唯一桥**：SetVariable 落在 native 输出变量上
+  → 生成 `set_var_<name>(value)` → 用户侧转发 app_set_output。命名用 `_cmd`
+  后缀表明是脉冲命令，get 不绑定（无回显误导）。
 - `defaultValue` 是**字符串化的 JSON**：int 写 `"0"`，string 写 `"\"--:--\""`
   （内层引号要转义）。
 - `native: true` → EEZ 生成 `vars.h` 里 `get_var_<name>/set_var_<name>` 声明，
@@ -302,6 +310,12 @@
     构建成功，容易漏看（§12.5）。
 11. 图片控件 `image` 名与 bitmaps[].name 不一致 → 不报错、运行时图片空白
     （构建期不校验引用，§12.5）。
+12. **LVGLListWidget 不生成 objects 表条目**（lv_list_create 有、objects.X 无；
+    hiddenExpr 标记也无效）→ native 侧运行时用
+    `lv_obj_check_type(obj, &lv_list_class)` 递归查找（实测 2026-10-01）。
+13. **native 运行时灌入的文本没有字形**（字形只按静态文本收集）→
+    lv_list_add_btn 的中文变豆腐块。解法：DSL `glyphs_seed = {字体名: "字符串"}`
+    预烘字形（json2eez 汇入 TEXT_BY_FONT）。
 
 ## 12.5 位图与图片控件（LVGLImageWidget）✅（2026-10-01 唱片转动实测）
 
