@@ -25,7 +25,9 @@
 
 ```bash
 # 记一条提示词（通常在每一轮对话结束时做）
-# --tool 写【实际使用的 AI 工具名】（WorkBuddy / Claude Code / Cursor / Codex / …）——本库不限工具
+# --tool 写【实际使用的 AI 工具名】（WorkBuddy / Trae / Claude Code / Codex /
+# Cursor / ChatGPT / 人 / …任意工具均可）——本库**不限工具、永不绑定**，
+# 同一问题允许不同工具接力记录，各自如实填写自己的工具名。
 python tools/log_entry.py prompt "用户的原始提示词" \
     --tool "<AI 工具名>" --ask "用户想达成什么" --out "这轮做了什么/结论" --link P-0001
 

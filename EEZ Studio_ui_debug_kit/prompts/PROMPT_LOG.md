@@ -827,3 +827,10 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
 - **产出 / 结论**：立为长期规矩入工程 MEMORY.md：每轮验证通过后回查经验库
   （reference/07、intake/P-####）——有错修错、有新知识补条目、漏记的提示词补录。
   本轮即补 07 §12 两条（bpp/image 名）+ PR-0081/0082。
+## PR-0083 · 2026-10-01 · 工具字段不限工具（Trae/Claude/Codex 均可）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「经验库中，- **工具**：WorkBuddy  ，可以支持所有的工具，不只是这个AI工具，可以是 trae claude codex 这些工具」
+- **产出 / 结论**：INTAKE.md/README.md/intake/TEMPLATE.md 三处示例清单补全
+  （+Trae/Claude Code/Codex）并显式声明「本库不限工具、永不绑定，同一问题允许
+  不同工具接力记录，各自如实填写工具名」；历史条目的工具名保持事实不改。

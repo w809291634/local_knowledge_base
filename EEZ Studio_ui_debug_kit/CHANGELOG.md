@@ -26,6 +26,9 @@
 - 「Run 模式预览执行 flow」结论修正（PR-0068 用户实证 eez_lvgl_demo）：
   预览执行 flow 并实时刷新画布，但不模拟真实 LVGL 交互事件/native 变量。
 
+- 追加（PR-0083）：**工具字段不限工具**——INTAKE.md/README/TEMPLATE 的示例清单
+  补全（WorkBuddy/Trae/Claude Code/Codex/Cursor/ChatGPT/人），显式声明本库
+  不绑定任何工具、允许不同工具接力记录；历史条目工具名保持事实不改。
 ## v0.9.2 — 设置页布局铁律 + tab 结构不变量（当前）
 
 - 背景（PR-0059 / intake P-0032、P-0033）：用户指出「界面发生重叠，你自己截图

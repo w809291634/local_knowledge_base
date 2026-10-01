@@ -93,7 +93,8 @@ ui_debug_kit/
 
 ## 记录区：让技能越用越强
 
-> 结构规约见 **`INTAKE.md`**。**任何 AI 工具**（WorkBuddy / Cursor / ChatGPT / 人）都应遵守：
+> 结构规约见 **`INTAKE.md`**。**任何 AI 工具**（WorkBuddy / Trae / Claude Code /
+> Codex / Cursor / ChatGPT / 人……不限清单、永不绑定）都应遵守：
 > 每轮对话把用户提示词追加进 `prompts/PROMPT_LOG.md`；遇到新问题登记进 `intake/`。
 
 ```bash

@@ -2,7 +2,7 @@
 
 - **工程**：<工程名 / 模块>
 - **日期**：YYYY-MM-DD
-- **工具**：<WorkBuddy / Cursor / ChatGPT / 人>
+- **工具**：<实际使用的工具名，任意填写：WorkBuddy / Trae / Claude Code / Codex / Cursor / ChatGPT / 人 ……本库不限工具>
 - **状态**：open | fixed | wontfix
 - **标签**：<逗号分隔，便于检索，如 点击,遮挡,字体>
 - **关联提示词**：PR-####（无则写"无"）
