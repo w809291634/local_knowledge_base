@@ -733,3 +733,80 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   app_model.h），全局变量 32→28，vars.h 28 对。all.py --shots EXIT=0
   （8.62%/断言全过）。入库 P-0041 + index。
 - 关联：P-0040、P-0020、§11.14
+## PR-0069 · 2026-10-01 · 均衡器恢复（排队事项）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「继续帮我实现」
+- **产出 / 结论**：取证备份工程恢复 NowPlaying 均衡器 5 柱 + NIGHT FLIGHT 位置；
+  重建丢失的受管 venv（P-0017 方法，阿里云源）。
+- 关联：P-0017
+
+## PR-0070 · 2026-10-01 · 先查经验库的提醒
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「C://Users//Administrator//Desktop//local_knowledge_base  这里有本地经验库，操作之前按照经验库的方法来，不容易出现错误」
+- **产出 / 结论**：按 P-0017 处理 venv/PIL 问题；「操作前先查经验库」入长期记忆。
+
+## PR-0071 · 2026-10-01 · 均衡器跳动需求
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「我在eez 中没有看到 音乐界面的 跳动效果啊，我要求 ，点击播放时候，均衡器有跳动效果，可以参考LVGL的示例，它中间是一个圆形唱片，周围有跳动效果」
+- **产出 / 结论**：取证 EEZ 动画能力（PLAY_ANIMATION 一次性）；给出 A/B 两方案。
+
+## PR-0072 · 2026-10-01 · 否掉方案、改官方示例形态
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「方案A 和 B 都不要，均衡器可以不要，按照官方示例来效果就可以了」
+- **产出 / 结论**：删均衡器柱；唱片居中 + 波纹环（静态几何先行，native lv_anim 驱动后续被 P-0043 flow 方案取代）。
+
+## PR-0073 · 2026-10-01 · 查手册质疑预览能力
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「EEZ 里面预览 达不到效果吗，你查查手册看看  D://天翼云同步盘2//UI设计资料//EEZ-Studio-reference-guide.pdf」
+- **产出 / 结论**：pypdf 全文检索 784 页：A43 Anim* 一次性、A2 Animate 是 Dashboard 机制、P5.2 预览=静态渲染；教训——「预览不执行运行时」表述过度泛化（后被 PR-0075 推翻修正）。
+
+## PR-0074 · 2026-10-01 · 仿真启动方式
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「如果不行的话，仿真怎么启动的」
+- **产出 / 结论**：直接拉起 main.exe 交互仿真（DLL 已在 exe 旁）。
+
+## PR-0075 · 2026-10-01 · 官方示例 Run 预览有动画（关键实证）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「C://Users//Administrator//eez-projects//examples//eez_lvgl_demo/src/eez-project/eez_lvgl_demo.eez-project  我看这个EEZ 运行仿真有动画啊」
+- **产出 / 结论**：取证该示例：动画 = Start→Loop(0→3600,70)→SET_PROPERTY(IMAGE_ANGLE)→Delay 50 纯 flow 链；**Run 模式预览真实执行 flow**（PR-0073 的泛化表述被修正）。
+
+## PR-0076 · 2026-10-01 · 确认 Run 预览动画
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「静态画布预览（Edit/Run 模式的页面视图）看不到动画  ，这个我在run确实看到了 ，C://Users//Administrator//eez-projects//examples//eez_lvgl_demo/src/eez-project/eez_lvgl_demo.eez-project 这个工程就是的」
+- **产出 / 结论**：结论定稿；提出纯 flow 律动方案待批。
+
+## PR-0077 · 2026-10-01 · 批准纯 flow 方案
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「所以唱片律动可以改成和官方示例完全同款的纯 EEZ flow 方案：」
+- **产出 / 结论**：实现 json2eez npAnim 发射器（12 组件+17 连线），native 退役；
+  三坑（Loop 端口/double/帧级停止）实测入库。关联：P-0043
+
+## PR-0078 · 2026-10-01 · 总结工程 JSON 语法到经验库
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「你有没有总结相关的 eez 工程 json 语法，可以参考官方手册总结到 经验文档，避免语法错误」
+- **产出 / 结论**：新增 reference/07_project_json_schema.md（字段级语法速查，
+  实测/手册/asar 三级标注）+ reference/README 索引 + CHANGELOG v0.9.4。
+
+## PR-0079 · 2026-10-01 · 新组不要重叠
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「记得新建的组，不要重叠了」
+- **产出 / 结论**：渲染高度感知扫描抓 18 对重叠；律动链区外移+单行、tabsync
+  点亮组件让位、行距公式改 40+n*30+16；55 组件重叠对 0。关联：P-0042
+
+## PR-0080 · 2026-10-01 · 记录经验入库存档
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「读取经验，记录经验，以后记得这个事情」
+- **产出 / 结论**：P-0042/P-0043 入 intake + index；PR-0069~0080 补录；
+  reference/07 增画布布局节。
