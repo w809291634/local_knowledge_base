@@ -7,6 +7,25 @@
 
 ---
 
+## v0.9.4 — 新增 reference/07：.eez-project 工程 JSON 序列化语法速查（当前）
+
+- 背景（PR-0069，用户问「有没有总结 eez 工程 json 语法，参考手册总结到经验文档」）：
+  官方手册只讲 UI 概念与操作，**从不写 .eez-project 文件的 JSON 落盘格式**——
+  这层语法全靠逆向 asar + 真实工程试错积累，散落在 json2eez.py 注释、skills.md
+  各节与日志里，AI 每次改工程 JSON 都要重新踩一遍。
+- 新增 `reference/07_project_json_schema.md`（~330 行）：文件顶层结构、
+  settings.general/build、globalVariables、User Actions、页面结构
+  （components/connectionLines/localVariables/componentGroups）、控件骨架与
+  hidden 三形态、eventHandlers 三形态、**flow 组件逐个序列化**
+  （LVGL/SET_PROPERTY 高层形式+降级映射/SetVariable/Compare/Loop/Delay/IsTrue/
+  Comment/Start）、连线端口语义表（@seqin/@seqout/True/False/start/next/done）、
+  表达式引擎能力与陷阱（`/`、`%` 返回 double）、动画能力矩阵、8 条静默失败清单。
+  每条标注验证等级（实测 ✅ / 手册 📖 / asar 🔍）。
+- 同日实证的 flow 动画三坑随文档入库：Loop 输入 start/next（非 @seqin）、
+  帧表达式纯整数（`/`、`%` 产 double → 位型垃圾坐标）、停止检查须帧级。
+- 「Run 模式预览执行 flow」结论修正（PR-0068 用户实证 eez_lvgl_demo）：
+  预览执行 flow 并实时刷新画布，但不模拟真实 LVGL 交互事件/native 变量。
+
 ## v0.9.2 — 设置页布局铁律 + tab 结构不变量（当前）
 
 - 背景（PR-0059 / intake P-0032、P-0033）：用户指出「界面发生重叠，你自己截图

@@ -17,6 +17,7 @@
 | A47–A92 | Actions：MQTT/TCP/UDP/串口/Python/键盘/页面导航…（**A53/A55/A72/A73/A75/A76/A78/A91** 重点） | `04_actions_a47_a92.md` | ~1209 |
 | W1–W43 | Widgets：按钮/容器/下拉/图片/标签/列表…（**W10/W16/W20/W24/W30/W35/W42** LVGL 重点） | `05_widgets_part1.md` | ~926 |
 | W44–W87 | Widgets：滑块/开关/Tabview/文本区/TileView…（**W56/W61/W67/W71/W74/W78/W80/W83/W84** LVGL 重点） | `06_widgets_part2.md` | ~817 |
+| **（非手册）** | **`.eez-project` 工程 JSON 序列化语法速查**——手册不讲文件格式，本篇为实测字段级对照（控件/样式/事件/flow 组件/连线/表达式陷阱），AI 或脚本改工程 JSON 前必读 | `07_project_json_schema.md` | ~330 |
 
 ## 本项目（eez-test，LVGL 9.4 / 800×480 横屏 / BGR）最常用入口
 
