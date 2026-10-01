@@ -953,3 +953,132 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
 - 验证：注释 58/58 配平、大括号平衡、四处落盘 grep 全中；真机构建由用户
   IDF 环境执行（沙箱不跑全量重配置，P-0045/PR-0091 教训）。
 - 关联：PR-0091、P-0045
+## PR-0093 · 2026-10-01 · 真机帧率下降定位：WifiManager 轮询过频（hosted RPC）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：（贴 FreeRTOS 任务表）「现在lvgl的帧率降低了，什么原因」
+- **定位**：任务表 IDLE 74%/82% 高闲 + lvgl 仅 5.9% CPU → 不是算力不足，是
+  **周期性阻塞**。根因 = PR-0091 把 user_io_tick 挂进 5ms LVGL 定时器，而
+  io_sample_inputs 每帧调 WifiManager::GetRssi/IsConnected —— P4 上 esp_wifi
+  是 esp_wifi_remote→esp_hosted **SDIO RPC 同步打到 C6**（任务表 sdio_*/rpc_*
+  一排），单次毫秒级，200Hz 轮询把 LVGL 任务周期性卡死（GetRssi 源码实证走
+  esp_wifi_sta_get_ap_info）。
+- **修**：WiFi 状态轮询降频 **1s 一次 + 缓存**（s_wifi_poll_at 门），其余 tick
+  只发布缓存值（纯内存拷贝，零 RPC）；WifiManager 访问全部收进 1s 门内；
+  命令处理器里的一次性调用不受影响。语义不变（断开记忆/三档信号/扫描过桥）。
+- **规则（应入 07/项目记忆）**：P4 上任何 esp_wifi_* 调用都是远程 RPC ——
+  高频路径（每帧/每 tick）禁止直调，必须缓存+降频。
+## PR-0094 · 2026-10-01 · 全按钮按压反馈审计（button 集中注入）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「重新扫描 等等 ，按钮没有点击效果，你要检查一下其他所有的按钮，类似问题都要修复」
+- **实现**：交互控件按创建路径漏斗审计（button/pill_btn/card_btn → button()；
+  box/pill 散装；native lv_list_add_btn；circle 特例）：① button() 集中注入
+  默认 PRESSED（PRIMARY 36%，pressed_style 参数可覆写）—— 一次覆盖导航/fab/
+  分类行/设置行/tile/弹窗关闭等全部；② 新增 add_pressed() helper 补散装
+  box/pill（断开/重新扫描/重试 pill×5/槽位热区行×5）；③ 曲库列表行在
+  ui_data_sync 里补 LVGL 内联按压态；④ 特例豁免：play_btn（点击即波纹律动）、
+  orb（点击即切页）、switch（原生即时翻转）。screens.c LV_STATE_PRESSED
+  15 → 83 条。
+- 验证：EXIT=0、[np]/[music] 全绿、9.27% 无回归。
+## PR-0095 · 2026-10-01 · WiFi 密码输入面板（点加密网络弹键盘）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「wifi 扫描后，wifi列表鸟出现了，但是点击没有弹出输入密码」
+- **实现**：网络页密码面板（隐藏，hiddenExpr 绑 native 输入 wifi_pwd_shown）：
+  标题 + 目标 SSID 回显（wifi_target_ssid 变量）+ textarea(passwordMode/
+  oneLineMode) + LVGL 键盘（textarea objID 引用，TEXT_LOWER）+ 取消/连接。
+  流程：io_wifi_pick（加密未保存）→ 置 target_ssid + pwd_shown=1 → 用户输入 →
+  连接 = APP_OUT_WIFI_JOIN → io_wifi_join 读 lv_textarea_get_text(objects.m_pwd_ta)
+  → SsidManager::AddSsid + StartStation。json2eez 新增 textarea/keyboard 映射 +
+  id→objID 预解析（keyboard 引用）+ mode 必填（缺省=undefined 编译错）+
+  键盘符号 glyphs_seed。native：APP_IN_WIFI_TARGET_SSID/PWD_SHOWN、
+  APP_OUT_WIFI_JOIN/PWD_CANCEL、action 桥、io_pc PC 桩。
+- 踩坑：① place() 前缀改 id → 引用必须传节点引用；② keyboard mode 缺省
+  生成 LV_KEYBOARD_MODE_undefined；③ EEZ User Action 需 action_<name> 桥函数
+  （忘了 → 链接错）。
+- 验证：EXIT=0、9.29% 无回归、set_textarea/mode/掩码/actions 落盘核对全过。
+- 关联：P-0044、P-0045
+## PR-0096 · 2026-10-01 · 用户程序零阻塞 LVGL：WiFi 全量搬进工作任务（v3）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「WiFi 状态轮询（IsConnected/GetRssi/GetIpAddress/GetSsid）降频到每秒 1 次，结果缓存；   可以使用软件定时器获取，这样不要阻塞LVGL的线程运行，我要求所有 用户程序 不允许阻塞LVGL」
+- **实现（io_esp v3）**：专用低优先级工作任务 `ui_wifi_work`（prio 4 < LVGL 6，
+  6KB 栈）承载**全部** WiFi 操作：每秒轮询 WifiManager 更新互斥锁保护的快照、
+  阻塞扫描 ~2s、StartStation/StopStation/AddSsid。LVGL 线程（io_sample_inputs +
+  全部 io_wifi_* 命令入口）只做：读快照（锁）→ 发布 app_model、投命令队列
+  （静态环形 6 槽）。静态审计：7 个 LVGL 线程函数体 WifiManager/esp_wifi_*
+  引用 = 0。密码面板/断开记忆语义不变。SNTP 首连启动移到工作任务。
+- 没用 esp_timer（回调在 esp_timer 任务里跑阻塞 RPC 会拖累系统定时器），
+  用专用 FreeRTOS 任务等效实现用户"软件定时器"诉求。
+- 静态审计：注释 78/78、括号平衡、7 函数零违规、工作任务函数定义齐全。
+  真机构建由用户 IDF 环境执行。
+- 关联：PR-0093（帧率根因）、PR-0092（断开记忆）、P-0045
+## PR-0097 · 2026-10-01 · 全量 UI 逻辑审计（不合理点清单）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「检查一下所有的ui逻辑中，还有那儿有不合理的地方」
+- **审计结论**（按严重度，详见当日报告；均未动手，等用户点单）：
+  P1 ①全部"滑条"实为只读 bar+圆点装饰（track() 用 type=bar，LVGL bar 不可拖）——
+     音量/亮度/灵敏度/提示音/音乐音量/进度条共 8 处只能看不能调；
+  P1 ②曲库选歌后 05 页歌名/歌手/专辑仍是写死的静态文本（NIGHT FLIGHT 等），
+     选歌不联动；
+  P2 ③通知中心筛选胶囊（全部/未读/音乐/提醒/系统）是 pill() 静态件——不可点、
+     无筛选逻辑；关闭钮无后续（清空通知无数据模型支撑）；
+  P2 ④开关类（勿扰/唤醒总开关/免打扰/自动亮度）视觉由 LVGL 原生翻转 + stub
+     回显，真实状态无变量支撑、重启回默认；
+  P3 ⑤05 页"陈婧霏 · 单曲循环"等文案写死，循环/随机态无变量回显；
+  P3 ⑥密码面板/键盘弹窗期间 tabview 横滑手势未被面板拦截（可滑走 underlying 页）。
+## PR-0098 · 2026-10-01 · 审计点单修复（P1/P2/P3 全部六项）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「修复P1 P2 P3」
+- **范围**：P1①只读bar→真滑杆双向绑定；P1②曲库选歌联动05页；P2③通知筛选
+  胶囊真生效（未读撤，无已读模型）；P2④开关真状态+io_esp NVS 持久化；
+  P3⑤随机/循环/静音真回显；P3⑥密码面板遮罩拦截横滑。
+- **语义变更（重要）**：toggle 类命令 v 从「恒 1 翻转脉冲」改为「目标态 0/1」，
+  User Action 直调入口在 native 层换算（读 model 取反）；io 层一律 set。
+## PR-0099 · 2026-10-01 · 修复后复查（抓到 3 个新错误 + 遗留清单）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「仔细检查一下有没有错误，同时看看  UI还有什么不对的，或者没有补充完的」
+- **抓到并已修**：①通知卡 hiddenExpr 写成显示条件（语义反了，四卡默认全灭，
+  compare 4.57% 不报警——暗色低对比均值盲区，P-0032 教训再现，截图目检抓到）；
+  ②var 绑定百分比 label 用 label_mid_right 右锚定失效（tw(None)=0 → 溢出屏幕外，
+  05 页音量百分比整个看不见）→ pct_label_right（固定宽+textAlign RIGHT+静态%后缀）；
+  ③io_pc settings_publish 把 notif_filter 强刷回 0（toggle 任意开关都会重置筛选）。
+- **新增回归断言**：sim.py [notif] 筛选断言（点音乐→卡4显/卡1隐，回全部→全显）。
+
+## PR-0100 · 2026-10-02 · 复查（滑杆/开关圆点几何实测修复）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「检查一下还有其他问题吗」
+- **抓到并已修**：①滑杆 knob 不可见（track h=5 → LVGL knob 直径=控件高度=5px）：
+  改「控件高=knob 直径 + MAIN transform_height 缩轨道」，9 条滑杆恢复设计稿形态；
+  ②开关圆点溢出（KNOB pad 正数=向外扩，23px 轨道配 29px 白球，**预存在 bug**，
+  影响全部开关）：改 pad -3 → 17px 内嵌圆点；
+  ③修掉 reference/07 §14 里我上轮写错的 knob 说明（就地更正 + 新增 §14.1）。
+- **复查手段**：截图分区放大（Read 图片）+ PIL 像素统计（文字/圆点存在性），
+  因为 compare 均值盲区抓不到这类错误（P-0032）。
+
+## PR-0101 · 2026-10-02 · 真机 idf.py build 报错（io_esp 重复定义）
+
+- **工具**：WorkBuddy
+- **用户提供**：真机 `idf.py build` 日志（贴全文），报 io_esp.cpp:326-331
+  `redefinition of 'int s_playing'` 等 6 处 + native_actions.cpp 两行
+  `-Wdeprecated-enum-enum-conversion` 警告。
+- **修**：①删掉「音乐/电量假数据」的重复副本（顶部已有一份，真机首次编译才暴露）；
+  ②曲库行按压态的 selector 先折 uint32_t 再拼（`LV_PART_MAIN | LV_STATE_PRESSED`
+  是 lv_part_t|lv_state_t 跨界按位或，GCC 14 弃用警告）。
+- **新增自检**：compile_commands.json + `-fsyntax-only` 用真机工具链过设备侧文件
+  （io_esp/native_actions/app_model/native_vars 全部 0 错 0 警）。
+
+## PR-0102 · 2026-10-02 · 星期几显示为空白（字形漏种）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：「还有星期几是空的」
+- **根因**：`clock_date` 的 glyphs 只写了「0123456789月日星期 ·早上…好-」，
+  漏了星期名的「一二三四五六」；运行时拼出的 "10月2日 星期五" 后半段无字形 →
+  渲染成空白（状态栏 11.5px 与待机页 13px 两处都中）。
+- **修**：抽出 `CLOCK_GLYPHS` 常量（含一二三四五六）给两处 label；glyphs_seed
+  给 10/11/12/13 四档兜底；新增 `design/_glyph_lint.py` 做覆盖率自检（负向测试通过）。

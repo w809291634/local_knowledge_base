@@ -345,6 +345,31 @@
 - 只有 image 能转：旋转走 `SET_PROPERTY targetType:"image" property:"angle"`
   （0.1° 单位，一圈 3600；`lv_img_set_angle` 收 int16，别超 32767）。
 
+## 12.6 键盘与密码输入（LVGLKeyboardWidget / LVGLTextareaWidget）✅（2026-10-01 密码面板实测）
+
+```json
+// TYPE_MAP 需加映射："textarea" -> LVGLTextareaWidget，"keyboard" -> LVGLKeyboardWidget
+// FLAGS：两者都要 CLICKABLE（textarea 可点聚焦、keyboard 收按键）
+{ "type": "LVGLTextareaWidget", "identifier": "m_net_pwd_ta",
+  "text": "", "textType": "literal", "useStaticText": true,
+  "oneLineMode": true, "passwordMode": true, "maxTextLength": 64 }
+{ "type": "LVGLKeyboardWidget", "identifier": "m_net_pwd_kb",
+  "textarea": "<textarea 的 EEZ objID>",        // ← codegen 自动 lv_keyboard_set_textarea
+  "mode": "TEXT_LOWER" }                        // ⚠ 必填！缺省 codegen 生成
+                                                //   LV_KEYBOARD_MODE_undefined（编译错）。
+                                                //   合法值 TEXT_LOWER/TEXT_UPPER/SPECIAL/NUMBER/USER_1..4
+```
+
+- **控件引用解析**：keyboard 的 textarea 是 objID。DSL 里传**节点引用**
+  （place() 前缀会原地改 id，构建期读最终 id 才不错位）——json2eez 用
+  build_page 预解析的 id→path→objID 表（路径公式必须与 children 递归一致：
+  `parent/id + str(i)`）。
+- **键盘特殊键字形**：lv_keyboard 用 LV_SYMBOL_BACKSPACE(F55A)/OK(F00C)/
+  NEW_LINE(F115)/KEYBOARD(F11C)/LEFT(F053)/RIGHT(F054)/CLOSE(F00D)——
+  经 glyphs_seed 进 FA 附加源（私有区自动分流）。
+- **输入文本回读**：EEZ 变量无双向绑定，最简路径 = native 直读
+  `lv_textarea_get_text(objects.m_xxx)`（普通控件有 objects 条目，与 List 不同）。
+
 ## 13. 画布布局（flow 组件摆位，2026-10-01 实测）✅
 
 flow 组件的 left/top 不影响构建，但决定编辑器画布可读性。防重叠三条铁律：
@@ -373,3 +398,44 @@ flow 组件的 left/top 不影响构建，但决定编辑器画布可读性。�
 | 变量/表达式 | P8（P.70–76）、P8.4 函数 |
 | LVGL 字体/字形 | P11.2 |
 | Tabview / 滑动行为 | W78（含 Active tab 属性） |
+
+## §14 滑杆 / 开关真状态绑定（P-0047，2026-10-01 审计修复实测）
+
+- **LVGLSliderWidget**（DSL `type:"slider"`）：字段与 bar 同名（min/max/mode/value/enableAnimation，
+  **无 valueStart**）。`value` 用 `valueType:"expression"` 绑 native 变量即**双向**：
+  tick `evalIntegerProperty → lv_slider_set_value`（外部→UI）+ VALUE_CHANGED handler
+  `lv_slider_get_value → assignIntegerProperty`（拖动→`set_var_*`）（asar Slider.js 实证）。
+- **KNOB 尺寸（★ 2026-10-02 修正，此前本段写错过）**：knob **直径 = 控件高度**
+  （lv_slider.c draw_knob: `knob_size = lv_obj_get_height(obj)`；position_knob 里
+  KNOB 的 pad 只把圆**向外扩**：`x1 -= pad_left`、`x2 += pad_right`，正 pad 不会
+  缩小它）。所以想要「细轨道 + 大圆点」必须：**控件高度 = 圆点直径**，再用
+  **MAIN 的 `transform_height` 负值收缩轨道**（lv_bar.c draw_indic：
+  `lv_area_increase(&bar_coords, transf_w, transf_h)` 按 MAIN transform 收缩绘制区，
+  INDICATOR 由收缩后的 bar_coords 推导，自动跟着变细）。DSL 侧 track() 已封装：
+  参数 h = 轨道厚度，内部把控件撑成 knob 直径并把 y 上移 extra/2 保持轨道中线不变。
+  （踩坑实证：h=5 的 slider 圆点只有 5px ≈ 看不见；rad 100 取圆、pad=0 即可。）
+- **v9 slider defaultFlags 无 SCROLL_CHAIN_HOR**（asar 原文）——横拖不会把滚动链给外层
+  tabview pager，拖进度条不换页；不要手动补回。
+- **CHECKED 真状态**：`checkedStateType:"expression"` + `checkedState:"<bool变量>"`
+  挂在 **Base.js**（任意 LVGL 控件都支持，不限 switch）。生成两段：
+  tick `evalBooleanProperty → lv_obj_add/remove_state(CHECKED)`；
+  VALUE_CHANGED `lv_obj_has_state → assignBooleanProperty`（回写 `set_var_*`）。
+  普通容器按钮要可点选 → flags 追加 `CHECKABLE`（LVGL 原生翻转 + 发 VALUE_CHANGED）。
+- **事件时序坑（P-0046）**：LVGL 9.4 CHECKABLE 翻转在 **LV_EVENT_RELEASED**
+  （lv_obj.c:829-835），CLICKED 不翻。命令通道从 CLICKED(onAction) 迁到
+  checkedState 回写后，冒烟脚本模拟点击要发 RELEASED（param=NULL 安全，
+  lv_indev_get_scroll_obj 判 NULL）。
+- **命令语义**：绑定回写带给定值（布尔/0..100 绝对值），toggle 类 APP_OUT_*
+  的 v 一律改为「目标态」；User Action 直调入口需要翻转语义时在 native 层
+  读 model 取反再入队（native_actions send_toggle）。
+- **纯 UI 内部状态**（如通知筛选 notif_filter）：onClick SetVariable →
+  set_var_notif_filter 直接 app_set_input_* 存 model，不经命令队列、不经 io。
+
+
+### §14.1 Switch 的 KNOB pad 方向（P-0049，2026-10-02 实测）
+
+- lv_switch.c 里 knob 区域同样是**向外扩**：`x1 -= pad_left; x2 += pad_right;
+  y1 -= pad_top; y2 += pad_bottom`，且 knob 基准大小 = 控件高度。
+  → **正 pad 会把圆点撑出轨道**（实测 pad 3：23px 轨道配 29px 大白球，圆点溢出）；
+  **负 pad 才是内嵌**（pad -3 → 直径 23-6 = 17px，四周留 3px，与设计稿一致）。
+- 设计稿「开关 = 蓝药丸 + 内嵌白圆」的正确写法：KNOB pad 全 -3、radius 100。
