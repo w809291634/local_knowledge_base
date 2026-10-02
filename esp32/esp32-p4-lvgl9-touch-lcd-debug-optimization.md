@@ -212,6 +212,8 @@ apl_console.c 任务创建按宏选择 MALLOC_CAP_SPIRAM / MALLOC_CAP_INTERNAL�
 | 分区表偏移 0x10000（bootloader 体积超限） | 2 |
 | MIPI-DSI PHY PLL 时钟源必须用 0/XTAL（rev3 必踩 abort） | 3 |
 | PPA 加速强制 LV_DRAW_SW_DRAW_UNIT_CNT=1（不能多核渲染） | 8 |
+| PPA 旋转路径与帧率上限归属：8ms 刷屏=PPA 跨步写固有代价；SRM 改 NON_BLOCKING 实测 FPS 升但拖影（排序≠同步）；队列深 8 无效；on_trans_done 在 ISR；正解需双绘制缓冲；DRAW_UNIT_CNT=2 仅 +6fps | 19 |
+| 异步 PPA 旋转落地（8ms 消除）：NON_BLOCKING 提交 + 独立 worker 补发 flush_ready + 计数信号量 + runtime mutex；含两次失败根因与完整修改清单 | 20 |
 | use_psram=true 大块 128B 对齐分配不可靠（无 fallback） | 4 |
 | buffer_height 480/240 双缓冲失败 | 4 |
 | L2 缓存 256KB / 128B 行（影响 PSRAM 对齐与 msync） | 全文 |
@@ -478,3 +480,146 @@ if (ota_->HasNewVersion()) {
 | 不带 firmware 段 | `No firmware section found!` | 继续启动，不崩 |
 
 两种路径都不再 abort；另可见 `Ota: Current version: 9.9.9`。
+
+## 19. PPA 旋转路径与帧率上限的归属：非阻塞实测 + 多核渲染实测
+
+> **更正（见 §20）**：本节 19.4 / 19.6 所写"只有一块绘制缓冲 fb2、所以必须串行、要重构才可能"是**错的**——`TRIPLE_FULL` 实际注册 **2 块**绘制缓冲，8ms 已被消除；§19.6 "补丁要避让 adapter 的 render_mode/flush_ready 机制"仍成立，但结论改为**可做**。
+
+背景：§8「帧率优化清单（已到顶）」、§9「横屏必须软件旋转」、§16.2「PPA 关闭后可试多核渲染（未实测）」三条都指向同一个未解问题——**帧率上限到底卡在哪一段**。本节是 2026-10-02 的实测收口，把「8ms 刷屏时间」的归属和处置讲清。
+
+### 19.1 实测数据（EEZ 11 屏 UI；TRIPLE_FULL + ROTATE_90；400MHz / PSRAM 200M）
+
+| 项 | 数值 |
+| --- | --- |
+| LVGL 软件渲染 | 23 ms/帧 |
+| 刷屏（flush，含 PPA 旋转） | 8 ms/帧 |
+| 合计 | 31 ms → 理论 32 fps |
+| FPS 实测（单 draw unit） | **27** |
+| 差额 | ~6 ms，疑似 `LV_DEF_REFR_PERIOD=13ms` 的节拍量化 |
+
+### 19.2 刷屏那 8ms 已经是 PPA 硬件，不是软件旋转
+
+`esp_lvgl_adapter` 的 PPA SRM 客户端在 `CONFIG_SOC_PPA_SUPPORTED` 下**无条件注册**（v9 bridge 的 hw_resource 初始化），所以旋转走 PPA；CPU 软件旋转 `display_rotate_copy_region()` 不执行。
+
+8 ms 换算 ≈ 768KB×2 / 8ms ≈ **190 MB/s**。90° 旋转对**目标缓冲是跨步写**（每个目标行只写 1 个像素），PSRAM 最怕这种访问模式——**游转的固有代价，不是配置没调好**，也没有可调参数（SRM 的 scale/swap 全 DISABLED，`mode` 写死在组件里）。
+
+### 19.3 关键实验：把 SRM 改成 NON_BLOCKING
+
+**改动点必须打对函数**：`rotate_copy_region()` 内的 `oper_config.mode`（v9 bridge）。同文件另有 `rotate_copy_strided_region()`，**FULL 刷屏路径不走它**——改错那一处会得到"完全没变化"的假结论（本次实测踩过，浪费了一轮编译）。
+
+```c
+.mode = PPA_TRANS_MODE_NON_BLOCKING,   // 原 PPA_TRANS_MODE_BLOCKING
+```
+
+**实测结果**：FPS 明显提升，但**画面出现拖影**。一次实验同时证明两件事：
+1. 那 8 ms **确实在关键路径上**（LVGL 任务真的在原地等它）；
+2. 缺的不是队列，而是**完成时点通知 + 缓冲复用门控**。
+
+### 19.4 为什么"有队列"也救不了：排序 ≠ 同步（≠ 所有权）
+
+- **队列是真实存在的**：`LVGL_PORT_PPA_MAX_PENDING_TRANS = 8`（`lvgl_port_alignment.h`，不是默认的 1）；驱动侧也有每引擎信号量 + `trans_stailq` 事务队列。
+- 但 `NON_BLOCKING` 只做"把描述符与 `in.buffer`/`out.buffer` **指针**推进队列后返回"；**DMA 是在执行时才去读 `in.buffer`**。队列只能保证事务之间的先后，**没有任何机制阻止 CPU 在这 8 ms 内改写那块源缓冲**。
+- 本路径的源缓冲 **fb2 同时就是 LVGL 的绘制缓冲**（`draw_buf_primary = frame_buffers[2]`，见 §17.5）→ 下一帧渲染与旋转并发读写同一块内存 → 拖影。
+- 结论：**队列保证顺序，不保证数据安全**；把 pending 从 8 调到 16 只会让在途引用更多、竞态更随机。
+
+### 19.5 为什么"补上 on_trans_done"也不涨帧率
+
+- 完成信息在系统里**是存在的**：驱动内部靠 2D-DMA 回调归还槽位；用户通知是另一条可选通道（`ppa_client->done_cb = cbs->on_trans_done`）。
+- 但该回调运行在 **ISR 上下文**（2D-DMA 通道回调，返回 `bool need_yield`），**不能**在其中做 `display_lcd_blit_full()` 或 `lv_display_flush_ready()`，必须信号量/任务通知转发。
+- 更要紧的是：**单绘制缓冲**下 `flush_ready` 必须等旋转完成才放行 → 帧周期回到 23+8 = 31 ms → **FPS 退回 27**。它只换来"那 8 ms 里 lvgl 任务能跑别的 timer"（触摸、`ui_tick` 更跟手），**不涨帧率**。
+
+### 19.6 正解需要"双绘制缓冲"，但不是配置项
+
+只有让旋转的源缓冲**不再被 LVGL 写**（两块轮转），才能同时拿到"快"与"不拖影"：渲染第 N+1 帧进 B，同时旋转 A。
+
+但 adapter 的 flush **自己就在操纵 LVGL 的渲染模式**：`disp->render_mode` 在 `LV_DISPLAY_RENDER_MODE_FULL` / `DIRECT` 之间切换，并递归 `lv_refr_now()` 强制整屏重绘，还自行调用 `display_manager_flush_ready(disp)`（full-copy 探针机制）。往里加第二块绘制缓冲会与这套逻辑冲突，且很可能破坏现有撕裂规避 → 属**组件内重构**，不是加一块 buffer 那么简单。
+
+**处置**：按 §16.2 的原则不长期打补丁（升级会被覆盖），作为**上游需求**反馈。
+
+### 19.7 多核渲染实测：`LV_DRAW_SW_DRAW_UNIT_CNT = 2`
+
+§16.2 记为"理论可试（未实测）"，现已实测：
+
+- **前提满足**：绘制 PPA 已关（§16）+ `LV_OS_FREERTOS`；LVGL Kconfig 只要求 `>1 requires an operating system enabled in LV_USE_OS`。
+- **结果：FPS 仅 +6fps，远非成倍。**
+- **原因**：① 该方式只并行"渲染/绘制"那一段（约 23/31 帧时间），旋转与扫描输出仍是串行（Amdahl）；② 绘制段本身是**带宽受限**而非算力受限——fb0/1/2、LVGL 对象、XIP 代码都在 PSRAM，两个 draw unit 只是互相抢同一条 PSRAM 总线。
+- **Kconfig 坑**：`LV_DRAW_THREAD_PRIO` 的 `range 0 4`，写 `5` 会被**静默忽略**并回落到默认 3（本工程 `sdkconfig.defaults` 曾写 5，表现为 `sdkconfig` 里是 3）。
+
+### 19.8 本次处置（已落地）
+
+| 动作 | 值 | 理由 |
+| --- | --- | --- |
+| v9 bridge 的 SRM `mode` | 回退 `PPA_TRANS_MODE_BLOCKING` | 保正确性，避免拖影 |
+| `CONFIG_LV_DEF_REFR_PERIOD` | 13 → **10** | 收那 ~6 ms 节拍量化（§8 记的调优值），预计 27 → ~31 fps |
+
+`LV_DRAW_SW_DRAW_UNIT_CNT=2` 保留（+6fps 是真实收益），代价是每个 draw unit 一个线程栈（`LV_DRAW_THREAD_STACK_SIZE`，内部 RAM）。
+
+## 20. 异步 PPA 旋转落地记录：8ms 刷屏时间被消除（含修改清单）
+
+**结果**：`TRIPLE_FULL + ROTATE_90` 下，原本串行占用的 ~8ms 刷屏（PPA SRM 旋转）已被**完全隐藏**，LVGL 任务不再等待它。本节同时**更正 §19.4/§19.6 的错误前提**，并给出可复现的修改清单（补丁在托管组件内，组件升级会覆盖，故必须留档）。
+
+### 20.1 更正 §19 的两处错误
+
+| §19 原结论 | 实际 | 证据 |
+| --- | --- | --- |
+| "FULL+旋转下只有一块绘制缓冲 fb2，所以必须串行" | **错。`TRIPLE_FULL` 注册 2 块绘制缓冲** | `display_manager_required_buffer_count()` 对 `TRIPLE_FULL` 直接 `return 2`；`lv_display_set_buffers(disp, draw_buf_primary, draw_buf_secondary, buf_bytes, ...)` |
+| "要同时拿到快与不拖影需重构成双缓冲，属上游重构、不可做" | **错。缓冲本来就有，只差"完成时点 + 独立补发上下文"** | 见 20.3 |
+
+§19.6 里"adapter 自己操纵 `render_mode` / `lv_refr_now` / `flush_ready`，补丁要避让"这点**仍然成立**；但结论从"不可做"改为"**可做**"。
+
+### 20.2 为什么"有队列 + 有双缓冲"还不够
+
+- PPA 队列真实存在（`LVGL_PORT_PPA_MAX_PENDING_TRANS = 8`，`lvgl_port_alignment.h`），但 `NON_BLOCKING` 只是"把描述符与 `in.buffer`/`out.buffer` **指针**推进队列后返回"；**DMA 在执行时才读 `in.buffer`** → 队列保证**顺序**，不保证**数据安全**（CPU 可改写 DMA 正在读的缓冲）。把 pending 调大只会让竞态更随机。
+- 完成信息在驱动里是有的（每引擎信号量 + `trans_stailq` 自归还），用户通知是**可选**通道：`ppa_client->done_cb = cbs->on_trans_done`。
+- **该回调运行在 ISR 上下文**（2D-DMA 通道回调，返回 `bool need_yield`）→ 回调里只能给信号量，**不能**做 blit / `flush_ready`。
+
+### 20.3 落地设计（4 个要素，缺一不可）
+
+| # | 要素 | 解决的问题 |
+| --- | --- | --- |
+| 1 | 旋转用 `PPA_TRANS_MODE_NON_BLOCKING` 提交，flush 回调**立即返回** | LVGL 任务不再等那 8ms |
+| 2 | **独立任务**（`ppa_rot`，prio 7 > LVGL 任务 prio 6）在旋转完成后做 blit + `flush_ready` | 补发者必须能**独立于 LVGL 任务**运行（见 20.4 失败 2 的死锁） |
+| 3 | **计数**信号量（上限 4），**不是二值** | 2 块绘制缓冲最多 2 笔在途；二值会丢计数 → 某缓冲永远拿不到 `flush_ready` → 卡帧 |
+| 4 | mutex 保护 adapter 的 `impl->runtime` / `toggle_fb`（worker 的 blit ↔ LVGL 侧 `display_runtime_acquire_next_buffer`） | 跨任务竞态（worker 与 lvgl 任务同时改同一结构） |
+| 附加 | `flush_ready` 推迟到旋转完成才发 | ① 面板不再被叫去扫描半成品 → **消拖影**；② LVGL 不会重画旋转正在读的源缓冲 → **结构性安全**，不是靠时序巧合 |
+
+### 20.4 两次失败与根因（本节最有价值的部分）
+
+**失败 1：改错函数（白编译一次）。** v9 bridge 里同时存在 `rotate_copy_region()` 与 `rotate_copy_strided_region()`；横屏 FULL 刷屏走**前者**（由 `flush_full_rotate()` 调用），后者是 stride 旁支。改到后者 → 得到"完全没变化"的假结论。
+→ **教训：动 adapter 前先确认调用链**（本例 dispatch → `flush_full_rotate` → `rotate_copy_region`），不要按函数名猜。
+
+**失败 2：把补发 `flush_ready` 放进 LVGL 任务 → 死锁 + 任务看门狗复位。**
+症状：`task_wdt: CPU 1: lvgl`，栈顶 `wait_for_flushing at lv_refr.c:1442`（来自 `resolution_change_event_cb` → `lv_refr_now`）。
+根因：`wait_for_flushing()` 会**在 LVGL 任务内同步忙等** `flushing` 标志；若把补发者做成"同一任务里的 lv_timer"，任务卡在忙等里 → 定时器永不执行 → 自锁。
+→ **教训：`flush_ready` 必须由能独立于 LVGL 任务运行的上下文补发**（独立任务），不能是同任务定时器。
+
+**顺带纠正一个机制理解（决定这条路能否成立）：**
+
+```c
+/* lv_refr.c:1019 */ if(!lv_display_is_double_buffered(disp_refr)) { wait_for_flushing(disp_refr); }        /* 单缓冲才等 */
+/* lv_refr.c:1374 */ if(lv_display_is_double_buffered(disp))        { wait_for_flushing(disp_refr); }        /* 仅两块都被占用时才等 */
+```
+
+即：**双缓冲 + 及时补发 `flush_ready` 时，正常渲染路径不会等待** —— 这正是 8ms 能被隐藏的前提。还有一条实证：早期"只把模式翻成 NON_BLOCKING（`flush_ready` 仍同步）"时 FPS 就涨了 → 证明 flush 回调一返回，LVGL 就去渲染下一帧了，没有别的隐含等待。
+
+### 20.5 修改清单（托管组件内，升级会被覆盖）
+
+文件：`managed_components/espressif__esp_lvgl_adapter/src/display/bridge/v9/lvgl_bridge_v9.c`
+
+| # | 位置 | 改动 |
+| --- | --- | --- |
+| 1 | 文件顶部 LVGL v9 区域（新增异步设施） | `#define V9_ROT_QUEUE_LEN 4`；`v9_rot_item_t{impl, next_fb, disp}`；SPSC 环 `s_rot_queue[]` + `volatile s_rot_head`（worker 写）/`volatile s_rot_tail`（LVGL 写）；`s_rot_done_sem`（**计数**，上限 4）；`s_rot_rt_mutex`；`s_rot_initialized`；`v9_rot_push()` / `v9_rot_pop()`；`v9_rot_worker()`；`v9_rot_async_init()`（懒创建 `xSemaphoreCreateCounting(4,0)` + `xSemaphoreCreateMutex()` + `xTaskCreate(v9_rot_worker,"ppa_rot",3072,NULL,7,NULL)`） |
+| 2 | `#if CONFIG_SOC_PPA_SUPPORTED` 区域内 | `v9_ppa_srm_done_cb()`：`IRAM_ATTR`，判空后仅 `xSemaphoreGiveFromISR(s_rot_done_sem,&hp)`，返回 `hp == pdTRUE` |
+| 3 | SRM 客户端创建处（紧随 `ppa_register_client` 之后） | `ppa_event_callbacks_t rot_cbs = { .on_trans_done = v9_ppa_srm_done_cb };` + `ppa_client_register_event_callbacks(hw_resource.ppa_handle, &rot_cbs);` |
+| 4 | `rotate_copy_region()` 的前向声明与定义 | 返回类型 `void` → `bool`；参数末尾加 `bool non_blocking`；`.mode = non_blocking ? PPA_TRANS_MODE_NON_BLOCKING : PPA_TRANS_MODE_BLOCKING`；PPA 分支 `return true;`（已异步提交），CPU 兜底末尾 `return false;`（已同步完成）；保留 `IRAM_ATTR` |
+| 5 | 另两处调用点（`display_bridge_v9_flush_triple_diff`、`flush_dirty_copy`） | 显式传 `false` 保持同步：`(void)rotate_copy_region(..., color_bytes, false);` |
+| 6 | `display_bridge_v9_flush_full_rotate()` | 顺序改为：`v9_rot_async_init()` → **持 mutex** 取 `next_fb` → `rotate_copy_region(..., true)` → 成功则组装 `v9_rot_item_t{impl,next_fb,disp}` 入队（`v9_rot_push`）；**本函数内不再 blit、不再 `flush_ready`**；`!submitted`（PPA 不可用）与队列满时走同步兜底（持 mutex blit + `flush_ready`） |
+
+**已知未处理项**：`v9_rot_async_init()` 若创建信号量/mutex/任务失败（仅启动期堆耗尽时可能），`s_rot_initialized` 仍为 false，后续 `xSemaphoreTake(NULL)` 会触发断言。正常启动不会走到；若要彻底安全需再加约 15 行降级分支（退回全同步路径）。
+
+### 20.6 仍未验证的点（诚实标注）
+
+- `display_lcd_blit_full()` / `display_manager_flush_ready()` 从**非 LVGL 任务**调用是否线程安全——实测运行正常，但**无正式保证**。
+- worker 持 `s_rot_rt_mutex` 期间若 `display_lcd_blit_full()` 内部阻塞，LVGL 侧的 `acquire` 会一并等待（从现有代码看它不等待：等待是 flush 里另起的一步 `ulTaskNotifyTake`，而 `flush_full_rotate` 内没有）。
+- 队列满/超时兜底会产生一次"多余计数"，理论上让 worker 提前处理未完成项；2 块缓冲下不会触发。
+- SPSC 环用 `volatile` 索引（生产者/消费者各只写一个索引），未加内存屏障。
