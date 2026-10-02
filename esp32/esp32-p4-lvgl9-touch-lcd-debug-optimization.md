@@ -240,6 +240,7 @@ apl_console.c 任务创建按宏选择 MALLOC_CAP_SPIRAM / MALLOC_CAP_INTERNAL�
 | CPU 监控堆损坏历史风险 | 12.3、踩坑 |
 | Kconfig.projbuild 正斜杠路径（反斜杠被当转义） | 13、踩坑 |
 | 构建/监视器环境、COM 口占用、sdkconfig 重生 | 11 |
+| xiaozhi OTA 版本检查：非数字 PROJECT_VER → std::stoi 未捕获异常 → 启动 abort；版本取值需高于官方，否则官方 OTA 覆盖自定义固件 | 18 |
 
 适用判断：
 - 新项目同样是 P4 芯片，但板卡不同 → 只须使用【芯片级】+【通用级】，【板卡级】引脚按新板卡改
@@ -382,3 +383,98 @@ target_link_options(${PROJECT_NAME}.elf PRIVATE
 - 绘制缓冲（DSI 帧缓冲 fb0/1/2 与 draw_buf=fb2）**本就在 PSRAM**（FULL+旋转下 draw_buf_primary=frame_buffers[2]），`use_psram` 开关只影响非 FULL 模式；实测改 use_psram 内部无变化，证明显示缓冲从不占内部
 - `CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=16384`（<16KB malloc 强制内部）保持默认，配合 CUSTOM_MALLOC 即可定向解决 LVGL 对象
 - 后续若加 WiFi（esp_wifi_remote/esp_hosted）需内部 RAM，此方案腾出的空间正好可用
+
+## 18. xiaozhi OTA 版本检查：非数字 PROJECT_VER 导致启动即 abort（std::stoi 未捕获异常）
+
+### 18.1 症状
+
+启动日志走到版本检查后立即 abort（**不是** Brownout、**不是** PPA/TLSF 堆签名、**不是** Hardware fault）：
+
+```
+I (11369) Ota: Current version: ee0dbd3-dirty
+I (11994) HttpClient: Established new connection to api.tenclass.net:443 protocol=https cost=479
+I (13434) HttpClient: HTTP connection closed
+
+abort() was called at PC 0x481f7e55 on core 0
+--- 0x481f7e55: __cxxabiv1::__terminate(void (*)()) at libstdc++-v3/libsupc++/eh_terminate.cc:45
+```
+
+`__cxxabiv1::__terminate` = **C++ 未捕获异常**：`throw` → 栈展开找不到 handler → `std::terminate()` → `abort()`。见到这个符号先往"未捕获异常"方向查，别查驱动/堆。
+（寄存器 dump 里的 `RA: esp_vApplicationTickHook`、`panic_abort` 是**表象**，不是根因。）
+
+### 18.2 根因
+
+- `Ota::ParseVersion()`（xiaozhi-esp32/main/ota.cc）把版本号按 `.` 切分，对每段调 `std::stoi()`：
+
+```cpp
+while (std::getline(ss, segment, '.')) {
+    versionNumbers.push_back(std::stoi(segment));   // "ee0dbd3-dirty" → 抛 std::invalid_argument
+}
+```
+
+- `ee0dbd3-dirty` 整串无前导数字 → `std::stoi` 必抛
+- xiaozhi 的 OTA 路径**全工程没有 try/catch** → 未捕获 → `std::terminate()` → `abort()`
+- 版本号来源：工程未设 `PROJECT_VER` 时，IDF 回退到 `git describe`（`<hash>` / `<hash>-dirty`）。上游 xiaozhi 用 git tag（形如 `1.7.5`）所以不踩
+- **通用教训**：凡移植 xiaozhi 且应用版本号非数字（`ee0dbd3-dirty` 必崩；`1.2.3-rc1` 因首段可解析而侥幸），只要服务器下发 firmware 段就必崩
+
+### 18.3 为什么"之前看起来是好的"——引信在服务器手里
+
+崩点有**前置条件**（ota.cc 版本检查主体）：
+
+```cpp
+cJSON *firmware = cJSON_GetObjectItem(root, "firmware");
+if (cJSON_IsObject(firmware)) {
+    ...
+    if (cJSON_IsString(version) && cJSON_IsString(url)) {
+        has_new_version_ = IsNewVersionAvailable(current_version_, firmware_version_);  // ← 崩点
+    }
+} else {
+    ESP_LOGW(TAG, "No firmware section found!");   // ← 响应无 firmware 段，安全返回、不崩
+}
+```
+
+- 响应**无 `firmware` 段** → 打印 `No firmware section found!` → 跳过崩点，设备一切正常
+- 响应**带 `firmware.version` + `firmware.url`** → 必崩
+
+所以这是**潜伏崩溃，触发权在服务器侧**，与本地绘制/内存/任务配置改动无关，表现为"时好时坏、莫名其妙突然崩"。
+
+**判别方法**：日志里搜 `No firmware section found!`——出现即那次没触发。
+
+**旁证思路**：若设备曾长时间正常运行（如 5 分钟、MQTT 已连），说明当次 `CheckNewVersion()` 安全通过——因为 `InitializeProtocol()` 排在 `CheckNewVersion()` **之后**（application.cc 初始化序列），协议能起来就证明版本检查没走到崩点。
+
+### 18.4 修复（改本工程自己的文件，不动 xiaozhi 树）
+
+顶层 CMakeLists，在 `include($ENV{IDF_PATH}/tools/cmake/project.cmake)` **之前**：
+
+```cmake
+set(PROJECT_VER "9.9.9")
+```
+
+- 版本变成数字即可消除 crash
+- **取值必须高于官方发布**，原因见 18.5
+
+### 18.5 连带坑：自动升级会覆盖自定义固件（比崩溃更危险）
+
+`Application::CheckNewVersion()`（xiaozhi-esp32/main/application.cc）：
+
+```cpp
+if (ota_->HasNewVersion()) {
+    if (UpgradeFirmware(ota_->GetFirmwareUrl(), ota_->GetFirmwareVersion())) {
+        return; // 无任何用户确认
+    }
+}
+```
+
+而 `CONFIG_OTA_URL` 默认官方 `https://api.tenclass.net/xiaozhi/ota/` → 若把 `PROJECT_VER` 设成**低于官方**的值（如 `1.0.0`），设备启动后会被刷成官方 xiaozhi 固件，**覆盖自定义 UI 工程**（本例：EEZ 11 屏全没）。
+
+- 残留风险：ota.cc 中 `firmware.force == 1` 会**绕过版本比较**强制升级，`9.9.9` 挡不住 → 只能改 xiaozhi 源码或更换 OTA URL
+- **不能直接关掉版本检查**：该 OTA 接口同时是**服务器配置下发通道**（MQTT/websocket 地址、激活码），AI 对话依赖它，关掉就连不上服务
+
+### 18.6 验证
+
+| 服务器响应 | 预期日志 | 结果 |
+| --- | --- | --- |
+| 带 firmware 段 | `Current is the latest version` | 继续启动，不升级、不崩 |
+| 不带 firmware 段 | `No firmware section found!` | 继续启动，不崩 |
+
+两种路径都不再 abort；另可见 `Ota: Current version: 9.9.9`。
