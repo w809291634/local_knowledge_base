@@ -1153,3 +1153,12 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   到轨道上方（P-0084）；废除 transform 改 MAIN pad 收细，fill/knob/时间同步实证。
 - 转圈：EEZ 原生 Spinner（lv_spinner 1s 自转）接入流水线，扫描态落地，
   连拍 4 帧弧角变化实证在转。
+
+## PR-0109 · 2026-10-02 · 长按 WiFi 忘记网络 + 重新扫描先断开
+
+> 我要求增加 长按 对应wifi 列表中的 wifi ,支持忘记密码
+> （上一条）点击重新扫描的时候 要主动断开wifi  不然扫描不到
+
+- 长按忘记：EEZ LONG_PRESSED 原生事件 + 确认卡（弹卡/真忘/取消三命令），
+  全链路 walk=forget 验证（详见 P-0085）。
+- rescan 主动断开：io_pc/io_esp 的 io_wifi_scan 入口先 disconnect。
