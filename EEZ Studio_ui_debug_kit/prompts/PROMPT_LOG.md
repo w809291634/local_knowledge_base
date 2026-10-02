@@ -1082,3 +1082,42 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   渲染成空白（状态栏 11.5px 与待机页 13px 两处都中）。
 - **修**：抽出 `CLOCK_GLYPHS` 常量（含一二三四五六）给两处 label；glyphs_seed
   给 10/11/12/13 四档兜底；新增 `design/_glyph_lint.py` 做覆盖率自检（负向测试通过）。
+
+## PR-0103 · 2026-10-02 · 真机构建第二次报错（-Werror=stringop-truncation）
+
+- **工具**：WorkBuddy
+- **用户提供**：真机 `idf.py build` 日志，io_esp.cpp 4 处
+  `strncpy(...) output may be truncated copying 32 bytes` 被当作错误。
+- **修**：新增 `safe_copy(dst, size, src)`（内部 snprintf，保证结尾 '\0'），
+  替换 io_esp.cpp 全部 11 处固定缓冲拷贝（ssid/pwd/target_ssid/snap/ip/sub）。
+- **★ 教训（修正 PR-0101 的自检手法）**：`-fsyntax-only` 不做优化，抓不到
+  stringop-truncation —— 改为**真实编译**（-c 且保留 -O2，输出 .obj 到临时目录），
+  固化成 `design/_device_syntax_check.py`；负向测试（改回 strncpy）确认能报 FAIL。
+
+## PR-0104 · 2026-10-02 · EEZ GUI 报 Textarea not found（键盘绑定真 bug）
+
+- **工具**：WorkBuddy
+- **用户原话（逐字）**：EEZ GUI 报错路径 `Pages / Main / … / Keyboard [m_net_pwd_kb]`
+  `"Textarea": "0dc957b9-…" not found.`
+- **根因（P-0053，修正 PR-0095 的写法）**：keyboard 的 `textarea` 属性值是
+  **identifier 名**，我却写成了目标控件的 objID（asar Keyboard.js：enumItems 用
+  identifier、check() 用 getIdentifierByName）。
+- **更严重的后果**：CLI build **静默略过**该绑定 —— screens.c 里根本没有
+  `lv_keyboard_set_textarea`，键盘和输入框实际没连上（真机弹出密码面板才会发现）。
+- **修**：json2eez 写入 identifier 名（id2obj 仅做存在性校验）；重建后
+  screens.c 出现 lv_keyboard_set_textarea；sim.py 新增 [kbd] 运行期绑定断言
+  （`lv_keyboard_get_textarea(kb) == ta`，实测 bound=1）。
+
+## PR-0105 · 2026-10-02 · 真机扫到 14 个 AP 但 UI 一行都不显示
+
+- **工具**：WorkBuddy
+- **用户提供**：真机串口日志（disconnect → scan done: 14 APs → scan results
+  published to UI slots）+ 现象「没有ap显示到 UI 中」。
+- **根因**：`s_scan_in_progress` 在扫描成功/失败路径都**没清**；io_sample_inputs
+  里 `state = s_scan_in_progress ? 1 : snap.state` → wifi_state 恒 = 1，
+  UI 列表 hiddenExpr="wifi_state == 1" 一直隐藏，只剩"正在搜索网络…"。
+  （PC 仿真走 io_pc 假状态机，没有这个标志 → 门禁照不到。）
+- **修**：do_scan_locked 改 do{}while(0)+break 单一出口，成败都清标志；
+  再加 15s 看门狗（标志漏清也自动回列表态）。
+- **坑**：第一版用 goto 单一出口，C++ 报 "jump to label crosses initialization"，
+  被 design/_device_syntax_check.py 当场抓到。

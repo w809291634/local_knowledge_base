@@ -354,16 +354,21 @@
   "text": "", "textType": "literal", "useStaticText": true,
   "oneLineMode": true, "passwordMode": true, "maxTextLength": 64 }
 { "type": "LVGLKeyboardWidget", "identifier": "m_net_pwd_kb",
-  "textarea": "<textarea 的 EEZ objID>",        // ← codegen 自动 lv_keyboard_set_textarea
+  "textarea": "<textarea 的 identifier 名>",   // ★ 不是 objID（P-0053 修正）
   "mode": "TEXT_LOWER" }                        // ⚠ 必填！缺省 codegen 生成
                                                 //   LV_KEYBOARD_MODE_undefined（编译错）。
                                                 //   合法值 TEXT_LOWER/TEXT_UPPER/SPECIAL/NUMBER/USER_1..4
 ```
 
-- **控件引用解析**：keyboard 的 textarea 是 objID。DSL 里传**节点引用**
-  （place() 前缀会原地改 id，构建期读最终 id 才不错位）——json2eez 用
-  build_page 预解析的 id→path→objID 表（路径公式必须与 children 递归一致：
-  `parent/id + str(i)`）。
+- **控件引用解析（★ P-0053 修正）**：keyboard 的 textarea 是 **identifier 名**，
+  **不是 objID**（asar Keyboard.js：enumItems 给 identifier 列表、check() 用
+  getIdentifierByName 按名查）。写 objID 的双重后果：
+  ①GUI 报 `"Textarea": "<objID>" not found`；
+  ②CLI **静默略过绑定** —— screens.c 里没有 lv_keyboard_set_textarea，
+    键盘与输入框实际没连上（只有真机弹面板才暴露）。
+  DSL 里仍传**节点引用**（place() 前缀会原地改 id，构建期读最终 id 才不错位）——
+  json2eez 用 build_page 预解析的 id→path→objID 表**只做存在性校验**，
+  写入值是 id 本身（路径公式必须与 children 递归一致：`parent/id + str(i)`）。
 - **键盘特殊键字形**：lv_keyboard 用 LV_SYMBOL_BACKSPACE(F55A)/OK(F00C)/
   NEW_LINE(F115)/KEYBOARD(F11C)/LEFT(F053)/RIGHT(F054)/CLOSE(F00D)——
   经 glyphs_seed 进 FA 附加源（私有区自动分流）。
