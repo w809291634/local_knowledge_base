@@ -1121,3 +1121,35 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   再加 15s 看门狗（标志漏清也自动回列表态）。
 - **坑**：第一版用 goto 单一出口，C++ 报 "jump to label crosses initialization"，
   被 design/_device_syntax_check.py 当场抓到。
+
+## PR-0106 · 2026-10-02 · 「键盘中按钮没有文字」→ 实为确认/取消按钮 + 要求全量检查缺字
+
+> 键盘中按钮没有文字 ，你没有发现吗
+
+（AskUserQuestion 澄清后用户答复：）
+> 问题1（在哪看到的）→ **真机屏幕上**
+> 问题2 → **「不是键盘，就是确认和取消没有文字，你要检查一下所有的，看看还有没有缺少文字的」**
+
+- **结果**：① 键盘无辜（仿真目检字全有）；真凶是 button 子 label 坐标二次减偏移
+  飞出屏幕 → P-0081，`btn_cx(base_x,...)` 传按钮左缘修复。
+  ② 全量检查两条腿：`_font_cov.py` 字形覆盖 3688 字符 OK；静态越界脚本 254 全假
+  阳性删除，改走路器 `audit` 运行时体检（`lv_obj_get_coords` 真实矩形 +
+  `lv_obj_is_visible`），6 态唯一可见空 label 是 textarea 内部 placeholder，正常。
+
+## PR-0107 · 2026-10-02 · 点单修复对齐/间隔 4 实锤 + 扫描态不居中
+
+> 实锤 4 个   ，还有一个   正在搜索网络   不居中
+
+- 全修：通知时间/按钮 11px 垂直差、滑杆轨道底消失（transform_height 吃 MAIN 背景）、
+  knob 0 值裁半、「42 %」空隙（EEZ label 无 textAlign → 定宽串方案）、
+  扫描/空态居中（wUnit 断链 + 静态居中）；附赠状态栏 "% 85" 顺序反。
+- 全链路验证见 P-0083；设备侧 4 文件 0 错 0 警，需用户 idf.py build 重烧。
+
+## PR-0108 · 2026-10-02 · 进度条状态不对 + 搜索转圈动画（用户贴两张截图）
+
+> 进度条状态状态不对 ，搜索网络  需要有一个动画转圈圈，可以高级一点，
+
+- 进度条：用户图中「轨道上方蓝细线」= INDICATOR 被 transform_height 负面积 snap
+  到轨道上方（P-0084）；废除 transform 改 MAIN pad 收细，fill/knob/时间同步实证。
+- 转圈：EEZ 原生 Spinner（lv_spinner 1s 自转）接入流水线，扫描态落地，
+  连拍 4 帧弧角变化实证在转。
