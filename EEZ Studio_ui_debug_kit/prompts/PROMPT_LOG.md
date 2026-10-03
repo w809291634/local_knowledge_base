@@ -1162,3 +1162,88 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
 - 长按忘记：EEZ LONG_PRESSED 原生事件 + 确认卡（弹卡/真忘/取消三命令），
   全链路 walk=forget 验证（详见 P-0085）。
 - rescan 主动断开：io_pc/io_esp 的 io_wifi_scan 入口先 disconnect。
+
+## PR-0110 · 2026-10-02 · 左栏「网络与连接」改回切 tabpager 页
+
+> m_cats_wifi 这个触发的 flow，不应该直接弹出 wifi 连接界面，而是像其他两个按钮一样，切换到指定的 tabpager 页即可
+> （AskUserQuestion 澄清后：）只需要通用页里面的无线网络进入到下拉浮层，进行 wifi 连接设置
+
+- 左栏切到新增的「网络」子页（tab 1），通用页那行仍弹浮层 → pane_network 建两份
+  （netp_ / net_），共享变量与命令。页序 0 通用/1 网络/2 显示/3 唤醒，牵动 6 处
+  索引一次改齐；详见 P-0089。
+- 顺带修走路器 WALK_MAX_MAP 700 溢出（静默丢对象表尾部）。
+
+## PR-0111 · 2026-10-02 · 左栏「网络与连接」改切 tabpager 页（第二次，第 105 轮被要求还原）
+
+> m_cats_wifi 这个触发的 flow，不应该直接弹出 wifi 连接界面，而是像其他两个按钮一样，切换到指定的 tabpager 页即可
+> 你的修改错误了，先还原上次修改，我的意思是，点击 网络 与 链接 弹出 @image 这个界面，简单修改即可
+
+- 我第一遍误解成「新增一个 Wi-Fi 子页」，被打回还原。正确 = 切到**已有通用页**，
+  净改动 3 行（CATS wifi "pop"→0、rail_cats 删 pop 分支、高亮 3 组），
+  通用页那行「无线网络」仍弹浮层连网。详见 P-0088。
+
+## PR-0112 · 2026-10-02 · 长按 WiFi 行不许连带触发连接
+
+> wifi长按触发时候，就不要触发 点击连接 了 ，长按触发了，就不要触发短按
+
+- 内核根因（lv_indev.c:882 CLICKED 在 long_pr_sent 判断之外）+ native 侧 800ms
+  抑制窗口；走路器 longpress 加第二参复现内核行为才验得住。详见 P-0091。
+
+## PR-0113 · 2026-10-03 · 真机 MQTT 8883 一直超时（P-0092，未根治）
+
+> I (3358) H_SDIO_DRV: Received INIT event ... I (11251) Application: Network connected 总是一个错误
+> （追问现象后）I (1665691) SystemInfo: free sram: 100539 ... E (1668820) esp-tls: [sock=54] select() timeout ... 现在网络确实连接了
+> （第二段）esp32p4> I (1577485) user_io_esp: screen: wake by touch ... E (1593809) esp-tls: [sock=54] select() timeout
+> （第三段，决定性）E (1178740) esp-tls: [sock=54] select() timeout ... I (1183744) MQTT: Connecting to endpoint api.tenclass.net
+> （第四段完整启动）... I (24077) Application: Activation done ... W (24078) Display: ShowNotification: 版本 9.9.9 ... W (29742) esp-tls: Failed to open new connection in specified timeout
+> 可以使用吗
+> （三选一尚未拍板，用户转而指示：）可以记录到  经验中
+
+- 结论：与 LVGL UI / Wi-Fi 选网链路**完全无关**（日志里 `screen: wake by touch` 正常，UI 活着）。
+  决定性事实 = **443（OTA）通、8883（MQTT）不通**，同一设备同一域名同一 Wi-Fi。
+- ★ 我犯的两次判断错误（都被用户贴的日志推翻，务必记住）：
+  ①猜「NVS 里存了失效陈旧 endpoint」→ 被 `Connecting to endpoint api.tenclass.net`
+    推翻（那是当前正确官方域名；PC 侧实测 443/8883/80 全 OPEN、openssl 握手成功）。
+  ②猜 `CONFIG_LWIP_TCP_MSS=1440` 撑爆 SDIO 隧道 → 被 `ShowNotification: 版本 9.9.9`
+    推翻（该串来自 `application.cc:299-308` 的 HandleActivationDoneEvent，版本取自
+    `lvgl_demo_ai/CMakeLists.txt:77` 的 `PROJECT_VER "9.9.9"`
+    （非 `xiaozhi-esp32/CMakeLists.txt:12` 的 2.3.0，被顶层覆盖），证明 **OTA 激活 HTTPS 443 大包已成功**；
+    且 1440+20+20+4=1484 < `ESP_TRANSPORT_SDIO_MAX_BUF_SIZE 1536`，根本没超）。
+    → **明确告知用户不要去动 MSS**。
+- 已排除：DNS（sock=54 已创建）、证书（CERTIFICATE_BUNDLE_DEFAULT_FULL=y）、MTU、
+  NVS 分区（16KB）、服务器可达性（PC 同网 HTTP 200/2.1s）。
+  固件 `strings` 查硬编码 MQTT 域名**零命中** ⇒ endpoint 只来自 NVS/OTA 下发
+  （`ota.cc:146-164` 是唯一写 NVS 的 `mqtt{}` 段解析）。
+- 「可以使用吗」的回答：**MQTT 不通时本地功能都能用，云端对话不能用**。唤醒词（本地）、
+  AFE、ES7210 四麦、codec、UI 全部初始化成功，设备停 `待命`；但唤醒后音频要经 MQTT
+  上云做 ASR/LLM/TTS，这一步断了 ⇒ 不会有回答。
+- 留给用户三选一（未决策，勿擅自推进）：A 加诊断日志定位丢包阶段 / B 摘掉 MQTT 链路 /
+  C 不管它（60s 刷一次不影响本地）。
+
+## PR-0114 · 2026-10-03 · 删除「对话」4 页中的后两页（P-0093）
+
+> 现在优化，将 UI 中 对话 页 中的 4页中，删除后两页，一个正在聆听 和  对话记录删除掉
+> （AskUserQuestion 澄清后：）「待机」页的「全部记录」按钮怎么处理？ → 一起删掉（推荐）
+> （AskUserQuestion 澄清后：）pane_voice() / pane_history() 这两个函数本体要不要一起删？ → 一并删掉（推荐）
+
+- DSL 三处联动（build_ui.py 2868→2690 行）：①`ai_nav` 的 tab 定义与 children 只留
+  `ai_standby`/`ai_chat` ②`pane_main()` 删「全部记录」按钮（原 p1，`switchTab`→tab 1），
+  p2 平移补位 ③整段删 `pane_voice()`+`pane_history()`+`_WAVE`（175 行）。
+- ★ **删页必查 sim.py 生成的 C 代码里的 `objects.m_*` 引用**（P-0093 翻车点）：
+  语音页移除后 `objects.m_ai_orb` 不复存在，冒烟段仍引用 → 实测编译
+  `error: 'objects_t' has no member named 'm_ai_orb'`。删段后通过；
+  `action_voice_stop` 的 native 实现保留（孤儿函数，无害）。
+- ★ **仿真截图文件名编号故意不重排**（01,02,05,06...）：重编号会让 `build/sim_shots`
+  历史截图与 compare.py/verify_center.py 的映射**集体错位**。跳号无害，勿"顺手整理"。
+  同步改 4 处：sim.py 的 PAGES+VIEWS、icon_survey.py 的 AI_TABS/VIEW_FILE/VIEW_NAME、
+  compare.py 的 MAP、build/verify_center.py 的 RAW_OF。
+- 验收：9 屏（原 11）、平均差异 9.08%（阈值 25%）、无缺屏；`src/ui/screens.c` 对象表
+  只剩 `m_tab_standby`/`m_tab_aichat`，`m_tab_aivoice`/`m_tab_aihist` 彻底消失；
+  EEZ 产物时间戳同秒 16:12:11 证明生成区未手改。
+
+## PR-0115 · 2026-10-03 · 仿真器默认路径（长期约定，不必每次问）
+
+> 以后 ，你 可以 默认使用  examples\idf_v555_my_exps\common\PC_SIM 这里的仿真器
+
+- 默认路径固化：`examples\idf_v555_my_exps\common\PC_SIM\lv_port_pc_vscode_v9.5`。
+  以后跑仿真直接用它，**不再逐次询问确认**。已写入工程 MEMORY.md「最高协作规矩」段。
