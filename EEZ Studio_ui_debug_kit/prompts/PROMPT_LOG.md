@@ -1541,3 +1541,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 产出/结论：按此实现 P-0108：新增 src/native/app_settings.{h,cpp}（g_set 唯一表 + read/write/save 钩子 + 每拍比对：读回→落硬件→存 NVS 最快 1s 一次），tick 挂在 user_io_tick 且在 io_sample_inputs 之前；io_esp 删 15 个 static、改名 92 处、NVS 键全沿用并补 to_min、删掉 vol 双写；板级加 app_audio_get_output_volume()；io_pc 用假 codec 寄存器（EEZ_SIM_AI_VOLUME）镜像同一条路。验证：真编译 5 文件 0 错 0 警、EEZ_SIM_AI_VOLUME=77 时 walk=audit_all 实测音量 label = " 77 %"、门禁 9 屏 9.89%
   - 关联：P-0108
 
+### PR-0165 · 2026-10-03 21:56 · Qoder
+  - 提示词：① GB2312 二级 3008 字 + 上面 11 个口语字 ≈ +300KB（cmap 实测二级在 TTF 里 3008/3008 全有）；    气泡左右那个头像方块是空的（只有色块没图标  可以你帮我添加一个 图标
+  - 诉求：选字库路线 ①（补二级+口语字），并让我给聊天气泡的空头像方块加图标
+  - 产出/结论：两件都做完：13px 扩到一二级+语气字白名单（3897→7413 码位，烘焙零缺字，位图约 +600KB rodata）；徽章加 F005 sparkle / F007 person（16px 档，glyphs_seed 同步补字）。过程中撞出 LV_FONT_FMT_TXT_LARGE 两边漂移（设备 =y，design/lv_conf.h 镜像还是 0）并改正源头；登记 P-0109，P-0101 再追加两节
+  - 关联：P-0101,P-0109
+
