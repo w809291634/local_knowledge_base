@@ -1499,3 +1499,21 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 产出/结论：四步已全部完成；映射表已建进 index.md 末节（C 错位 / B 侧面 / D 库内无正文 / A 一致四级）。过程中撤回了上一条我自己报的「grep P-0099 = 0」假绿：相对路径 main 在 eez-test 下不存在，真数 13 处，漏网的 board_p4_audio.cc:131 已改 P-0098/P-0105
   - 关联：P-0105,P-0086
 
+### PR-0158 · 2026-10-03 20:30 · Qoder
+  - 提示词：另外，为什么回话记录没有实时的文字更新呢  ，我和ai语音聊天的时候 ，还有底部的发送不是要删除吗
+  - 诉求：问两件事：语音聊天时消息区为何不动文字；底部发送条是不是该删
+  - 产出/结论：取证答两处断链（GetDisplay 返回 NoDisplay、真机 chat_append 零调用者）+ P-0092 未通；确认发送条该删（我此前把「B 不要输入」误解为留装饰并已写进日志）
+  - 关联：P-0106
+
+### PR-0159 · 2026-10-03 20:30 · Qoder
+  - 提示词：最省的接法（零改内核，和 P-0098 同款套路）：在 P4AudioBoard 覆盖 GetDisplay() 返回一个自家 Display 子类，SetChatMessage 里转 chat_append(role=="assistant", text)；⚠ 它跑在小智主循环线程，必须持 LVGL 锁调（app_model.h:202 那条铁律），且不能让它去碰 esp_wifi/协议栈头。  我想要的，不妨碍 lvgl 线程，可以将小智的语音交互 信息通过 队列方式传输到 lvgl 中，每次lvgl 扫描一次时候，将 队列中的消息刷新一条即可
+  - 诉求：否决跨线程持 LVGL 锁，改成队列：LVGL 每次扫描只刷一条
+  - 产出/结论：按此实现：SPSC 无锁环 chat_q_push/chat_q_pump（8 槽）+ user_io_tick 每 tick 取一条 + 板级 P4ChatDisplay 只覆写 SetChatMessage；io_pc 同路镜像。真编译 5 文件 0 错 0 警，chataudit 走查通，门禁 9.87% 不变
+  - 关联：P-0106
+
+### PR-0160 · 2026-10-03 20:30 · Qoder
+  - 提示词：这个队列使用 PSRAM 应该可以的吧
+  - 诉求：问队列能否放 PSRAM
+  - 产出/结论：当前 config 未开 SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY ⇒ 静态数组进不了 PSRAM；map 实测 .dram0.bss 81KB / 内部段 956KB / 余约 670KB，2.1KB 不值得搬；且 P-0096 堆损坏未定位 + SPIRAM ECC 关闭，搬过去是给排查加变数。真要省该搬的是 s_chat[100]≈26KB
+  - 关联：P-0106
+
