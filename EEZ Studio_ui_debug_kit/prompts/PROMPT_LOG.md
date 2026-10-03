@@ -1517,3 +1517,27 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 产出/结论：当前 config 未开 SPIRAM_ALLOW_BSS_SEG_EXTERNAL_MEMORY ⇒ 静态数组进不了 PSRAM；map 实测 .dram0.bss 81KB / 内部段 956KB / 余约 670KB，2.1KB 不值得搬；且 P-0096 堆损坏未定位 + SPIRAM ECC 关闭，搬过去是给排查加变数。真要省该搬的是 s_chat[100]≈26KB
   - 关联：P-0106
 
+### PR-0161 · 2026-10-03 20:40 · Qoder
+  - 提示词：② 底部发送——你是对的，我理解偏了 你原话「B 不要输入」我落成了"不做输入功能、把输入条和发送钮留成装饰"，还写进了日志（2026-10-03.md:673）。要删的是整条：build_ui.py:1145-1159 的 input_bar（含「说点什么，或按住说话…」）+ send_fab，消息区高度补回；连带变死链的 chat_send 变量（:2606）、APP_OUT_CHAT_SEND、action_chat_send、io_chat_send。  这个发送完全可以删除掉，连 输入框 都可以去掉
+  - 诉求：确认整条删除：发送钮 + 输入框都去掉，连带清掉 chat_send 那条死链
+  - 产出/结论：登记 P-0107：DSL 删 input_bar/send_fab、chat_h 吃满、PAGE_ROLES/EXPLICIT_SHORT/变量表同步；native 删 APP_OUT_CHAT_SEND/case/action_chat_send/io_chat_send 两份实现；PC 触发改成假状态机按时序投 stt/tts（都走 chat_q_push）；走路器去掉 mousef。验证：生成区零残留、真编译 5 文件 0 错 0 警、chataudit 全 ok、门禁 9 屏 9.91%、截图目检底栏已消失
+  - 关联：P-0107
+
+### PR-0162 · 2026-10-03 20:55 · Qoder
+  - 提示词：聊天记录中的    +新对话  和  设置 的“三个点”  可以不要了，然后有些 AI 使用的语气词，也没有显示出来，显示的方框
+  - 诉求：删掉对话页头两枚装饰钮；查清气泡里的方框到底是什么字
+  - 产出/结论：两枚 pill（action 都是 None = 纯装饰）已从 pane_chat 删除，门禁 9.90%、walk 4 步全 ok、重跑走路图目检页头已干净（先看旧图差点误判）。方框取证：新增 design/_glyph_probe.py 从已烘字体 C 文件反解真实码位（LVGL SPARSE_TINY 的 unicode_list 是相对 range_start 的偏移，读错会得出标点全缺的荒谬结论）= 13px 3897 码位，缺 语气词 呃呗喔喽嘞噢欸 + 嗯咦咩哒、符号 ℃±×÷★○●✓、emoji 全缺；中文标点只缺 ￥ ⇒ 根因是烘的是静态可枚举集而云端回复是自由文本。三条路线（+300KB / +2.0MB 全 CJK / native 过滤 emoji）等用户选
+  - 关联：P-0101
+
+### PR-0163 · 2026-10-03 21:31 · Qoder
+  - 提示词：还有，AI语音中可以设置  音量，这个音量 也要和UI同步音量，所以最好建立一个全局的所有变量，或者一个统一的类，存放这些信息，然后操作统一内存，如果可以NV也可以保存下来，方便重新生效，后续可以记忆
+  - 诉求：音量要与 UI 同步；所有设置收进一个统一内存 + NVS 持久化，重启能恢复
+  - 产出/结论：取证：音量是双真值源（AudioCodec 自己写 NVS audio/output_volume，MCP set_volume 直接调 codec；我们又存 ui_settings/vol 且 UI 读自己那份）⇒ AI 改完 UI 不动、UI 一动又盖回去；另查出 to_min 只读不写 = 息屏时间天生不持久化。给出两步方案（①音量以 codec 为准读回 ②统一表 app_settings）
+  - 关联：P-0108
+
+### PR-0164 · 2026-10-03 21:31 · Qoder
+  - 提示词：我的建议是，设置统一管理的结构体或者类，使用软件定时器 周期 判断变量是否变更，如果变更，然后设置输出即可，就这么简单
+  - 诉求：定案：一张结构体 + 周期比对变更再输出，别搞复杂钩子
+  - 产出/结论：按此实现 P-0108：新增 src/native/app_settings.{h,cpp}（g_set 唯一表 + read/write/save 钩子 + 每拍比对：读回→落硬件→存 NVS 最快 1s 一次），tick 挂在 user_io_tick 且在 io_sample_inputs 之前；io_esp 删 15 个 static、改名 92 处、NVS 键全沿用并补 to_min、删掉 vol 双写；板级加 app_audio_get_output_volume()；io_pc 用假 codec 寄存器（EEZ_SIM_AI_VOLUME）镜像同一条路。验证：真编译 5 文件 0 错 0 警、EEZ_SIM_AI_VOLUME=77 时 walk=audit_all 实测音量 label = " 77 %"、门禁 9 屏 9.89%
+  - 关联：P-0108
+
