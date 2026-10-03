@@ -119,3 +119,9 @@
 > 说明：以上**不是本次新增造成的** —— 本次只加 P-0092 / P-0093，文件与索引双向齐全。
 > 按 INTAKE 纪律「只追加不改历史」，此处只登记不删改；补齐时优先从工程当日日志回填
 > （日志里有完整现象/根因/证据），补不了的标 `open` 待查。
+| P-0094 | 2026-10-03 | 「始终连上次指定的WiFi」= 把 SsidManager 剪成唯一一项（推翻 P-0086 的 set_config 方案） | WiFi,SsidManager,HandleScanResult,RSSI,剪枝,StartStation,managed_components | fixed |
+| P-0095 | 2026-10-03 | UI 时间比实际快 8 小时：自家 SNTP 与小智 OTA 双写系统时钟 | 时间,SNTP,OTA,settimeofday,时区,息屏,双写冲突 | fixed |
+| P-0096 | 2026-10-03 | 真机偶发重启：TLSF 空闲链表被写坏，崩在 DHCP 首批 malloc；探测器本身又造出第二个崩溃 | 崩溃,heap,TLSF,addr2line,esp_hosted,中断看门狗, sdkconfig | open |
+| P-0097 | 2026-10-03 | 一完成对时就熄屏：息屏计时用了墙上时间 + 活动打点其实没人调 | 息屏,背光,timeNULL,esp_timer,单调时钟,跨任务,io_note_ui_activity | fixed |
+| P-0098 | 2026-10-03 | 唤醒词没有点亮屏幕：接语音交互态（SetCallbacks 外部接管是陷阱） | 息屏,唤醒词,DeviceState,SetCallbacks,桥接,GetDeviceState | fixed |
+| P-0099 | 2026-10-03 | 6 个开关全是装饰：json2eez 的 switch 分支把 stateVar 真状态绑定覆盖成 literal | switch,json2eez,checkedStateType,stateVar,假反馈,审计 | open |
