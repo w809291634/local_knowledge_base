@@ -1478,3 +1478,37 @@ set_wake["children"] = place(pane_wake(...),     SET_X, SB_H, "wake_")
 `LVGLTabviewWidget`（本次手工执行：13 tab / 4 tabview / 违例 0）。
 **遗留建议**：把该断言做进 `json2eez.py` 的 check_bounds 邻位，成为常驻门禁。
 
+
+### 11.21 ★ 绑变量的滑杆：`get_var` 与 `set_var` 必须指向同一块内存（2026-10-03 真机确认，`intake/P-0110`）
+
+EEZ 对"值绑了变量"的滑杆，生成的代码**每次刷新**都执行回写（实测 `src/ui/screens.c:9494-9501`）：
+
+```c
+int32_t new_val = evalIntegerProperty(...);          // 走 get_var_xxx()
+int32_t cur_val = lv_slider_get_value(objects.m_np_vol);
+if (new_val != cur_val) {                            // 只要不等就写回控件
+    tick_value_change_obj = objects.m_np_vol;        // 反环标记：这次写入不再触发 set_var
+    lv_slider_set_value(objects.m_np_vol, new_val, LV_ANIM_OFF);
+}
+```
+
+⇒ 用户手点到 25 之后，只要 `get_var` 读到的还是旧值，**下一帧绑定就把滑杆打回 42**；
+命令通道随后把值改成 25，控件再跳回来 —— 现象就是"跳到目标 → 弹回旧值 → 再跳到目标"的闪烁。
+
+**铁律**：`set_var_X()` 写哪儿，`get_var_X()` 就必须读哪儿。
+两边读写的若不是同一块内存，任何"事件写 A、刷新读 B"的错位都会被这行回写放大成可见闪烁。
+本工程的落法 = 两边都走统一设置表 `g_set`（`src/native/app_settings.h`）：
+
+```c
+void    set_var_volume_pct(int32_t v) { g_set.volume = v; app_set_output(APP_OUT_VOLUME_SET, ...); }
+int32_t get_var_volume_pct(void)      { return g_set.volume; }   // ★ 不是 app_get_input_i(APP_IN_*)
+```
+
+三条附带教训：
+1. **只补一半会看起来"没修好"**：第一轮只改了 `set_var` 写表（以为旧值不会再被发布），
+   真机仍闪 —— 因为漏了"绑定读的是模型槽"这条独立路径。控件回写型 UI 要**两条路径一起改**。
+2. **PC 仿真复现不出来 ≠ 没问题**：走路器 `getval`（`lv_slider_get_value`，本工程 LVGL 9.x
+   **没有** `lv_obj_get_value` 符号）每 20ms 采样，修复前后都是"一路 25"。
+   绑定 vs 事件是**亚帧竞态**，仿真的刷新顺序与真机不同 ⇒ 这类只能真机判定。
+3. **`APP_IN_*` 槽不必删**：改成读表后，io 侧照旧发布（待机页等别的消费者还在用），
+   只是不再当控件的真值源 —— 单一真值源指的是**读路径**，不是"只能有一份拷贝"。
