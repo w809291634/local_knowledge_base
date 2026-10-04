@@ -1560,3 +1560,68 @@ int32_t get_var_volume_pct(void)      { return g_set.volume; }   // ★ 不是 a
 会把 `-DMBEDTLS_CONFIG_FILE=\"x\"` 改成 `/"x"/`，于是 mbedTLS 配置头加载不到，
 报 `esp_crt_bundle.h: 'mbedtls_x509_crt' does not name a type` —— 看着像缺 `-I`，其实是**缺 define**。
 （实测：借来的命令编 `io_weather.cpp` 就中过这一枪，官方条目 + 安全归一化后才 0 错 0 警。）
+
+
+### 11.23 ★ 轮播/翻转态不进设置表也不进 NVS；断言要"比变化"不要"比值"（2026-10-04，`intake/P-0114`）
+
+待机页天气卡收藏多城后要 8 秒自动翻一城、手动 ‹ › 即重置计时。两条口径值得单列，因为它们和
+"统一设置表 + 周期比对变更"（`§11.21` / P-0108）看起来一致、其实相反：
+
+1. **`view`（当前翻到第几个）是显示态，不是设置**：它每 8 秒变一次 ⇒ 塞进 `g_set` 就等于
+   每 8 秒写一次 NVS（Flash 实打实的磨损），而且 `app_settings_tick` 的 `memcmp` 去抖
+   对"周期性必然变化"完全失效（每次都判定"变了"）。⇒ 它是数据源模块的私有 static，
+   表里只留真正跨重启要保留的 `wx_mask`。**判据：只有"用户会去调 + 要跨重启"的项才进统一表。**
+2. **走路断言优先"比变化"而不是"比具体值"**：这条链上自动翻转随时会插进来（走路本身耗掉十几秒），
+   认死"第 3 城 = 上海"必然假失败。写成 `A → 点 › → B≠A → 点 ‹ → 回到 A → 静置 8.6s → 又变`，
+   三向都成立才算手动/自动/重置各自生效。
+3. 附带：翻转/熄屏这类计时一律 `lv_tick_get()` + **有符号回绕比较**
+   （`if ((int32_t)(now - due) < 0) return;`），别用墙上时间（P-0097 对时一跳就乱）。
+
+
+### 11.24 ★ 外部 API 的响应形状必须当场抓一次；短动效用样式值断言，别用截图（2026-10-04，`intake/P-0114`）
+
+天气"后来不再获取数据了"的根因不是网络，是我照记忆写的解析：以为 Open-Meteo 多地点返回
+`{"current":[{...},{...}]}`，**实测**（直接抓一次那个 URL）顶层其实是**数组**、每个元素各自带一个
+`current` **对象** ⇒ `cJSON_GetObjectItem(root, "current")` 在数组上返回 NULL ⇒ 勾 ≥2 城永远解析失败。
+三条：
+
+1. **能当场取证就别用记忆**：一次 HTTP 抓取就能定形状，成本远低于"上线后用户报障"。
+   凡"我以为接口是这样"（对象还是数组、字段在顶层还是嵌一层、顺序是否等于请求顺序）都先抓一次。
+2. **退避游标要记"尝试"，不是记"成功"**。写成"只在成功时更新游标"会让
+   `changed = (want != 上次成功)` 在失败后恒真 ⇒ 60 秒退避被绕成**每 5 秒一次 TLS 握手**，
+   还顺带撞限流。这两个 bug 是叠在一起才显得"完全不上数据"。
+3. **几百毫秒的动效不要靠截图断言** —— 走路器 `shot` 之前还会再泵几帧，动画早播完了，
+   图上看着就是"没效果"。加一条读样式的走路命令才是硬证据：
+   `getrot <obj>` 打 `lv_obj_get_style_transform_rotation / transform_scale_x / opa_layered`，
+   换城后 80ms 采到 `rot=-50 scale=219 opa=179`、播完采到 `0/255/255` ⇒ 既证明在跑，也证明能归零。
+   顺带一条 LVGL 9 事实：**transform 是"对象 + 整棵子树"画进中间层再整体变换**
+   （`src/core/lv_refr.c`：`lv_obj_redraw(new_layer, obj)` → `lv_draw_layer(..., rotation/scale/skew)`），
+   所以给容器加 transform 会带着子控件一起动，不用逐个对象刷；
+   但那张中间层是 ARGB 的（本工程天气卡 290×128 ≈ 148KB/帧）⇒ **短时可用、别常驻**，
+   嫌重就降时长/降角度（本工程两个宏：`WX_ANIM_MS` / `WX_TILT_DEG`）。
+
+
+### 11.25 ★ 定任务栈之前，先算它每个函数的最大局部对象（2026-10-04 真机崩溃，`intake/P-0115`）
+
+`xTaskCreate(fn, "ui_sd_scan", 6144, ...)` 配一句 `sd_snap_t s;`（`char names[64][96]` = 6152B）
+= 局部变量比整个栈还大 ⇒ 真机 Core0 **Stack protection fault**，崩点还落在被调函数里
+（`bsp_sdcard_mount`），看起来像"别人的锅"。三条：
+
+1. **小任务（<8KB）里出现 >1KB 的局部对象就是定时炸弹**：一律改 `static`（单线程用）或 heap。
+   编译器不警告、静态检查不报、**PC 仿真根本不编这段代码** ⇒ 只有真机会炸。
+2. **手算一遍再定栈**：把调用链上每个函数的最大局部量加起来（FatFS 挂载 + `opendir` 还要几百到上千字节），
+   别照抄"看起来差不多"的数（本工程 io_weather 用 8192 是因为里面有 TLS）。
+3. **留一条真实用量**：一次性任务收尾打
+   `ESP_LOGI(TAG, "stack min free = %u bytes", uxTaskGetStackHighWaterMark(NULL) * sizeof(StackType_t))`，
+   下次烧完直接看数字，不用再来回猜。
+4. 解码崩溃的固定动作：`Stack bounds` 相减 = 实际栈大小，和 `xTaskCreate` 的数一比，
+   再和函数里最大的那个局部量一比 —— 三个数字对上，根因就出来了（这次 6136 vs 6152）。
+
+
+**补一条同型判据（真机 Store access fault 定位法）**：崩在 `memcpy` 且 `A0/MTVAL` 是个小常数
+（如 `0xc`）时，先怀疑 `NULL + 结构体字段偏移` —— 去查那个偏移等不等于某个 header/struct 的
+`sizeof`（本次 `esp_payload_header` packed = 12 ⇒ `copy_buff == NULL`）。
+再查该缓冲来自哪块内存：esp_hosted 的 `MEM_ALLOC` 带 `MALLOC_CAP_INTERNAL|MALLOC_CAP_DMA`，
+**PSRAM 再大也不相干**；所以"加功能后偶发网络崩溃"要先算自己往内部 RAM 里塞了多少静态数组/任务栈。
+另外：release 下 `assert()` 会被编掉，驱动里 `assert(p); *p = ...` 这种写法等于把 panic 留给你。
+

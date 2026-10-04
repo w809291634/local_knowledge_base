@@ -322,3 +322,5 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0111 | 2026-10-04 | 设置页「网络与连接」永远显示 Home-5G / 已连接·信号强：整行是设计稿写死的静态文案 | 静态文案,假反馈,WiFi,绑定,glyphs,snprintf,stdio | fixed |
 | P-0112 | 2026-10-04 | 待机页天气卡四项全是设计稿字面量（24° / 晴 / 北京·空气优·体感26° / 太阳），还自相矛盾 | 静态文案,假反馈,天气,绑定,图标四态,UnboundLocalError,数据源待定 | fixed |
 | P-0113 | 2026-10-04 | 天气数据源接 Open-Meteo：HTTPS 抓取跑独立工作任务；新建 .cpp 不在 compile_commands，逐文件真编译会把它当成没编译却报通过 | 天气,Open-Meteo,esp_http_client,esp_crt_bundle,工作任务,P4零阻塞,快照互斥,compile_commands,验证盲区,export.ps1 | fixed |
+| P-0114 | 2026-10-04 | 天气地点做成可收藏多城：位图存 NVS + 12 颗 CHECKABLE 胶囊浮层 + 多城一次 HTTPS 请求 | 天气,多选,NVS,位图,CHECKABLE,checkedState,表达式无位运算,浮层遮罩,Open-Meteo多城,父边界门禁,链接期缺setter | fixed |
+| P-0115 | 2026-10-04 | 曲库接真 SD 卡：BSP 的 bsp_sdcard_mount 早就链进固件只是没人调用；FATFS 关着长文件名 + API 编码默认 ANSI 会让中文歌名变豆腐 | SD卡,SDMMC,FATFS,长文件名,UTF-8编码,曲库,lv_list重灌,generation,假反馈,ESP_PLATFORM分界,无热插拔 | open |
