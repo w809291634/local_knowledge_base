@@ -1512,3 +1512,51 @@ int32_t get_var_volume_pct(void)      { return g_set.volume; }   // ★ 不是 a
    绑定 vs 事件是**亚帧竞态**，仿真的刷新顺序与真机不同 ⇒ 这类只能真机判定。
 3. **`APP_IN_*` 槽不必删**：改成读表后，io 侧照旧发布（待机页等别的消费者还在用），
    只是不再当控件的真值源 —— 单一真值源指的是**读路径**，不是"只能有一份拷贝"。
+
+
+### 11.22 ★ 借 `compile_commands.json` 做"真编译"取证的硬规矩（四条，2026-10-04，`intake/P-0113`）
+
+背景：本机跑不了 `idf.py reconfigure/build`（`export.ps1` 在这台 PowerShell 上 `BadExpression` 直接失败），
+但**每个源文件的真实编译命令**都在 `compile_commands.json` 里，借它做**单文件真编译**（保留 `-c` 与 `-O2`，
+输出指向 scratch obj），比肉眼 review 强得多 —— 前提是别把"没编译"当成"编译通过"。四条：
+
+1. **能 `reconfigure` 就先 `reconfigure`**（本机入口见下条 0），新文件才会进 `compile_commands.json`，后面全是官方命令，不必借。
+   没有构建入口时才用「借命令」，此时**先确认它在不在清单里**（这条最容易翻车）：`compile_commands.json` 是 **cmake 生成物**，
+   没 reconfigure 就不会收录新建的 `.cpp`；按文件名匹配不到时脚本会**静默跳过**，于是"0 错 0 警"是假的。
+   **0. 本机 cmd 侧构建入口（用户给的 tasks.json 复刻，2026-10-04 实测跑通）**：
+   `cmd.exe //C "design\\_idf_build.bat <reconfigure|build|size|flash|monitor>"`，包装里必须
+   `set MSYSTEM=`（Git Bash 继承来的，`export.bat` 第 2 行见到就 `goto :eof` 静默拒绝）＋
+   显式 `IDF_PYTHON_ENV_PATH=...\python_env\idf5.5_py3.11_env`（不指会按 PATH 猜成 py3.10 报 env not found）＋
+   `set IDF_TOOLS_PATH=...` ＋ `set IDF_PATH=<idf 根>` 再 `call export.bat`，最后 `cd` 到 **IDF 工程根**（不是子工程目录）。
+   两条禁忌：`idf_cmd_init.bat` **别带参数**（`%1` 以 `esp-idf` 开头会把 `IDF_TOOLS_PATH` 盖成参数值，报天书级「命令语法不正确」）；
+   `.bat` 内**只写 ASCII**（UTF-8 中文注释被 GBK 切碎成垃圾命令，实测报 `'sks.json' 不是内部或外部命令`）。
+   ```bash
+   python -c "import io;t=io.open('<上级>/build/compile_commands.json',encoding='utf-8').read();print(t.count('io_weather'))"
+   # 0 ⇒ 该文件对逐文件真编译完全隐形，必须借命令
+   ```
+   ⚠ 路径坑：IDF 的构建树在**工程上级**（`lvgl_demo_ai/build/`），子目录里的 `build/` 常是仿真产物，别找错。
+2. **命令写进 `.sh` 再 `bash xx.sh`，绝不用 `bash -c "$CMD"`**。清单里的命令含 `\"` 转义引号
+   （如 `-DIDF_VER=\"v5.5\"`、`@"...cxxflags"`），经 Python→CreateProcess→MSYS bash 二次转义后
+   源文件参数会被吃掉，gcc 只报 `fatal error: no input files` —— 报的是"没有输入"，不是"找不到文件"，
+   极易误判成路径写错。改造只动两处：`-o <原 obj>` 换成 scratch obj（**保留 `-c`，别换 `-fsyntax-only`**，
+   见 `intake/P-0052`：`-fsyntax-only` 不跑 tree 优化器，抓不到 `-Wstringop-truncation` 这类警告）、
+   结尾 `-c <src>` 换成目标文件；最后整体把 `\` 换成 `/`（`-DIDF_VER=\"x\"` 被顺手改成 `/"x"/` 无副作用）。
+3. **补的 `-I` 要做反证**。兄弟文件的 include 集只覆盖它自己用到的组件，新头文件（如 `esp_http_client.h`）
+   常缺目录；补完后**去掉补的 -I 再跑一次应当报错**（`fatal error: xxx.h: No such file or directory`），
+   这才证明补齐是必要的、而不是碰巧过了。
+4. **★ 新建「设备专属」文件后，必须再跑一次 PC 门禁**（本轮就是它抓到回归）。PC 仿真收 `src/native` 的方式是
+   `file(GLOB_RECURSE)` + **按名字排除**（`common/PC_SIM/lv_port_pc_vscode_v9.5/CMakeLists.txt:27-30`，
+   正则 `(io_esp|test_native)\.(c|cpp)$`）⇒ 新文件不在名单里就被仿真构建**捞去编译**，炸在
+   `freertos/FreeRTOS.h: No such file or directory`。这与 `intake/P-0045` 是**同一对盲区的双向**：
+   老坑 = io_esp 在 PC 根本不编（改动潜伏）；新坑 = 新加的设备文件在 PC **会**被编（你以为不会）。
+   修法优先在**工程内自证身份**，别改那个多工程共用、又不在本工程 git 里的构建壳：
+   ESP-IDF 必给 `-DESP_PLATFORM`、PC 仿真没有 ⇒ 文件体整体包 `#if defined(ESP_PLATFORM)`，PC 侧编成空翻译单元。
+
+借来的命令只验到**编译这一层**（头文件 + 代码生成期警告）：**链接、体积、`REQUIRES` 齐不齐**要真机 `idf.py build`，
+**两边构建是否都通**要 PC 门禁 `design/all.py --shots` —— 三者缺一不可，别拿其中一个盖另外两个。
+留档脚本范式见工程侧 `eez-test/design/_verify_weather.py`（一次跑 6 个文件；有官方条目用官方条目、
+没有才借 io_esp 的命令，含"去掉补的 -I 应当报错"的反证开关 `VW_NOEXTRA`）。
+⚠ 借命令时**反斜杠归一化必须跳过 `\"`**：`re.sub(r'\\\\(?!")', '/', cmd)`。一把梭 `cmd.replace("\\","/")`
+会把 `-DMBEDTLS_CONFIG_FILE=\"x\"` 改成 `/"x"/`，于是 mbedTLS 配置头加载不到，
+报 `esp_crt_bundle.h: 'mbedtls_x509_crt' does not name a type` —— 看着像缺 `-I`，其实是**缺 define**。
+（实测：借来的命令编 `io_weather.cpp` 就中过这一枪，官方条目 + 安全归一化后才 0 错 0 警。）
