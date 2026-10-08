@@ -113,3 +113,55 @@ A0 = 0x0000000c   A2 = 0x20   MTVAL = 0x0000000c
 
 验证：7 个 native 文件官方命令 0 错 0 警；`idf.py build` rc=0、bin `0x4D7EC0 → 0x4D7E70`、src/native 零警告。
 
+
+
+---
+
+## ★ 追加（2026-10-06 晚，第三次崩溃）：这次是 **PSRAM 堆的空闲链表被踩**
+
+### 现场（播放 1.8 秒后）
+```
+I (8231) user_io_esp: music play
+I (8248) MusicPlayer: playing #0 /sdcard/music/这条街.mp3 (1883189 bytes)
+I (8322) MusicPlayer: source 44100 Hz 2 ch -> 24000 Hz mono, ~47s
+I (8352) Adev_Codec: Open codec device OK / AudioCodec: Set output enable to true
+I (10119) esp_wifi_remote: esp_wifi_internal_reg_rxcb ...
+Core 0 panic'ed (Store access fault)  MEPC=remove_free_block  MTVAL=0x0000000b
+#0 remove_free_block (control=0x48250214, block=0x48254ea8, fl=1, sl=2) tlsf_control_functions.h:374
+    374:  next->prev_free = prev;
+#2 tlsf_malloc(size=28)  #5..#8 heap_caps_aligned_alloc/malloc_prefer(caps=0x1400)
+#9 mem_malloc(28) lwip/src/core/mem.c:209
+#10 esp_pbuf_allocate  #11 wlanif_input  #12 esp_netif_receive  #13 sdio_process_rx_task
+ELF SHA256 9eec0439f（与本轮烧写一致）
+```
+
+### 这份 dump 证明了什么（三条，都是硬事实）
+1. **被踩的是 PSRAM 堆**：`caps = 0x1400 = MALLOC_CAP_SPIRAM(1<<10) | MALLOC_CAP_DEFAULT(1<<12)`
+   （`esp_heap_caps.h:31-41` 实证位值），且 `tlsf=0x48250214` 落在 P4 PSRAM 数据窗口。
+   ⇒ 上一轮那次 `transport_drv_sta_tx` 崩在**内部 DMA 池取空**，这次是**另一个堆的元数据被写坏**，
+   两者不是同一件事，别混着算。
+2. **是内存踩踏，不是内存不足**：崩在 `remove_free_block` 写 `next->prev_free`，
+   `MTVAL=0xb` ⇒ 空闲链表里某个 `next` 是垃圾小指针 ⇒ 有人越界写或用后写，踩掉了某个空闲块的块头。
+3. **崩点是受害者、不是凶手**：踩链表的写操作与 lwip 收包分配只是"下一个走到这块链表的人"。
+   时间上它紧跟在"音乐起 + codec/I2S 打开 + 首次 WiFi RX"之后 1.8 秒。
+
+### 本工程 PSRAM 堆上都有谁（`CONFIG_SPIRAM_USE_MALLOC=y` + `ALWAYSINTERNAL=0` ⇒ 裸 malloc 全进 PSRAM）
+LVGL 运行期对象 / 小智 `std::vector` 音频缓冲（`AudioCodec::OutputData → Write(data.data(), data.size())`）/
+`esp_audio_simple_dec`（libhelix）内部缓冲 / `esp_ae_rate_cvt` / FatFS LFN（`FATFS_LFN_HEAP=y`）/
+wifi+lwip（`SPIRAM_TRY_ALLOCATE_WIFI_LWIP=y`）/ 播放方三块缓冲（s_raw 4096 + s_pcm 18432 + s_res 18432）。
+
+### 已经用算式排除的两个嫌疑（不是靠猜）
+- **`esp_ae_rate_cvt_process` 溢出**：头文件写明 `out_sample_num` 是 in/out —— 进=输出缓冲最大样本数、
+  出=实际（`esp_ae_rate_cvt.h:114-115`）。我们传 `MP_RES_FRAMES=9216`，`s_res` 正好 9216×2 字节，
+  且 channel=1 时"帧==样本" ⇒ 它不会写超。（副作用：源率低于 12k 时升采样会被**截断**，是音质问题不是踩内存。）
+- **播放三缓冲自身越界**：`out.len = MP_PCM_FRAMES*2*sizeof(int16_t) = 18432` 与 `s_pcm` 的 malloc 同式；
+  `downmix_mono` 读写都在 `decoded_size` 内；`keep = len - consumed`（且 `consumed>len` 已夹住）⇒ `s_raw` 内。
+
+### 下一步（两步，先做零成本的那个）
+1. **差分定位（不重烧）**：同一版固件跑三组 —— A 只放歌不联网（设置里断开 Wi-Fi）；
+   B 只联网不放歌（开着对话、多聊几轮）；C 边放歌边联网（已知会崩）。
+   只有 C 崩 ⇒ 凶手要同时具备"音乐在跑"和"RX 有流量"两个条件，范围立刻小一大半。
+2. **取证炉（要重烧）**：`CONFIG_HEAP_POISONING_COMPREHENSIVE=y`（Kconfig 实证有此选项）
+   + 播放任务每 ~40 圈调一次 `heap_caps_check_integrity_all(true)`，并把三块缓冲地址与
+   `heap_caps_get_free_size(MALLOC_CAP_SPIRAM)` 打出来。按老规矩：调试开关同时写进
+   `sdkconfig.defaults`，不能只改 `sdkconfig`。

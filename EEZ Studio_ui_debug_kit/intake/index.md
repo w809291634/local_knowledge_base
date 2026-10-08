@@ -324,3 +324,6 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0113 | 2026-10-04 | 天气数据源接 Open-Meteo：HTTPS 抓取跑独立工作任务；新建 .cpp 不在 compile_commands，逐文件真编译会把它当成没编译却报通过 | 天气,Open-Meteo,esp_http_client,esp_crt_bundle,工作任务,P4零阻塞,快照互斥,compile_commands,验证盲区,export.ps1 | fixed |
 | P-0114 | 2026-10-04 | 天气地点做成可收藏多城：位图存 NVS + 12 颗 CHECKABLE 胶囊浮层 + 多城一次 HTTPS 请求 | 天气,多选,NVS,位图,CHECKABLE,checkedState,表达式无位运算,浮层遮罩,Open-Meteo多城,父边界门禁,链接期缺setter | fixed |
 | P-0115 | 2026-10-04 | 曲库接真 SD 卡：BSP 的 bsp_sdcard_mount 早就链进固件只是没人调用；FATFS 关着长文件名 + API 编码默认 ANSI 会让中文歌名变豆腐 | SD卡,SDMMC,FATFS,长文件名,UTF-8编码,曲库,lv_list重灌,generation,假反馈,ESP_PLATFORM分界,无热插拔 | open |
+| P-0116 | 2026-10-06 | 播放态 UI 不同步：np_playing 是播放按钮链的页面局部变量，凡是不按这个按钮的状态变化必然错相 | EEZ,变量绑定,音乐播放,仿真走路,所有权 | fixed |
+| P-0117 | 2026-10-07 | 音乐三条：暂停把进度抹成 00:00（位置所有权错）+ seek 是空桩（滑杆必弹回）+ 对话中点播放把对话挤掉 | 音乐播放,进度条,seek,所有权,AI抢占,esp_hosted,真机取证 | open |
+| P-0118 | 2026-10-07 | 歌词块是设计稿假词：接同名 .lrc，当前行恒居中（样式静态时靠窗口对齐做高亮） | 歌词,LRC,UTF-8,字库档位,EEZ静态样式,PSRAM,P4零阻塞,单写者 | fixed |
