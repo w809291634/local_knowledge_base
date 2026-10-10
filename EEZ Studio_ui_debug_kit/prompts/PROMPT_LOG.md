@@ -1700,3 +1700,41 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 产出/结论：加两个 MCP 工具：self.media.list_music（清单）+ self.media.play_song(title)。★ 必须配 list 的理由就在上一轮日志里：模型看不见曲库就只能瞎猜，所以 play_song 找不到时把整份清单塞进返回值，让它自己改口。搜索放 native（板级只写 AddTool 和文案）⇒ 仿真也编得到、能验；搜索在调用方线程同步做（要当场回答云端），动作仍投环给 LVGL 线程（槽位加 idx）；执行走 APP_OUT_MUSIC_SELECT = 手指点那一行的同一条通道。匹配 = 小写去空格剥后缀 + 互相包含即命中（《》不用特判）。走路 voicecmd 三段（压队 / 立即 / 点歌含未命中）全绿、门禁 9.88%、设备 9 文件 0 错、build 0x4efae0 38% free。
   - 关联：P-0119
 
+### PR-0191 · 2026-10-09 21:13 · Qoder
+  - 提示词：对于 LVGL 在P4上提升帧率的方法，是否做过总结，可以输出到 本地经验，比如 将 PPA 队列优化，使用双核渲染等等，记得输出本地经验中
+  - 诉求：把 P4 上的 LVGL 帧率手段整理成本地经验（点名 PPA 队列、双核渲染）
+  - 产出/结论：写了 reference/08 第一版（后被 PR-0193 推翻）。教训先记形式那条：说"库里没做过"之前必须**把所有子库都 grep** 一遍 —— 当时只扫了 EEZ 工具箱子库，漏了 esp32 子库里的现成总结。
+
+### PR-0192 · 2026-10-09 21:36 · Qoder
+  - 提示词：同时总结一下，我的项目一般的 编译 ，下载 调试方法，输出到本地经验库中
+  - 诉求：把本项目实际的编译/烧写/调试手法固化进本地经验库
+  - 产出/结论：新建 **reference/09_build_flash_debug_lvgl_demo_ai.md**：路径与占位符对照、验收顺序（门禁→走路→逐文件真编译→build→烧写清单）、UI 流水线、仿真用法与走路器命令表、真机任务表、逐文件真编译规矩、崩溃解码（先核 ELF sha256）、环境雷区速查表、交付节奏；CONFIG.md §4.1 改成只指向它（不留第二份正文）。
+
+### PR-0193 · 2026-10-09 22:26 · Qoder
+  - 提示词：你的帧率优化是对的吗，我记得 之前好像做过这个经验
+  - 诉求：质疑第一版帧率总结的可靠性，并提示库里已有旧结论
+  - 产出/结论：**用户是对的，公开撤回**。权威出处是 esp32 子库 §8（横屏+PPA 约束下帧率**已到顶**）与 §16（PPA blend 的 DMA 按 128B 凑整、帧缓冲末端越界写 → PSRAM 堆损坏）。我第一版两处危险：把 `enable_ppa_accel=true` 当"待试优化"（那个 `false` 是修复结果，打开就恢复已知崩溃）、把未测的 `CONFIG_LV_USE_PPA` 说成正解。reference/08 重写为第二版（顶部列第一版错处 + 已排除路径表 + 抓手排序 A 应用侧阻塞→B 低风险配置→C 显示链路），§11.30 加更正段；顺带把在挂的 PSRAM 踩踏崩溃和 §16 的取证方法接上（查 free-list 被覆盖值是否 RGB565 像素色、比对损坏点紧跟哪个大 buffer 末端）。
+
+### PR-0194 · 2026-10-09 22:40 · Qoder
+  - 提示词：（贴出完整 VS Code tasks.json）这些是下载调试方法
+  - 诉求：以他的 tasks.json 为准，把真机编译/下载入口钉死
+  - 产出/结论：reference/09 §4 重写成 4.1 用户侧任务表（reconfigure / idf_build / flash / app_flash / monitor / flash_monitor / app_flash_monitor / menuconfig / size·size-components·size-files / partition-table / fullclean / set-target）+ 4.2 AI 侧等价入口 + 4.3 产物与分区 + 4.4 三个必踩坑。钉住两条规则：**日常烧用 app_flash，改分区表或字体烘焙产物（assets 分区 0x1020000）必须全量 flash**；**clean 是注释掉的 ⇒ 只有 fullclean，而它连 compile_commands.json 一起带走，之后必须 reconfigure**。★ 用 `design\_idf_build.bat --help` 实测核对到"两侧命名不等价"：用户包装的参数名是 `app_flash`/`flash_monitor`，idf.py 真名是 `app-flash` 与两个词 `flash monitor` —— 我们的 .bat 是 `idf.py %*` 直传，照抄下划线名会被 argparse 拒（已写进 §11.22 第 0 条）。同批更正：§11.22 背景里"本机跑不了 idf.py"改成"只是 PowerShell 那条路不通"。
+  - 关联：reference/09、P-0113
+### PR-0195 · 2026-10-10 19:51 · Qoder
+  - 提示词：根据本地经验库，你自己最简修改，要求LVGL横屏，要求使用 demo 窗口示例中，要求最终lgvl的帧率能够达到 40fps以上，是最低帧率，你需要不断地调试优化，可以从双核驱动，使用 ppa DMA 队列缓存方式，提高刷新率，调试串口为 com20
+  - 诉求：横屏 + lvgl demo 跑满 40fps 最低帧率，允许双核与 PPA DMA 队列，串口 COM20 调试
+  - 产出/结论：14 轮单变量实测：分块高度是最大抓手(23.4→37.0fps)，双核随块大小变号，PPA 两条路线对本 UI 无效并回退；另立「从设备日志回读生效配置」的取证规矩
+  - 关联：（待补）
+
+### PR-0196 · 2026-10-10 19:51 · Qoder
+  - 提示词：有编译方法（附 VS Code tasks.json：idf_cmd_init.bat && idf_build.bat build/flash/monitor，PROJECT_PATH/DEFAULT_COM 写在 idf_build.bat 里）
+  - 诉求：给出本工程/本机既有构建入口，别自造一套
+  - 产出/结论：改用其习惯：Git Bash 被 idf.py 拒(MSys/Mingw is not supported)，落到 PowerShell 包 idf.py（tmp/idf.ps1，需清 MSYSTEM 并补 ESP_ROM_ELF_DIR）；采集用 venv python + pyserial（tmp/cap_serial.py），一轮一条命令 tmp/run_round.sh
+  - 关联：（待补）
+
+### PR-0197 · 2026-10-10 20:05 · Qoder
+  - 提示词：你可以通过串口中增加监控打印，就知道多少帧率了。，我要求你自己验证
+  - 诉求：别把目检推给用户，固件里自己加监控打印把帧率验证出来
+  - 产出/结论：加两项自证：DSI 面板帧缓冲抽样哈希(证明画面在刷新)+帧周期直方图(达标帧占比)；3146 帧里 >=40fps 只占 41.4%，均值 36.4；另发现烧写后前两次开机 GT911 read_cfg 失败导致 abort 循环
+  - 关联：P-0120
+

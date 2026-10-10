@@ -1519,6 +1519,9 @@ int32_t get_var_volume_pct(void)      { return g_set.volume; }   // ★ 不是 a
 背景：本机跑不了 `idf.py reconfigure/build`（`export.ps1` 在这台 PowerShell 上 `BadExpression` 直接失败），
 但**每个源文件的真实编译命令**都在 `compile_commands.json` 里，借它做**单文件真编译**（保留 `-c` 与 `-O2`，
 输出指向 scratch obj），比肉眼 review 强得多 —— 前提是别把"没编译"当成"编译通过"。四条：
+> ★ 更正（2026-10-04 同日，见下条 0）：**"本机跑不了 idf.py" 只是 PowerShell 那条路不通**，
+> 走 `cmd.exe` + 自建 `.bat` 包装完全能跑 ⇒ 下面"没有构建入口时才用借命令"是退路，不是常态。
+> 有了入口就**先 reconfigure**，用官方命令，别继续借兄弟文件的命令凑证据。
 
 1. **能 `reconfigure` 就先 `reconfigure`**（本机入口见下条 0），新文件才会进 `compile_commands.json`，后面全是官方命令，不必借。
    没有构建入口时才用「借命令」，此时**先确认它在不在清单里**（这条最容易翻车）：`compile_commands.json` 是 **cmake 生成物**，
@@ -1530,6 +1533,12 @@ int32_t get_var_volume_pct(void)      { return g_set.volume; }   // ★ 不是 a
    `set IDF_TOOLS_PATH=...` ＋ `set IDF_PATH=<idf 根>` 再 `call export.bat`，最后 `cd` 到 **IDF 工程根**（不是子工程目录）。
    两条禁忌：`idf_cmd_init.bat` **别带参数**（`%1` 以 `esp-idf` 开头会把 `IDF_TOOLS_PATH` 盖成参数值，报天书级「命令语法不正确」）；
    `.bat` 内**只写 ASCII**（UTF-8 中文注释被 GBK 切碎成垃圾命令，实测报 `'sks.json' 不是内部或外部命令`）。
+   ★ **用户 tasks.json 里的参数名 ≠ idf.py 的子命令名**（2026-10-09 `--help` 实测）：他那份写的是
+   `app_flash` / `flash_monitor` / `app_flash_monitor`，而 idf.py 只有连字符的 `app-flash`、`bootloader-flash`、
+   `partition-table-flash`，"烧完接着看"在 idf.py 侧是**两个词** `flash monitor`。
+   ⇒ 我们的包装是 `idf.py %*` 直传，照抄他的下划线名会被 argparse 直接拒。抄任何外部任务名前先用 `--help` 对齐真名。
+   完整任务表（何时 reconfigure / app-flash 与全量 flash 的分界 / size 三档 / fullclean 会带走 compile_commands）
+   见 **`reference/09_build_flash_debug_lvgl_demo_ai.md` §4**。
    ```bash
    python -c "import io;t=io.open('<上级>/build/compile_commands.json',encoding='utf-8').read();print(t.count('io_weather'))"
    # 0 ⇒ 该文件对逐文件真编译完全隐形，必须借命令
@@ -1731,7 +1740,21 @@ LVGL 在 ESP32-P4 上想同时拿 PPA 和双核软渲染，**两条 PPA 路线�
 - 显示适配层的 `enable_ppa_accel`：用 `lv_draw_sw_register_blend_handler()` 替换软渲染的 blend/fill，
   源码注释写死"assumes draw unit count is forced to 1" ⇒ **和 `LV_DRAW_SW_DRAW_UNIT_CNT=2` 互斥**。
 - LVGL 原生 `CONFIG_LV_USE_PPA`：注册**第三个 draw unit**（认领 FILL / IMAGE 任务），
-  和两个 SW unit 并存 ⇒ **可以和双核同时用**。
+  与两个 SW unit 并存 ⇒ **可以和双核同时用**。
+
+★★ **同日更正（这条"②可以试"是未测的乐观推荐，而①已被实测否决）**：
+本工程在 `local_knowledge_base/esp32/esp32-p4-lvgl9-touch-lcd-debug-optimization.md` §16 里
+**早就实测过①**：`.enable_ppa_accel = true` 会在启动约 0.5s 内 `Store access fault`，
+栈在 TLSF `remove_free_block`，被覆盖的 free-list 值是 RGB565 像素颜色 ——
+PPA fill/blend 的 DMA 按 128B 块凑整、在帧缓冲末端越界写（一行 960B ÷ 128 除不尽 + 脏块边缘悬空）。
+⇒ BSP 里那个 `false` 是**修复结果，不是"还没优化"**，谁再把它打开就是恢复一个已知崩溃。
+②与①不是同一个开关，但**同样是 DMA 写帧缓冲**，越界机理一样成立 ⇒ 默认结论是**不试**，
+收益不确定、代价是堆损坏。真正的帧率抓手在别处：横屏是软件旋转（物理瓶颈）、
+以及本项目历史上唯一有效的那类修复 —— **把慢操作挪出 LVGL 线程**（PR-0093：hosted RPC 轮询）。
+
+还有一条流程教训，比上面都重要：**说"库里没有做过"之前，必须把所有子库和工程日志一起 grep，
+或者直接问用户一句"这块以前做过吗"。** 我这次只搜了 `EEZ Studio_ui_debug_kit/` 一个子库，
+漏了同库下的 `esp32/`，于是把别人踩过的坑当成新发现推荐了一遍。
 
 三条通则：
 
@@ -1742,3 +1765,67 @@ LVGL 在 ESP32-P4 上想同时拿 PPA 和双核软渲染，**两条 PPA 路线�
    一次只改一项。没有基线的"优化"只是换配置碰运气。
 3. 掉帧先分家：**绘制耗时**和**送屏耗时**是两个方向（前者归渲染配置/面积，后者归缓冲与撕裂模式）；
    而"一放歌/一联网就掉帧"要先怀疑 **PSRAM 带宽与内存争用**，不要一上来就改渲染配置。
+
+### 11.31 ★ 帧率优化：先确认「画面在不在动」，再确认「一块多大」（2026-10-10 真机实测，`intake/P-0120`）
+
+同一块 P4+4.3" 横屏、同一个 `lv_demo_widgets`，实测出来的排序是：**分块高度 >> 双核 > PPA**，
+而大家最先想到的 PPA 反而最没用。逐条出处：
+
+1. **"3fps 而且每帧耗时一模一样"= 空转，不是瓶颈**。静止时唯一的重绘源是 LVGL 性能表，周期
+   `LV_SYSMON_REFR_PERIOD_DEF=300`（`lv_sysmon.c:24-25,120`）⇒ 恒 3.3fps。先把负载做出来
+   （`lv_demo_widgets_start_slideshow()` 的持续滚动，实测重绘面积 84% 屏）再谈优化。
+2. **拆段用 `LV_EVENT_FLUSH_START/FINISH`**（`lv_refr.c:1415/1423`，没被任何开关挡住），
+   一对 `esp_timer_get_time()` 就把「送屏」和「绘制」分开了。本例送屏 4.8~6.7ms/帧、绘制 16~41ms/帧
+   ⇒ 抓手全在绘制侧，改撕裂模式/队列都是白费。
+3. **adapter 在旋转下算错了分块行数**：`TRIPLE_PARTIAL` 的绘制缓冲是
+   `profile->hor_res * profile->buffer_height`（`display_manager.c:868-872`），这个 hor_res 是**面板**宽 480，
+   而 `ROTATE_90` 之后 LVGL 宽是 800 ⇒ 每块实际只有 `0.6×buffer_height` 行：`buffer_height=50` ⇒ 30 行/块
+   ⇒ 一帧 16 块。块边界是同步点，**块数 14→6→4 时均值 23.4→29.9→35.2fps**，是本项目最大的单项收益。
+4. **双核的收益取决于块大小，不是常量**：14 块时 `DRAW_UNIT_CNT=2` 比单核**慢**（19.9 vs 23.4）；
+   4 块时才转正（37.0 vs 35.2，+5%，与 `esp32/esp32-p4-lvgl9-touch-lcd-debug-optimization.md` §19 记的
+   "+6fps" 对上）⇒ 想判"双核有没有用"，先把块调大再测，否则结论是反的。
+5. **PPA 两条路线对「圆角卡片 + AA 文字」这种 UI 都吃不到**：原生 PPA draw unit 只认领
+   `radius==0 && grad==NONE && opa==MAX` 的 FILL 和不缩放不旋转的 RGB565/888 IMAGE
+   （`lv_draw_ppa.c:111-160`）；adapter 的 blend handler 把所有**带 mask** 的（圆角/描边/字形）退回软渲染
+   （`lvgl_ppa_accel_v9.c:321-336`）；根因是 P4 的 PPA BLEND 只有 bg/fg + 固定 alpha，
+   **没有 per-pixel mask 输入**（`driver/ppa.h` 的 `ppa_blend_oper_config_t`）⇒ 逐像素混合卸不掉。
+   实测路线②打开（`lv_ppa=1`，指纹确认生效）：35.8 vs 关掉 37.0 ⇒ 无收益，已回退。
+6. **打开路线②的硬前置**（白烧一次才知道）：`CONFIG_LV_USE_PPA=y` 要求
+   `LV_DRAW_BUF_ALIGN==CACHE_L1_CACHE_LINE_SIZE(64)` 且 `LV_ATTRIBUTE_MEM_ALIGN_SIZE==64`，否则
+   `lv_draw_ppa_private.h:40-42` 直接 `#error`；且 lvgl 组件没有 `esp_driver_ppa`/`esp_mm` 依赖，
+   `driver/ppa.h`、`esp_cache.h` 都找不到，得在 `main/CMakeLists.txt` 给 `${LVGL_LIB}` 补 include 目录。
+7. **L2 cache 想开 512KB 会直接把板子锁死在启动**：P4 的 L2 吃的是内部 SRAM，512KB 后
+   `Could not reserve internal/DMA pool (0x101)` → abort 在 `freertos/app_startup.c:179`
+   `reclaim_startup_stack_memory_for_heap`。而横屏 partial 恰恰依赖内部 RAM 绘制缓冲 ⇒ 保持 256KB。
+
+### 11.32 ★ 每轮优化都要从**设备日志回读生效配置**，否则烧的是上一版固件（2026-10-10 连踩两次，`intake/P-0120`）
+
+- **坑1（管道吃退出码）**：`idf.py build flash 2>&1 | tail -3` 里 `$?` 是 `tail` 的 0；构建失败照样
+  往下跑串口采集 ⇒ 读到的是**上一版固件**。我有两条结论（路线②无收益、L2 64B 无收益）就是这么来的，
+  全部作废重测。特征就是"两轮数字几乎一模一样"——那不是"无收益"，那是**同一个二进制**。
+- **坑2（kconfig 静默退回）**：不满足依赖的项会被 kconfig 悄悄写成 `is not set`
+  （`CONFIG_LV_USE_PPA` 就是），所以"我改了 sdkconfig" ≠ "生效配置变了"。
+- **落地规矩（三条，已写进 `run_round.sh`）**：
+  1. 判成败不看管道：`rc==0` **且** 日志有 `Hash of data verified` **且** 有 `Hard resetting` **且** `.bin` 是本轮新生成的；
+  2. 固件启动打一行配置指纹（`cfg units=.. draw_prio=.. lv_ppa=.. refr=..ms align=../..`），
+     采集脚本没见到指纹行就不认这批数；
+  3. 同一配置至少重复采一次当噪声基线（实测 37.0 vs 36.9）⇒ **±0.5fps 以内的差别不下结论**。
+
+### 11.33 ★ 帧率要「自证」就测两件事：扫出的内存在不在变 + 帧周期分布，不要只抄平均值（2026-10-10，`intake/P-0120` 追加）
+
+用户会要求「你自己验证，别让我目检」。靠串口做到自证，需要两个彼此独立的指标：
+
+1. **内容确实在变**（防"计数器在跑但画面冻结"）：读 DSI 正在扫描的那几块帧缓冲本身——
+   `esp_lcd_dpi_panel_get_frame_buffer(bsp_display_get_panel_handle(), 3, &fb0, &fb1, &fb2)`，
+   每块 768000B，每秒抽样 ~700 个像素做 FNV-1a，打 `changed=<变化块数>/<fb数>` 与跨秒去重计数。
+   抽样而不是全扫：全扫 2.3MB/s 会给 PSRAM 带宽添负担，反过来污染我要测的帧率。
+   （更硬的版本可以先 `esp_cache_msync(..., DIR_M2C)` 再采样，防 CPU 读到陈旧缓存行。）
+2. **最低帧率用分布回答，不用平均值**：把每帧周期分桶 `<25 / <33 / <50 / >=50 ms`，
+   打累计 `ge40=<达标帧>/<总帧>`。"40fps 以上"是一个**分布**问题：本例均值 36.4、峰值 47，
+   但达标帧只占 41.4%，所以结论是不达标——这句话只有直方图能支撑，平均值说不出来。
+   ★ 坑：开机第一帧会被算成 400ms+ 的极端周期，报"瞬时最低帧率"前先把它剔掉。
+
+顺带一条**别误判成回归**的：`idf.py flash` 只拉 RTS，GT911 不在该复位域（其 RST 与 LCD RST 共用），
+烧完头两次开机会 `GT911 read error → Error(0x103) → bsp_display_indev_init 的 ESP_ERROR_CHECK abort`
+→ `rst:0xc` 复位循环，第三次才 `Touch registered`。断电重上电即正常；要根治是把触摸失败降级成 WARN，
+属于 BSP 决定，不是帧率改动带来的问题。

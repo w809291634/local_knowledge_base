@@ -211,3 +211,23 @@
 | 静态体检说坐标越界但肉眼没越界 | 用 `design_coords`/`child_coords` 未换算 | 检查是否需要"绝对→相对"的换算步骤 |
 | 内置字体被报"未声明" | 命名不满足启发式，且 `builtin_patterns` 没覆盖到 | 按框架的内置字体命名补通配（如 `<前缀>_*`） |
 | config_check 报 "F 仿真器"：占位符 / 路径本机不存在 | `sim` 段是**机器相关**路径，换电脑/搬目录后必失效 | **向用户询问新路径**并更新 `sim` 段，禁止 AI 扫盘猜；不跑仿真的工程可留可选项为空 |
+
+---
+
+## 4. 已登记工程实例
+
+### 4.1 `p4_touch_lcd4_3_exp/lvgl_demo_ai/eez-test`（ESP32-P4 + EEZ Studio + LVGL 9.4）
+本工程的 `{占位符}` 实际值、编译/烧写/调试的完整作业卡（含逐文件真编译、崩溃解码、环境雷区、
+交付节奏）已单独成文：**`reference/09_build_flash_debug_lvgl_demo_ai.md`**（2026-10-06）。
+帧率与 PPA 双核取舍见 **`reference/08_lvgl_esp32p4_frame_rate.md`**。
+
+要点先记三条（细节去上面两篇查）：
+- 解释器必须是 `C:\Users\Administrator\.workbuddy\binaries\python\envs\default\Scripts\python.exe`
+  （只有它装了 PIL）；系统 python 跑门禁必崩。
+- 真机构建唯一入口：`cmd.exe //C "design\_idf_build.bat <t>"`（`t` = reconfigure/build/**app-flash**/flash/monitor/size/fullclean）；
+  `.bat` 里要清 `MSYSTEM`、显式三个 IDF 路径、**文件内容 ASCII-only**。
+  ★ 它是 `idf.py %*` 直传 ⇒ 只能用 idf.py 的连字符真名；用户 tasks.json 里的 `app_flash`/`flash_monitor` 是**他包装的参数名**，别照抄到我们这边。
+- ★ 日常烧写用 `app-flash`（只烧 app，最快）；但**改分区表或改字体烘焙产物必须走全量 `flash`**
+  —— 字库在 assets 分区 `0x1020000`，`app-flash` 烧不到它。完整任务表见 `reference/09` §4.1。
+- IDF 的 build 目录在**上一层**（`lvgl_demo_ai/build`），不在 `eez-test/`；
+  新建 `.cpp` 要先 `reconfigure` 才会进 `compile_commands.json`，否则逐文件真编译会"看不见它却报通过"。
