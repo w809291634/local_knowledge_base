@@ -56,10 +56,13 @@ CONFIG_PARTITION_TABLE_OFFSET=0x10000
 
 ## 6. LVGL 触摸方向校正（横屏）
 
-横屏 ROTATE_90 时触摸坐标需对应变换（main.c 的 touch_flags）：
-- 上下反 -> `mirror_y=1`
-- 左右反 -> `mirror_x=1`
+横屏（`swap_xy=1`）时触摸坐标需对应变换（`main.c` 的 touch_flags）：
 - 旋转 90 度基础组合：`swap_xy=1` + 按实际镜像补 mirror_x/mirror_y
+
+★ **但"左右反 -> `mirror_x`、上下反 -> `mirror_y`"这句只在没开 swap 时成立。**
+驱动的软件修正是 `mirror_x → mirror_y → swap_xy` 的顺序，mirror 作用在**交换前**的面板轴上
+（`esp_lcd_touch.c:89-107`）⇒ **开了 swap 之后：`mirror_x` 翻的是 LVGL 的 y，`mirror_y` 翻的是 LVGL 的 x，
+两个一起翻等于没翻**。实测细节与四角验证法见 **§24.11**。
 
 ## 7. 触摸初始化失败（热重启几乎100%复现）
 
@@ -225,7 +228,12 @@ apl_console.c 任务创建按宏选择 MALLOC_CAP_SPIRAM / MALLOC_CAP_INTERNAL�
 | PPA 旋转路径与帧率上限：SRM 改 NON_BLOCKING 实测 FPS 升但会拖影（排序≠同步）、队列深 8 无效、`on_trans_done` 在 ISR；`DRAW_UNIT_CNT=2` 只 +6fps | 19（更正见 §19 顶部与 §20） |
 | 异步 PPA 旋转落地（8ms 消除）：NON_BLOCKING 提交 + 独立 worker 补发 flush_ready + 计数信号量 + runtime mutex；含两次失败根因与完整修改清单 | 20 |
 | `esp_lcd_dpi_panel` 的 `draw_bitmap()` 只有传入缓冲**落在某块 FB 地址区间内**才零拷贝翻转，否则走 `do_copy` 永远写同一块 ⇒ 自拼管线必须"旋进 FB + 轮转 3 块" | 22 |
-| P4 无 SMP 内核（`FREERTOS_SMP depends on !IDF_TARGET_ESP32P4`）⇒ `xCoreID` 只是亲和性；双核并行的证明用空闲钩子计数 | 23 |
+| P4 无 SMP 内核（`FREERTOS_SMP depends on !IDF_TARGET_ESP32P4`）⇒ `xCoreID` 只是亲和性；空闲钩计数只是粗判据，权威判据是逐线程×逐核累加 | 23 |
+| **LVGL 绘制线程默认 `xTaskCreate`=NO_AFFINITY ⇒ 被"唤醒它的核"接管 ⇒ `DRAW_UNIT_CNT=2` 实际挤在一核**；帧率归因表 + DIRECT/tile_cnt/PPA/分块+内部RAM 实测（横屏 torture 场景 38fps、上限 ≈48，60 不可达的三条算术）| 24 |
+| ★ **帧率优化的入口/手册页在隔壁**：`esp32-p4-lvgl-frame-rate-playbook.md`（先算三行账、有效/无效清单、根因卡片、只测不改库的仪表方法）。本文其余节是它的证据出处 | 手册页 |
+| **禁改 `managed_components/lvgl__lvgl` 时如何钉绘制线程：官方 `LV_USE_OS == LV_OS_CUSTOM` + 工程自己的 `lv_os_pinned.h/.c`**（P4 无 SMP 内核、非 SMP 无 `vTaskCoreAffinitySet` ⇒ 事后改亲和不可能）；含 `__idf_lvgl__lvgl` 目标名、`-Wl,--undefined=lv_thread_init` 链接顺序坑、`lv_os_get_idle_percent` 必须自己实现 | 24.9 |
+| 帧率仪表全部改到应用侧：`uxTaskGetSystemState` + run-time stats（esp_timer ⇒ µs）打每线程 ms/帧与 `xCoreID`；**仪表任务优先级必须低于被测线程**，否则同优先级时间片轮转自己吃掉 1fps | 24.8、24.4 |
+| 工程结构定稿：**显示核心（460 行）与仪表/自测（`dsi_diag.c`）分文件**，`EXAMPLE_DIAG`/`EXAMPLE_SELFTEST` 编译切换（切换类型定义要放条件外），板级事实单独 `dsi_board.h`；`place_*` 落位自测在整理当天抓到"SRM 源块宽高被写成旋转后尺寸=转置"的真 bug ⇒ 改完显示代码必看 `inside==want && bleed==0` | 24.10 |
 | use_psram=true 大块 128B 对齐分配不可靠（无 fallback） | 4 |
 | buffer_height 480/240 双缓冲失败 | 4 |
 | L2 缓存 256KB / 128B 行（影响 PSRAM 对齐与 msync） | 全文 |
@@ -240,6 +248,7 @@ apl_console.c 任务创建按宏选择 MALLOC_CAP_SPIRAM / MALLOC_CAP_INTERNAL�
 | 经验 | 节 |
 | --- | --- |
 | GT911 触摸复位时序（GPIO23 独立 RST，手动 50ms+150ms 复位） | 7 |
+| 自拼管线接触摸：I2C0 **SDA7/SCL8**、RST23、**INT 未接 ⇒ 只能轮询**、**0x5D 与 0x14 都要探**（同一块板两次上电分别应答过这两个）；驱动坐标顺序 `mirror_x→mirror_y→swap_xy` ⇒ 开了 swap 后 **`mirror_x` 管 LVGL 的 y**；**触摸读不能放 LVGL 线程**（38.7→35.7fps、最差帧 298ms、`IDLE` 反而升＝阻塞）⇒ 独立轮询任务 + 快照 | 24.11 |
 | 控制台 UART 引脚 GPIO37/38、背光 26、LCD RST 27、触摸 I2C 8/7、SD、I2S 引脚 | 12、全文 |
 | **背光栅极低有效**：LED C 必须照抄 BSP 的 `ledc flags.output_invert=1`，漏了就"画面在跑但屏幕全黑" | 22 末段 |
 | 板卡启动日志特征（cpu_start 报 console UART 引脚） | 全文 |
@@ -700,8 +709,266 @@ COM20 取数工具）。本节及以后引用"§21"的地方都指那份文件�
   `TaskStatus_t.xCoreID`，**但那给的是亲和性**（无亲和任务 = `tskNO_AFFINITY`），不是"这个任务上次在哪个核跑的"；
   而 run-time stats 会在每次上下文切换里读计数器 ⇒ **本身就干扰你要测的调度**。
   ⇒ 撤回"用 `uxTaskGetSystemState` 打印 core 来证明双核"这条路（我为它踩过一次编译失败 + 一次 defaults 不生效）。
-- **便宜又无干扰的办法**：`esp_register_freertos_idle_hook_for_cpu(cb, 0/1)`
+- **便宜又无干扰的粗判据**：`esp_register_freertos_idle_hook_for_cpu(cb, 0/1)`
   （`components/esp_system/include/esp_freertos_hooks.h:44`），回调里
   `s_idle[esp_cpu_get_core_id()]++` 且 **return false**（= 该核只要空闲就尽可能快地被调用）；
-  每秒取增量 = 每个核的"空闲环数/s"。**两核一起掉 ⇒ 真并行；只有 cpu0 掉 ⇒ 全挤在核 0。**
-  零 kconfig 改动、零调度干扰。实测代码见 `examples/mipi_dsi` 的 `idle_count_cb()` / `core_free_snapshot()`。
+  每秒取增量 = 每个核的"空闲环数/s"。零 kconfig 改动、零调度干扰，代码见 `examples/mipi_dsi` 的
+  `idle_count_cb()` / `core_free_snapshot()`。
+  ★ 但它**只能当粗判据**：2026-10-11 在 `examples/mipi_dsi` 上，逐线程直接计数证明 u1 每帧在 cpu1 画了
+  11-16ms，而 cpu1 的空闲环数仍报 53 万/s（≈88% 空闲）——短脉冲式干活+高优先级自旋会让它失真。
+  **曾经的权威判据**是在 `execute_drawing()` 前后累加 `lv_draw_sw_core_us[idx][xPortGetCoreID()]`（见 §24），
+  但那是**改库**得来的 —— 现在被禁止（§24.9）。**当前判据**：应用侧
+  `uxTaskGetSystemState()` + run-time stats 打每线程 µs/帧与 `xCoreID`（§24.8），两者数值一致
+  （15.4/7.1 与 15.9/6.7），可以放心用它代替库内仪表。
+- ★★ 真正常见根因不是"没开并行"，而是**LVGL 的绘制线程根本没被分到两个核**：
+  `lv_thread_init` 用 `xTaskCreate`（= `tskNO_AFFINITY`），非 SMP 内核把 NO_AFFINITY 任务 pend 到
+  **唤醒它的那个核**，而唤醒者正是主线程 ⇒ `LV_DRAW_SW_DRAW_UNIT_CNT=2` 只是"两个线程挤一个核"。
+  改法与实测数字见 **§24**。
+
+## 24. examples/mipi_dsi 自拼管线的帧率归因（2026-10-11 实测，LVGL 9.5.0）
+
+工程 `examples/idf_v555_my_exps/p4_touch_lcd4_3_exp/examples/mipi_dsi`；场景 = 800×480 横屏
+`lv_demo_widgets()` + 整页轮播，屏上性能表 `LV_USE_PERF_MONITOR` 常开（用户要求不关）。
+度量脚本（不在工程里）：`~/.qoder-cn/tmp/run_mdsi.sh <tag> <秒>` 构建+烧写+采 COM20，
+`cap_mdsi.py -r <旧日志>` 可重解析（解析器写错不用重烧）。**同配置重复采样噪声 ≈ ±1.6fps**，<5% 的差值别写成收益。
+
+### 24.1 送屏侧已经不是瓶颈（更正 §22 的"7.9ms"归属）
+`flush stages: wait_rot=0.00ms srm_submit=0.63ms flip=0.01ms` ⇒ flush 合计 **0.6ms**。
+§22 的 7.9ms 来自 **SRM 还写成 BLOCKING** 的那版固件，它归属的是旋转硬件时间本身：
+bench 实测 `ppa srm hw=105 MB/s` ⇒ 整屏一帧 **7.3ms**（60fps 时占 PPA 44%），非阻塞提交后与渲染完全重叠。
+缓存维护也不掏钱：768KB 的 C2M 只 **0.11ms**（渲染时脏行已被 256KB L2 自然逐出写走）。
+另：`esp_cache_msync(..., DIR_M2C | UNALIGNED)` 会报 `M2C direction doesn't allow UNALIGNED`。
+
+### 24.2 带宽 bench（开机一次性，不影响稳态；B/µs = MB/s）
+| 路径 | MB/s |
+| --- | --- |
+| CPU 写 PSRAM（带缓存）| 179 |
+| CPU PSRAM↔PSRAM 拷贝 | 86（=172 流量）|
+| CPU 写内部 RAM | **1036**（5.8× PSRAM）|
+| 内部 RAM 拷贝 | 407 |
+| PPA SRM PSRAM↔PSRAM | 105 |
+
+hex@200MHz 理论 ≈200 MB/s ⇒ 实测已到 86-90%，**PSRAM 带宽是硬上限**。
+
+### 24.3 帧时间归因（固件每秒自打；addr2line 用 `build/mipi_dsi_panel.elf` 认符号）
+最终配置（DIRECT 脏区 + `tile_cnt=1` + 绘制线程轮转分核 + 主线程固定 cpu1 + 关断言）
+= **38.8 fps（min 30 / max 44）**，flush 0.6ms，`stalls=0`，`changed=3/3`，护栏 `guard=0B`。
+**这版 `managed_components/lvgl__lvgl` 与上游逐字节相同**（`diff -rq` 对 ComponentManager 缓存 = 0 个文件差异），
+归因数字改由应用侧取（`task cpu` 行，见 §24.8），与当年"库内仪表"版一字不差：
+u0 15.4 ↔ `swdraw@0` 15.9、u1 7.1 ↔ `swdraw@1` 6.7、handler 26.6 ↔ `LVGL@1` 18.5 + 等待。
+
+| 段 | ms/帧 | 位置 |
+| --- | --- | --- |
+| 走树 walk（对象树→绘制任务）| 6.5-8.9 | cpu1，串行不可分 |
+| `anim_timer`（demo 几十条动画）| 8.4-11.2 | cpu1，串行 |
+| layout + 其它 | ~2-3 | cpu1 |
+| 主线程等绘制 | ~9.4 | cpu1（等待）|
+| 像素功 u0 | 15.4 | cpu0 |
+| 像素功 u1 | 7.1 | cpu1 |
+
+关键路径 = cpu1（串行 17-21 + u1 7.1）≈ 26ms；cpu0 每帧还剩 ~10ms 用不上。
+**总功 ≈42ms/帧 ÷ 2 核 = 21ms ⇒ 这个场景理论上限 ≈48fps。**
+★ 应用侧同样能给出这条判据：`LVGL@1=18.5ms/帧` 且 cpu1 每帧只剩 `idle1≈2.9ms` ⇒
+**单线程段本身已经吃满/超过 60fps 的 16.6ms 预算**，这条是 §24.5 第 1 条的独立证据。
+
+### 24.4 实测有效 / 无效（一次一项，同场景）
+| 改动 | fps | 结论 |
+| --- | --- | --- |
+| 起点：FULL + 非阻塞 SRM + 零拷贝 flip | 34.2 | §22 的 27.5/7.9ms 基线作废 |
+| **FULL → DIRECT（只画脏区；LVGL 自己把脏区同步进另一块缓冲）** | 31.8→35.7 | ✅ +12%；实测每帧脏区 **84-88%** |
+| **`lv_display_set_tile_cnt()` 4 → 1**（2/4/8 都量过）| 35.2→37.9 | ✅ 最优点；8→31.1：走树成本随 tile 数上涨，而像素并不会更均衡 |
+| 绘制线程固定核轮转分两核（§23 根因）| 必需 | 单加它不涨帧率，但没有它 `DRAW_UNIT_CNT=2` 是假的。**改法见 §24.9：用 `LV_OS_CUSTOM`，不动库** |
+| 主线程固定 cpu1 | 35.7→36.8 | 差值在噪声内 |
+| 关断言（确认 `-DNDEBUG` 进 1522 个编译单元）| 37.9→38.1 | ≈0，保留（省 flash）|
+| 两个绘制线程都放 cpu0 | 33.7 / 35.7（两轮）| ❌ 一核吞吐封顶；任务是在走树末端才被创建的，队列排在同核后面只会把帧尾推后 |
+| **主线程优先级 6 → 2（低于绘制线程 3，想让它别抢占像素）** | 38.8→36.1 | ❌ −2.7fps：`idle1` 仍只有 2ms ⇒ 延迟不是抢占造成的，是任务创建得晚 |
+| **遥测任务 `fps_report` 优先级 3 → 1 并钉 cpu0** | 37.8→38.8 | ✅ +1.0：它每秒哈希 3 块 768KB 帧缓冲，与 `swdraw@0` 同优先级会时间片轮转互抢 ⇒ **仪表自己也在关键路径上，A/B 前先把仪表降优先级** |
+| 走树期间就 `lv_draw_dispatch()`（让像素与走树重叠）| 35.1 | ❌ 关键路径在 cpu1，重叠只省下 cpu0 的闲置 |
+| `CONFIG_LV_USE_PPA`（需 `LV_DRAW_BUF_ALIGN=CONFIG_CACHE_L2_CACHE_LINE_SIZE=128`）| 33.7 vs 36.8 | ❌ 无收益：官方 PPA 单元只接 FILL/IMAGE，`LV_PPA_NONBLOCKING_OPS` 被强制 0 ⇒ 绘制线程原地等硬件，还与本管线的 SRM 抢同一 2D-DMA。**绘制缓冲尾部 4KB 护栏读数 0B ⇒ 它没有越界**，与 §16 的 adapter 加速路径不同 |
+| 走树期间每 32 个对象就 `lv_draw_dispatch()`（想让像素与走树重叠）| 38.2 vs 38.3 | ❌ 完全无影响（walk/main_wait/u0/u1 四项一字不差）⇒ 限制不在喂料时机，在「同一层内任务互相覆盖必须按序」 |
+| `LV_DRAW_SW_DRAW_UNIT_CNT=1`（单绘制线程独占 cpu0，主线程独占 cpu1）| 33.1 | ❌ 变成纯串行：`走树 8.4 + 画 19.2 + 动画 ≈ 32ms` |
+| 两个绘制线程都钉 cpu0、主线程 cpu1（tile=1）| 34.0 | ❌ 同上串行链：`9.0 + 21.0 = 30ms` |
+| 主线程钉 cpu0（绘制线程轮转）| 35.8 | ❌ 比"主线程 + u1 同核"的 38.1 差 |
+| `CIRCLE_CACHE` 8→24、`SHADOW_CACHE` 16→48 | 38.1 | ≈0；顺带证明**同配置复现精度 ≈0.1ms/0.2fps** |
+| 想 A/B 屏上性能表的开销 | — | **做不到**：`LV_USE_PERF_MONITOR` 在 `LV_USE_SYSMON` 下被 Kconfig 重新置回 `=y`（改 `sdkconfig` 里那行会被 `default y` 覆盖，回读 `sdkconfig.h` 才发现）⇒ 要关得连 sysmon 一起关 |
+
+### 24.5 60fps 的账（别把"到不了"当成"还没优化"）
+1. 串行段 17-21ms/帧（走树 + 动画引擎 + 布局）**本身就 > 16.6ms**，而 LVGL 9.5 里这三项都在同一线程
+   ⇒ 就算像素功免费也到不了 60。
+2. 带宽：60fps 下 DSI 扫描 0.75MB + SRM 读写 1.5MB = 135MB/s，再加绘制缓冲读写 ~90MB/s
+   = **225MB/s > 实测 172-179MB/s**。
+3. 对照（同一固件、同一 UI，只关整页轮播 `EXAMPLE_SLIDESHOW=0`）：每帧脏区 35%，
+   **像素功只有 u0=1.0ms/11 个任务** ⇒ 管线离 60fps 很远，卡住的是"每帧 87% 全变 + 几十条动画"这个负载。
+
+⇒ **结论：这个 torture 场景软件渲染到不了 60（实测推到 38，面板仍 60Hz 在扫，无撕裂无卡帧）；
+   真实产品页（脏区小、动画少）用同一套管线 60fps 可得。**
+   一定要"整屏全变也 60"只有：降内部分辨率 + PPA 缩放（画质让步）／减动画密度（观感让步）／
+   竖屏直出免旋转（省 1.5MB/帧流量和 7.3ms PPA，但仍受串行段限制）。
+
+### 24.6 分块（PARTIAL）+ 内部 RAM 绘制缓冲：机制可用，但本场景净亏（2026-10-11 实测）
+先做可行性自测（`selftest_band_isolation` / `band_case_crosscore`，开机跑；结论对任何自拼管线通用）：
+1. **SRM 子块写入是像素精确的**：把 FB 涂黑，从 800×80 源旋转不同矩形进去，整块 FB 回读 ——
+   6 个用例全部 `inside==want`、`bleed_or_foreign=0`，含 **16×16 内部小矩形**和列起点 419/432/458 这种非 128B 对齐位置
+   ⇒ §16 的"行凑整越界"只发生在 fill/blend，SRM 子块不受其害 ⇒ 我此前"分块合成必然串块"的担心**撤回**。
+2. **内部 RAM 可作 SRM 源**（`ppa_srm.c:193` 注释 "in_buffer could be anywhere (ram, flash, psram)"，实测 err=ESP_OK 且像素正确）。
+3. **跨核一致性成立**：两个核各写同一块内部 RAM 缓冲的一半，再旋转进 FB 回读 ⇒ 红/蓝各 32000、无杂色。
+   即 P4 内部 RAM 虽走 L1（`SOC_CACHE_INTERNAL_MEM_VIA_L1CACHE=1`），驱动提交时的 C2M 仍覆盖了另一核写的行。
+   （即便如此，送屏 worker 仍固定在 LVGL 线程那个核上，少一个变量。）
+
+再上真分块管线（`EXAMPLE_PARTIAL_BANDS`：内部 RAM 双 chunk 缓冲 + 每块一次 SRM 旋进目标 FB +
+帧末只补"脏区外接矩形的补集" + `lv_display_set_flush_wait_cb` 放行，不跨线程改 LVGL 状态）：
+
+| 配置 | fps | 走树 | 像素功 | 绘制任务/帧 | PPA |
+| --- | --- | --- | --- | --- | --- |
+| DIRECT（定稿）| **38.1** | 8.4ms（1 次）| 22.9ms | ~130 | 整帧 7.3ms，被隐藏 |
+| PARTIAL 64 行 + 整帧底拷贝 | 25.8 | 17.4ms | 35.4ms | 356 | 另加 7.24ms/帧串行 |
+| PARTIAL 64 行 + 补集拷贝 | 30.1 | 17.8ms | 36.1ms | 355 | 补集 ~1.2 块/帧 |
+
+**根因：LVGL 9.5 的 PARTIAL 是"每个 chunk 重走一遍对象树"**（`refr_invalid_areas` 按 `get_max_row()` 把脏区切片，
+每片一次 `refr_area`），且跨 chunk 边界的对象会被**重复绘制** ⇒ 任务数 2.7×、像素功 1.6×，
+把"内部 RAM 写带宽 5.8×"的收益全部吃掉。
+⇒ **按脏区分口径**：脏区 ≥ 半屏用 DIRECT；脏区小到 1-2 块/帧时，分块+内部 RAM 才占优。
+   ~~定稿默认 `EXAMPLE_PARTIAL_BANDS=0`，分块路径整套留在代码里~~ → **2026-10-11 R40 整理时已删除**
+   （见 §24.10）；本节这 3 个数字 + 上面 3 条自测结论就是它的全部可复用价值，要再走这条路按本节重写，
+   或直接取快照 `~/.qoder-cn/tmp/pre_clean_R35/main/mipi_dsi_lcd_example_main.c`（1625 行原版）。
+
+### 24.7 本轮自己踩出来的两个坑
+- **PPA 完成回调可能早于信号量的存在**：自测里的 BLOCKING 旋转同样会触发 `on_trans_done` ⇒
+  ISR 给一个尚未创建的队列 = `Load access fault, MTVAL=0x4c`（NULL + 自旋锁偏移，addr2line 直指 `rot_done_cb`）。
+  ⇒ **送 ISR 的信号量必须在 `ppa_register_client()` 之前建好**。
+- **托管组件的干净副本在哪**：`C:\Users\Administrator\AppData\Local\Espressif\ComponentManager\Cache\service_*\lvgl__lvgl_<版本>_<hash>\`
+  就是下载原文（本工程 9.5.0 那份与 `Template/base_template_p4_c61_wifi` 下同名文件 md5 相同）
+  ⇒ 改坏 `managed_components` 时从这里还原，不必重下、不会版本漂移；还原后**用同一组归因数字复现**才算修好。
+- 附：固件指纹行的 `__DATE__ __TIME__` 只在**该 TU 重新编译**时才变（本例只改 lvgl ⇒ 时间戳没动）
+  ⇒ 判"跑的是不是这份固件"要看 `mode=/tile_cnt=/units=` 这类配置字段和 `build/*.bin` 的 mtime，别只信时间戳。
+- 附（工具教训）：用 python 改文件时 `s[:i] + s[j:]` 若 `i > j` 会**复制**而不是删除（本次把 `lv_refr.c` 写坏过一回）
+  ⇒ 文本改写一律用带唯一上下文的字面量替换 + 打印 ok/MISS + 事后 grep 计数复核，不用下标算术。
+
+### 24.8 本工程仪表清单（下次直接复用，全部在应用侧）
+`report_task` 每秒打：`fps/min/avg + chunks/f + flush + render + worst + vsync + dirty% + guard`、
+`flush stages: wait_rot/srm_submit/flip`、`lvgl thread: handler/flush/wall(cpu0,cpu1)`、
+`task cpu (ms/frame, name@core): LVGL@1 / swdraw@0 / swdraw@1 / ipc0 / IDLE0..`、
+`verify lastfb/fb0..fb2 changed=x/3`、`stalls=`；开机另打 `place_full/place_odd/place_tiny`
+（PPA 落位自测，判据 `inside==want && bleed==0`）和 `build ... ppa_draw=/lv_cpu=` 指纹行。
+解析器 `~/.qoder-cn/tmp/cap_mdsi.py`（`-r` 可重解析旧日志 ⇒ 改解析器不用重烧）。
+★ **`task cpu` 行是库内仪表的替代品**：开 `CONFIG_FREERTOS_GENERATE_RUN_TIME_STATS=y`
+  （计数器源 = esp_timer ⇒ 单位就是 µs，选 `RUN_TIME_COUNTER_TYPE_U64` 免回绕）
+  + `CONFIG_FREERTOS_VTASKLIST_INCLUDE_COREID=y`（`TaskStatus_t.xCoreID` = 该任务的**亲和性**，
+  正好用来验证固定核是否真生效），每秒 `uxTaskGetSystemState()` 取快照、按 handle 配对做差分 ÷ 帧数。
+  它测的是"这个线程跑了多久"；对本工程就是 `execute_drawing` 的时间（其余时间它阻塞在 sync 上），
+  与当年库内仪表逐项对上（见 §24.3）。
+  ⚠ 与 §23 的差别要说清：§23 撤回的是"用它证明无亲和任务**实际**在哪个核跑"（xCoreID 给的是亲和性，
+  且 run-time stats 在每次切换读计数器本身有干扰）；固定核之后这两点都不再是问题。
+  ⚠ **同一核上各任务 ms/帧 之和会比帧周期大 ~15%**（中断/切换时间记在被中断任务头上 + 采样窗口与
+  帧计数窗口不同相）⇒ 用它做**任务之间的横向比较和趋势**，不要当核占用率；占用情况看 `IDLE0/IDLE1` 的相对大小。
+  ⚠ **仪表任务必须低于被测线程优先级**：`fps_report` 与 `swdraw` 同为 prio 3 时时间片互抢，
+  降到 prio 1 并钉 cpu0 ⇒ 帧率 37.8→38.8（+1.0fps，R35）。
+★ 采集**空闲环数**（`esp_register_freertos_idle_hook_for_cpu` + `core free loops/s`）那条路已删（R40）：
+  `IDLE0/IDLE1` 是同一个量的精确版本，没必要留两套。
+`walk/layout/invalid/other` 那种库内细分**已不再采集**（要改 `managed_components`，见 §24.9 的禁令），
+旧仪表版存档在 `~/.qoder-cn/tmp/lvgl_patched_R28/src/`（5 个文件，只作历史对照，别再往工程里打）。
+
+### 24.9 ★ 禁令与正解：不碰 `managed_components/lvgl__lvgl` 也要拿到双核渲染（2026-10-11 定稿）
+**用户规则：不许修改 LVGL 库源码（含仪表）**。本轮把之前打在 5 个文件里的补丁全部还原，
+`diff -rq` 对 ComponentManager 缓存 = **0 差异**，帧率没有损失（打补丁 38.7 vs 未打补丁 **38.8**）。
+
+为什么"钉核"这件事只能落在 OS 抽象层：
+- 非 SMP 内核**没有** `vTaskCoreAffinitySet()`（只在 `FreeRTOS-Kernel-SMP` 里有）⇒ 任务建好之后无法再钉核；
+- `CONFIG_FREERTOS_SMP` 在 Kconfig 里 `depends on !IDF_TARGET_ESP32P4`（IDF-8113）⇒ P4 换 SMP 内核这条路是堵的；
+- LVGL 只在**主线程**里做 `dispatch()` 认领任务（`render_thread_cb` 只执行、只 `lv_draw_dispatch_request()`），
+  再多起一个线程调 `lv_draw_dispatch()` 会和它抢任务链表 ⇒ "自己在应用侧加绘制线程"不能靠重复调 LVGL 内部函数实现。
+⇒ 唯一干净的口子是 LVGL 官方的 **`LV_USE_OS == LV_OS_CUSTOM`**：线程创建交给应用侧实现。
+
+落地清单（全在工程自己的文件里，5 处）：
+1. `sdkconfig.defaults` + `sdkconfig`：`CONFIG_LV_OS_CUSTOM=y`、`CONFIG_LV_OS_CUSTOM_INCLUDE="lv_os_pinned.h"`
+   （Kconfig 里选项名就是 `255: CUSTOM`；那个 string 会原样变成 `#include` 的字面量）。
+2. `main/lv_os_pinned.h`：定义 `lv_thread_t / lv_mutex_t / lv_thread_sync_t`（字段照 `lv_freertos.h`，
+   同步对象只留"一个等待者 + task notify"，因为 LVGL 每个 sync 对象只服务一个线程）。
+3. `main/lv_os_pinned.c`：实现 `lv_thread_init/delete`、`lv_mutex_init/lock/lock_isr/unlock/delete`、
+   `lv_thread_sync_init/wait/signal/signal_isr/delete`、`lv_sleep_ms`、`lv_os_get_idle_percent`。
+   `lv_thread_init` 里把 `xTaskCreate` 换成 `xTaskCreatePinnedToCore(..., core)`，
+   `core = (LV_PIN_FIRST_CORE + 创建序号) % CONFIG_SOC_CPU_CORES_NUM` ⇒ **策略是这两个宏，不是库**。
+   ★ `lv_os_get_idle_percent()` **必须提供**（`LV_SYSMON_GET_IDLE` 默认指向它，屏上性能表要用）：
+   `lv_freertos.c` 那套靠 `traceTASK_SWITCHED_*` 的计数在本机根本没编译（所以之前 CPU% 是 0/假数），
+   改用 `ulTaskGetIdleRunTimeCounterForCore(c)`（esp_timer 源 ⇒ 单位就是 µs）做窗口差分取最忙的核。
+4. 顶层 `CMakeLists.txt`（`project()` 之后）两行 + `main/CMakeLists.txt`：
+   - `target_include_directories(__idf_lvgl__lvgl PRIVATE ${CMAKE_CURRENT_LIST_DIR}/main)`
+     —— LVGL 的 `lv_os_private.h` 要 `#include` 到这个头。**组件目标名带 `__idf_` 前缀**，
+     写 `lvgl__lvgl` 会报 "Cannot specify include directories for target ... not built by this project"。
+   - `target_link_options(${PROJECT_NAME}.elf PRIVATE "-Wl,--undefined=lv_thread_init")`
+     —— 只有 `liblvgl__lvgl.a` 引用这批符号，而它在 `libmain.a` 之前被搜索 ⇒ 没人把 `lv_os_pinned.c.obj`
+     拉进链接，报一串 `undefined reference to lv_mutex_init / lv_thread_sync_*`。强拉**一个**符号就带进整个 .o。
+   - `main/CMakeLists.txt`：SRCS 加 `lv_os_pinned.c`，INCLUDE_DIRS 加
+     `../managed_components/lvgl__lvgl/src/osal`（只为拿 `lv_os_private.h` 的声明，不改它）。
+5. 生效验证（不看这个就不知道成没成）：开机 `lv_os_pin: thread 'swdraw' #0 pinned to cpu0 prio 3 / #1 -> cpu1`，
+   每秒 `task cpu` 行里 `swdraw@0`、`swdraw@1` 分别在两个核上都有毫秒数（实测 15.9 / 6.7）。
+**收益**：这条改动值 +6fps（同场景 33→38 一档），且组件升级不会把它冲掉。
+
+### 24.10 R40-R45 代码整理：把工程收敛到当前方案，并把仪表拆出核心（2026-10-11）
+**文件布局（现在的样子）**
+| 文件 | 行 | 内容 |
+| --- | --- | --- |
+| `main/mipi_dsi_lcd_example_main.c` | 460 | **只有显示路径**：面板/背光初始化、SRM 送屏管线、DIRECT 双缓冲装配、LVGL 任务 |
+| `main/dsi_diag.c/.h` | 482/85 | 全部仪表（fps/flush 三段/每任务 CPU/FB 哈希/护栏/hist）+ 开机 PPA 落位自测 |
+| `main/dsi_board.h` | 41 | 屏与板级事实（480×800、时序、lane、LDO3/背光 GPIO26 低有效/RST27），核心与仪表共用一份 |
+| `main/lv_os_pinned.c/.h` | 243/54 | `LV_OS_CUSTOM` 实现体（固定核，见 §24.9） |
+| 已删 | — | `lvgl_demo_ui.c`（无人引用、没进 SRCS）、`main/Kconfig.projbuild`（三个 `CONFIG_EXAMPLE_*` 全工程零引用，属原厂 EK79007/ILI9881C 例程） |
+
+**切换**：`EXAMPLE_DIAG=0` ⇒ `dsi_diag.h` 里所有入口变 `static inline` 空函数，核心照常编译（已实测：
+`rc=0`、0 error、0 warning）；`EXAMPLE_SELFTEST=0` 单独关自测（也实测编过）。
+类型 `dsi_diag_hw_t` 必须放在 `#if EXAMPLE_DIAG` **外面** —— 核心无条件填它，放进条件里就出现
+"关仪表编不过"（我踩过一次：`unknown type name 'dsi_diag_hw_t'`）。
+
+**删除量与验证**：`main.c` 1625 → 892（R40 删实验分支）→ 460（R43 拆仪表）。逐项对比整理前后：
+fps 38.8→38.7（噪声内）、`LVGL@1=18.4/15.9/6.7`、`wait_rot=0.00 srm_submit=0.61 flip=0.01`、
+`changed=3/3`、`stalls=0`、`guard=0B×44`、0 E 日志、0 编译警告 ⇒ **纯结构改动，行为未变**。
+删掉的东西：PARTIAL 分块管线（459 行，结论在 §24.6）、band/跨核自测（243 行，结论在 §24.6）、
+带宽 bench（83 行，数字在 §24.2）、空闲钩子（见 §24.8）、`count_objs`、FULL 分支与三个实验宏。
+原版快照：`~/.qoder-cn/tmp/pre_clean_R35/`（含被删的 lvgl_demo_ui.c 与 Kconfig.projbuild）。
+
+★ **自测在整理当天就抓到一次我自己写错的真 bug**：把 SRM 的 `in.block_w/h` 写成了"旋转后矩形的
+  宽高"= 源块被转置 ⇒ `place_full` 报 `ESP_ERR_INVALID_ARG`、`place_odd` 的 `inside=3721 ≠ want=22021`
+  （16×16 那例是正方形，转置看不出来所以照过）。改回**源坐标**（`block_w = ix2-ix1+1`）后三例全绿。
+  ⇒ 保留 `place_*` 三例的价值就在这：**压缩/重写显示相关代码后，必须看这三行回到 `inside==want && bleed==0`**。
+  另注意 `hist=` 行去掉了与桶 0 完全重复的 `ge50=` 计数，解析器 `cap_mdsi.py` 已同步。
+
+**配置卫生**：`grep -nP "[^\x00-\x7F]"` 扫 defaults/Kconfig/CMakeLists = 0 命中；删掉 defaults 中与
+`CONFIG_LV_OS_CUSTOM` 同 choice 冲突的 `CONFIG_LV_OS_FREERTOS=y`；删掉死 Kconfig。
+★ 可复现性验证法（以后改 defaults 都跑一遍）：备份并删 `sdkconfig` ⇒ `idf.py reconfigure` ⇒
+`diff` 新旧 `build/config/sdkconfig.h`。R41 与 R45 两次都是 **0 行差异** ⇒ defaults 单独就能定稿。
+
+**还欠两件事（已提给用户，未批）**：① `pipeline_drain()` 超时后的第二次等待是 `portMAX_DELAY`
+⇒ 旋转完成中断一旦丢失会永久挂住 UI 线程，而 Task WDT 只看两核 idle，**兜不住**（现象＝画面冻死、
+日志照打）；补法＝有界等待 + 丢帧计数。② 护栏只包在自己分配的绘制缓冲后面，`esp_lcd_dpi` 的 3 块 FB
+后面放不了 ⇒ DMA 若写坏 FB 之后的堆 `guard` 看不见（§16 的事故就在 fb2 之后）；补法＝周期
+`heap_caps_check_integrity_all(true)`。
+
+### 24.11 自拼管线补触摸（GT911）：坐标换算 + "I2C 不能跑在 LVGL 线程"（2026-10-11 实测）
+参考实现 = 同板 `lvgl_demo_ai` 的 Waveshare BSP（`components/esp32_p4_wifi6_touch_lcd_4_3`），
+本项目不用它的 adapter，触摸自己接：`main/dsi_touch.c`（I2C0 + 复位 + 探测 + LVGL indev + 轮询任务）。
+
+- **板级事实**：`SDA=GPIO7`、`SCL=GPIO8`、触摸 `RST=GPIO23`（**与 LCD 复位 GPIO27 不是同一根**），
+  `INT` 未接 ⇒ 只能轮询。地址 **0x5D 与 0x14 都要探**：同一次上电先后两次分别应答过 0x5D 和 0x14
+  （INT 电平决定地址），只写死 0x5D 会随机"触摸不存在"。
+- **复位时序照抄 §7**：RST 低 50ms → 高 150ms，然后给驱动 `rst_gpio_num = GPIO_NUM_NC`
+  （驱动自带的复位只等 ~20ms，热重启几乎必挂）。
+- ★ **驱动的软件坐标修正顺序是 `mirror_x → mirror_y → swap_xy`**（`esp_lcd_touch.c:89-107`，
+  且 mirror 用的是交换前的 `x_max/y_max`）⇒ **镜像宏作用在面板轴上，不作用在 LVGL 轴上**：
+  想翻 LVGL 的 **y** 要改 `mirror_x`，想翻 LVGL 的 **x** 要改 `mirror_y`；**两个一起翻等于没翻**。
+  这是"注意正反"最容易踩的地方。
+- 换算依据两路独立对上：① 本项目 ANGLE_270 的实测映射 `panel(X,Y) = (479 - y_lvgl, x_lvgl)`
+  ⇒ `x_lvgl = Y`、`y_lvgl = 479 - X`；② 参考工程（adapter `ROTATE_90`）用的正是
+  `swap_xy=1, mirror_x=1, mirror_y=0`（`x_max=480, y_max=800`，即面板原生竖屏尺寸）。
+  ⇒ **90° 与 270° 在这块板上落到同一组触摸标志值**。这只是"两条独立推导对上了"，
+  **最终结论仍要由四角实测收口**（不要拿这条当已验证事实去解释别的工程）。
+- ★★ **触摸读不能放在 LVGL 线程里做**（一次实测教训）：`esp_lcd_touch_read_data()` 是 I2C 事务，
+  GT911 更新坐标寄存器时会拉伸时钟；把读放进 `lv_indev` 的 read 回调（= LVGL 线程）后
+  **38.7fps → 35.7fps，最差帧 298ms**，且 `IDLE1` 从 2.7 涨到 6.0ms/帧
+  ⇒ **判据：帧率掉但 CPU 空闲反而增加 = 阻塞，不是算力不够**。
+  改法＝独立轮询任务（`gt911_poll`，20ms 周期、prio 2、钉在有余量的 cpu0）写一份快照，
+  read 回调只拷快照（临界区内 3 个字段）。改完 38.2fps、最差帧 39.1ms、`gt911_poll=0.2ms/帧`。
+- 自证手段（不能靠眼睛）：每次按下打一行 `touch press #N at lvgl x=.. y=..`，并累计
+  `touch range x=a-b y=c-d`；**摸四个角**后 x 应覆盖 0-799、y 覆盖 0-479，哪根轴反向就按上面那条
+  映射翻一个宏（步骤写在 `examples/mipi_dsi/test/README.md` §4）。
+- 触摸挂点：`esp_lcd_touch_gt911: ^1.2.0` 进 `main/idf_component.yml`，从 ComponentManager 本地缓存
+  离线解析成功（`managed_components/espressif__esp_lcd_touch*`）；**LVGL 那份仍 0 文件差异**。
