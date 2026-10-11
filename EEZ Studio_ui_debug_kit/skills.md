@@ -1527,11 +1527,15 @@ int32_t get_var_volume_pct(void)      { return g_set.volume; }   // ★ 不是 a
    没有构建入口时才用「借命令」，此时**先确认它在不在清单里**（这条最容易翻车）：`compile_commands.json` 是 **cmake 生成物**，
    没 reconfigure 就不会收录新建的 `.cpp`；按文件名匹配不到时脚本会**静默跳过**，于是"0 错 0 警"是假的。
    **0. 本机 cmd 侧构建入口（用户给的 tasks.json 复刻，2026-10-04 实测跑通）**：
+   ★ 2026-10-11 更正：**优先直接用 IDF 根那对脚本**（`<IDF根>\idf_cmd_init.bat && <IDF根>\idf_build.bat <cmd>`，
+   切工程只改 `idf_build.bat:5` 的 `PROJECT_PATH`；唯一真源见 `esp32` 子库 `esp-idf-windows-build.md`），**不要往工程目录复制 bat**。
    `cmd.exe //C "design\\_idf_build.bat <reconfigure|build|size|flash|monitor>"`，包装里必须
-   `set MSYSTEM=`（Git Bash 继承来的，`export.bat` 第 2 行见到就 `goto :eof` 静默拒绝）＋
+   `set MSYSTEM=`（Git Bash 继承来的，`export.bat:2-4` 见到会**先打印** "This .bat file is for Windows CMD.EXE shell only."
+   再 `goto :eof` —— 不是静默；症状就是日志只有这一行）＋
    显式 `IDF_PYTHON_ENV_PATH=...\python_env\idf5.5_py3.11_env`（不指会按 PATH 猜成 py3.10 报 env not found）＋
    `set IDF_TOOLS_PATH=...` ＋ `set IDF_PATH=<idf 根>` 再 `call export.bat`，最后 `cd` 到 **IDF 工程根**（不是子工程目录）。
-   两条禁忌：`idf_cmd_init.bat` **别带参数**（`%1` 以 `esp-idf` 开头会把 `IDF_TOOLS_PATH` 盖成参数值，报天书级「命令语法不正确」）；
+   两条禁忌：`idf_cmd_init.bat` **别带参数**（上游 idf-env 查表版会把 `IDF_TOOLS_PATH` 盖成参数值报天书级「命令语法不正确」；
+   本机那份 `:11-13` 写死了、全文不读 `%1`，所以对本机不成立）；
    `.bat` 内**只写 ASCII**（UTF-8 中文注释被 GBK 切碎成垃圾命令，实测报 `'sks.json' 不是内部或外部命令`）。
    ★ **用户 tasks.json 里的参数名 ≠ idf.py 的子命令名**（2026-10-09 `--help` 实测）：他那份写的是
    `app_flash` / `flash_monitor` / `app_flash_monitor`，而 idf.py 只有连字符的 `app-flash`、`bootloader-flash`、
@@ -1829,3 +1833,18 @@ PPA fill/blend 的 DMA 按 128B 块凑整、在帧缓冲末端越界写（一行
 烧完头两次开机会 `GT911 read error → Error(0x103) → bsp_display_indev_init 的 ESP_ERROR_CHECK abort`
 → `rst:0xc` 复位循环，第三次才 `Touch registered`。断电重上电即正常；要根治是把触摸失败降级成 WARN，
 属于 BSP 决定，不是帧率改动带来的问题。
+
+### 11.34 ★ 「命令失败」和「命令没被执行」是两件事，判据是日志字节数+固定标记（2026-10-10，`intake/P-0120` 追加更正）
+
+在 Git Bash 里调 Windows 工具链，最容易把"根本没跑"误判成"跑了但没用"：
+
+- `cmd.exe /c "..."` 的 `/c` 被 MSYS 路径转换吃掉 ⇒ cmd 进交互模式，bat 一条没执行，`$?` 还是 0。
+  **要写 `cmd.exe //c`**。同类：bat 里别用 `cd /d %CD%` 这种间接写法，跨 shell 传参不稳，直接绝对路径 `call D:...\x.bat`。
+- 判据不是退出码，而是**日志字节数 + 必然出现的标记**：那次日志只有 189 字节（Windows banner + 提示符），
+  正常一次构建几十 KB 且必含 `Hash of data verified`。
+- 同一轮已踩三次：① `idf.py build flash 2>&1 | tail -3` 把 ninja 失败吞成 0（于是读的是旧固件）；
+  ② kconfig 对非法值/不满足依赖的项**静默改写**（`LV_DRAW_THREAD_PRIO range 0 4` 我写了 6；
+     `LV_USE_PPA` 缺 `LV_DRAW_BUF_ALIGN=64` 依赖被退回）⇒ "我改了配置"必须由 `build/config/sdkconfig.h` 回读证明；
+  ③ 上一条的 `cmd /c`。
+- 定下来的规矩：**每条命令都要有一个"确实跑了"的证据**（新产物时间戳 / 日志里的固定标记 / 设备回读的指纹行），
+  拿不到证据就当它没跑，不看它的结果。

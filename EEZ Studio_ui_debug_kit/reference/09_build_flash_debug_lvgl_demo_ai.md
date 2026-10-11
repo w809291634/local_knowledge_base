@@ -112,11 +112,16 @@ cmd.exe //C "design\_idf_build.bat <t>"     t ∈ reconfigure|build|app-flash|fl
 ```
 ★ 我们这份包装是 `idf.py %*` **直传**，所以只能用 idf.py 的真名：`app-flash`（连字符）、
 `flash monitor`（两个词一次传：`..._idf_build.bat flash monitor`）。
-用户的 `idf_cmd_init.bat` / `idf_build.bat` 在 workspaceFolder 里、本侧搜不到，所以自建了这份包装。
-三个必须（缺一件就失败）：① `set MSYSTEM=`（Git Bash 起 cmd 时它有值，`export.bat` 第二行见到就直接退出）；
+★ 用户的 `idf_cmd_init.bat` / `idf_build.bat` **在 IDF 根** `D:\esp32_8266_files\esp-idf-v5.5.5_ol\`，
+`tasks.json` 的 `cwd=${workspaceFolder}` 指的也是 IDF 根（2026-10-11 更正：从前记的"在 workspaceFolder 里、本侧搜不到"
+是我在**工程目录**里搜 ⇒ 误判；**不要再往工程目录复制 bat**，切工程只改 `idf_build.bat:5` 的 `PROJECT_PATH`）。
+构建通路唯一真源 = `esp32` 子库 `esp-idf-windows-build.md`（含"该 bat 每个函数都 `exit /b 0` ⇒ 退出码恒 0、判成败只看日志"这条）。
+三个必须（缺一件就失败）：① `set MSYSTEM=`（Git Bash 起 cmd 时它有值，`export.bat:2-4` 见到会先打印
+"This .bat file is for Windows CMD.EXE shell only." 再 `goto :eof`）；
 ② 显式 `IDF_TOOLS_PATH` / `IDF_PYTHON_ENV_PATH` / `IDF_PATH`；③ **`.bat` 内容必须 ASCII-only**
 （UTF-8 中文注释在 GBK 代码页下会被解析成垃圾命令，报"'sks.json' 不是内部或外部命令"这类莫名错）。
-★ 另：`idf_cmd_init.bat` **不要带参数** —— 它会把 `IDF_TOOLS_PATH` 盖成参数值，导致"命令语法不正确"。
+★ 另：`idf_cmd_init.bat` 带参数会把 `IDF_TOOLS_PATH` 盖成参数值 —— **这是上游 idf-env 查表版的行为**；
+本机那份 `:11-13` 已把路径写死、全文不读 `%1`，带不带参数结果一样（见 `esp32/esp-idf-windows-build.md` §1）。
 
 ### 4.3 产物与分区
 `{IDF_ROOT}\build\lvgl_demo_v9.bin`（当前 `0x4efae0`；app 分区 `0x800000`，38% free）；
@@ -174,6 +179,7 @@ VW_NOEXTRA=1 python design/_verify_weather.py   # 反证：去掉补的 -I，应
 | `bash -c` 报 no input files | 二次转义吃掉文件名 | 命令写进 `.sh` 再跑 |
 | 改了源码仿真没变 | exe 没重编 | `walk_capture` 已无条件重生成 main.c ⇒ 必重编；别手动 `-n` |
 | sdkconfig 改动没生效 | 只改了 `sdkconfig` | 同步 `sdkconfig.defaults` + 复核 effective config；注意它是 CRLF |
+| **反过来**：只改了 `sdkconfig.defaults` | `sdkconfig` 已存在时 defaults **完全不参与**（只有删掉 `sdkconfig` 才生效）⇒ 构建照样"成功"，配置没变 | 两个文件都要写；判据只认 `build/config/sdkconfig.h` 回读 |
 | 真机方框但仿真正常 | 两端 `LV_FONT_DEFAULT` 不是一个东西 | 运行期建的控件必须自己 `set_style_text_font`（P-0118） |
 
 ---

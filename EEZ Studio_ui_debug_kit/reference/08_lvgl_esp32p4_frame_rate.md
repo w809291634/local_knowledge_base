@@ -21,7 +21,7 @@
    栈在 TLSF（`remove_free_block`/`block_trim_used`/`tlsf_malloc`）；被覆盖的 free-list 值是
    `0xAEABAFDE` 这种**典型 RGB565 像素颜色** ⇒ 是 PPA fill/blend 的 DMA 按 128B 块凑整、
    在帧缓冲末端越界写（一行 480px×2B=960B，960÷128=7.5 除不尽 + 脏块边缘悬空）。
-   ⇒ **BSP 里那个 `false` 是修复结果，不是"还没优化"**（`esp32_p4_wifi6_touch_lcd_4_3.c:685`）。
+   ⇒ **BSP 里那个 `false` 是修复结果，不是"还没优化"**（`esp32_p4_wifi6_touch_lcd_4_3.c:641`）。
 3. **历史上真正的掉帧原因都在 LVGL 线程被阻塞**（PR-0093 + 10-03 三项），不是渲染参数：
    hosted RPC 轮询、NVS 写、codec 调用、tick 过密。⇒ 排查顺序应该反过来：
    **先看任务表和线程占用，再看渲染配置。**
@@ -33,31 +33,44 @@
 | 路径 | 结论 | 原因 |
 |---|---|---|
 | `enable_ppa_accel = true` | **禁止** | §16：DMA 越界写坏 PSRAM 堆，必崩 |
-| 多核 `LV_DRAW_SW_DRAW_UNIT_CNT=2` 换 PPA | 二者互斥 | adapter 源码写死 PPA 要求 unit==1（`display_manager.c:612-618`）；PPA 既然禁用，多核就是剩下的选项——**当前已经是 2**（`sdkconfig:3337`） |
+| 多核 `LV_DRAW_SW_DRAW_UNIT_CNT=2` 换 PPA | 二者互斥 | adapter 里那条其实是**警告而不是硬约束**：`managed_components/espressif__esp_lvgl_adapter/src/display/display_manager.c:612-618`（另一处 `:662-668`）只在 `enable_ppa_accel` 且 `LV_DRAW_SW_DRAW_UNIT_CNT > 1` 时 `ESP_LOGW("PPA acceleration requires ... (current=%d)")`，**没有 assert、不会拦下来**；真正互斥的原因是 PPA 加速走的是"顶替 SW blend 回调"这条路，多核 SW 渲染器一开就会和它抢同一批任务 ⇒ 结论不变（别指望同时吃到两边），但**依据是警告+机理，不是代码写死**（2026-10-10 更正）。当前是 `CONFIG_LV_DRAW_SW_DRAW_UNIT_CNT=2`、PPA 关 |
 | MIPI-DSI lane 提速 | 无效 | 500Mbps×2lane 远超需求，非瓶颈 |
 | `LV_OS_NONE` + 手动互斥循环 | 无效且有害 | 锁不是瓶颈；还会破坏 adapter 的撕裂规避与 PPA 同步 |
 | CPU 频率 / 优化等级 / PSRAM 速率 | 已到顶 | 400MHz（CPLL 上限）、`-O2`（IDF 无 -O3、无 LTO）、PSRAM 200MHz + XIP |
-| PSRAM 大绘制缓冲 | 有前置坑 | esp32 文 §4：`heap_caps_aligned_alloc` 无 fallback；当前 BSP 注掉一句 "DIAG: 绘制缓冲改 PSRAM 释放内部 RAM"（`:683`）⇒ **这一条与 §8 的"100 行内部 RAM 双缓冲"已经不一致，改之前要先确认当初为什么挪去 PSRAM、有没有触发 §4 的分配失败** |
+| PSRAM 大绘制缓冲 | **已经是内部 RAM，不是 PSRAM** | 上一版这里写"当前 BSP 注掉一句 DIAG 把绘制缓冲改 PSRAM（`:683`）"—— 现在文件里既没有 `DIAG` 也没有 `PSRAM` 字样，且 `esp32_p4_wifi6_touch_lcd_4_3.c:640` 是 `.use_psram = false`、`:639` 是 `.buffer_height = 200` ⇒ 这一条**与 §8 的"内部 RAM 双缓冲"其实一致**，"要先查为什么挪去 PSRAM"的前置问题不存在（2026-10-10 更正）。仍保留的有效提醒只剩 esp32 文 §4：`heap_caps_aligned_alloc` 无 fallback |
 
 ---
 
-## 2. 本工程当前状态（实测值，行号为 `sdkconfig` / 源文件）
+## 2. 本工程当前状态（2026-10-11 逐条回读生效配置）
+
+> 引用一律用**符号名**：`sdkconfig` 被 `.gitignore`，一次 reconfigure 就让行号整体位移。
+> 上一版写 `LV_USE_PERF_MONITOR=y（开着）` 是错的 —— 我只往 `sdkconfig.defaults` 加过它，
+> 而 `sdkconfig` 已存在 ⇒ defaults 静默失效，固件里根本没有性能表 ⇒
+> 由它得出的"开/关都 29.0 ⇒ 表不花钱"**作废**（两组都是关的）。现已直接改 `sdkconfig` 并回读确认，代价待重测。
 
 | 项 | 当前值 | 出处 |
 |---|---|---|
-| LVGL | 9.4（Espressif fork，有 `src/draw/espressif/ppa`） | `managed_components/lvgl__lvgl` |
-| 颜色深度 | RGB565 | `sdkconfig:3272-3275` |
-| SW draw unit | **2（双核软渲染已开）** | `sdkconfig:3337` |
-| 刷新周期 | 13ms | `sdkconfig:3297`（§8 建议 10ms；10-03 那轮把 tick 从 5ms 放宽到 16ms——**两处口径要对齐，别再改回去**） |
-| 性能表 | `LV_USE_PERF_MONITOR=y`（开着） | `sdkconfig:3616` ⇒ 屏上就是 FPS/CPU，**基线随时能抄** |
-| 快速代码进 IRAM | 已开 | `sdkconfig:3409` |
-| 绘制缓冲对齐 | 4 字节 | `sdkconfig:3320`（PPA/DMA 想要 128B 对齐——但 PPA 已禁，这条只对"改缓冲位置"有意义） |
-| 离屏层预算 | 24576 | `sdkconfig:3321`（transform/opacity 组图层走这里） |
-| 图片缓存 | 全 0 | `sdkconfig:3393-3394` |
-| 阴影/圆形缓存 | 16 / 8 | `sdkconfig:3342-3343`（与 §8 一致） |
-| `LV_USE_PPA`（LVGL 原生 draw unit，另一条路） | 未开 | `sdkconfig:3356` |
-| 抗撕裂 | `TRIPLE_FULL` | `main/main.c:47` |
+| LVGL | 9.4.0（Espressif fork，有 `src/draw/espressif/ppa`） | `managed_components/lvgl__lvgl/idf_component.yml:9` |
+| 颜色深度 | RGB565 | `CONFIG_LV_COLOR_DEPTH=16` |
+| SW draw unit | **2（双核软渲染已开）** | `CONFIG_LV_DRAW_SW_DRAW_UNIT_CNT=2` |
+| 刷新周期 | **15ms** | `CONFIG_LV_DEF_REFR_PERIOD=15`（§8 建议 10ms；10-03 那轮把 tick 放宽到 16ms —— 三处口径仍未统一，别再盲改） |
+| 性能表 | `CONFIG_LV_USE_PERF_MONITOR=y`（**现在才真的开进固件**） | 判据 = `build/config/sdkconfig.h` 里有 `#define CONFIG_LV_USE_PERF_MONITOR 1` |
+| 快速代码进 IRAM | 已开 | `CONFIG_LV_ATTRIBUTE_FAST_MEM_USE_IRAM=y` |
+| 绘制缓冲对齐 | 4 字节 | `CONFIG_LV_DRAW_BUF_ALIGN=4`（PPA/DMA 想要 128B 对齐——但 PPA 已禁，这条只对"改缓冲位置"有意义） |
+| 离屏层预算 | 24576 | `CONFIG_LV_DRAW_LAYER_SIMPLE_BUF_SIZE=24576`（transform/opacity 组图层走这里） |
+| 图片缓存 | 全 0 | `CONFIG_LV_CACHE_DEF_SIZE=0`、`CONFIG_LV_IMAGE_HEADER_CACHE_DEF_CNT=0` |
+| 阴影/圆形缓存 | 16 / 8 | `CONFIG_LV_DRAW_SW_SHADOW_CACHE_SIZE=16`、`..._CIRCLE_CACHE_SIZE=8`（与 §8 一致） |
+| 绘制线程优先级 | 3 | `CONFIG_LV_DRAW_THREAD_PRIO=3`（Kconfig `range 0 4` ⇒ 写 6 会被静默丢弃，别按 6 的结论说话） |
+| `LV_USE_PPA`（LVGL 原生 draw unit，另一条路） | 未开 | `# CONFIG_LV_USE_PPA is not set` |
+| adapter FPS 统计 | 开 | `CONFIG_ESP_LVGL_ADAPTER_ENABLE_FPS_STATS=y` |
+| 抗撕裂 | `TRIPLE_FULL` | `main/main.c:183`（旋转 90° 在 `:182`） |
+| 面板缓冲配置 | `buffer_height=200`、**`use_psram=false`（绘制缓冲就在内部 RAM）**、`enable_ppa_accel=false`、`require_double_buffer=false` | `components/esp32_p4_wifi6_touch_lcd_4_3/esp32_p4_wifi6_touch_lcd_4_3.c:639-642` |
 | 面板旋转 | 软件旋转（横屏必需） | esp32 文 §9 |
+
+> 上一版 §1 表末行说"当前 BSP 把绘制缓冲挪到了 PSRAM，原因未查（:683 一句被注掉的 DIAG）"——
+> **该说法已过时**：现在 `esp32_p4_wifi6_touch_lcd_4_3.c` 里既没有那句注释，也是 `use_psram=false`，
+> 也就是 §8 要的"内部 RAM 双缓冲"其实**已经是现状**；`:683` 那行现在是 `bsp_display_start_with_config()` 的函数体。
+
 
 ---
 
@@ -86,9 +99,14 @@
      lvgl 组件还不含 `esp_driver_ppa`/`esp_mm` 头路径）。
 
 ### C. 显示链路（要改共享组件 ⇒ 先问用户）
-8. `tear_avoid_mode` 从 `TRIPLE_FULL` 降级：省每帧全幅 PSRAM 搬运。代价 = 可见撕裂，属产品决定。
-9. 绘制缓冲回到内部 RAM（对齐 §8 的"100 行内部 RAM 双缓冲"）：省 PSRAM 带宽，
-   但会吃紧内部 RAM（esp32 文 §4/§17 的账），且当前那句 "DIAG" 改动的原因还没查清。
+8. `tear_avoid_mode` 从 `TRIPLE_FULL` 降级：省每帧全幅搬运。代价 = 可见撕裂，属产品决定。
+   ★ 2026-10-10 用户已明确否决"为了帧率降级/用 TRIPLE_PARTIAL"（PARTIAL + PPA 在他们板上会卡死），
+   所以这条在本工程里**不是候选项，只是备查**。
+9. ~~绘制缓冲回到内部 RAM~~ —— **已经是内部 RAM**（`esp32_p4_wifi6_touch_lcd_4_3.c:640 .use_psram = false`），
+   这条无事可做；上一版说的"先查那句 DIAG 为什么挪 PSRAM"是不存在的历史（文件里没有该注释）。
+9b. ★ **真正还没试过的**：`buffer_height` 在 `TRIPLE_FULL` 之外还能配合"整帧一次送"的自管管线
+   （见 esp32 文 §22/§23：在 `examples/mipi_dsi` 里自己拼 LVGL→PPA SRM→零拷贝翻 FB，
+   旋转移出关键路径）。那条路不受 adapter 的 PARTIAL/PPA 互斥与撕裂模式限制，代价是自己承担 FB 轮转正确性。
 
 ---
 
@@ -124,9 +142,26 @@
 - 教训（已同步进 `skills.md §11.30` 的更正段）：**"全库没有"这种话，必须先把所有子库和工程日志
   一起 grep，或者干脆问用户一句"这块以前做过吗"。**
 
+### 6.1 第二版更正（2026-10-11，逐条回读代码/生效配置后）
+
+| # | 上一版的说法 | 更正 |
+|---|---|---|
+| ① | `LV_USE_PERF_MONITOR=y（开着）` + "开/关都是 29.0 ⇒ 表不花钱" | 当时生效配置里**没有这个符号**（只写进了 `sdkconfig.defaults`，而 `sdkconfig` 已存在 ⇒ 不生效）⇒ 对比作废，代价待重测 |
+| ② | 刷新周期 13ms | 生效值是 `CONFIG_LV_DEF_REFR_PERIOD=15`；"13/10/16 三口径"其实只有 15 与 16 |
+| ③ | adapter 源码"写死" PPA 要求 unit==1 | 那里只有 `ESP_LOGW`，无 assert（`display_manager.c:612-620`、`:662-668`）；互斥的真实机理是 PPA 加速顶替 SW blend 回调（`lvgl_ppa_accel_v9.c:72`）。结论不变，依据改成"警告+机理" |
+| ④ | "BSP 注掉一句 DIAG 把绘制缓冲改 PSRAM，改前先查原因" | 该文件 `DIAG`/`PSRAM` 零命中，且 `.use_psram=false`（`:640`）⇒ 内部 RAM **本来就是现状**，这道"前置工序"是我虚构的 |
+| ⑤ | 大量 `sdkconfig:3xxx` 行号引用 | `**/sdkconfig` 在 `.gitignore` 里，一次 reconfigure 行号整体位移 ⇒ **只引符号名** |
+
+**元教训（已同步 `skills.md`）**：判"配置生效没有"只有一个合法判据 = 回读 `build/config/sdkconfig.h`；
+`sdkconfig` 不进版本库 ⇒ `sdkconfig.defaults` 才是持久的那份，但它在 `sdkconfig` 存在时完全不生效 —— **两个文件必须同时改**。
+
+
 ---
 
 ## 7. ★ 2026-10-10 实测：`08_lvgl_demo_v9_opt` 横屏 widgets demo（`intake/P-0120`）
+
+> 本表数字**转录自 `intake/P-0120`**（原始轮次记录在那里）；不一致时以 P-0120 为准。
+> 其中 R26/R27 两行按 §6.1 ① 作废。
 
 工程：`examples/08_lvgl_demo_v9_opt`（干净示例工程，无 EEZ/无网络，纯 LVGL 负载）；
 负载：`lv_demo_widgets()` + `lv_demo_widgets_start_slideshow()`（持续滚动，实测每帧重绘 **84%** 屏）；

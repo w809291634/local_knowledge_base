@@ -70,3 +70,71 @@ skills.md §11.31（帧率先确认在不在动、再确认一块多大；双核
 第三次才 `Touch input device registered`（本次日志：0x5d 失败、0x14 也失败、第三次成功）。
 ⇒ **不要把它当成帧率改动引起的回归**：断电重上电/按复位键就正常；真要治是把触摸失败降级成
 `ESP_LOGW` 容错（esp32 子库也提过这个口子），那是 BSP 健壮性决定，归用户。
+
+
+## ★ 追加 3（2026-10-10 晚）：稳定模式约束落地后的数
+
+用户否决两件事：**不许用局部绘制**（必须全屏滚动），**不许改画面效果**（所以 `LV_DRAW_SW_COMPLEX=n` 换的 43fps 作废），
+并指出 **TRIPLE_PARTIAL 会因 PPA 卡死**——与 `esp32/esp32-p4-lvgl9-touch-lcd-debug-optimization.md` §5
+「TRIPLE_FULL 稳定 / TRIPLE_PARTIAL 冻结」一致。于是回到 TRIPLE_FULL 重测（外观不变、双核、缓存 16/8、60s）：
+
+| 轮 | 配置 | 均值 | 每秒最低 | 峰值 | 帧周期分布 |
+|---|---|---|---|---|---|
+| R26 | TRIPLE_FULL，屏上性能表**关** | 29.0 | 24 | 33 | <20ms 0 / <25 2 / <33 814 / >=33 789 |
+| R27 | TRIPLE_FULL，性能表**开**（用户要求保留指示器） | 29.0 | 24 | 33 | 同上（0/2/829/807） |
+
+三条新结论：
+
+1. **在 TRIPLE_FULL 下屏上性能表是免费的**（29.0 vs 29.0）——因为整屏重绘时 overlay 那块面积可忽略；
+   之前 PARTIAL 下它值 2.6% 是另一条链路的账。**用户要指示器就直接给，不用拿帧率换。**
+2. **PARTIAL 37.7 与 FULL 29.0 的差（约 -23%）就是稳定税**：FULL 每帧 100% 面积 + 未重绘区不复制；
+   PARTIAL 靠分块把面积压到 84% 但那条增量刷新路径在本 adapter 版本上会冻结。
+3. **卡死的根因找到了**：`managed_components/espressif__esp_lvgl_adapter/0001-bugfix-lcd-Fixed-PPA-freeze.patch`
+   是给 **ESP-IDF 本体** `components/esp_driver_ppa/src/ppa_srm.c` 加的 2 行
+   `PPA.sr_byte_order.sr_macro_bk_ro_bypass = 1;`，而本机 IDF 源码里**没有这 2 行**（grep 无命中）
+   ⇒ 补丁从未生效，PPA SRM 冻结风险一直存在。横屏每帧 SRM 次数：PARTIAL 4~16 次 / FULL 1 次
+   —— 这解释了为什么 FULL 稳定、PARTIAL 容易死。
+   ⇒ 处置：要么给 IDF 打这 2 行（影响所有工程，须用户同意），要么保持 FULL（每帧只 1 次 SRM）。
+4. **50fps 在这个约束下的距离**：实测绘制 ~31ms/帧（与缓冲位置无关，PARTIAL 的绘制也是 26~33ms），
+   送屏 ~8ms。§20 的异步旋转只能隐藏送屏 ⇒ 约 32~37fps，仍不到 50。
+   样式不许改又要全屏滚动的唯一可达路径是**减少每帧像素**：LVGL 按 640x400 渲染、由 PPA SRM 在同一次
+   事务里 scale+rotate 到 480x800（像素量 0.4x，圆角/渐变/阴影/字号全保留，代价是清晰度），
+   需要改 adapter 的 LVGL 分辨率、缓冲尺寸、SRM scale 与触摸坐标反缩放四处 ⇒ 属组件内改动，先请示。
+
+
+## ★ 追加更正（2026-10-10 晚）本条目里被证据推翻或降级的结论（逐条点名）
+
+纪律：编号只增不改；本段是**追加**的更正，前面原文保留。
+
+| # | 原结论 | 现状 | 依据 |
+|---|---|---|---|
+| 1 | 「路线② `CONFIG_LV_USE_PPA` 无收益」的首次读数 | 首次那两次是**旧固件**（构建失败被管道吞掉）；后来带指纹 `lv_ppa=1` 的 R14c 实测 35.8 vs 37.0，结论成立但只算一次 | 追加 2、§11.32 |
+| 2 | 「L2 cache line 64B 无收益」 | **撤回，等于未测**：那一轮同样是旧固件，至今没有有效对照 | 本轮复核 |
+| 3 | 「绘制线程优先级往上调会倒退（写 6 时 37.6 vs 43.0）」 | **撤回**：`LV_DRAW_THREAD_PRIO` 在 LVGL Kconfig 是 `range 0 4`（`managed_components/lvgl__lvgl/Kconfig:212-215`，与 esp32 子库 §19.7 同一个坑），6 属非法值被静默改写 ⇒ 测的不是那个假设；合法值 4 的对照因构建进程残留（`ninja: failed recompaction: Permission denied`）中断，仍未测 | 本轮实测 |
+| 4 | 「buffer_height=200 就是内部 RAM 上限」 | **降精度**：只证明 200 可用（192KB）、267 不可用（256320B 分配失败 → assert 复位循环），墙在两者之间 | 追加 2 的 J 行 |
+| 5 | 「烧完头两次开机 GT911 失败是 RTS 复位时序造成」 | **降级为假设**：现象可复现（`GT911 read error → Error(0x103) → ESP_ERROR_CHECK abort → rst:0xc`，第三次成功），但没做断电重上电对照 | 追加 2 |
+| 6 | 「`export.ps1` 走不通是因为 idf_tools.py 认为工具未安装」 | **归因错误**：真实原因是继承了 `MSYSTEM` 让 `idf_tools.py` 直接拒跑（输出为空 → `BadExpression`）；清掉 `MSYSTEM` 后 `export.ps1` 能不能用**未测**。后来确认**根本不需要自建环境**：IDF 根那对脚本可用（见 `esp32/esp-idf-windows-build.md` §1） | cmd 复测 |
+| 7 | 单次采样、差值 <5% 的项（`LV_DEF_REFR_PERIOD 15→10` 36.0 vs 37.0；阴影/圆形缓存 36.4 vs 36.4） | **标注低置信**：同配置重复采样噪声约 ±0.5fps，<5% 不足以下结论 | 追加 2/3 |
+| 8 | **追加 3 的结论 1「TRIPLE_FULL 下屏上性能表是免费的（R26 关表 29.0 vs R27 开表 29.0）」** | **作废（2026-10-11）**：R27 那轮固件里**也没有表**——`CONFIG_LV_USE_PERF_MONITOR=y` 只写进了 `sdkconfig.defaults`，而 `sdkconfig` 已存在 ⇒ defaults 静默不生效（`build/config/sdkconfig.h` 零命中）。⇒ R26/R27 是同一配置测两次，不是"表的代价"；真开表后的读数**尚未重测** | 回读 `build/config/sdkconfig.h` |
+| 9 | 「`sdkconfig` 的行号（`:3272/:3337/:3616`）可以长期引用」 | **改规矩**：`**/sdkconfig` 在 `.gitignore` 里，一次 reconfigure 行号整体位移 ⇒ 只引**符号名** | 本轮复核 |
+
+还有一条比上面都重要的**取证纪律失效案例**：`cmd.exe /c "..."` 在 Git Bash 下会被 MSYS 把 `/c` 当路径转换吃掉
+⇒ cmd 进交互模式、bat 一条都没执行，而 `$?` 仍是 0；我据此一度以为"bat 跑了但没输出"。
+判据是**日志字节数 + 预期标记**（那次只有 189 字节的 Windows banner，正常构建是几十 KB 且必含 `Hash of data verified`），
+cmd 开关要写成 `//c`。
+
+---
+
+## ★ 追加 4（2026-10-11）：对照工程 `examples/mipi_dsi` 结案 + 构建通路收敛
+
+1. **横屏"全黑但软件一切正常"结案 = 背光极性**（本板背光栅极低有效；BSP 在
+   `esp32_p4_wifi6_touch_lcd_4_3.c:380-395` 用 `ledc flags.output_invert = 1`，我那份漏了它 ⇒ 引脚恒高、LED 串全灭）。
+   用户回报"LVGL 可以运行了"即结案证据。**可复用规矩**：自拼显示管线先照抄 BSP 的 `output_invert`，再怀疑数据通路；
+   开机先打纯色是最快的分水岭。详录 `esp32` 子库 §22 末段。
+2. **构建通路收敛为一条**：在 **IDF 根**开 cmd 终端 `idf_cmd_init.bat && idf_build.bat <cmd>`；切工程 = 改 `idf_build.bat:5` 的 `PROJECT_PATH`。
+   两个必知的坑：该 bat 每个函数都 `exit /b 0` ⇒ **退出码恒 0、VS Code 会假绿**；`%~2` 是串口号不是工程路径。
+   唯一真源 = `esp32` 子库 `esp-idf-windows-build.md`；`reference/09 §4.2`、`skills.md:1529-1539` 已按此就地更正，工程内复制的 bat 已删。
+3. **还欠的数**：mipi_dsi 的 `flush=`（改 NON_BLOCKING+提交即 `flush_ready`+整帧旋进 FB 后应接近 0）、`stalls=`、
+   `core free loops/s: cpu0=/cpu1=`（P4 无 SMP 内核 ⇒ 用空闲钩子计数，不用 `xCoreID`）、真开表后 29.0 是否变化。
+   判据：**`flush≈0` 而 `render` 仍 26~28ms ⇒ 上限 ~35fps**，再往上只剩"降渲染分辨率 + 同次 SRM 放大"。
+

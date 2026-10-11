@@ -88,6 +88,16 @@ i2c transaction failed -> GT911 read error! -> esp_lcd_touch_new_i2c_gt911: GT91
 
 ## 8. 帧率优化清单（横屏+PPA 约束下已到顶）
 
+> **★★ 更正（2026-10-11）：下面表里有三行已作废，先读这段。**
+> ① `enable_ppa_accel=true` 与"P4 上 PPA 收益更大" ⇒ **§16 实测必崩**（SRM/BLEND 的 DMA 在帧缓冲末端越界写坏 PSRAM 堆），
+> 本行只配读成"PPA 关闭"；② "多核与 PPA 互斥" ⇒ adapter 那句只是 `ESP_LOGW`（`display_manager.c:612-620`，无 assert），
+> PPA 既然必须关，多核就是唯一选项（§19/§20 实测非阻塞旋转消掉 8ms 刷屏）；
+> ③ "渲染线程优先级 5" 与 "刷新周期 10ms" ⇒ `LV_DRAW_THREAD_PRIO` 的 Kconfig 是 `range 0 4`（5 被静默改写，从未生效），
+> 实机生效值是 `CONFIG_LV_DEF_REFR_PERIOD=15`（不是 10，§20 里那句"§8 记的调优值 10"同样不成立）。
+> 数值归属：§8/§19/§20 = **EEZ / lvgl_demo_ai（adapter 路线）**；`P-0120`/`reference/08 §7` = `08_lvgl_demo_v9_opt`；§22 = `examples/mipi_dsi`。
+> 三处都出现过"8ms 刷屏"，是三个工程的不同含义 ⇒ 跨节引用必须带工程名。
+
+
 | 项 | 配置 | 说明 |
 | --- | --- | --- |
 | CPU | `ESP_DEFAULT_CPU_FREQ_MHZ=400` | CPLL 最高 400MHz，无法再高 |
@@ -211,9 +221,11 @@ apl_console.c 任务创建按宏选择 MALLOC_CAP_SPIRAM / MALLOC_CAP_INTERNAL�
 | 芯片修订 rev v3.1+ 配置 CONFIG_ESP32P4_REV_MIN_301 | 1 |
 | 分区表偏移 0x10000（bootloader 体积超限） | 2 |
 | MIPI-DSI PHY PLL 时钟源必须用 0/XTAL（rev3 必踩 abort） | 3 |
-| PPA 加速强制 LV_DRAW_SW_DRAW_UNIT_CNT=1（不能多核渲染） | 8 |
-| PPA 旋转路径与帧率上限归属：8ms 刷屏=PPA 跨步写固有代价；SRM 改 NON_BLOCKING 实测 FPS 升但拖影（排序≠同步）；队列深 8 无效；on_trans_done 在 ISR；正解需双绘制缓冲；DRAW_UNIT_CNT=2 仅 +6fps | 19 |
+| PPA 加速与多核互斥（依据是 `ESP_LOGW` + "顶替 SW blend 回调"的机理，**不是**代码 assert；详见 §8 顶部更正） | 8 |
+| PPA 旋转路径与帧率上限：SRM 改 NON_BLOCKING 实测 FPS 升但会拖影（排序≠同步）、队列深 8 无效、`on_trans_done` 在 ISR；`DRAW_UNIT_CNT=2` 只 +6fps | 19（更正见 §19 顶部与 §20） |
 | 异步 PPA 旋转落地（8ms 消除）：NON_BLOCKING 提交 + 独立 worker 补发 flush_ready + 计数信号量 + runtime mutex；含两次失败根因与完整修改清单 | 20 |
+| `esp_lcd_dpi_panel` 的 `draw_bitmap()` 只有传入缓冲**落在某块 FB 地址区间内**才零拷贝翻转，否则走 `do_copy` 永远写同一块 ⇒ 自拼管线必须"旋进 FB + 轮转 3 块" | 22 |
+| P4 无 SMP 内核（`FREERTOS_SMP depends on !IDF_TARGET_ESP32P4`）⇒ `xCoreID` 只是亲和性；双核并行的证明用空闲钩子计数 | 23 |
 | use_psram=true 大块 128B 对齐分配不可靠（无 fallback） | 4 |
 | buffer_height 480/240 双缓冲失败 | 4 |
 | L2 缓存 256KB / 128B 行（影响 PSRAM 对齐与 msync） | 全文 |
@@ -229,6 +241,7 @@ apl_console.c 任务创建按宏选择 MALLOC_CAP_SPIRAM / MALLOC_CAP_INTERNAL�
 | --- | --- |
 | GT911 触摸复位时序（GPIO23 独立 RST，手动 50ms+150ms 复位） | 7 |
 | 控制台 UART 引脚 GPIO37/38、背光 26、LCD RST 27、触摸 I2C 8/7、SD、I2S 引脚 | 12、全文 |
+| **背光栅极低有效**：LED C 必须照抄 BSP 的 `ledc flags.output_invert=1`，漏了就"画面在跑但屏幕全黑" | 22 末段 |
 | 板卡启动日志特征（cpu_start 报 console UART 引脚） | 全文 |
 
 ### 【通用级】（任意 ESP32 工程，非 P4 专属）
@@ -241,7 +254,7 @@ apl_console.c 任务创建按宏选择 MALLOC_CAP_SPIRAM / MALLOC_CAP_INTERNAL�
 | 控制台任务栈 8KB+ 、PSRAM/内部可配、优先级不宜过高 | 12.2、踩坑 |
 | CPU 监控堆损坏历史风险 | 12.3、踩坑 |
 | Kconfig.projbuild 正斜杠路径（反斜杠被当转义） | 13、踩坑 |
-| 构建/监视器环境、COM 口占用、sdkconfig 重生 | 11 |
+| **本机构建/烧写/取数通路**（IDF 根那对 bat、`PROJECT_PATH` 切工程、bat 恒返回 0、`MSYSTEM` 清法、`sdkconfig.defaults` 陷阱、COM 口占用） | `esp-idf-windows-build.md`（本文 §21 已拆过去），另 §11 |
 | xiaozhi OTA 版本检查：非数字 PROJECT_VER → std::stoi 未捕获异常 → 启动 abort；版本取值需高于官方，否则官方 OTA 覆盖自定义固件 | 18 |
 
 适用判断：
@@ -623,3 +636,72 @@ if (ota_->HasNewVersion()) {
 - worker 持 `s_rot_rt_mutex` 期间若 `display_lcd_blit_full()` 内部阻塞，LVGL 侧的 `acquire` 会一并等待（从现有代码看它不等待：等待是 flush 里另起的一步 `ulTaskNotifyTake`，而 `flush_full_rotate` 内没有）。
 - 队列满/超时兜底会产生一次"多余计数"，理论上让 worker 提前处理未完成项；2 块缓冲下不会触发。
 - SPSC 环用 `volatile` 索引（生产者/消费者各只写一个索引），未加内存屏障。
+
+
+## 21. 本机 ESP-IDF 命令行构建通路 → **已拆出**
+
+构建/烧写/取数通路是跨工程通用的，2026-10-11 拆到同目录的 **`esp-idf-windows-build.md`**
+（唯一入口 = IDF 根那对 `idf_cmd_init.bat` + `idf_build.bat`、切工程改 `PROJECT_PATH` 第 5 行、
+bat 恒返回 0 只能查日志标记、Git Bash 下 `set MSYSTEM=&&` 的四种写法差异、`sdkconfig.defaults` 陷阱、
+COM20 取数工具）。本节及以后引用"§21"的地方都指那份文件。
+
+## 22. 自己拼 DSI 显示管线时的「写进了没在扫的那块 FB」坑（2026-10-10 实测，mipi_dsi 例程适配）
+
+`examples/mipi_dsi` 改成 ST7701(480x800) + 横屏 PPA 旋转时出现**画面全黑但软件一切正常**的形态，
+串口自证给出的证据链是：
+
+- `verify stage=DEBD5D15 fb0=DEBD5D15 fb1=D9DB0D2D changed=1/2` —— 旋转后的整帧与 **fb0** 逐字节同哈希，
+  而 **fb1 从头到尾一动不动**；
+- `vsync=60Hz` —— DSI 确实在出流；`st7701` 初始化日志与工作工程逐字一致、init 表 39 条完整（含 0x11/0x29）。
+
+根因在 IDF 驱动 `esp_lcd_panel_dpi.c::dpi_panel_draw_bitmap()` 的两条分支：
+**只有当传入的 buffer 落在某块 FB 的地址区间内**，它才做"零拷贝 + 把 `cur_fb_index` 切到你这块"；
+否则走 `do_copy`，**永远拷进 `fbs[cur_fb_index]`（这里一直是 0）**。
+所以"自己另开一块 staging，再 `draw_bitmap(staging)`"这种写法，在多 FB 自由轮转的 DPI 上会写到没在扫的那块里。
+
+**正解（两处一起改）**：
+1. `num_fbs = 3`，用 `esp_lcd_dpi_panel_get_frame_buffer()` 拿到 3 块 FB；
+2. **PPA SRM 直接把旋转结果写进 FB[k]**，再 `esp_lcd_panel_draw_bitmap(panel, 0,0,480,800, FB[k])` 走零拷贝翻转，
+   `k` 轮转（3 块：显示中/正在写/在途各占其一，天然不冲突）。
+
+> **★ 更正（2026-10-10，自查取证来源后）**：上一条原来还写着"实测改完 `changed=3/3`"和
+> "零拷贝省掉了 768KB 拷贝但 flush 仍是 7.9ms ⇒ 那 7.9ms 全是 SRM 的跨步写"。
+> **这两句都是我的推断，不是实测**：回到原始记录，`mipi_dsi` 工程抓到的设备日志只有 staging 版那一轮的
+> `verify stage=DEBD5D15 fb0=DEBD5D15 fb1=D9DB0D2D changed=1/2` + `flush=7.9ms`；
+> `changed=3/3` 是**另一个工程（08_lvgl_demo_v9_opt，TAG 是 `fps:`）的数字**，被我串到了这里；
+> 而 7.9ms 是在**还没改零拷贝之前**测的（那次 `do_copy` 的 768KB 拷贝和阻塞 SRM 混在同一个 flush 里），
+> 所以它既不能归因给 SRM、也不能归因给拷贝。要拆开只能等零拷贝版真正烧进去再量一次。
+> 教训同 §20：**跨工程的数字必须带 TAG 一起抄**，否则"看起来像实测"的话最容易写错。
+
+**取证纪律**（又一次生效）：`verify` 里把 `stage` 与每块 FB 分开打哈希，才一眼看出"只写 fb0"；
+如果只看聚合 XOR 或只看 fps 数字，就会把"管线没通"误判成"帧率低"。
+
+**★★ 但"FB 轮转改对了仍然全黑"的真根因 = 背光极性（2026-10-11 已上机结案）**
+同一块板、能正常显示的那份 BSP（`esp32_p4_wifi6_touch_lcd_4_3.c:380-395`）：
+```c
+    .gpio_num = BSP_LCD_BACKLIGHT,          // GPIO_NUM_26
+    .timer_sel = 1, .duty = 0,
+    .flags = {.output_invert = 1},          // ← ★ 关键：背光栅极低有效
+```
+`brightness_set(p)` 写 `duty = 1023*p/100` ⇒ 占空比越大、低电平越久、背光越亮。
+我那份 `backlight_init()` 抄了同一个 GPIO/5kHz/10bit，**唯独漏了 `output_invert`**，`duty=1023` ⇒ 引脚恒高 ⇒ LED 串全灭 ——
+于是出现"DSI 在扫（`vsync=60Hz`）、FB 内容在对、连开机纯色都看不见"的形态，之前查 init 表/送屏路径全是白工。
+补上 `flags.output_invert = 1` 后画面正常（用户回报"LVGL 可以运行了"）。
+**规矩**：自拼显示管线时**先照抄 BSP 背光的 `flags.output_invert`**，再怀疑数据通路；开机先打一屏纯色当分水岭——
+纯色出现就说明背光/时序/面板都活着，剩下的才谈内容错。
+
+
+## 23. 证明"两个核真的在并行渲染"：P4 没有 SMP 内核，用空闲钩子计数
+
+- `components/freertos/Kconfig:9` 写死 `config FREERTOS_SMP ... depends on !IDF_TARGET_ESP32P4`（TODO: IDF-8113）
+  ⇒ P4 用的是 ESP-IDF 的**非 SMP** 内核。
+- 因此 `configTASKLIST_INCLUDE_COREID`（被 `#if !CONFIG_FREERTOS_SMP` 包着，
+  `components/freertos/config/include/freertos/FreeRTOSConfig.h:289`）在本机**可以**打开并拿到
+  `TaskStatus_t.xCoreID`，**但那给的是亲和性**（无亲和任务 = `tskNO_AFFINITY`），不是"这个任务上次在哪个核跑的"；
+  而 run-time stats 会在每次上下文切换里读计数器 ⇒ **本身就干扰你要测的调度**。
+  ⇒ 撤回"用 `uxTaskGetSystemState` 打印 core 来证明双核"这条路（我为它踩过一次编译失败 + 一次 defaults 不生效）。
+- **便宜又无干扰的办法**：`esp_register_freertos_idle_hook_for_cpu(cb, 0/1)`
+  （`components/esp_system/include/esp_freertos_hooks.h:44`），回调里
+  `s_idle[esp_cpu_get_core_id()]++` 且 **return false**（= 该核只要空闲就尽可能快地被调用）；
+  每秒取增量 = 每个核的"空闲环数/s"。**两核一起掉 ⇒ 真并行；只有 cpu0 掉 ⇒ 全挤在核 0。**
+  零 kconfig 改动、零调度干扰。实测代码见 `examples/mipi_dsi` 的 `idle_count_cb()` / `core_free_snapshot()`。
