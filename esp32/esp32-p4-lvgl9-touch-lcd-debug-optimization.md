@@ -900,7 +900,14 @@ u0 15.4 ↔ `swdraw@0` 15.9、u1 7.1 ↔ `swdraw@1` 6.7、handler 26.6 ↔ `LVGL
      拉进链接，报一串 `undefined reference to lv_mutex_init / lv_thread_sync_*`。强拉**一个**符号就带进整个 .o。
    - `main/CMakeLists.txt`：SRCS 加 `lv_os_pinned.c`，INCLUDE_DIRS 加
      `../managed_components/lvgl__lvgl/src/osal`（只为拿 `lv_os_private.h` 的声明，不改它）。
-5. 生效验证（不看这个就不知道成没成）：开机 `lv_os_pin: thread 'swdraw' #0 pinned to cpu0 prio 3 / #1 -> cpu1`，
+   > ★ **补充（2026-10-11，`lvgl_demo_ai` 移植时实测）**：上面那条"只给 LVGL 组件目标加 include"**只在
+   > 单一工程里成立**。`lvgl_demo_ai` 还有 `esp_lv_decoder` / `esp_lvgl_adapter` 等多个托管组件间接 include
+   > LVGL 头，它们同样会在 `#include LV_OS_CUSTOM_INCLUDE` 处炸（报 `fatal error: lv_os_pinned.h: No such
+   > file or directory`，出处指向 `build/config/sdkconfig.h` 里那行 `#define`，因为报错位置是宏展开点）。
+   > 正解 = 全局搜索路径，且**必须写在 `project()` 之前**：
+   > `idf_build_set_property(COMPILE_OPTIONS "-I${CMAKE_CURRENT_LIST_DIR}/components/<组件>/include" APPEND)`。
+   > ⚠ 没有 `COMPILE_INCLUDE_DIRS` 这个属性名 —— 写错不报错，被静默忽略（我第一次就踩了，现象是"改了 CMake 却没生效"）。
+4. 生效验证（不看这个就不知道成没成）：开机 `lv_os_pin: thread 'swdraw' #0 pinned to cpu0 prio 3 / #1 -> cpu1`，
    每秒 `task cpu` 行里 `swdraw@0`、`swdraw@1` 分别在两个核上都有毫秒数（实测 15.9 / 6.7）。
 **收益**：这条改动值 +6fps（同场景 33→38 一档），且组件升级不会把它冲掉。
 

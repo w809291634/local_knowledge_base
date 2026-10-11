@@ -12,7 +12,7 @@
 
 | 工程 | 显示路线 | 数字代表 |
 |---|---|---|
-| `lvgl_demo_ai`（EEZ UI） | `esp_lvgl_adapter` + `TRIPLE_FULL/ROTATE_90` | §8、§19、§20 |
+| `lvgl_demo_ai`（EEZ UI） | **2026-10-11 起改为自拼管线**（DIRECT 双缓冲 + 非阻塞 SRM + `LV_OS_CUSTOM` 钉核 + 触摸离线程）；此前为 `esp_lvgl_adapter` + `TRIPLE_FULL/ROTATE_90` | 旧数字见 §8、§19、§20（**路线已退役**）；新数字待真机回读 |
 | `08_lvgl_demo_v9_opt` | `esp_lvgl_port` | 本库 `intake/P-0120`、`reference/08 §7` |
 | `examples/mipi_dsi` | **自拼管线**（本页多数新数字） | §22、§23、§24 |
 
