@@ -10,7 +10,8 @@
 | `AGENTS.md` | **规则入口**（工具无关，AI 工具先读这个） |
 | `template-doc-methodology.md` | 总纲：十条通用原则 + 适用边界 |
 | `template-inheritance-in-place-replace.md` | 核心方法：以参考文档「就地替换」 |
-| `cover-pagination-and-sections.md` | 封面/分页/分节三大高风险点 |
+| `cover-pagination-and-sections.md` | 封面/分页/分节高风险点（含"目录后垫片空段""各节页宽不一致"） |
+| `docx-fields-and-toc-repair.md` | 域（Field）与目录修复：TOC 坏的三形态、诊断、补壳、"更新目录"会拍平域壳的教训 |
 | `consistency-gate.md` | 多文档同数据一致性对账 + 说明书/代码/注意事项三方收口 |
 | `iteration-and-versioning.md` | 迭代机制与版本管理 |
 | `multi-ai-tool-adaptation.md` | 一套内容适配多种 AI 工具 |

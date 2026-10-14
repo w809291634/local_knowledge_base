@@ -33,6 +33,26 @@ soffice --headless --convert-to pdf --outdir OUT "file.docx"   # 一次一份
 - 现象：一批命令里连续转多份 → 只成功第一份；卡死后只留 `lu*.tmp` 锁文件。
 - 别死循环重试：改用 PDF 文本抽取做结构核对，或直接看 XML。
 
+### 兜底：改用 Word COM 只读导出（LibreOffice 持续卡死时）
+
+本轮实测 LibreOffice 连续卡死（隔离 profile、清锁文件都无效），**改用 Word COM 导出 PDF 成功且稳定**：
+
+```python
+import win32com.client as w
+app = w.Dispatch('Word.Application'); app.Visible = False; app.DisplayAlerts = 0
+try:
+    d = app.Documents.Open(src, ReadOnly=True)
+    print('页数 =', d.ComputeStatistics(2))       # 2 = wdStatisticPages
+    d.ExportAsFixedFormat(pdf_out, 17)            # 17 = PDF
+    d.Close(False)
+finally:
+    app.Quit()
+```
+
+- 优点：拿到的是**Word 自己的分页**（比 LibreOffice 更接近用户所见）。
+- 想取页宽/页高：用 PyMuPDF 读 `page.rect`（`595×842pt = 21×29.7cm`）。
+- 只用 `ReadOnly=True` 打开；**不要在用户正开着文件时写回**。
+
 ## 3. 遍历 `w:body` 清理时的 `break` 陷阱
 
 ```python
@@ -65,7 +85,9 @@ for el in list(body):
 |---|---|
 | `.doc` 与 `.docx` 混放 | 按后缀分流，`.doc` 先转 `.docx` |
 | 合并单元格计数 | `row.cells` 对合并区域会重复返回同一 cell，拼文本会重复，写值无碍 |
-| 目录（TOC） | 多为「超链接 + `PAGEREF` 域」，替换要**避开含域代码的段落** |
+| 目录（TOC） | 多为「超链接 + `PAGEREF` 域」，替换要**避开含域代码的段落**；域壳破损有三种形态，见 `docx-fields-and-toc-repair.md` |
+| 目录后垫片空段 | 「目录 → 正文」之间几十个纯空段是**靠空段顶页**，脆且常顶不准（正文标题掉到目录页），要改成显式分页符 |
+| 各节页宽不一致 | 模板可能把某节设成**横向**（`pgSz@orient="landscape"`）→ 后面页宽和前面不同，检测/修法见 `cover-pagination-and-sections.md` 第 6 节 |
 | 页眉编号 | 页眉常含 `<编号> <版本>`，换项目时它也要改 |
 | 输出目录 | 产物目录独立，避免覆盖源文档与历史版本 |
 | 字体/编码 | 中文文档注意 `eastAsia` 字体槽；GBK 文件读写别用 UTF-8 假设 |

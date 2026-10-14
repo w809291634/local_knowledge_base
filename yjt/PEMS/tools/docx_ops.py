@@ -15,7 +15,7 @@ import struct
 from docx import Document
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
-from docx.shared import Inches, Pt
+from docx.shared import Inches, Pt, Emu
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.text.run import Run
 
@@ -684,3 +684,251 @@ def convert_doc_to_docx(src, dst, prefer=('Word.Application', 'KWPS.Application'
             last = e
             continue
     raise RuntimeError('无法转换 .doc：%s' % last)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 域（Field）/ 目录（TOC）修复与分页一致性（详见 docx-fields-and-toc-repair.md、
+# cover-pagination-and-sections.md 第 5/6 节）。四个函数互相独立，可单独调用。
+# ─────────────────────────────────────────────────────────────────────────────
+
+def toc_diagnose(doc):
+    """诊断目录域健康度。
+    返回 keys：
+      balance        —— begin-end 差值，>0 表示域未闭合（如 RD-068 缺 end）
+      toc_instr      —— 是否找到 TOC 指令（instrText）
+      toc_has_begin  —— TOC 指令前是否有未被闭合的 begin（False → 指令裸露，如 RD-026）
+      toc_has_separate —— TOC 指令后是否有 separate（False → 结果区未开始，指令会裸露）
+      text_has_toc   —— 指令是否被误写成 <w:t> 普通文本
+      toc_paras      —— 目录样式段落索引
+      entry_has_field—— 目录条目是否含域（False → 纯文本目录，无超链接，如 RD-032）
+    """
+    from collections import Counter
+    body = doc.element.body
+    seq = []
+    for el in body.iter():
+        if el.tag == qn('w:fldChar'):
+            seq.append(('fld', el.get(qn('w:fldCharType'))))
+        elif el.tag == qn('w:instrText'):
+            seq.append(('instr', el.text or ''))
+        elif el.tag == qn('w:t'):
+            seq.append(('t', el.text or ''))
+    c = Counter(v for k, v in seq if k == 'fld')
+    pos = [i for i, (k, v) in enumerate(seq) if k == 'instr' and 'TOC' in v]
+    toc_instr = bool(pos)
+    has_begin = has_sep = False
+    if pos:
+        i = pos[0]
+        depth = 0
+        for j in range(i - 1, -1, -1):          # 向前找未被闭合的 begin
+            k, v = seq[j]
+            if k == 'fld' and v == 'end':
+                depth += 1
+            elif k == 'fld' and v == 'begin':
+                if depth == 0:
+                    has_begin = True
+                    break
+                depth -= 1
+        for j in range(i + 1, len(seq)):        # 向后找 separate（到首个 end 为止）
+            k, v = seq[j]
+            if k == 'fld' and v == 'separate':
+                has_sep = True
+                break
+            if k == 'fld' and v == 'end':
+                break
+    tocs = [i for i, p in enumerate(doc.paragraphs)
+            if (p.style.name or '').lower().startswith('toc')]
+    return {
+        'begin': c.get('begin', 0), 'separate': c.get('separate', 0), 'end': c.get('end', 0),
+        'balance': c.get('begin', 0) - c.get('end', 0),
+        'toc_instr': toc_instr,
+        'toc_has_begin': has_begin,             # False → 指令裸露
+        'toc_has_separate': has_sep,            # False → 结果区未开始
+        'text_has_toc': any('TOC' in v for k, v in seq if k == 't'),
+        'toc_paras': tocs,
+        'entry_has_field': any(doc.paragraphs[i]._p.findall('.//' + qn('w:fldChar')) for i in tocs),
+        'applicable': bool(pos) or bool(tocs),        # 本文档是否有目录（无目录 → healthy 为 None）
+        'healthy': (None if not (pos or tocs) else
+                    bool(pos and has_begin and has_sep and c.get('begin', 0) == c.get('end', 0))),
+    }
+
+
+def _fld_run(fld_type):
+    r = OxmlElement('w:r')
+    fc = OxmlElement('w:fldChar')
+    fc.set(qn('w:fldCharType'), fld_type)
+    r.append(fc)
+    return r
+
+
+def close_toc_field(doc):
+    """外层 TOC 域缺 end 时，在目录末条目段落末尾补足；返回补的个数"""
+    need = toc_diagnose(doc)['balance']
+    if need <= 0:
+        return 0
+    tocs = toc_diagnose(doc)['toc_paras']
+    if not tocs:
+        return 0
+    last = doc.paragraphs[max(tocs)]
+    for _ in range(need):
+        last._p.append(_fld_run('end'))
+    return need
+
+
+def fix_stray_toc_instruction(doc):
+    """把误写成普通文本（w:t）的 TOC 指令转成真正的域：begin + instrText + separate"""
+    for p in doc.paragraphs:
+        for r in p._p.findall(qn('w:r')):
+            t = r.find(qn('w:t'))
+            if t is None or 'TOC' not in (t.text or ''):
+                continue
+            instr = t.text
+            it = OxmlElement('w:instrText')
+            it.set(qn('xml:space'), 'preserve')
+            it.text = instr
+            r.addprevious(_fld_run('begin'))
+            r.addprevious(it)
+            r.addprevious(_fld_run('separate'))
+            t.text = ''          # 指令不再作为可见文本
+            return instr
+    return None
+
+
+def normalize_toc_page_break(doc, pad_min=5):
+    """目录末条目→正文首标题之间的垫片空段，改为 1 个显式分页符。返回(删除段数, 是否插入)"""
+    ps = doc.paragraphs
+    tocs = [i for i, p in enumerate(ps) if (p.style.name or '').lower().startswith('toc')]
+    if not tocs:
+        return 0, False
+    last = max(tocs)
+    first_body = None
+    for i, p in enumerate(ps):
+        if i <= last:
+            continue
+        pPr = p._p.find(qn('w:pPr'))
+        if pPr is not None and pPr.find(qn('w:numPr')) is not None and paragraph_text(p).strip():
+            first_body = i
+            break
+    if first_body is None:
+        return 0, False
+    empt = [p for p in ps[last + 1:first_body]
+            if not paragraph_text(p).strip()
+            and not p._p.findall('.//' + qn('w:br'))
+            and not p._p.findall('.//' + qn('w:drawing'))
+            and not p._p.findall('.//' + qn('w:pict'))
+            and not p._p.findall('.//' + qn('w:fldChar'))        # ★ 只含域标记的段不能当空段删
+            and not p._p.findall('.//' + qn('w:instrText'))]
+    if len(empt) < pad_min:
+        return 0, False
+    keep = empt[0]
+    for r in keep._p.findall(qn('w:r')):
+        keep._p.remove(r)
+    r = OxmlElement('w:r')
+    br = OxmlElement('w:br')
+    br.set(qn('w:type'), 'page')
+    r.append(br)
+    keep._p.append(r)
+    n = 0
+    for p in empt[1:]:
+        p._p.getparent().remove(p._p)
+        n += 1
+    return n, True
+
+
+def page_size_report(doc):
+    """逐节报告页面尺寸/页边距，用于发现"某节被设成横向"导致的页宽不一致"""
+    out = []
+    for i, s in enumerate(doc.sections):
+        e = s._sectPr
+        sz = e.find(qn('w:pgSz'))
+        mar = e.find(qn('w:pgMar'))
+        out.append({
+            'section': i + 1,
+            'w': sz.get(qn('w:w')) if sz is not None else None,
+            'h': sz.get(qn('w:h')) if sz is not None else None,
+            'orient': sz.get(qn('w:orient')) if sz is not None else None,
+            'margins': tuple(mar.get(qn('w:' + k)) if mar is not None else None
+                             for k in ('left', 'right', 'top', 'bottom')),
+        })
+    return out
+
+
+def unify_sections(doc, base=0):
+    """把各节的 pgSz/pgMar 统一为第 base 节（默认封面节）的值；返回修改记录"""
+    b = doc.sections[base]._sectPr
+    b_sz, b_mar = b.find(qn('w:pgSz')), b.find(qn('w:pgMar'))
+    fixed = []
+    for i, s in enumerate(doc.sections):
+        if i == base:
+            continue
+        e = s._sectPr
+        sz = e.find(qn('w:pgSz'))
+        if sz is None:
+            sz = OxmlElement('w:pgSz')
+            e.insert(0, sz)
+        for k in ('w', 'h', 'orient'):
+            bv = b_sz.get(qn('w:' + k)) if b_sz is not None else None
+            if bv is None:
+                if sz.get(qn('w:' + k)) is not None:
+                    del sz.attrib[qn('w:' + k)]
+            elif sz.get(qn('w:' + k)) != bv:
+                sz.set(qn('w:' + k), bv)
+                fixed.append('节%d pgSz.%s→%s' % (i + 1, k, bv))
+        mar = e.find(qn('w:pgMar'))
+        if mar is not None and b_mar is not None:
+            for k in ('left', 'right', 'top', 'bottom'):
+                bv = b_mar.get(qn('w:' + k))
+                if bv is not None and mar.get(qn('w:' + k)) != bv:
+                    mar.set(qn('w:' + k), bv)
+                    fixed.append('节%d pgMar.%s→%s' % (i + 1, k, bv))
+    return fixed
+
+
+def clamp_images_to_text_width(doc, max_emu=None):
+    """把所有内嵌图缩放到不超过正文宽度（保持纵横比）；返回缩放张数"""
+    sec = doc.sections[0]
+    if max_emu is None:
+        max_emu = sec.page_width - sec.left_margin - sec.right_margin
+    n = 0
+    for sh in doc.inline_shapes:
+        w, h = sh.width, sh.height
+        if w and w > max_emu:
+            ratio = max_emu / w
+            sh.width = Emu(int(max_emu))
+            sh.height = Emu(int(h * ratio))
+            n += 1
+    return n
+
+
+def refresh_toc_via_word(path, save=True):
+    """用 Word 更新目录域/字段（等价于在 Word 里 F9 /『更新目录』）。
+    只能在装有 Word/WPS 的环境执行；不刷新则目录页码停留在旧值。"""
+    import win32com.client as w
+    app = w.Dispatch('Word.Application')
+    app.Visible = False
+    app.DisplayAlerts = 0
+    try:
+        d = app.Documents.Open(path)
+        for i in range(1, d.TablesOfContents.Count + 1):
+            d.TablesOfContents(i).Update()
+        d.Fields.Update()
+        if save:
+            d.Save()
+        d.Close(False)
+    finally:
+        app.Quit()
+
+
+def export_pdf_via_word(path, pdf_path):
+    """LibreOffice 卡死时的兜底：用 Word 只读导出 PDF（得到的即 Word 自身分页）"""
+    import win32com.client as w
+    app = w.Dispatch('Word.Application')
+    app.Visible = False
+    app.DisplayAlerts = 0
+    try:
+        d = app.Documents.Open(path, ReadOnly=True)
+        pages = d.ComputeStatistics(2)          # 2 = wdStatisticPages
+        d.ExportAsFixedFormat(pdf_path, 17)     # 17 = PDF
+        d.Close(False)
+        return pages
+    finally:
+        app.Quit()
