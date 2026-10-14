@@ -50,3 +50,11 @@
 
 - Python 3 + `python-docx`；`.doc` 转换需 `pywin32`（Word 或 WPS）。
 - 渲染校验用 LibreOffice（`soffice --headless`）。
+
+## 质量闸门补充（2026-10-14）
+
+- 编写前冻结项目事实基线；用户新增确认先回写 YAML 或受控变更记录，再生成文档。
+- 未命中的替换槽位、事实冲突、旧项目残留、缺少必要图示或未提供实测证据时，必须阻断发布。
+- 草稿、待执行、待审核和受控发布分开管理；无证据不填通过结论、签署人或测试日期。
+- 适用文档必须有当前项目的架构图、关键流程/状态图、硬件关系/拓扑图或可用性任务流程图；图示逐页渲染核对。
+- 详细规则见 `one-pass-quality-gate.md`、`reference-format-profile-current-templates.md` 和 `reference-document-format-and-diagram-requirements.md`。

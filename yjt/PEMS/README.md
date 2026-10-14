@@ -31,3 +31,9 @@
 1. 复制本目录（方法论与 `tools/` 无需改动）。
 2. 新建 `config.json`：填项目号、产品/部件名、清单数据、指标、版本、编号、术语替换表。
 3. 指定参考模板（只读），依次跑 `build_docs.py` → `consistency_check.py` → 渲染对拍 → 人工核图与签署。
+
+## 质量与格式补充
+
+- `one-pass-quality-gate.md`：事实基线、自动质量闸门、证据/签署状态与发布归档。
+- `reference-format-profile-current-templates.md`：当前 PEMS 参考模板的格式档案。
+- `reference-document-format-and-diagram-requirements.md`：参考文档的格式深度与必备框图要求。
