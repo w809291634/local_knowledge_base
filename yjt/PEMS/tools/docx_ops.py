@@ -360,20 +360,42 @@ def insert_page_break(paragraph_el):
 #      drop_orphan_image_rels(doc)         # 清掉包内旧图残留（瘦身）
 #      ok, rows = verify_figures(doc, [s[0] for s in specs])
 # --------------------------------------------------------------------------
+# 图片引用只有两种形态：DrawingML(a:blip@r:embed) 与 VML(v:imagedata@r:id)。
+# 模板文档两者常混用（见 pitfalls.md「图片两种形式都要认」）——
+# 只认 DrawingML 会漏图，甚至把仍被 VML 引用的图当成孤立件删掉。
+# 注意：python-docx 的 nsmap 没有 v 前缀，VML 必须用 Clark 记法（{命名空间}标签）。
+VML_NS = 'urn:schemas-microsoft-com:vml'
+IMAGE_REF_TAGS = (
+    (qn('a:blip'), qn('r:embed')),
+    ('{%s}imagedata' % VML_NS, qn('r:id')),
+)
+IMAGE_EXTS = ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tif', '.tiff', '.emf', '.wmf')
+
+
+def image_rids(p):
+    """段落里全部图片引用的 rId（DrawingML + VML 都认）；文本框内的也算"""
+    rids = []
+    for tag, attr in IMAGE_REF_TAGS:
+        for el in p._p.findall('.//' + tag):
+            rid = el.get(attr)
+            if rid:
+                rids.append(rid)
+    return rids
+
+
 def has_inline_image(p):
-    """段落是否含内联图片（DrawingML a:blip）"""
-    return bool(p._p.findall('.//' + qn('a:blip')))
+    """段落是否含图片（DrawingML 或 VML）"""
+    return bool(image_rids(p))
 
 
 def iter_image_paragraphs(doc):
-    """按文档顺序返回含内联图片的段落"""
+    """按文档顺序返回含图片的段落（两种图片形式都算）"""
     return [p for p in doc.paragraphs if has_inline_image(p)]
 
 
 def paragraph_image_sha256(doc, p):
     """取段落内嵌图片的 sha256（图替换后的二进制校验用）"""
-    blip = p._p.findall('.//' + qn('a:blip'))[0]
-    rid = blip.get(qn('r:embed'))
+    rid = image_rids(p)[0]
     return hashlib.sha256(doc.part.related_parts[rid].blob).hexdigest()
 
 
@@ -444,21 +466,24 @@ def replace_figures(doc, specs, caption_size_pt=10.5):
 
 
 def drop_orphan_image_rels(doc):
-    """删除未被正文引用的图片关系。
+    """删除未被引用的图片关系（瘦身）。
 
     删段落不会连带删包内图片部件，残留旧图会让文件虚胖（曾 1.5MB→2.4MB）。
-    python-docx 保存时只写出「可达」部件，所以断开关系即可瘦身，无需改 zip。
+    python-docx 保存时只写出「可达」部件，所以断开关系即可，无需改 zip。
+
+    ★ 判定「已引用」必须同时认 DrawingML 与 VML：只认 a:blip 会把 VML
+      (v:imagedata) 正在用的图当成孤立件删掉，保存后图片丢失、引用悬空。
     """
     used = set()
     for p in doc.paragraphs:
-        for blip in p._p.findall('.//' + qn('a:blip')):
-            rel = doc.part.rels.get(blip.get(qn('r:embed')))
+        for rid in image_rids(p):
+            rel = doc.part.rels.get(rid)
             if rel is not None:
                 used.add(os.path.basename(rel.target_ref or ''))
     dropped = []
     for rid, rel in list(doc.part.rels.items()):
         base = os.path.basename(rel.target_ref or '')
-        if base.startswith('image') and base.endswith('.png') and base not in used:
+        if base.startswith('image') and base.lower().endswith(IMAGE_EXTS) and base not in used:
             doc.part.drop_rel(rid)
             dropped.append(base)
     return dropped
@@ -478,13 +503,18 @@ def verify_figures(doc, expected_pngs):
     """
     rows = []
     ok = True
-    for i, (p, png) in enumerate(zip(iter_image_paragraphs(doc), expected_pngs)):
-        blob = doc.part.related_parts[
-            p._p.findall('.//' + qn('a:blip'))[0].get(qn('r:embed'))].blob
+    for p, png in zip(iter_image_paragraphs(doc), expected_pngs):
+        blob = doc.part.related_parts[image_rids(p)[0]].blob
         sha_ok = hashlib.sha256(blob).hexdigest() == \
             hashlib.sha256(open(png, 'rb').read()).hexdigest()
+        # VML 图没有 wp:inline/extent，无法核显示比例，只核二进制（避免误报崩溃）
         inl = p._p.findall('.//' + qn('wp:inline'))
-        ext = inl[0].find(qn('wp:extent'))
+        ext = inl[0].find(qn('wp:extent')) if inl else None
+        if ext is None:
+            ok = ok and sha_ok
+            rows.append(dict(png=os.path.basename(png), sha_ok=sha_ok, ratio_ok=True,
+                             disp_w=None, disp_h=None, ratio=None))
+            continue
         cx, cy = int(ext.get('cx')), int(ext.get('cy'))
         pw, ph = png_size(png)
         ratio = cx / cy
@@ -508,6 +538,78 @@ def assert_writable(path):
             pass
     except OSError as e:
         raise IOError('目标文档被其它进程占用，请先关闭：%s' % path) from e
+
+
+# --------------------------------------------------------------------------
+# 段落缩进规范化 / 旧式图形清理
+#   模板中常见「畸形首行缩进」：firstLine 远大于 2 字符（如 2040/3420 twip），
+#   并常与负的 leftChars 同时出现 → 渲染成「首行缩进一大截、折行回到左边界」。
+#   该缺陷在 06 项目模板、血糖仪 058/062、元良三个项目上均复现，故独立成原语。
+#   注意：**不要把正文文字写进畸形段落**；应留空该段落，文字写入新建的正常段落。
+# --------------------------------------------------------------------------
+def normalize_paragraph_indent(doc, max_first_line=1440, first_line_chars=200,
+                               first_line=480, drop_zero=False):
+    """把畸形首行缩进规范化。返回 (修改数, 清理空段数)。
+
+    - 段落有文字：仅替换 w:ind 为 (firstLineChars, firstLine)，保留其余格式；
+    - 段落为空  ：drop_zero=True 时直接删除该空段，否则同样规范化。
+    """
+    from docx.oxml import OxmlElement
+    fixed = dropped = 0
+    for p in list(doc.paragraphs):
+        pPr = p._p.find(qn('w:pPr'))
+        if pPr is None:
+            continue
+        ind = pPr.find(qn('w:ind'))
+        if ind is None:
+            continue
+        fl = ind.get(qn('w:firstLine'))
+        lc = ind.get(qn('w:leftChars'))
+        bad = (fl and abs(int(fl)) > max_first_line) or (lc and int(lc) < 0)
+        if not bad:
+            continue
+        empty = not ''.join(t.text or '' for t in p._p.iter(qn('w:t'))).strip()
+        if empty and drop_zero:
+            p._p.getparent().remove(p._p)
+            dropped += 1
+            continue
+        pPr.remove(ind)
+        new = OxmlElement('w:ind')
+        new.set(qn('w:firstLineChars'), str(first_line_chars))
+        new.set(qn('w:firstLine'), str(first_line))
+        # 按 schema，w:ind 须排在 w:rPr 之前
+        rPr = pPr.find(qn('w:rPr'))
+        if rPr is not None:
+            rPr.addprevious(new)
+        else:
+            pPr.append(new)
+        fixed += 1
+    return fixed, dropped
+
+
+def clear_legacy_shapes(doc, caption_prefixes=('图', '表'), drop_empty=True):
+    """删除旧式 VML 图形段落（w:pict）及其紧随的图题段落。
+
+    模板里继承的图常是 VML（不是 a:blip），`clear_figures` 抓不到；图题
+    也可能是「图1 xxx」（无空格），不匹配 `图 ` 前缀。故本函数：
+      1) 删掉所有含 w:pict 的段落；
+      2) 删掉文本以 caption_prefixes 开头、且紧跟其后的图题段落。
+    返回删除段数。
+    """
+    targets = []
+    for i, p in enumerate(doc.paragraphs):
+        if p._p.findall('.//' + qn('w:pict')):
+            targets.append(p)
+            continue
+        t = paragraph_text(p).strip()
+        if t and any(t.startswith(x) for x in caption_prefixes) and len(t) <= 40:
+            prev = doc.paragraphs[i - 1] if i > 0 else None
+            if prev is not None and (prev._p.findall('.//' + qn('w:pict'))
+                                    or has_inline_image(prev)):
+                targets.append(p)
+    for p in targets:
+        p._p.getparent().remove(p._p)
+    return len(targets)
 
 
 # --------------------------------------------------------------------------

@@ -151,6 +151,44 @@ except OSError:
 
 查是谁占着：`Get-CimInstance Win32_Process` 看命令行里带该文件名的 `wps.exe` / `WINWORD.EXE`。
 
+### 3.4 只认一种图片形式 → 数错图、误删 VML 图（最险）
+
+Word 里图片有两种形态：**DrawingML**（`a:blip@r:embed`）与 **VML**（`v:imagedata@r:id`）。
+模板文档（老版式、文本框、艺术字）常混用 VML —— 实测本工程 **RD-030 有 4 张 VML 图**、
+**血糖仪 058 参考文档有 3 张**。
+
+只判断 `a:blip` 的代价（在 RD-030 副本上实测）：
+
+```
+iter_image_paragraphs 只数到 3 张（实际 7 张）
+drop_orphan_image_rels 删掉 4 个"仍被 VML 引用"的关系  ->  media 7 → 3
+保存后 4 处悬空引用（rId12/13/14/17）  ->  4 张图直接从文档里消失
+```
+
+**判定"引用"必须同时收两种**，且 VML 要用 **Clark 记法**（python-docx 的 nsmap 里**没有 `v` 前缀**，
+写 `qn('v:imagedata')` 会 `KeyError: 'v'`）：
+
+```python
+VML_NS = 'urn:schemas-microsoft-com:vml'
+IMAGE_REF_TAGS = ((qn('a:blip'), qn('r:embed')), ('{%s}imagedata' % VML_NS, qn('r:id')))
+
+def image_rids(p):                     # 唯一出口：所有"找图片"都走这里
+    rids = []
+    for tag, attr in IMAGE_REF_TAGS:
+        for el in p._p.findall('.//' + tag):
+            if el.get(attr):
+                rids.append(el.get(attr))
+    return rids
+```
+
+`has_inline_image / iter_image_paragraphs / paragraph_image_sha256 / drop_orphan_image_rels /
+verify_figures` 统一走 `image_rids`——**不要再单独写 `findall('a:blip')`**。
+另外 VML 图没有 `wp:inline`/`wp:extent`，核宽高比前要先判空，否则 `IndexError`。
+
+> **教训（本文件自己要记的）**：`docx_ops.py` 里本来就有 `has_graphic()`（`w:drawing`/`w:pict` 两种都认），
+> 我却又写了个只认一种的 `has_inline_image` —— 既重复又做错。
+> 这正是"只写新文件、不先查已有约定"的后果：**加函数前先搜同义实现。**
+
 ---
 
 ## 4. 两项机器校验（截图看不出，但必须做）
@@ -171,10 +209,12 @@ except OSError:
 1. 生成图 → **逐张读图核对**（第 2 节表格）。
 2. 每条图题**居中 + 加粗**，且位于**正文区**（第一个 Heading 1 之后，不在目录区）。
 3. `clear_figures` → `replace_figures` 重建，锚点用 `find_body_heading`（跳过 toc）。
-4. `drop_orphan_image_rels` 瘦身。
-5. `verify_figures` 通过（哈希 + 宽高比）。
-6. 文件可写校验通过后再保存；保存后重开一次确认结构与图片数。
-7. 人工在 Word/WPS 里翻页确认渲染效果。
+4. 跑 `drop_orphan_image_rels` **之前**先对账：`iter_image_paragraphs` 的总数应等于文中
+   `a:blip` + `v:imagedata` 的引用数之和；不等说明还原成"只认一种"，**停下别删**。
+5. `drop_orphan_image_rels` 瘦身；保存后重开，确认 media 部件数 == 实际被引用数，且无悬空 rId。
+6. `verify_figures` 通过（哈希 + 宽高比；VML 图只核哈希）。
+7. 文件可写校验通过后再保存；保存后重开一次确认结构与图片数。
+8. 人工在 Word/WPS 里翻页确认渲染效果。
 
 ## 6. 复用入口
 
@@ -182,6 +222,7 @@ except OSError:
 |---|---|
 | 画框图/流程图/拓扑图原语 | `tools/fig_tools.py`：`canvas / box / txt / edge / arr / circle / flow / save / warn_report` |
 | 竖向流程图 | `fig_tools.flow(ax, steps, bx, top, notes={...})` |
+| 列图片段落 / 取图片 rId | `docx_ops.iter_image_paragraphs(doc)` / `docx_ops.image_rids(p)`（**两种图片形式都认**） |
 | 插图替换 | `docx_ops.replace_figures(doc, specs)`（specs = `[(png, 图题, 锚点标题, 宽度in), ...]`） |
 | 瘦身 | `docx_ops.drop_orphan_image_rels(doc)` |
 | 校验 | `docx_ops.verify_figures(doc, [png...])` |

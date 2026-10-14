@@ -11,7 +11,7 @@
 | `template-doc-methodology.md` | 总纲：十条通用原则 + 适用边界 |
 | `template-inheritance-in-place-replace.md` | 核心方法：以参考文档「就地替换」 |
 | `cover-pagination-and-sections.md` | 封面/分页/分节三大高风险点 |
-| `consistency-gate.md` | 多文档同数据一致性对账 |
+| `consistency-gate.md` | 多文档同数据一致性对账 + 说明书/代码/注意事项三方收口 |
 | `iteration-and-versioning.md` | 迭代机制与版本管理 |
 | `multi-ai-tool-adaptation.md` | 一套内容适配多种 AI 工具 |
 | `pitfalls.md` | 环境与格式坑 |

@@ -18,8 +18,10 @@
 3. **封面独立成页**；封面后不得出现空白页。
 4. **输出到新版本目录**（`*_V{n}/`），永不覆盖源文档与历史版本。
 5. **相同代码只写一份**：公共处理封装在 `tools/docx_ops.py`，项目只提供配置。
+6. **三方收口**：每轮输出文档后，必须核对 **说明书 / 代码 / 注意事项** 三者一致性，
+   冲突未清零不得发布（规则见 `consistency-gate.md` 第 5 节）。
 
-## 每次交付前必做（4 步）
+## 每次交付前必做（5 步）
 
 ```
 1) python tools/build_docs.py --config config.json         # 重新生成
@@ -27,6 +29,7 @@
 3) soffice --headless --convert-to pdf --outdir out "某份.docx"   # 一次只转一份
    → 抽 PDF 首页文本：封面独立页 + 无空白页 + 页眉编号正确
 4) 人工核对：图（图文一致）、签署栏、交叉引用文件名、他项目残留
+5) 三方收口：说明书 / 代码 / 注意事项 逐参数核对 → 冲突清零（consistency-gate.md 第 5 节）
 ```
 
 ## 详细规范
@@ -36,7 +39,7 @@
 | `template-doc-methodology.md` | 总纲：十条通用原则 |
 | `template-inheritance-in-place-replace.md` | 核心方法：就地替换 |
 | `cover-pagination-and-sections.md` | 封面/分页/分节三大风险点 |
-| `consistency-gate.md` | 多文档一致性对账 |
+| `consistency-gate.md` | 多文档一致性对账 + 说明书/代码/注意事项**三方收口** |
 | `iteration-and-versioning.md` | 迭代与版本管理 |
 | `multi-ai-tool-adaptation.md` | 一套内容适配多 AI 工具 |
 | `pitfalls.md` | 环境/格式坑 |

@@ -49,10 +49,15 @@ for el in list(body):
 | 形式 | XML | 备注 |
 |---|---|---|
 | DrawingML | `a:blip` / `w:drawing` | 新式 |
-| VML | `w:pict` / `v:shape` | 老式（模板图常见） |
+| VML | `w:pict` / `v:shape` / `v:imagedata@r:id` | 老式（模板图常见，RD-030 4 张、血糖仪 058 3 张） |
 
 `Paragraph.text` 里**没有图内文字**；沿用旧模板时图上的标注（模式名、部件名、颜色）很可能
 还是旧项目的 → 交付前逐图人工看。
+
+> ⚠️ **只认 `a:blip` 会删掉 VML 图**：判定"图片是否被引用"若漏了 `v:imagedata@r:id`，
+> 瘦身函数会把仍被 VML 引用的图当孤立件删除（实测 RD-030：media 7→3、4 处引用悬空、丢 4 张图）。
+> 另：python-docx 的 nsmap 无 `v` 前缀，写 `qn('v:imagedata')` 会 `KeyError`，须用 Clark 记法。
+> 详见 `diagram-generation-and-figure-insertion.md` 第 3.4 节。
 
 ## 5. 其他零碎
 
