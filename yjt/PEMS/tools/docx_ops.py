@@ -9,6 +9,7 @@ docx_ops —— Word 文档「模板就地替换」通用原语库
 """
 import copy
 import hashlib
+import re
 import os
 import struct
 
@@ -397,6 +398,7 @@ IMAGE_REF_TAGS = (
     (qn('a:blip'), qn('r:embed')),
     ('{%s}imagedata' % VML_NS, qn('r:id')),
 )
+TXBX = qn('w:txbxContent')          # 文本框内容容器（字体统一要跳过）
 IMAGE_EXTS = ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tif', '.tiff', '.emf', '.wmf')
 
 
@@ -932,3 +934,195 @@ def export_pdf_via_word(path, pdf_path):
         return pages
     finally:
         app.Quit()
+
+# --------------------------------------------------------------------------
+# 字体与字号统一（文档族级版式收口；详见 font-and-style-normalization.md）
+#   三条实测必要性：
+#     ① 必须删掉 rFonts 的 *Theme 属性，否则主题字体优先级高于显式 rFonts，改了不生效；
+#     ② 必须单独遍历表格——doc.paragraphs **不含表格内段落**，漏了表格等于没统一；
+#     ③ 必须同时改 styles.xml 的 Normal/Heading/Caption，否则用户在 Word 里新打字又回旧字体。
+# --------------------------------------------------------------------------
+THEME_FONT_ATTRS = ('asciiTheme', 'hAnsiTheme', 'eastAsiaTheme', 'ctheme', 'cstheme')
+
+
+def apply_rpr_font(rPr, east_asia=None, latin=None, sz=None):
+    """在给定 `w:rPr` 上**就地**写字体槽与字号。
+
+    ★ 不要为了复用 run 级函数而把 rPr `append` 到临时 `w:r` 上：lxml 的 append 是
+      **移动**语义，会把 rPr 从样式元素里搬走，结果 Heading 的字号定义整段丢失，
+      而且不报错、只在渲染时表现为"章标题变成正文大小"。
+    """
+    if east_asia or latin:
+        rf = rPr.find(qn('w:rFonts'))
+        if rf is None:
+            rf = OxmlElement('w:rFonts')
+            rPr.insert(0, rf)
+        if latin:
+            for at in ('ascii', 'hAnsi', 'cs'):
+                rf.set(qn('w:' + at), latin)
+        if east_asia:
+            rf.set(qn('w:eastAsia'), east_asia)
+        for at in THEME_FONT_ATTRS:
+            if rf.get(qn('w:' + at)):
+                del rf.attrib[qn('w:' + at)]
+    if sz:
+        for tag in ('w:sz', 'w:szCs'):
+            el = rPr.find(qn(tag))
+            if el is None:
+                el = OxmlElement(tag)
+                rPr.append(el)
+            el.set(qn('w:val'), str(sz))
+    return rPr
+
+
+def style_font(doc, name, east_asia=None, latin=None, sz=None):
+    """改样式默认值（Normal / Heading 1~4 / Caption / Body Text）。样式名不存在时返回 False。"""
+    try:
+        el = doc.styles[name]._element
+    except KeyError:
+        return False
+    rPr = el.find(qn('w:rPr'))
+    if rPr is None:
+        rPr = OxmlElement('w:rPr')
+        el.append(rPr)
+    apply_rpr_font(rPr, east_asia, latin, sz)
+    return True
+
+
+def _in_textbox(el):
+    anc = el.getparent()
+    while anc is not None:
+        if anc.tag == TXBX:
+            return True
+        anc = anc.getparent()
+    return False
+
+
+def iter_zone_paragraphs(doc, cover_first_cell='文件编号'):
+    """按版式分区产出 (paragraph, zone)：
+    cover / head / caption / table / body / hf（页眉页脚）。
+
+    分区是字号统一的前提——标题、封面、页眉**只该改字体不该改字号**，
+    否则章标题会和正文一样大、封面版式塌陷。
+    """
+    sect_i = next((i for i, p in enumerate(doc.paragraphs) if has_section_break(p)), 0)
+    cover = find_cover_table(doc.element.body, cover_first_cell)
+    for i, p in enumerate(doc.paragraphs):
+        pPr = p._p.find(qn('w:pPr'))
+        style = (p.style.name or '').lower()
+        t = ''.join(x.text or '' for x in p._p.iter(qn('w:t')))
+        t = re.sub(r'\s+', '', t or '')
+        if i < sect_i:
+            zone = 'cover'
+        elif style.startswith('heading') or style.startswith('toc')                 or style.startswith('caption')                 or (pPr is not None and pPr.find(qn('w:numPr')) is not None):
+            zone = 'head'
+        elif t[:1] in ('图', '表') and len(t) <= 40:
+            zone = 'caption'
+        else:
+            zone = 'body'
+        yield p, zone
+    for tb in doc.tables:
+        z = 'cover' if tb._tbl is cover else 'table'
+        for row in tb.rows:
+            seen = set()
+            for c in row.cells:
+                if c._tc in seen:
+                    continue
+                seen.add(c._tc)
+                for p in c.paragraphs:
+                    yield p, z
+    for s in doc.sections:
+        for hf in (s.header, s.footer, s.first_page_header, s.first_page_footer,
+                   s.even_page_header, s.even_page_footer):
+            if hf is not None:
+                for p in hf.paragraphs:
+                    yield p, 'hf'
+
+
+def unify_document_fonts(doc, east_asia='宋体', latin='Times New Roman',
+                         body_sz=None, table_sz=None, caption_sz=None,
+                         styles=('Normal', 'Heading 1', 'Heading 2', 'Heading 3',
+                                 'Heading 4', 'Caption', 'Body Text'),
+                         cover_first_cell='文件编号'):
+    """统一整份文档字体，并按分区设字号（字号单位=半磅，None 表示该分区不动）。
+
+    返回 (改字体的 run 数, 设字号的 run 数, 改的样式数)。文本框内的 run 一律跳过：
+    那是表单/示意图的排版，改字号会撑破框。
+    """
+    sizes = {'body': body_sz, 'table': table_sz, 'caption': caption_sz}
+    n_font = n_sz = 0
+    for p, zone in iter_zone_paragraphs(doc, cover_first_cell):
+        sz = sizes.get(zone)
+        for r in p._p.findall(qn('w:r')):
+            if _in_textbox(r):
+                continue
+            rPr = r.find(qn('w:rPr'))
+            if rPr is None:
+                rPr = OxmlElement('w:rPr')
+                r.insert(0, rPr)
+            apply_rpr_font(rPr, east_asia, latin, sz)
+            n_font += 1
+            if sz:
+                n_sz += 1
+    n_style = sum(1 for nm in styles
+                  if style_font(doc, nm, east_asia, latin,
+                                body_sz if nm == 'Normal' else None))
+    return n_font, n_sz, n_style
+
+
+# --------------------------------------------------------------------------
+# 表格重建原语（fill_table 之外的两种结构改动）
+# --------------------------------------------------------------------------
+def table_grid_cols(tbl):
+    """现有列数：**必须看 tblGrid**，不能用末行的 tc 数——合并单元格会让 tc 数少于列数，
+    据此判断会漏调列，产出「表头 5 列、数据行 4 格」的错位表。"""
+    grid = tbl.find(qn('w:tblGrid'))
+    if grid is not None:
+        return len(grid.findall(qn('w:gridCol')))
+    trs = tbl.findall(qn('w:tr'))
+    return len(trs[-1].findall(qn('w:tc'))) if trs else 0
+
+
+def flatten_table_rows(tbl, keep_head=0):
+    """去掉纵向合并与数据行的横向合并。
+
+    克隆末行做新数据行时，若该带 `vMerge`，首个新行没有可继承的上方 tc，
+    python-docx 读 `row.cells` 会直接抛
+    `ValueError: no `tc` element at grid_offset=…`（不是内容错误，是遍历失败）。
+    """
+    for ri, tr in enumerate(tbl.findall(qn('w:tr'))):
+        for tc in tr.findall(qn('w:tc')):
+            tcPr = tc.find(qn('w:tcPr'))
+            if tcPr is None:
+                continue
+            for vm in tcPr.findall(qn('w:vMerge')):
+                tcPr.remove(vm)
+            if ri >= keep_head:
+                for gs in tcPr.findall(qn('w:gridSpan')):
+                    tcPr.remove(gs)
+
+
+def substitute_wt_nodes(p, subs):
+    """段落级词替换的**图形安全**版本。
+
+    `docx_ops.apply_substitutions` 在整段仍残留关键词时会走"合并 run"分支
+    （`p.runs[0].text = after`），而 `run.text` 赋值会清空该 run 的其它子节点 ——
+    含 `w:pict`/`w:drawing` 的段落（表单文本框、示意图）会被连带抹掉，且不报错。
+    含图形的段落只用本函数：逐 `w:t` 节点替换，不合并 run。
+    """
+    graphic = bool(p._p.findall('.//' + qn('w:pict'))
+                   or p._p.findall('.//' + qn('w:drawing')))
+    if not graphic:
+        apply_substitutions(p, subs)
+        return False
+    for t in p._p.iter(qn('w:t')):
+        if not t.text:
+            continue
+        new = t.text
+        for old, rep in subs:
+            if old and old in new:
+                new = new.replace(old, rep)
+        if new != t.text:
+            t.text = new
+            t.set(qn('xml:space'), 'preserve')
+    return True

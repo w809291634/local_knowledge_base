@@ -21,7 +21,7 @@
 6. **三方收口**：每轮输出文档后，必须核对 **说明书 / 代码 / 注意事项** 三者一致性，
    冲突未清零不得发布（规则见 `consistency-gate.md` 第 5 节）。
 
-## 每次交付前必做（5 步）
+## 每次交付前必做（6 步）
 
 ```
 1) 使用当前项目主事实文件生成；调用本库脚本时执行 `python tools/build_docs.py --config <project-config.json>`，确认输出目录中的 `manifest.json` 已记录配置、事实文件、模板和产物的哈希。
@@ -29,7 +29,9 @@
 3) soffice --headless --convert-to pdf --outdir out "某份.docx"   # 一次只转一份
    → 抽 PDF 首页文本：封面独立页 + 无空白页 + 页眉编号正确
 4) 人工核对：图（图文一致）、签署栏、交叉引用文件名、他项目残留
-5) 三方收口：说明书 / 代码 / 注意事项 逐参数核对 → 冲突清零（consistency-gate.md 第 5 节）
+5) **用 Word 只读打开每一份产物并记录页数**（LibreOffice 与 python-docx 都不报的损坏，Word 会报；
+   典型诱因见 `pitfalls.md` 第 6/7 节）
+6) 三方收口：说明书 / 代码 / 注意事项 逐参数核对 → 冲突清零（consistency-gate.md 第 5 节）
 ```
 
 ## 详细规范
@@ -44,7 +46,8 @@
 | `multi-ai-tool-adaptation.md` | 一套内容适配多 AI 工具 |
 | `pitfalls.md` | 环境/格式坑 |
 | `dod-checklist.md` | 交付质量清单（DoD） |
-| `diagram-generation-and-figure-insertion.md` | 配图生成与插图替换（绘图三原则、插图三坑、自检与校验） |
+| `font-and-style-normalization.md` | 字体字号统一（正文/标题/表格/图题分区，样式默认值与配图字体一起改） |
+| `diagram-generation-and-figure-insertion.md` | 配图生成与插图替换（绘图三原则、插图五坑、自检与校验） |
 | `case-study-anonymized.md` | 落地实例（含项目数据） |
 | `tools/docx_ops.py` | 通用原语库（统一封装，跨项目复用） |
 | `tools/fig_tools.py` | 配图绘制原语（框图/流程图；边界精确、箭头端点自动算） |
@@ -55,7 +58,7 @@
 ## 环境
 
 - Python 3 + `python-docx`；`.doc` 转换需 `pywin32`（Word 或 WPS）。
-- 配图需 `matplotlib`（中文字体用 SimHei/Microsoft YaHei）。
+- 配图需 `matplotlib`（中文字体用 SimHei/Microsoft YaHei；**文档正文统一宋体时，图内也要改用 SimSun 重绘**，否则一眼看出不统一，见 `font-and-style-normalization.md`）。
 - 渲染校验用 LibreOffice（`soffice --headless`）。
 
 ## 质量闸门补充（2026-10-14）
@@ -66,6 +69,12 @@
 - 草稿、待执行、待审核和受控发布分开管理；无证据不填通过结论、签署人或测试日期。
 - 适用文档必须有当前项目的架构图、关键流程/状态图、硬件关系/拓扑图或可用性任务流程图；图示逐页渲染核对。
 - 配图先过机器自检（文本宽度预警 + 内嵌图片哈希/宽高比校验），再人工逐张看 PNG（脚本读不到图内文字）。
+- **字体基线要"分区 + 二遍"**：正文/表格/图题各有字号档，标题与封面只统一字体不改字号；
+  字体统一必须在**目录刷新之后**再跑一遍（Word 保存会抹掉显式 `rFonts` 与等价样式字号）。
+  覆盖正文、表格单元格、空 run、样式默认值四处，配图回绘图脚本换字体重绘。
+  见 `font-and-style-normalization.md` §6/§7 与 `tools/docx_ops.py:unify_document_fonts`。
+- 承接旧稿做块对齐时：空段先剔除、封面区与目录域禁止插入、刷新后比对目录条目数，
+  超阈值还原备份（`pitfalls.md` §11/§12）。
 - 详细规则见 `one-pass-quality-gate.md`、`reference-format-profile-template.md`、`reference-document-format-and-diagram-requirements.md` 和 `diagram-generation-and-figure-insertion.md`。
 
 ## 通用性边界

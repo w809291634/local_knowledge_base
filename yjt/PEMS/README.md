@@ -15,9 +15,10 @@
 | `consistency-gate.md` | 多文档同数据一致性对账 + 说明书/代码/注意事项三方收口 |
 | `iteration-and-versioning.md` | 迭代机制与版本管理 |
 | `multi-ai-tool-adaptation.md` | 一套内容适配多种 AI 工具 |
-| `pitfalls.md` | 环境与格式坑 |
+| `pitfalls.md` | 环境与格式坑（含"Word 判文件损坏"三坑、文本框节点级替换） |
 | `dod-checklist.md` | 交付质量清单（Definition of Done） |
-| `diagram-generation-and-figure-insertion.md` | 配图生成与 Word 插图替换（绘图三原则、三个插图坑、自检与校验） |
+| `font-and-style-normalization.md` | 字体字号统一：正文/标题/表格/图题分区，样式默认值与配图字体一起改 |
+| `diagram-generation-and-figure-insertion.md` | 配图生成与 Word 插图替换（绘图三原则、五个插图坑、自检与校验） |
 | `case-study-anonymized.md` | 匿名化落地实例（仅保留方法，不是项目事实来源） |
 | `tools/docx_ops.py` | 通用原语库（统一封装共用函数） |
 | `tools/fig_tools.py` | 配图绘制原语（框图/流程图/拓扑图；1 单位=1 英寸、边界精确、箭头端点自动算） |
