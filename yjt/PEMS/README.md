@@ -1,7 +1,7 @@
 # 模板化文档生成（通用方法论）
 
 本目录沉淀「按固定版式批量生成并迭代 Word 文档族」的方法、脚本与踩坑。
-**方法通用，不绑定某一项目**；项目专有信息只放在 `case-study-*.md` 与 `config.json` 里。
+**方法通用，不绑定某一项目**；项目专有信息仅保存在项目目录的受控事实文件与证据索引中。经验库中的案例必须匿名化，仅说明方法。
 
 ## 文件
 
@@ -18,7 +18,7 @@
 | `pitfalls.md` | 环境与格式坑 |
 | `dod-checklist.md` | 交付质量清单（Definition of Done） |
 | `diagram-generation-and-figure-insertion.md` | 配图生成与 Word 插图替换（绘图三原则、三个插图坑、自检与校验） |
-| `case-study-medical-laser-03GSR2607002.md` | 落地实例（含项目数据，可替换） |
+| `case-study-anonymized.md` | 落地实例（含项目数据，可替换） |
 | `tools/docx_ops.py` | 通用原语库（统一封装共用函数） |
 | `tools/fig_tools.py` | 配图绘制原语（框图/流程图/拓扑图；1 单位=1 英寸、边界精确、箭头端点自动算） |
 | `tools/build_docs.py` | 配置驱动的生成入口 |
@@ -32,12 +32,14 @@
 ## 换项目三步
 
 1. 复制本目录（方法论与 `tools/` 无需改动）。
-2. 新建 `config.json`：填项目号、产品/部件名、清单数据、指标、版本、编号、术语替换表。
+2. 建立项目主事实文件（YAML、JSON 或受控配置文件三选一）：填项目元数据、型号/配置、指标、版本、编号、术语和证据索引；调用本库脚本时生成适配的配置 JSON。
 3. 指定参考模板（只读），依次跑 `build_docs.py` → `consistency_check.py` → 渲染对拍 → 人工核图与签署。
 
 ## 质量与格式补充
 
+- generality-boundaries-and-precedence.md：通用规则边界、证据优先级和案例隔离要求。
+
 - `one-pass-quality-gate.md`：事实基线、自动质量闸门、证据/签署状态与发布归档。
-- `reference-format-profile-current-templates.md`：当前 PEMS 参考模板的格式档案。
+- `reference-format-profile-template.md`：项目模板格式档案的空白文字模板。
 - `reference-document-format-and-diagram-requirements.md`：参考文档的格式深度与必备框图要求。
 - `diagram-generation-and-figure-insertion.md`：配图怎么画才不重叠/不指错，以及插图替换进 Word 的坑与校验。

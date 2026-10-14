@@ -12,7 +12,7 @@
 
 ## 硬约束（违反即返工）
 
-1. **数据唯一**：型号/部件/指标/编号/厂商只写在 `config.json`；禁止在脚本或文档里另写一套。
+1. **数据唯一**：项目事实仅写入当前项目指定的主事实文件（`facts.yaml`、`facts.json` 或受控 `config.json` 三选一）；禁止在脚本、经验库或文档中另写一套。
 2. **格式靠继承**：以参考文档 `.docx` 为模板「就地替换」，**禁止从零拼 Word**
    （会丢封面大标题、浮动封面表、目录域、页眉页脚、分节）。
 3. **封面独立成页**；封面后不得出现空白页。
@@ -24,8 +24,8 @@
 ## 每次交付前必做（5 步）
 
 ```
-1) python tools/build_docs.py --config config.json         # 重新生成
-2) python tools/consistency_check.py --config config.json   # 主键/关键字对账
+1) 使用当前项目主事实文件生成；调用本库脚本时执行 `python tools/build_docs.py --config <project-config.json>`
+2) 运行一致性检查；调用本库脚本时执行 `python tools/consistency_check.py --config <project-config.json>`
 3) soffice --headless --convert-to pdf --outdir out "某份.docx"   # 一次只转一份
    → 抽 PDF 首页文本：封面独立页 + 无空白页 + 页眉编号正确
 4) 人工核对：图（图文一致）、签署栏、交叉引用文件名、他项目残留
@@ -45,7 +45,7 @@
 | `pitfalls.md` | 环境/格式坑 |
 | `dod-checklist.md` | 交付质量清单（DoD） |
 | `diagram-generation-and-figure-insertion.md` | 配图生成与插图替换（绘图三原则、插图三坑、自检与校验） |
-| `case-study-medical-laser-03GSR2607002.md` | 落地实例（含项目数据） |
+| `case-study-anonymized.md` | 落地实例（含项目数据） |
 | `tools/docx_ops.py` | 通用原语库（统一封装，跨项目复用） |
 | `tools/fig_tools.py` | 配图绘制原语（框图/流程图；边界精确、箭头端点自动算） |
 | `tools/build_docs.py` / `config.example.json` | 配置驱动的生成入口 |
@@ -64,4 +64,10 @@
 - 草稿、待执行、待审核和受控发布分开管理；无证据不填通过结论、签署人或测试日期。
 - 适用文档必须有当前项目的架构图、关键流程/状态图、硬件关系/拓扑图或可用性任务流程图；图示逐页渲染核对。
 - 配图先过机器自检（文本宽度预警 + 内嵌图片哈希/宽高比校验），再人工逐张看 PNG（脚本读不到图内文字）。
-- 详细规则见 `one-pass-quality-gate.md`、`reference-format-profile-current-templates.md`、`reference-document-format-and-diagram-requirements.md` 和 `diagram-generation-and-figure-insertion.md`。
+- 详细规则见 `one-pass-quality-gate.md`、`reference-format-profile-template.md`、`reference-document-format-and-diagram-requirements.md` 和 `diagram-generation-and-figure-insertion.md`。
+
+## 通用性边界
+
+- 通用经验库不得写入具体项目名称、项目号、型号、芯片、版本、阈值、人员、测试结果或结论。
+- 案例、历史文档和格式档案仅用于方法与版式参考，不能作为新项目事实来源。
+- 事实来源、证据边界、必备图示和发布条件遵循 generality-boundaries-and-precedence.md。

@@ -43,4 +43,4 @@
 4. `iteration-and-versioning.md` — 怎么迭代不失控
 5. `multi-ai-tool-adaptation.md` — 多工具协作
 6. `pitfalls.md` / `dod-checklist.md` — 避坑与交付自检
-7. `case-study-medical-laser-03GSR2607002.md` — 完整落地实例
+7. `case-study-anonymized.md` — 完整落地实例

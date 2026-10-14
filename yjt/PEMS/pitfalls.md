@@ -26,8 +26,10 @@ for prog in ('Word.Application', 'KWPS.Application'):   # 先 Word，失败退 W
 ## 2. LibreOffice 转 PDF
 
 ```powershell
-Get-Process soffice* | Stop-Process -Force      # 复用实例卡死时先杀
-soffice --headless --convert-to pdf --outdir OUT "file.docx"   # 一次一份
+# 不要终止用户正在使用的 soffice 进程；为本次自动化任务创建独立用户配置目录。
+$profile = Join-Path $env:TEMP ("pems_lo_" + [guid]::NewGuid())
+New-Item -ItemType Directory -Path $profile | Out-Null
+soffice --headless "-env:UserInstallation=file:///$($profile -replace '\\','/')" --convert-to pdf --outdir OUT "file.docx"   # 一次一份
 ```
 
 - 现象：一批命令里连续转多份 → 只成功第一份；卡死后只留 `lu*.tmp` 锁文件。
@@ -69,7 +71,7 @@ for el in list(body):
 | 形式 | XML | 备注 |
 |---|---|---|
 | DrawingML | `a:blip` / `w:drawing` | 新式 |
-| VML | `w:pict` / `v:shape` / `v:imagedata@r:id` | 老式（模板图常见，RD-030 4 张、血糖仪 058 3 张） |
+| VML | `w:pict` / `v:shape` / `v:imagedata@r:id` | 老式（模板图常见，必须逐图识别） |
 
 `Paragraph.text` 里**没有图内文字**；沿用旧模板时图上的标注（模式名、部件名、颜色）很可能
 还是旧项目的 → 交付前逐图人工看。
