@@ -18,12 +18,13 @@
 | `pitfalls.md` | 环境与格式坑 |
 | `dod-checklist.md` | 交付质量清单（Definition of Done） |
 | `diagram-generation-and-figure-insertion.md` | 配图生成与 Word 插图替换（绘图三原则、三个插图坑、自检与校验） |
-| `case-study-anonymized.md` | 落地实例（含项目数据，可替换） |
+| `case-study-anonymized.md` | 匿名化落地实例（仅保留方法，不是项目事实来源） |
 | `tools/docx_ops.py` | 通用原语库（统一封装共用函数） |
 | `tools/fig_tools.py` | 配图绘制原语（框图/流程图/拓扑图；1 单位=1 英寸、边界精确、箭头端点自动算） |
 | `tools/build_docs.py` | 配置驱动的生成入口 |
 | `tools/config.example.json` | 配置模板 |
 | `tools/consistency_check.py` | 配置驱动的一致性检查 |
+| `tools/release_ops.py` | 全 XML 文本扫描、页眉页脚/文本框受控替换、哈希与发布清单原语 |
 
 ## 一句话总纲
 
@@ -33,7 +34,7 @@
 
 1. 复制本目录（方法论与 `tools/` 无需改动）。
 2. 建立项目主事实文件（YAML、JSON 或受控配置文件三选一）：填项目元数据、型号/配置、指标、版本、编号、术语和证据索引；调用本库脚本时生成适配的配置 JSON。
-3. 指定参考模板（只读），依次跑 `build_docs.py` → `consistency_check.py` → 渲染对拍 → 人工核图与签署。
+3. 指定参考模板（只读），依次跑 `build_docs.py`（核对 `manifest.json`）→ `consistency_check.py`（按 `scope` 对账）→ 渲染对拍 → 人工核图与签署。
 
 ## 质量与格式补充
 
@@ -43,3 +44,10 @@
 - `reference-format-profile-template.md`：项目模板格式档案的空白文字模板。
 - `reference-document-format-and-diagram-requirements.md`：参考文档的格式深度与必备框图要求。
 - `diagram-generation-and-figure-insertion.md`：配图怎么画才不重叠/不指错，以及插图替换进 Word 的坑与校验。
+
+## 工具使用边界
+
+- `build_docs.py` 只接受主事实文件和项目配置提供的内容；模板只读，输出目录必须是新版本目录。已有输出默认会被拒绝，只有经过确认的重建才使用 `--force`。
+- `manifest.json` 是本轮交付的可追溯快照：保留项目配置、主事实文件、模板和产物的 SHA-256 哈希；不要手工修改它。
+- `global_subs` 会在正文、表格、页眉页脚和可见 Word XML 中复核替换；对于浮动文本框等非标准槽位，应把替换项登记在 `xml_subs`，再由残留词检查确认。
+- `consistency_check.py` 的 `scope` 是比较边界。只有属于同一事实范围的文档才互相比较型号、版本或术语集合。

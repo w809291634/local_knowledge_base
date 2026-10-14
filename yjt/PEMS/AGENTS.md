@@ -24,8 +24,8 @@
 ## 每次交付前必做（5 步）
 
 ```
-1) 使用当前项目主事实文件生成；调用本库脚本时执行 `python tools/build_docs.py --config <project-config.json>`
-2) 运行一致性检查；调用本库脚本时执行 `python tools/consistency_check.py --config <project-config.json>`
+1) 使用当前项目主事实文件生成；调用本库脚本时执行 `python tools/build_docs.py --config <project-config.json>`，确认输出目录中的 `manifest.json` 已记录配置、事实文件、模板和产物的哈希。
+2) 运行一致性检查；调用本库脚本时执行 `python tools/consistency_check.py --config <project-config.json>`。跨文档对比必须按 `scope` 分组，禁止把本来不应包含同一型号或术语的文档强行判为不一致。
 3) soffice --headless --convert-to pdf --outdir out "某份.docx"   # 一次只转一份
    → 抽 PDF 首页文本：封面独立页 + 无空白页 + 页眉编号正确
 4) 人工核对：图（图文一致）、签署栏、交叉引用文件名、他项目残留
@@ -50,6 +50,7 @@
 | `tools/fig_tools.py` | 配图绘制原语（框图/流程图；边界精确、箭头端点自动算） |
 | `tools/build_docs.py` / `config.example.json` | 配置驱动的生成入口 |
 | `tools/consistency_check.py` | 配置驱动的一致性检查 |
+| `tools/release_ops.py` | 全 XML 文本扫描、页眉页脚/文本框受控替换、哈希与发布清单原语 |
 
 ## 环境
 
@@ -61,6 +62,7 @@
 
 - 编写前冻结项目事实基线；用户新增确认先回写 YAML 或受控变更记录，再生成文档。
 - 未命中的替换槽位、事实冲突、旧项目残留、缺少必要图示或未提供实测证据时，必须阻断发布。
+- `build_docs.py` 默认拒绝覆盖已有输出；仅在确认同一版本目录需要重建时才显式使用 `--force`。每次交付保留生成的 `manifest.json` 与一致性检查报告。
 - 草稿、待执行、待审核和受控发布分开管理；无证据不填通过结论、签署人或测试日期。
 - 适用文档必须有当前项目的架构图、关键流程/状态图、硬件关系/拓扑图或可用性任务流程图；图示逐页渲染核对。
 - 配图先过机器自检（文本宽度预警 + 内嵌图片哈希/宽高比校验），再人工逐张看 PNG（脚本读不到图内文字）。
