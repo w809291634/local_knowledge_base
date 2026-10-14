@@ -330,3 +330,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0119 | 2026-10-08 | 自定义语音命令走 MCP 工具注册：跨线程投环 + AI 忙时压队执行（别在设备端匹配句子） | MCP,语音命令,线程边界,无锁环,AI抢占冲突,tabview切页,仿真载体 | fixed |
 | P-0120 | 2026-10-10 | LVGL 横屏帧率优化：有效的是绘制分块高度，双核要看块大小、PPA 两条路线都吃不到圆角+AA 文字（追加 4：mipi_dsi 对照工程黑屏结案=背光极性） | LVGL,帧率,ESP32-P4,esp_lvgl_adapter,buffer_height,PPA,双核,内部RAM,背光,output_invert,mipi_dsi,构建通路,假绿,取证,串口COM20 | fixed |
 | P-0121 | 2026-10-11 | lvgl_demo_ai 显示驱动整体换成 mipi_dsi 自拼管线：旧路线的 8ms 只能改托管组件才能藏，自拼反而零改库 | LVGL,帧率,ESP32-P4,自拼管线,DIRECT,LV_OS_CUSTOM,include路径,COMPILE_OPTIONS,managed_components,GT911,真机取证 | open |
+| P-0122 | 2026-10-14 | 单屏 tabview 拆 4 个 screen：共用 alias 让 534 个 id 不变；identifier 去重表必须跨页共享；changeScreen 只有 push（useStack 被忽略） | EEZ,多screen,identifier,changeScreen,fadeMode,门禁,nav命令 | fixed |

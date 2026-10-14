@@ -1762,3 +1762,13 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：旧显示/触摸路径整条退役，直接换参考工程的
   - 产出/结论：新增本地组件 components/dsi_display（自拼管线 + LV_OS_CUSTOM 钉核 + GT911 轮询快照），main.c 三处换入口，CMake/sdkconfig 同步；背光与 GT911 bring-up 故意继续走 BSP（output_invert 那条修复和亮度 API 都在那儿），并把参考工程自己列为欠账的 portMAX_DELAY 二次等改成 200ms 有界等 + 丢帧。build rc=0、我的文件 0 warning、bin 0x4efae0→0x4e8110（旧路线被链接器整条丢掉，这条差值就是"不再走它"的独立证据）；lvgl 与 adapter 两个托管组件还原成各 0 文件差异。**行为只能真机判**：钉核两行、屏上 FPS、四角触摸、psram largest。
   - 关联：P-0121
+### PR-0202 · 2026-10-14 15:10 · Qoder
+  - 提示词：现在我发现 eez 中就创建了一个 screen，我想使用 4 个，避免所有的事件 flow 都在一个 screen，同时也可以直接两个 screen 滑屏，你帮我适配一下，可以现在仿真器中试试 /（随后）这几页不需要滑屏，使用点击按钮切换，你先适配
+  - 诉求：外层四个分区拆成 4 个 EEZ screen，切页用按钮点击（滑屏撤掉），先在 PC 仿真器验证
+  - 产出/结论：build_ui.py 拆 s_ai/s_music/s_notify/s_settings + _page()；四屏共用 alias m ⇒ 565 个 id 里 534 个逐字不变，只有重复的 chrome 加页标签（_cid 挂末尾才不被 EXPLICIT_SHORT 破坏）；高亮退回 DSL checked 画死，外层 switchTab/onTabChange 两条动作链整体退役。三处硬伤逐个修：assign_ids 去重表改模块级共享（否则 m_box/m_t 跨页撞）、json2eez 的 Comment 合成 id 加页名、place() 的无条件 strip_goto 加 keep_goto。查清 changeScreen 在这版引擎只有 push（useStack 没人读），栈是 10 格挤掉最老的所以无害，native 侧改用 eez_flow_set_screen 才是真 replace。验收：all.py --sim rc=0、门禁 9.84%（基线 9.88~9.95）、rail 真点击 scr 0→1→0 且高亮 1000→0100→1000、设备 build rc=0（bin +24KB）。
+  - 关联：P-0122
+### PR-0203 · 2026-10-14 16:20 · Qoder
+  - 提示词：这个左侧按钮能够做到顶层吗，避免点击后，按钮也呈现淡入淡出效果，要求 eez 中修改
+  - 诉求：切屏时左侧导航不要跟着淡；且希望这个改法留在 EEZ 侧
+  - 产出/结论：先中后否 —— EEZ 没有跨屏常驻层（app.asar 里 lv_layer_top 全是 LVGL-WASM 导出桩、topLayer 全是 Floating-UI；屏生命周期只有 createAtStart/deleteOnScreenUnload/screensLifetimeSupport），而 lv_scr_load_anim 作用于整个 screen，画在屏里的 rail 必然跟着动。EEZ 内的正确解=屏间过渡一律 NONE（build_ui 单点 SCREEN_GOTO_FADE，rail+tile 都读它；EEZ 实测接受 "NONE"：build 无错无警告、工程里 16 条 changeScreen 的 fadeMode 全 NONE/speed 全 0），native 语音切屏同步改 LV_SCR_LOAD_ANIM_NONE 保持两条路径同一观感。仿真 rc=0 门禁 9.85%、[rail] 点击切屏断言照旧过；设备 build rc=0。真·顶层要 native 一行 reparent + 把退役的 CHECKED 运行期同步请回来，等用户点头再做。
+  - 关联：P-0122
