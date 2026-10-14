@@ -8,11 +8,15 @@ docx_ops —— Word 文档「模板就地替换」通用原语库
 依赖：python-docx
 """
 import copy
+import hashlib
 import os
+import struct
 
 from docx import Document
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
+from docx.shared import Inches, Pt
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.text.run import Run
 
 
@@ -347,6 +351,163 @@ def insert_page_break(paragraph_el):
     p = OxmlElement('w:p')
     p.append(r)
     paragraph_el.addnext(p)
+
+
+# --------------------------------------------------------------------------
+# 图片：图题驱动的插图替换与校验
+# 用法：specs = [(png, '图 1  xxx', anchor_heading, width_in), ...]
+#      n = replace_figures(doc, specs)     # 删旧图 + 依序插入
+#      drop_orphan_image_rels(doc)         # 清掉包内旧图残留（瘦身）
+#      ok, rows = verify_figures(doc, [s[0] for s in specs])
+# --------------------------------------------------------------------------
+def has_inline_image(p):
+    """段落是否含内联图片（DrawingML a:blip）"""
+    return bool(p._p.findall('.//' + qn('a:blip')))
+
+
+def iter_image_paragraphs(doc):
+    """按文档顺序返回含内联图片的段落"""
+    return [p for p in doc.paragraphs if has_inline_image(p)]
+
+
+def paragraph_image_sha256(doc, p):
+    """取段落内嵌图片的 sha256（图替换后的二进制校验用）"""
+    blip = p._p.findall('.//' + qn('a:blip'))[0]
+    rid = blip.get(qn('r:embed'))
+    return hashlib.sha256(doc.part.related_parts[rid].blob).hexdigest()
+
+
+def find_body_heading(doc, text):
+    """按前缀在**正文**定位标题段落；跳过目录（toc 样式）段落。
+
+    必须跳过目录：目录条目与正文标题同文本，简单前缀匹配会插错位置。
+    """
+    for p in doc.paragraphs:
+        style = p.style.name if p.style else ''
+        if style.lower().startswith('toc'):
+            continue
+        if paragraph_text(p).strip().startswith(text):
+            return p
+    return None
+
+
+def clear_figures(doc, caption_prefix='图 '):
+    """删除所有内联图片段落 + 紧随其后的居中图题段落，返回删除条数"""
+    doomed = []
+    for p in doc.paragraphs:
+        if has_inline_image(p):
+            doomed.append(p)
+        elif paragraph_text(p).strip().startswith(caption_prefix) \
+                and p.alignment == WD_ALIGN_PARAGRAPH.CENTER:
+            doomed.append(p)
+    for p in doomed:
+        p._p.getparent().remove(p._p)
+    return len(doomed)
+
+
+def insert_figure_before(doc, anchor_para, img_path, caption, width_in,
+                         caption_size_pt=10.5, caption_bold=True):
+    """在 anchor 段落前插入「居中图片 + 居中图题」两个段落。
+
+    doc.add_picture 只能追加到文末，这里靠 addprevious 把它挪到锚点前。
+    """
+    doc.add_picture(img_path, width=Inches(width_in))
+    pic = doc.paragraphs[-1]
+    pic.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    anchor_para._p.addprevious(pic._p)
+
+    cap = doc.add_paragraph(caption)
+    cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    for r in cap.runs:
+        r.font.size = Pt(caption_size_pt)
+        r.bold = caption_bold
+    anchor_para._p.addprevious(cap._p)
+
+
+def replace_figures(doc, specs, caption_size_pt=10.5):
+    """重建全部插图：先清旧图，再按 specs 依序插到各锚点前。
+
+    specs: [(png_path, caption, anchor_heading_text, width_in), ...]
+    同一锚点会被插入多张时，按 specs 顺序依次排好。
+    """
+    clear_figures(doc)
+    anchors = {}
+    for _, _, anchor, _ in specs:
+        if anchor not in anchors:
+            t = find_body_heading(doc, anchor)
+            if t is None:
+                raise KeyError('未在正文找到锚点标题: %s' % anchor)
+            anchors[anchor] = t
+    for png, caption, anchor, width_in in specs:
+        insert_figure_before(doc, anchors[anchor], png, caption, width_in, caption_size_pt)
+    return len(specs)
+
+
+def drop_orphan_image_rels(doc):
+    """删除未被正文引用的图片关系。
+
+    删段落不会连带删包内图片部件，残留旧图会让文件虚胖（曾 1.5MB→2.4MB）。
+    python-docx 保存时只写出「可达」部件，所以断开关系即可瘦身，无需改 zip。
+    """
+    used = set()
+    for p in doc.paragraphs:
+        for blip in p._p.findall('.//' + qn('a:blip')):
+            rel = doc.part.rels.get(blip.get(qn('r:embed')))
+            if rel is not None:
+                used.add(os.path.basename(rel.target_ref or ''))
+    dropped = []
+    for rid, rel in list(doc.part.rels.items()):
+        base = os.path.basename(rel.target_ref or '')
+        if base.startswith('image') and base.endswith('.png') and base not in used:
+            doc.part.drop_rel(rid)
+            dropped.append(base)
+    return dropped
+
+
+def png_size(path):
+    """读 PNG 头取 (宽, 高) 像素"""
+    with open(path, 'rb') as f:
+        head = f.read(24)
+    return struct.unpack('>II', head[16:24])
+
+
+def verify_figures(doc, expected_pngs):
+    """校验图组：数量/顺序 + 二进制哈希 + 显示宽高比（防拉伸）。
+
+    返回 (ok, rows)，rows 每项为 dict(png, sha_ok, ratio_ok, disp_w, disp_h, ratio)。
+    """
+    rows = []
+    ok = True
+    for i, (p, png) in enumerate(zip(iter_image_paragraphs(doc), expected_pngs)):
+        blob = doc.part.related_parts[
+            p._p.findall('.//' + qn('a:blip'))[0].get(qn('r:embed'))].blob
+        sha_ok = hashlib.sha256(blob).hexdigest() == \
+            hashlib.sha256(open(png, 'rb').read()).hexdigest()
+        inl = p._p.findall('.//' + qn('wp:inline'))
+        ext = inl[0].find(qn('wp:extent'))
+        cx, cy = int(ext.get('cx')), int(ext.get('cy'))
+        pw, ph = png_size(png)
+        ratio = cx / cy
+        ratio_ok = abs(pw / ph - ratio) < 0.01          # 容差 1%
+        ok = ok and sha_ok and ratio_ok
+        rows.append(dict(png=os.path.basename(png), sha_ok=sha_ok, ratio_ok=ratio_ok,
+                         disp_w=cx / 914400.0, disp_h=cy / 914400.0, ratio=ratio))
+    if len(rows) != len(expected_pngs):
+        ok = False
+    return ok, rows
+
+
+def assert_writable(path):
+    """确认文件未被 Word/WPS 独占锁定；被占用时抛 IOError。
+
+    python-docx 保存到被打开的 .docx 会报 PermissionError，且此时改动已丢，
+    所以动笔前先探一次。
+    """
+    try:
+        with open(path, 'rb+'):
+            pass
+    except OSError as e:
+        raise IOError('目标文档被其它进程占用，请先关闭：%s' % path) from e
 
 
 # --------------------------------------------------------------------------

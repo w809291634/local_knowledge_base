@@ -41,14 +41,17 @@
 | `multi-ai-tool-adaptation.md` | 一套内容适配多 AI 工具 |
 | `pitfalls.md` | 环境/格式坑 |
 | `dod-checklist.md` | 交付质量清单（DoD） |
+| `diagram-generation-and-figure-insertion.md` | 配图生成与插图替换（绘图三原则、插图三坑、自检与校验） |
 | `case-study-medical-laser-03GSR2607002.md` | 落地实例（含项目数据） |
 | `tools/docx_ops.py` | 通用原语库（统一封装，跨项目复用） |
+| `tools/fig_tools.py` | 配图绘制原语（框图/流程图；边界精确、箭头端点自动算） |
 | `tools/build_docs.py` / `config.example.json` | 配置驱动的生成入口 |
 | `tools/consistency_check.py` | 配置驱动的一致性检查 |
 
 ## 环境
 
 - Python 3 + `python-docx`；`.doc` 转换需 `pywin32`（Word 或 WPS）。
+- 配图需 `matplotlib`（中文字体用 SimHei/Microsoft YaHei）。
 - 渲染校验用 LibreOffice（`soffice --headless`）。
 
 ## 质量闸门补充（2026-10-14）
@@ -57,4 +60,5 @@
 - 未命中的替换槽位、事实冲突、旧项目残留、缺少必要图示或未提供实测证据时，必须阻断发布。
 - 草稿、待执行、待审核和受控发布分开管理；无证据不填通过结论、签署人或测试日期。
 - 适用文档必须有当前项目的架构图、关键流程/状态图、硬件关系/拓扑图或可用性任务流程图；图示逐页渲染核对。
-- 详细规则见 `one-pass-quality-gate.md`、`reference-format-profile-current-templates.md` 和 `reference-document-format-and-diagram-requirements.md`。
+- 配图先过机器自检（文本宽度预警 + 内嵌图片哈希/宽高比校验），再人工逐张看 PNG（脚本读不到图内文字）。
+- 详细规则见 `one-pass-quality-gate.md`、`reference-format-profile-current-templates.md`、`reference-document-format-and-diagram-requirements.md` 和 `diagram-generation-and-figure-insertion.md`。

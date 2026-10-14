@@ -16,8 +16,10 @@
 | `multi-ai-tool-adaptation.md` | 一套内容适配多种 AI 工具 |
 | `pitfalls.md` | 环境与格式坑 |
 | `dod-checklist.md` | 交付质量清单（Definition of Done） |
+| `diagram-generation-and-figure-insertion.md` | 配图生成与 Word 插图替换（绘图三原则、三个插图坑、自检与校验） |
 | `case-study-medical-laser-03GSR2607002.md` | 落地实例（含项目数据，可替换） |
 | `tools/docx_ops.py` | 通用原语库（统一封装共用函数） |
+| `tools/fig_tools.py` | 配图绘制原语（框图/流程图/拓扑图；1 单位=1 英寸、边界精确、箭头端点自动算） |
 | `tools/build_docs.py` | 配置驱动的生成入口 |
 | `tools/config.example.json` | 配置模板 |
 | `tools/consistency_check.py` | 配置驱动的一致性检查 |
@@ -37,3 +39,4 @@
 - `one-pass-quality-gate.md`：事实基线、自动质量闸门、证据/签署状态与发布归档。
 - `reference-format-profile-current-templates.md`：当前 PEMS 参考模板的格式档案。
 - `reference-document-format-and-diagram-requirements.md`：参考文档的格式深度与必备框图要求。
+- `diagram-generation-and-figure-insertion.md`：配图怎么画才不重叠/不指错，以及插图替换进 Word 的坑与校验。
