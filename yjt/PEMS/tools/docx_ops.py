@@ -353,6 +353,34 @@ def insert_page_break(paragraph_el):
     paragraph_el.addnext(p)
 
 
+def trim_trailing_empty_paragraphs(doc, keep=1):
+    """删除文末（最后一个块/sectPr 之前）的纯空段，避免渲染出末尾空白页。
+
+    模板常在正文结束后遗留若干空段（元良 RD-026 末尾 4 个 → 第 5 页只有页眉）。
+    keep=1 表示至少保留一个空段，维持段落标记。返回删除数。
+    """
+    body = doc.element.body
+    # 文末 sectPr 之前的块序列
+    blocks = [el for el in body if el.tag != qn('w:sectPr')]
+    tail = []
+    for el in reversed(blocks):
+        if el.tag == qn('w:p') and not ''.join(t.text or '' for t in el.iter(qn('w:t'))).strip() \
+                and not el.findall('.//' + qn('w:br')) \
+                and not el.findall('.//' + qn('w:drawing')) \
+                and not el.findall('.//' + qn('w:pict')) \
+                and not has_section_break_el(el):
+            tail.append(el)
+        else:
+            break
+    removed = 0
+    for el in tail:
+        if removed >= max(0, len(tail) - keep):
+            break
+        body.remove(el)
+        removed += 1
+    return removed
+
+
 # --------------------------------------------------------------------------
 # 图片：图题驱动的插图替换与校验
 # 用法：specs = [(png, '图 1  xxx', anchor_heading, width_in), ...]
