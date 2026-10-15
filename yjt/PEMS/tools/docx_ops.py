@@ -1212,6 +1212,57 @@ def effective_outline(p_el, smap, _depth=0):
     return None
 
 
+def sect_breaks_page_el(p_el):
+    """段落携带的分节符（pPr/sectPr）是否换页；type=continuous 不换页，缺省按 nextPage（§39）。"""
+    pPr = p_el.find(qn('w:pPr'))
+    sect = pPr.find(qn('w:sectPr')) if pPr is not None else None
+    if sect is None:
+        return False
+    typ = sect.find(qn('w:type'))
+    val = (typ.get(qn('w:val')) or 'nextPage') if typ is not None else 'nextPage'
+    return val != 'continuous'
+
+
+def chapter_pad_map(doc):
+    """`[(章标题元素, 其前连续顶页空段元素列表)]`——`pagination_audit.chapter_pad` 与
+    `pagination_repair('drop_chapter_pad')` **共用**这一份判据（§8 第 4 步：查改同源）。
+
+    边界与 audit 一致：只看封面信息表之后（封面留白不算顶页，§42）；lvl==0 才算章标题；
+    往回连续数空段，遇分节符载体段（它前面的空段属于上一节）整条作废；<2 段不算缺陷。
+    **含域代码的空段（`fldChar`/`instrText`）不是回车**：目录区的 `end`/`separate` 常常单独占一段，
+    删掉就留下没闭合的 TOC 域（实测 RD-068 begin/separate 各 6、end 只有 5 → Word 刷新时
+    把 `TOC \\o` 指令裸露在页面上），所以它必须让整条链作废，而不只是"这一跳不删"。
+    """
+    smap = _style_outline_map(doc)
+    kids = list(doc.element.body.iterchildren())
+    etxt = lambda el: ''.join(t.text or '' for t in el.iter(qn('w:t')))
+    egra = lambda el: bool(el.findall('.//' + qn('w:drawing'))
+                           or el.findall('.//' + qn('w:pict')))
+    efld = lambda el: bool(el.findall('.//' + qn('w:fldChar'))
+                           or el.findall('.//' + qn('w:instrText')))
+    cover_end = len(kids)
+    for k, c in enumerate(kids):
+        if c.tag.split('}')[-1] == 'tbl' and '文件编号' in etxt(c):
+            cover_end = k
+            break
+    hits = []
+    for i, c in enumerate(kids):
+        if c.tag.split('}')[-1] != 'p' or i < cover_end or effective_outline(c, smap) != 0:
+            continue
+        pads, j = [], i - 1
+        while j >= 0 and kids[j].tag.split('}')[-1] == 'p' \
+                and not etxt(kids[j]).strip() and not egra(kids[j]):
+            # 分节符载体 / 域代码载体 → 整条作废（前面的空段不归本章管）
+            if kids[j].find('.//' + qn('w:sectPr')) is not None or efld(kids[j]):
+                pads = []
+                break
+            pads.append(kids[j])
+            j -= 1
+        if len(pads) >= 2:
+            hits.append((c, pads))
+    return hits
+
+
 def pagination_audit(doc, cover_texts=()):
     """分页 / 标题树体检（只读）。返回 dict，各项为空即通过。
 
@@ -1262,6 +1313,8 @@ def pagination_audit(doc, cover_texts=()):
     out['toc_field'] = bool(re.search(r'<w:instrText[^>]*>\s*TOC',
                                       doc.element.xml))
 
+    padmap = {h: len(p) for h, p in chapter_pad_map(doc)}   # 元素作键（§43），不用 id()
+
     for i, c in enumerate(kids):
         if c.tag.split('}')[-1] != 'p':
             continue
@@ -1273,7 +1326,11 @@ def pagination_audit(doc, cover_texts=()):
         hard = any(b.get(qn('w:type')) == 'page'
                    for b in c.iter(qn('w:br')))
         if hard and pbb:
-            out['stacked_breaks'].append(t[:30] or '<空段>')          # §39
+            out['stacked_breaks'].append(t[:30] or '<空段>')          # §39 段前分页+段内硬分页
+        elif pbb:
+            prv = kids[i - 1] if i > 0 else None                     # §39 分节符+段前分页
+            if prv is not None and prv.tag.split('}')[-1] == 'p' and sect_breaks_page_el(prv):
+                out['stacked_breaks'].append('分节符+段前分页：' + (t[:24] or '<空段>'))
         if pbb and lvl is None and t:
             out['body_page_break'].append(t[:30])                     # §39
         if lvl is None and pPr is not None and (
@@ -1281,18 +1338,9 @@ def pagination_audit(doc, cover_texts=()):
             out['keep_on_body'].append(                               # §38
                 ('<图/空段>' if egra(c) else '') + t[:30])
         if lvl == 0:
-            n = 0
-            j = i - 1
-            while j >= 0 and kids[j].tag.split('}')[-1] == 'p' \
-                    and not etxt(kids[j]).strip() and not egra(kids[j]):
-                # 遇分节符载体段即停：其前空段属上一节，不是本章的顶页回车（§23 边界1）
-                if kids[j].find('.//' + qn('w:sectPr')) is not None:
-                    n = 0
-                    break
-                n += 1
-                j -= 1
+            n = padmap.get(c, 0)                                     # §23 判据见 chapter_pad_map
             if n >= 2 and i >= cover_end:
-                out['chapter_pad'].append((t[:24], n))                # §23
+                out['chapter_pad'].append((t[:24], n))
             if nt in {re.sub(r'\s+', '', x) for x in cover_texts}:
                 out['outline_anomaly'].append(('封面短行带一级大纲', t[:24]))
         if lvl is not None and not t and not in_field(c):
@@ -1301,7 +1349,6 @@ def pagination_audit(doc, cover_texts=()):
                 and _NUM_HEADING_RE.match(t) and not _CAPTION_RE.match(t):
             out['numbered_not_in_tree'].append(t[:30])                # §41
     return out
-
 
 def page_ink_coverage(pdf_path, dpi=50, band=0.08, cutoff=200):
     """逐页返回"正文区墨占比(%)"，用于空白页判据（§40）。
@@ -1343,14 +1390,166 @@ def page_ink_coverage(pdf_path, dpi=50, band=0.08, cutoff=200):
 
 
 def grade_pages_by_ink(coverage, blank=0.15, thin=0.8):
-    """按 §37 分级 + §40 墨占比判据给出 (阻断项, 提示项)。"""
+    """按 §37 分级 + §40 墨占比判据给出 (阻断项, 提示项)。
+
+    末页单列：§41 的"末页 <0.8% 记提示"要盖过"空白页阻断"——正文只剩 1~2 行的末页
+    墨占比会低到 0.1%，那是 §37 说的溢出行，交人决定，不能用偏离基线的行距去压页；
+    只有**一点墨都没有**（c==0）的末页才是真空白页，仍然阻断。
+    """
     block, warn = [], []
     n = len(coverage)
     for i, c in enumerate(coverage, 1):
-        if c < blank:
+        if c <= 0.0:
+            block.append('第%d页正文区无墨（空白页）' % i)
+        elif i == n and c < thin:
+            warn.append('第%d页%.2f%%墨（末页溢出，交人决定）' % (i, c))
+        elif c < blank:
             block.append('第%d页正文区无墨（空白页）' % i)
         elif i < n and c < thin:
             block.append('第%d页仅%.2f%%墨（疑似顶页/分页错位）' % (i, c))
-        elif i == n and c < thin:
-            warn.append('第%d页%.2f%%墨（末页溢出，交人决定）' % (i, c))
     return block, warn
+
+
+def pagination_repair(doc, cover_texts=(), apply=None):
+    """按 pagination_audit 的判据**就地修复**分页与标题树缺陷，返回 {项: 处置数}。
+
+    与 pagination_audit 共用同一套判据，避免"查的是一套、改的是另一套"。
+    `apply` 可传子集限定动作；默认全开。所有动作都不改文字内容、不改 pStyle、不改字号。
+
+    动作：
+      drop_hard_break   段前分页已存在时删掉段内 `w:br type=page`（§39 空白页根因）；
+                        段内只有硬分页符时：纯空占位段整段删除，有内容的段**换成**
+                        `pageBreakBefore`（计入 `pbb_from_hard`），保证全包计数归零
+      drop_pbb_after_sect 前一段是**换页**分节符时删掉本段的 `pageBreakBefore`
+                        （§39 另一种叠加：分节符已换页，再写段前分页就多一张空白页；
+                         sectPr 的 type 为 continuous 时段前分页要保留）
+      drop_pad_tabs     章级标题里多余的制表符（保留 1 个，与全文其余章标题对齐）
+      drop_chapter_pad  章标题前的顶页空段（§23；封面区与分节符载体段不动）
+      demote_cover      封面文档名的大纲级别降为正文级 9（§25/§42）
+      demote_empty      空标题段降级为 9（§24；带 sectPr/域/图形的只能降级不能删）
+      drop_body_keep    正文级段落上的 keepNext/keepLines（§38 "点点"根因）
+      drop_keep_before_table
+                        标题段带 keepNext 且**下一块就是整张表**时摘掉（§45.2；
+                        audit 的 keep_on_body 不收它——它不是"属性加错了段"，是"绑定对象太大"）
+    """
+    ALL = ('drop_hard_break', 'drop_pbb_after_sect', 'drop_pad_tabs', 'drop_chapter_pad',
+           'demote_cover', 'demote_empty', 'drop_body_keep', 'drop_keep_before_table')
+    apply = set(ALL) if apply is None else set(apply)
+    stats = dict.fromkeys(ALL, 0)
+    smap = _style_outline_map(doc)
+    body = doc.element.body
+    etxt = lambda el: ''.join(t.text or '' for t in el.iter(qn('w:t')))
+    egra = lambda el: bool(el.findall('.//' + qn('w:drawing'))
+                           or el.findall('.//' + qn('w:pict')))
+
+    def flag_on(pPr, tag):
+        if pPr is None:
+            return False
+        e = pPr.find(qn(tag))
+        if e is None:
+            return False
+        return (e.get(qn('w:val')) or '1').strip().lower() not in ('0', 'false', 'off', 'none')
+
+    def set_outline(el, val):
+        pPr = el.get_or_add_pPr()
+        e = pPr.find(qn('w:outlineLvl'))
+        if e is None:
+            e = OxmlElement('w:outlineLvl')
+            pPr.append(e)
+        e.set(qn('w:val'), str(val))
+
+    sect_breaks_page = sect_breaks_page_el          # 与 audit 同一判据
+
+    # 封面区边界
+    kids = list(body.iterchildren())
+    cover_end = len(kids)
+    for k, c in enumerate(kids):
+        if c.tag.split('}')[-1] == 'tbl' and '文件编号' in etxt(c):
+            cover_end = k
+            break
+    coverset = {re.sub(r'\s+', '', x) for x in cover_texts}
+
+    for i, c in enumerate(kids):
+        if c.tag.split('}')[-1] != 'p':
+            continue
+        pPr = c.find(qn('w:pPr'))
+        t = etxt(c).strip()
+        lvl = effective_outline(c, smap)
+        pbb = flag_on(pPr, 'w:pageBreakBefore')
+        if 'drop_hard_break' in apply:
+            brs = [b for b in list(c.iter(qn('w:br'))) if b.get(qn('w:type')) == 'page']
+            for b in brs:
+                run = b.getparent()
+                if run is not None:
+                    run.remove(b)
+                stats['drop_hard_break'] += 1
+            if brs and not pbb:
+                carrier = (pPr is not None and pPr.find(qn('w:sectPr')) is not None) \
+                    or egra(c) or bool(c.findall('.//' + qn('w:fldChar')))
+                if not t and not carrier:
+                    nxt = c.getnext()
+                    nxt_breaks = (nxt is not None and nxt.tag == qn('w:p') and (
+                        flag_on(nxt.find(qn('w:pPr')), 'w:pageBreakBefore')
+                        or any(b.get(qn('w:type')) == 'page' for b in nxt.iter(qn('w:br')))))
+                    if nxt_breaks:
+                        # 下一段自己就换页 → 占位段删掉，否则"空段分页 + 下段分页"又是一张空白页
+                        body.remove(c)
+                        stats['pad_removed'] = stats.get('pad_removed', 0) + 1
+                        continue
+                    # 下一段不换页 → 这个空段就是封面/章节的分页占位，**就地转成段前分页**，
+                    # 不能删（删了分页意图就丢了，实测封面与正文第一块被排到同一页）
+                pPr2 = c.get_or_add_pPr()
+                if pPr2.find(qn('w:pageBreakBefore')) is None:
+                    e = OxmlElement('w:pageBreakBefore')
+                    pPr2.insert(0 if pPr2.find(qn('w:pStyle')) is None else 1, e)
+                    stats['pbb_from_hard'] = stats.get('pbb_from_hard', 0) + 1
+        if 'drop_pbb_after_sect' in apply and pbb and pPr is not None:
+            prev = c.getprevious()
+            if prev is not None and prev.tag.split('}')[-1] == 'p' and sect_breaks_page(prev):
+                for old in pPr.findall(qn('w:pageBreakBefore')):
+                    pPr.remove(old)
+                    stats['drop_pbb_after_sect'] += 1
+        if 'drop_pad_tabs' in apply and lvl == 0:
+            tabs = [x for x in c.iter(qn('w:tab'))]
+            for x in tabs[1:]:
+                x.getparent().remove(x)
+                stats['drop_pad_tabs'] += 1
+        if 'drop_body_keep' in apply and lvl is None and pPr is not None:
+            for tag in ('w:keepNext', 'w:keepLines'):
+                e = pPr.find(qn(tag))
+                if e is not None and flag_on(pPr, tag):
+                    pPr.remove(e)
+                    stats['drop_body_keep'] += 1
+        if 'drop_keep_before_table' in apply and lvl is not None and pPr is not None \
+                and flag_on(pPr, 'w:keepNext'):
+            nxt = c.getnext()          # §45.2：标题 + 整张表被 keepNext 粘成一整块，块高超过剩余页高时
+            if nxt is not None and nxt.tag == qn('w:tbl'):
+                # 整块跳到下一页，上一页底部留大片空白，表后的说明行还会被挤成 0.26% 墨的薄页。
+                pPr.remove(pPr.find(qn('w:keepNext')))
+                stats['drop_keep_before_table'] += 1
+        if 'demote_cover' in apply and lvl == 0 and i < cover_end \
+                and re.sub(r'\s+', '', t) in coverset:
+            set_outline(c, 9)
+            stats['demote_cover'] += 1
+        if 'demote_empty' in apply and lvl is not None and not t:
+            set_outline(c, 9)
+            stats['demote_empty'] += 1
+
+    # 顶页空段：判据取自 chapter_pad_map，与 audit 的 chapter_pad 同一份（§8 第 4 步）。
+    # 删一段序号全变，所以按最新段落表反复重扫（§23 边界3）。
+    if 'drop_chapter_pad' in apply:
+        for _round in range(6):
+            hits = chapter_pad_map(doc)
+            if not hits:
+                break
+            did = 0
+            for _h, pads in hits:
+                for el in pads:
+                    # 只删"纯空段"：图形/分节符/域载体一律保留（chapter_pad_map 已排除图形与分节符）
+                    if el.getparent() is body:
+                        body.remove(el)
+                        did += 1
+            stats['drop_chapter_pad'] += did
+            if not did:
+                break
+    return {k: v for k, v in stats.items() if v}

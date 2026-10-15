@@ -27,7 +27,11 @@
 1) 使用当前项目主事实文件生成；调用本库脚本时执行 `python tools/build_docs.py --config <project-config.json>`，确认输出目录中的 `manifest.json` 已记录配置、事实文件、模板和产物的哈希。
 2) 运行一致性检查；调用本库脚本时执行 `python tools/consistency_check.py --config <project-config.json>`。跨文档对比必须按 `scope` 分组，禁止把本来不应包含同一型号或术语的文档强行判为不一致。
 3) soffice --headless --convert-to pdf --outdir out "某份.docx"   # 一次只转一份
-   → 抽 PDF 首页文本：封面独立页 + 无空白页 + 页眉编号正确
+   → 逐页 page_ink_coverage + grade_pages_by_ink：封面独立页 + 无空白页 + 页眉编号正确
+     （不要用抽文字字数判空白页：中文 PDF 缺 ToUnicode 会双向误判，见 pitfalls.md §41）
+3b) pagination_audit(doc, cover_texts=[封面文档名]) 七项必须全清；需修复时只用同源的
+     pagination_repair(..., apply=[本轮已确认的动作])，改完复跑 audit 并重渲染核账页数
+     （流程见 cover-pagination-and-sections.md §8，终检项见 dod-checklist.md F 组）
 4) 人工核对：图（图文一致）、签署栏、交叉引用文件名、他项目残留
 5) **用 Word 只读打开每一份产物并记录页数**（LibreOffice 与 python-docx 都不报的损坏，Word 会报；
    典型诱因见 `pitfalls.md` 第 6/7 节）
