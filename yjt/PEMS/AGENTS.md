@@ -142,6 +142,29 @@
   `stacked_breaks` / `body_page_break` / `keep_on_body` / `chapter_pad` / `outline_anomaly` /
   `numbered_not_in_tree` / `toc_field`；渲染侧配 `page_ink_coverage(pdf)` + `grade_pages_by_ink(cov)`。
 
+## 分页收口第三轮：判据形态与残留状态（2026-10-15 追加，§45–§50）
+
+- **修复动作不得污染自己的判据**：`drop_hard_break` 会把硬分页符换成 `pageBreakBefore`，所以判
+  "本文档是否已按章分页"要同时数**段前分页 / 段内硬分页符 / 前一段换页分节符**三种等价形态，
+  并且复核必须排在清空段之后。§46、§45.1。
+- **章级排版按模板多数派在同一文档内统一**（补齐 / 保持连续 / 取消少数派），不要机械"每章一页"：
+  6 页的表单式报告全拆页会造出 §41 的半空页。封面后第一块（目录／前言）是**前置件例外**，
+  必须保留分页，且要找封面表之后的第一个有字段落，不能用序号差。§46。
+- **"无文字的空段"有三种命运**：单独承载域 `end` 的删了 TOC 域不闭合（刷新后指令裸露在页面上）；
+  只含硬分页符且是封面与正文之间唯一换页的删了正文会挤回封面页，应就地转成 `pageBreakBefore`；
+  只有纯回车占位才删。守卫写进"数空段"的循环里，别写在删除动作的 if 上。§47。
+- **修完分页的三项回归**：`toc_diagnose` 的 `balance==0`、页数核账（新页数＝旧页数−消除的空白页数）、
+  末页只在 `c==0` 时阻断（1~2 行溢出记提示，压页不得动正文基线）；图示核对数**图张数**不是"有图的页"。§48。
+- **判据对、对象也会选错**：紧跟分节符的第一章不算"自己分了页"；目录条目文本是"标题＋制表线＋页码"；
+  表头列名不是"标签：值"点位。生成器与闸门必须共用同一个豁免函数，否则一边豁免一边不豁免。§49。
+- **无头 Office/LibreOffice 失败多为状态残留**：`GetActiveObject` 取的是 ROT 里任意一个实例
+  （同一句代码可能取到用户的可见实例）；"服务器运行失败 / Operation unavailable" 先回收孤儿实例再退避重试；
+  LibreOffice 每次转换用**全新** `UserInstallation` 目录并重试 3 次；判占用先试 `os.rename()`。§50、§44。
+- 以上修复动作一律走同源原语 `tools/docx_ops.py:pagination_repair(doc, cover_texts=[...], apply=[...])`
+  （动作：`drop_hard_break` / `drop_pbb_after_sect` / `drop_pad_tabs` / `drop_chapter_pad` /
+  `demote_cover` / `demote_empty` / `drop_body_keep` / `drop_keep_before_table`），
+  顶页空段判据与 audit 共用 `chapter_pad_map(doc)`；项目里不再自写第二套分页修复。
+
 ## 第二轮改同一批文档时的七条硬约束（2026-10-15 追加）
 
 - **槽位"已消费"按段落元素身份记录**，不按序号：多行插入、去重删段、显式合并都会让序号错位并
