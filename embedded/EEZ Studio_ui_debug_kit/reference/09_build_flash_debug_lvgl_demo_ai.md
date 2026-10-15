@@ -4,29 +4,28 @@
 > 并把"一条命令走到底"的顺序钉死。所有条目都是本项目实际用过的，不是抄官网。
 > 相关：帧率与 PPA 见 `reference/08_lvgl_esp32p4_frame_rate.md`；通用方法论见 `PLAYBOOK.md`。
 >
-> ★ **"这台机器"= 记录时的来源机器。本文件全文（不止 §0 那张表，含 §4 的 `addr2line`、各条命令示例里的
-> `D:\esp32_8266_files\...` 与 `C:\Users\Administrator\...`）都是那台机器的实测值，换机一律失效。**
-> 照抄前先换当前机器的真值，确认不了就问用户，禁止扫盘猜（见 `embedded/README.md` 第 5 节）。
+> ★ **"这台机器"= 记录时的来源机器（用户 `Administrator`）。** 2026-10-15 已在当前机器逐条实测，结果标在 §0 表的状态列；
+> 通用对照表与处置规矩见 `embedded/README.md` 第 6 节。表里没有的路径（含 §4 的 `addr2line`）先实测再用，
+> 实测不到就问用户，**禁止扫盘猜**。
 
 ---
 
 ## 0. 路径与占位符对照
 
-> ★ **下表全部绝对路径（`C:\Users\Administrator\...`、`D:\esp32_8266_files\...`）都是来源机器的实测值，换一台电脑即失效。**
-> 照着执行前必须先确认它在本机存在；确认不了就问用户，**禁止扫盘猜路径**（规矩同 `config.template.json` 的 `sim` 段注释）。
-> 本机与来源机器不一致时，以本机实测为准，并回来更新本表。
+> **状态列 = 2026-10-15 在当前机器（用户 `yjt54`）的实测结果。** ✅ 存在（若只是用户名不同，按当前用户替换即可）；
+> ❌ 当前机器没有，别照抄命令；⚠️ 部分命中或待核。规矩同 `config.template.json` 的 `sim` 段：拿不准问用户，禁止猜。
 
-| 占位符 | 实际值 | 备注 |
-|---|---|---|
-| `{ROOT}` | `D:\esp32_8266_files\esp-idf-v5.5.5_ol\examples\idf_v555_my_exps\p4_touch_lcd4_3_exp\lvgl_demo_ai\eez-test` | UI/native 工程根 |
-| `{IDF_ROOT}` | `{ROOT}\..` = `...\lvgl_demo_ai` | ★ **build 目录在这里**，不在 eez-test |
-| `{DESIGN_DIR}` | `{ROOT}\design` | DSL、工具、门禁、走路器全在这 |
-| `{PY}` | `C:\Users\Administrator\.workbuddy\binaries\python\envs\default\Scripts\python.exe` | ★ **只有它装了 PIL**；系统 python 跑门禁必 `ModuleNotFoundError: PIL` |
-| 仿真器根 | `...\idf_v555_my_exps\common\PC_SIM\lv_port_pc_vscode_v9.5` | 目录内**零改动**，靠引用工程源码编译 |
-| `{EXE}` | 仿真器根 `\bin\main.exe` | |
-| LVGL 内核 | `...\common\APL\apl_lvgl_v9_4` | 读源码定 API 时来这里（`lv_obj_event.c` / `lv_indev.c` 等） |
-| IDF | `D:\esp32_8266_files\esp-idf-v5.5.5_ol`，工具链 `esp-idf-tools_for_idf_v5_5_5`，py env `idf5.5_py3.11_env` | |
-| 小智 | `{IDF_ROOT}\xiaozhi-esp32`（vendored，**不改**）；板级胶水 `{IDF_ROOT}\main\board_p4_audio.cc`（改这里） | |
+| 状态 | 占位符 | 实际值 | 备注 |
+|---|---|---|---|
+| ✅ | `{ROOT}` | `D:\esp32_8266_files\esp-idf-v5.5.5_ol\examples\idf_v555_my_exps\p4_touch_lcd4_3_exp\lvgl_demo_ai\eez-test` | UI/native 工程根；`design/`、`src/`、`test.eez-project`、`ui_debug_kit.config.json` 都在 |
+| ✅ | `{IDF_ROOT}` | `{ROOT}\..` = `...\lvgl_demo_ai` | ★ **build 目录在这里**，不在 eez-test |
+| ⚠️ | `{DESIGN_DIR}` | `{ROOT}\design` | DSL、工具、门禁、走路器全在这 |
+| ✅ | `{PY}` | `C:\Users\Administrator\.workbuddy\binaries\python\envs\default\Scripts\python.exe` | 本机等价物已核实存在（只换用户名）。★ **只有这类托管 venv 装了 PIL**；系统 python 跑门禁必 `ModuleNotFoundError: PIL` |
+| ❌ | 仿真器根 | `...\idf_v555_my_exps\common\PC_SIM\lv_port_pc_vscode_v9.5` | 当前机器 `common/` 下只有 `APL`、`DRV`，没有 `PC_SIM` ⇒ PC 仿真那套在这台机器跑不了，需向用户确认目录去哪了 |
+| ❌ | `{EXE}` | 仿真器根 `\bin\main.exe` | 随上一行，未命中 |
+| ❌ | LVGL 内核 | `...\common\APL\apl_lvgl_v9_4` | 本机 `APL` 下只有 apl_atomic / apl_console* / apl_utility ⇒ 读源码定 API 前要先确认版本目录名 |
+| ⚠️ | IDF | `D:\esp32_8266_files\esp-idf-v5.5.5_ol`（✅，`idf_cmd_init.bat` + `idf_build.bat` 都在），工具链 `esp-idf-tools_for_idf_v5_5_5`（❌ 本机只有 `esp-idf-tools_for_idf_v5_5_1` 和默认 `C:\Users\yjt54\.espressif\tools`），py env `idf5.5_py3.11_env`（❌ `.espressif` 下无 `python_env`） | 构建入口可用，但 `IDF_TOOLS_PATH` / `IDF_PYTHON_ENV_PATH` 两个显式值必须按本机重新确认 |
+| ⚠️ | 小智 | `{IDF_ROOT}\xiaozhi-esp32`（✅ 存在，vendored，**不改**）；板级胶水 `{IDF_ROOT}\main\board_p4_audio.cc`（⚠️ 该文件未命中，改前先定位真名） | |
 
 ---
 

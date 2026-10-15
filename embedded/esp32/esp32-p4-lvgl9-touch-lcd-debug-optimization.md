@@ -2,10 +2,11 @@
 
 Waveshare ESP32-P4-WIFI6-Touch-LCD-4.3 开发板（480x800 MIPI-DSI ST7701 屏 + GT911 触摸 + ESP-IDF v5.5.5 + LVGL v9.4 + esp_lvgl_adapter）调试经验总结。
 
-> ★ **路径口径**：本文所有 `D:\esp32_8266_files\...`、`C:\Users\Administrator\...`、`~/.qoder-cn/tmp\...`
-> 都是**来源机器**的实测位置（度量脚本、串口解析器、原版快照都存在那台机器的 tmp 里，tmp 本身还会被清理），
-> 换机即失效。照抄任何命令前先换成本机真值，找不到就问用户，**禁止扫盘猜**（见 `embedded/README.md` 第 5 节）。
-> 跨机可复用的是结论、判据和取证方法。构建通路的同类说明见 `esp-idf-windows-build.md` 开头那一条。
+> ★ **路径口径**：本文的路径写于来源机器（用户 `Administrator`）。2026-10-15 在本机实测：IDF 根
+> `D:\esp32_8266_files\esp-idf-v5.5.5_ol` 与工程根 `...\p4_touch_lcd4_3_exp\lvgl_demo_ai\eez-test` **都在**，
+> `C:\Users\Administrator\...` 换成当前用户名基本都能命中；但 `.qoder-cn\tmp` 里的度量脚本与串口解析器、
+> `{IDF_ROOT}\build`、PC 仿真器根 `common\PC_SIM\...`、`common\APL\apl_lvgl_v9_4` 本机**没有**。
+> 逐条对照表见 `embedded/README.md` 第 6 节；确认不了就问用户，禁止扫盘猜。跨机可复用的是结论、判据和取证方法。
 
 ## 1. 芯片修订 (rev) 问题
 

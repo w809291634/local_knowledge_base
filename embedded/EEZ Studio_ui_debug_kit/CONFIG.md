@@ -224,8 +224,9 @@
 要点先记三条（细节去上面两篇查）：
 - 解释器必须是 `C:\Users\Administrator\.workbuddy\binaries\python\envs\default\Scripts\python.exe`
   （只有它装了 PIL）；系统 python 跑门禁必崩。
-  ★ **这条路径是来源机器的实测值，换机即失效**：用之前先确认本机存在，不存在就问用户要真值，
-  禁止扫盘猜；"只有某个特定 venv 装了 PIL"这个结论本身仍然成立。
+  ★ **这条只是用户名不同**：2026-10-15 在本机实测 `C:\Users\<当前用户>\.workbuddy\binaries\python\envs\default\Scripts\python.exe`
+  存在，把 `Administrator` 换成当前用户名即可用；"只有这个 venv 装了 PIL、系统 python 跑门禁必崩"的结论照旧成立。
+  其他机器路径的逐条对照见 `embedded/README.md` 第 6 节。
 - 真机构建唯一入口：`cmd.exe //C "design\_idf_build.bat <t>"`（`t` = reconfigure/build/**app-flash**/flash/monitor/size/fullclean）；
   `.bat` 里要清 `MSYSTEM`、显式三个 IDF 路径、**文件内容 ASCII-only**。
   ★ 它是 `idf.py %*` 直传 ⇒ 只能用 idf.py 的连字符真名；用户 tasks.json 里的 `app_flash`/`flash_monitor` 是**他包装的参数名**，别照抄到我们这边。
