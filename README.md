@@ -292,6 +292,18 @@ If you've learned something here, support my efforts writing daily TILs by
 - [IAR / Keil / RT-Thread Studio 的 IDE 层坑](embedded/ide/iar-keil-ide-issues.md)
 - [RT-Thread 踩坑合集（hard fault / 栈溢出 / 定时器上下文）](embedded/rt-thread/rt-thread-pitfalls.md)
 - [STM32 / HAL 经典坑合集（时钟 / printf / JTAG 引脚）](embedded/stm32/stm32-hal-pitfalls.md)
+- [杰理 Soundbox SDK 经验库 · 总索引（跨型号通用 + 型号目录）](embedded/jieli_soundbox_sdk/README.md)
+- [杰理 SDK：分层/工具链/编译烧录产物链与新增 .c 的登记](embedded/jieli_soundbox_sdk/common/sdk-layout-build-and-flash.md)
+- [杰理 SDK：配置三层开关与官方宏互斥清单](embedded/jieli_soundbox_sdk/common/config-three-layers-and-macro-mutex.md)
+- [杰理 SDK：启动链与模式任务状态机（新增模式 5 步）](embedded/jieli_soundbox_sdk/common/app-task-state-machine.md)
+- [杰理 SDK：按键与事件流（新增按键源 5 处）](embedded/jieli_soundbox_sdk/common/key-and-event-flow.md)
+- [杰理 SDK：外设驱动速查与独占资源表（UART/SPI/IIC/PWM/ADC/定时器）](embedded/jieli_soundbox_sdk/common/peripheral-drivers-cookbook.md)
+- [杰理 SDK：led7 断码显示与 UI 框架注册刷新机制](embedded/jieli_soundbox_sdk/common/led7-display-and-ui-framework.md)
+- [杰理 SDK：音频链路、音效模块与在线调音全流程](embedded/jieli_soundbox_sdk/common/audio-pipeline-and-effects.md)
+- [杰理 SDK：功耗调试（power_down / 唤醒 / 定时器选择 / 实测电流）](embedded/jieli_soundbox_sdk/common/power-consumption-debug.md)
+- [杰理 SDK：升级与 OTA（单双备份、回滚、json.txt、MD5/ufw）](embedded/jieli_soundbox_sdk/common/ota-dual-backup-update.md)
+- [杰理 SDK：协议接入（RCSP / AI 中间层 / 涂鸦 / 天猫精灵 Mesh）](embedded/jieli_soundbox_sdk/common/protocol-integration-rcsp-app-tuya.md)
+- [杰理 AC695N / BR23：芯片资源表与 19 个板级映射](embedded/jieli_soundbox_sdk/ac695n_br23/chip-resources-and-board-variants.md)
 
 ### Elixir
 
@@ -2243,6 +2255,7 @@ If you've learned something here, support my efforts writing daily TILs by
 - [STC8H 8 KB 容量预算与 Keil 编译/链接选项（含实测）](yjt/STC8H_8G/stc8h-rom-budget-and-keil-optimize.md)
 - [STC8G/8H SDK 工作流纪律：验证三件套 / 编码 / 提交规范](yjt/STC8H_8G/workflow-verification-discipline.md)
 - [分段线性查表少算一轮 → 除零 → 高浓度误报 LO（严重）](yjt/MultiParam/glu-range-lookup-off-by-one-lo.md)
+- [AC695N 项目自写驱动：RF315 / DMX512 / 断码屏 SEG / 引脚冲突表](yjt/ac695n_soundbox/user_apps-custom-drivers.md)
 
 ### Zed
 

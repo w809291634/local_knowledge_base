@@ -16,6 +16,7 @@
 |---|---|---|
 | `embedded/esp32/` | ESP32-P4/C6 实战四篇：Windows 下 IDF 构建通路、LVGL 9 触摸 LCD 调试与优化主文档、帧率调优手册（playbook）、P4+C6 远程 WiFi（esp_hosted） | 碰 ESP-IDF 构建、LVGL 帧率/撕裂/旋转、托管组件还原、双核与 PPA 取舍 |
 | `embedded/EEZ Studio_ui_debug_kit/` | **可移植的 UI 调试与验收工具箱**（ui_debug_kit）：整个文件夹拷进任意 UI 工程 + 填一份配置，即得"出效果图 → 对照定位 → 修复验收"能力。内核在 `PLAYBOOK.md`/`CONFIG.md`/`tools/`/`cases/`，记录区在 `skills.md`/`intake/`/`prompts/` | 任何"用组件树描述界面 + 由它生成代码"的 UI 方案（EEZ Studio、LVGL、Web/桌面/移动前端）要做像素级对照与回归门禁 |
+| `embedded/jieli_soundbox_sdk/` | **杰理（Jieli）Soundbox SDK 经验**，按"跨型号通用 / 型号绑定"分两层：`common/`（编译烧录链、配置三层开关、任务状态机、按键事件流、VM/syscfg/SDFILE、外设驱动速查、led7 与 UI 框架、音频链路与在线调音、日志与异常定位、功耗、OTA 双备份、协议接入、配置工具量产）+ `ac695n_br23/`（芯片资源表、19 个板级映射、版本史） | 碰杰理 AC695N/AC696N/BR23 系蓝牙音频 SoC；先读 `jieli_soundbox_sdk/README.md` |
 
 进 `EEZ Studio_ui_debug_kit/` 先读它的 `README.md`（30 秒上手），再读 `PLAYBOOK.md`。
 
