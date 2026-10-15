@@ -138,3 +138,18 @@ cmd 开关要写成 `//c`。
    `core free loops/s: cpu0=/cpu1=`（P4 无 SMP 内核 ⇒ 用空闲钩子计数，不用 `xCoreID`）、真开表后 29.0 是否变化。
    判据：**`flush≈0` 而 `render` 仍 26~28ms ⇒ 上限 ~35fps**，再往上只剩"降渲染分辨率 + 同次 SRM 放大"。
 
+---
+
+## ★ 追加 5（2026-10-15）：本条目内 `esp32/...` 路径标签的勘误（原文保留不改）
+
+纪律同上：只增不改。本条目正文里 3 处把 esp32 子库写成仓库根一级目录，**那是当时的位置**，现已整体并入 `embedded/`：
+
+| 出现处 | 当时写的 | 现在的位置 |
+|---|---|---|
+| §交叉印证（正文前段） | `esp32/esp32-p4-lvgl9-touch-lcd-debug-optimization.md` §19 | `embedded/esp32/` 下同名文件 |
+| 追加 4 之前那段（TRIPLE_PARTIAL 与 §5 互证） | 同上 | 同上 |
+| 追加更正表第 6 行 | `esp32/esp-idf-windows-build.md` §1 | `embedded/esp32/esp-idf-windows-build.md` §1 |
+
+`skills.md` 与 `reference/09` 里的同类标签已就地更正（那两处是要被跟着执行的指路文本）；
+`esp32` 子库这个**称呼**不变，变的只是路径深度。写新记录时直接按 `embedded/esp32/` 落笔。
+

@@ -2,6 +2,11 @@
 
 Waveshare ESP32-P4-WIFI6-Touch-LCD-4.3 开发板（480x800 MIPI-DSI ST7701 屏 + GT911 触摸 + ESP-IDF v5.5.5 + LVGL v9.4 + esp_lvgl_adapter）调试经验总结。
 
+> ★ **路径口径**：本文所有 `D:\esp32_8266_files\...`、`C:\Users\Administrator\...`、`~/.qoder-cn/tmp\...`
+> 都是**来源机器**的实测位置（度量脚本、串口解析器、原版快照都存在那台机器的 tmp 里，tmp 本身还会被清理），
+> 换机即失效。照抄任何命令前先换成本机真值，找不到就问用户，**禁止扫盘猜**（见 `embedded/README.md` 第 5 节）。
+> 跨机可复用的是结论、判据和取证方法。构建通路的同类说明见 `esp-idf-windows-build.md` 开头那一条。
+
 ## 1. 芯片修订 (rev) 问题
 
 **症状**: `A fatal error occurred: bootloader.bin requires chip revision in range [v0.1 - v1.99] (this chip is revision v3.2)`。
@@ -839,6 +844,8 @@ u0 15.4 ↔ `swdraw@0` 15.9、u1 7.1 ↔ `swdraw@1` 6.7、handler 26.6 ↔ `LVGL
 - **托管组件的干净副本在哪**：`C:\Users\Administrator\AppData\Local\Espressif\ComponentManager\Cache\service_*\lvgl__lvgl_<版本>_<hash>\`
   就是下载原文（本工程 9.5.0 那份与 `Template/base_template_p4_c61_wifi` 下同名文件 md5 相同）
   ⇒ 改坏 `managed_components` 时从这里还原，不必重下、不会版本漂移；还原后**用同一组归因数字复现**才算修好。
+  ★ 上面这个 Cache 位置和同条里的 `~/.qoder-cn/tmp/` 快照都是**来源机器**的路径，换机后按同样思路在本机找
+  （`ComponentManager\Cache` 跟着 `%LOCALAPPDATA%` 走），找不到就问用户，别拿它当本机事实直接执行。
 - 附：固件指纹行的 `__DATE__ __TIME__` 只在**该 TU 重新编译**时才变（本例只改 lvgl ⇒ 时间戳没动）
   ⇒ 判"跑的是不是这份固件"要看 `mode=/tile_cnt=/units=` 这类配置字段和 `build/*.bin` 的 mtime，别只信时间戳。
 - 附（工具教训）：用 python 改文件时 `s[:i] + s[j:]` 若 `i > j` 会**复制**而不是删除（本次把 `lv_refr.c` 写坏过一回）

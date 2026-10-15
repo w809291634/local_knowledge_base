@@ -41,7 +41,7 @@ int fputc(int ch, FILE *f) { usart1_put(ch); }
 
 - **strcpy 硬件错误**：源字符串长度超出目标区域。实例（FreeRTOS CLI 移植）：串口工具发的命令自带 `\r\n`，程序把两者都当回车 → 命令处理两次 → 发送缓存被撑爆 → `_CLI_DMA_SendBuff[CLI_DMA_Send_len++]` 越界覆盖相邻的 `cInputString`（只有 50 字节）。教训：**DMA 一次性整串发送时缓存要给足，len 递增前检查边界**；用 cmbacktrace/跟踪工具从 strcpy 回溯。
 - **初始化内存管理/FATFS 时硬件错误**：main 里 FATFS 测试把栈用爆。定位法：屏蔽文件系统代码段后正常 → 加大栈空间。
-- **`FPU active!` + bus fault**：数组越界/指针非法访问，先查自己写的接口（详见 rt-thread-pitfalls.md 的 PC/LR 定位法）。
+- **`FPU active!` + bus fault**：数组越界/指针非法访问，先查自己写的接口（详见 `embedded/rt-thread/rt-thread-pitfalls.md` 的 PC/LR 定位法）。
 - **sprintf 全局变量导致 LCD 显示异常**：局部正常、挪到全局后被篡改（320 变 256），疑似内存踩踏，未解决——留档勿引用结论。
 
 ## 5. 工具链

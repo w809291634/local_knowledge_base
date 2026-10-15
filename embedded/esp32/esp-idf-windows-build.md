@@ -1,5 +1,10 @@
 # 本机 ESP-IDF 命令行构建通路（Windows；IDF v5.5.5 + Git Bash 冲突）
 
+> ★ **标题里的"本机"、下文的"这台机器"= 记录时的来源机器**（IDF 在 `D:\esp32_8266_files\`，临时脚本在 `C:\Users\Administrator\.qoder-cn\tmp\`）。
+> 本文件出现的这些绝对路径、以及 §1 命令行里的目录，**换一台电脑就都不成立**：照抄前先把它们换成当前机器的真值，
+> 确认不了就问用户，**禁止扫盘猜**（规矩见 `embedded/README.md` 第 5 节）。
+> 跨机可复用的是做法本身：清 `MSYSTEM`、显式三个 IDF 路径、`.bat` 内容 ASCII-only、退出码恒 0 因此只看日志。
+
 适用范围：**这台机器上的所有 ESP-IDF 工程**（非某个工程专属）。从
 `esp32-p4-lvgl9-touch-lcd-debug-optimization.md` §21 拆出（2026-10-11），那份文档以后只留指针。
 项目侧的作业卡（子命令名差异、分区/产物、调试开关）见
@@ -73,6 +78,10 @@ cmd.exe //c "set MSYSTEM=&& call D:\esp32_8266_files\esp-idf-v5.5.5_ol\idf_cmd_i
 
 `idf.py monitor` 是交互式的，脚本侧要读数用 venv python + pyserial（打开口后 RTS 脉冲复位进运行态，按行解析）。
 本机现成工具（都在 `C:\Users\Administrator\.qoder-cn\tmp\`，不属于任何工程）：
+
+> ★ 那是**来源机器**的临时目录，换机不保证还在，`.qoder-cn\tmp` 本身也会被清理。
+> 三个脚本的价值在**做法**（先校验 PROJECT_PATH 再动手、build+flash 后回读生效配置、绕过 bat 拿真退出码），
+> 不在文件位置；本机找不到就去问用户，不要扫盘猜。
 
 | 工具 | 用法 | 作用 |
 | --- | --- | --- |

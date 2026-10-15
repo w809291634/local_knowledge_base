@@ -40,6 +40,7 @@ If you've learned something here, support my efforts writing daily TILs by
 * [Devops](#devops)
 * [Docker](#docker)
 * [Drizzle](#drizzle)
+* [Embedded](#embedded)
 * [Elixir](#elixir)
 * [Gatsby](#gatsby)
 * [Git](#git)
@@ -277,6 +278,20 @@ If you've learned something here, support my efforts writing daily TILs by
 - [Create bigint Identity Column For Primary Key](drizzle/create-bigint-identity-column-for-primary-key.md)
 - [Drizzle Tracks Migrations In A Log Table](drizzle/drizzle-tracks-migrations-in-a-log-table.md)
 - [Get Fields For Inserted Row](drizzle/get-fields-for-inserted-row.md)
+
+### Embedded
+
+自建中文经验库（跨项目可复用的嵌入式方法论与平台坑）· 分区索引见 [embedded/README.md](embedded/README.md)
+
+- [ESP-IDF Windows 命令行构建通路（IDF v5.5.5 + Git Bash 冲突）](embedded/esp32/esp-idf-windows-build.md)
+- [ESP32-P4 + LVGL v9 触摸 LCD 调试与优化主文档](embedded/esp32/esp32-p4-lvgl9-touch-lcd-debug-optimization.md)
+- [LVGL 帧率调优 playbook（有效/无效两张表）](embedded/esp32/esp32-p4-lvgl-frame-rate-playbook.md)
+- [ESP32-P4 + C6 远程 WiFi（esp_hosted）](embedded/esp32/esp32-p4-c6-remote-wifi-esp-hosted.md)
+- [问题排查方法论：参考示例 / 对比法 / 问题点法 / github issues](embedded/debug-methodology/debug-methodology.md)
+- [J-Link / WCH-Link / ST-LINK 调试器固件与驱动](embedded/debugger/debugger-jlink-stlink-wchlink.md)
+- [IAR / Keil / RT-Thread Studio 的 IDE 层坑](embedded/ide/iar-keil-ide-issues.md)
+- [RT-Thread 踩坑合集（hard fault / 栈溢出 / 定时器上下文）](embedded/rt-thread/rt-thread-pitfalls.md)
+- [STM32 / HAL 经典坑合集（时钟 / printf / JTAG 引脚）](embedded/stm32/stm32-hal-pitfalls.md)
 
 ### Elixir
 
@@ -1752,25 +1767,25 @@ If you've learned something here, support my efforts writing daily TILs by
 
 ### UI Debug Kit
 
-- [UI 调试与验收工具箱 · 总览与上手](ui_debug_kit/README.md)
-- [通用方法论 PLAYBOOK（三层图 / 差异四步法 / 六类体检 / 十条红线）](ui_debug_kit/PLAYBOOK.md)
-- [操作手册 skills.md（自动设计 → 对照查验 → 仿真验证，含条例 D/G/R）](ui_debug_kit/skills.md)
-- [案例库索引（七段式沉淀，B1~B10）](ui_debug_kit/cases/README.md)
-- [案例 B1 · 字体源分配错误（图标全空白 / 正文变方框）](ui_debug_kit/cases/B1_字体源分配错误.md)
-- [案例 B2 · 保存时重算坐标（元素跑出画布边缘）](ui_debug_kit/cases/B2_保存时重算坐标.md)
-- [案例 B3 · 默认主题 padding 偏移（某类控件内子元素整体偏移）](ui_debug_kit/cases/B3_默认主题padding偏移.md)
-- [案例 B4 · 异步渲染拿到旧帧（批量抓图内容重复）](ui_debug_kit/cases/B4_异步渲染拿到旧帧.md)
-- [案例 B5 · 子控件二次偏移（嵌套容器，文字跑到卡片外）](ui_debug_kit/cases/B5_子控件二次偏移（嵌套容器）.md)
-- [案例 B6 · 样式值写错语法被静默吞掉（GUI 报 invalid color）](ui_debug_kit/cases/B6_样式值写错语法被静默吞掉.md)
-- [案例 B7 · 构建成功却零产出](ui_debug_kit/cases/B7_构建成功却零产出.md)
-- [案例 B8 · 仿真器出图的四个坑（颜色 / 内存 / 进程 / 配置路径）](ui_debug_kit/cases/B8_仿真器出图的四个坑.md)
-- [案例 B9 · 图标在父对象里没居中（手摆像素 vs 声明式居中）](ui_debug_kit/cases/B9_图标在父对象里没居中（手摆像素vs声明式居中）.md)
-- [案例 B10 · 布局助手给最后一项多加了一个间隔（纯图标偏中心）](ui_debug_kit/cases/B10_布局助手给最后一项多加了一个间隔（纯图标偏中心）.md)
-- [问题流水索引 P-0001~P-0016（现象 → 根因 → 修复 → 证据）](ui_debug_kit/intake/index.md)
-- [记录规约 INTAKE.md（新问题与提示词怎么留痕）](ui_debug_kit/INTAKE.md)
-- [工具索引（每个工具一句话 + 参数速查）](ui_debug_kit/tools/README.md)
-- [「元素没居中」检查器 center_check.py（可移植、可直接挂 CI）](ui_debug_kit/tools/center_check.py)
-- [工具箱迭代记录 CHANGELOG（v0.1 → v0.9）](ui_debug_kit/CHANGELOG.md)
+- [UI 调试与验收工具箱 · 总览与上手](embedded/EEZ Studio_ui_debug_kit/README.md)
+- [通用方法论 PLAYBOOK（三层图 / 差异四步法 / 六类体检 / 十条红线）](embedded/EEZ Studio_ui_debug_kit/PLAYBOOK.md)
+- [操作手册 skills.md（自动设计 → 对照查验 → 仿真验证，含条例 D/G/R）](embedded/EEZ Studio_ui_debug_kit/skills.md)
+- [案例库索引（七段式沉淀，B1~B10）](embedded/EEZ Studio_ui_debug_kit/cases/README.md)
+- [案例 B1 · 字体源分配错误（图标全空白 / 正文变方框）](embedded/EEZ Studio_ui_debug_kit/cases/B1_字体源分配错误.md)
+- [案例 B2 · 保存时重算坐标（元素跑出画布边缘）](embedded/EEZ Studio_ui_debug_kit/cases/B2_保存时重算坐标.md)
+- [案例 B3 · 默认主题 padding 偏移（某类控件内子元素整体偏移）](embedded/EEZ Studio_ui_debug_kit/cases/B3_默认主题padding偏移.md)
+- [案例 B4 · 异步渲染拿到旧帧（批量抓图内容重复）](embedded/EEZ Studio_ui_debug_kit/cases/B4_异步渲染拿到旧帧.md)
+- [案例 B5 · 子控件二次偏移（嵌套容器，文字跑到卡片外）](embedded/EEZ Studio_ui_debug_kit/cases/B5_子控件二次偏移（嵌套容器）.md)
+- [案例 B6 · 样式值写错语法被静默吞掉（GUI 报 invalid color）](embedded/EEZ Studio_ui_debug_kit/cases/B6_样式值写错语法被静默吞掉.md)
+- [案例 B7 · 构建成功却零产出](embedded/EEZ Studio_ui_debug_kit/cases/B7_构建成功却零产出.md)
+- [案例 B8 · 仿真器出图的四个坑（颜色 / 内存 / 进程 / 配置路径）](embedded/EEZ Studio_ui_debug_kit/cases/B8_仿真器出图的四个坑.md)
+- [案例 B9 · 图标在父对象里没居中（手摆像素 vs 声明式居中）](embedded/EEZ Studio_ui_debug_kit/cases/B9_图标在父对象里没居中（手摆像素vs声明式居中）.md)
+- [案例 B10 · 布局助手给最后一项多加了一个间隔（纯图标偏中心）](embedded/EEZ Studio_ui_debug_kit/cases/B10_布局助手给最后一项多加了一个间隔（纯图标偏中心）.md)
+- [问题流水索引 P-0001~P-0016（现象 → 根因 → 修复 → 证据）](embedded/EEZ Studio_ui_debug_kit/intake/index.md)
+- [记录规约 INTAKE.md（新问题与提示词怎么留痕）](embedded/EEZ Studio_ui_debug_kit/INTAKE.md)
+- [工具索引（每个工具一句话 + 参数速查）](embedded/EEZ Studio_ui_debug_kit/tools/README.md)
+- [「元素没居中」检查器 center_check.py（可移植、可直接挂 CI）](embedded/EEZ Studio_ui_debug_kit/tools/center_check.py)
+- [工具箱迭代记录 CHANGELOG（v0.1 → v0.9）](embedded/EEZ Studio_ui_debug_kit/CHANGELOG.md)
 
 ### Unix
 
@@ -2214,8 +2229,20 @@ If you've learned something here, support my efforts writing daily TILs by
 
 ### YJT
 
+自建中文经验库（按芯片/项目归档）· 分区索引见 [yjt/README.md](yjt/README.md)
+
+- [PEMS 模板化 Word 文档族 · 规则入口 AGENTS.md](yjt/PEMS/AGENTS.md)
+- [PEMS 文件索引 README](yjt/PEMS/README.md)
 - [CH571（CH57x）BLE 设备 ID：滚码 NV 格式、控制台/BLE 写法与校验](yjt/ch571/ble-device-id-rollcode-nv.md)
 - [移植实战：把「滚码设备 ID」落到一个新 CH571 工程（ZY0_BLE_CH571）](yjt/ch571/port-rollcode-device-id-to-new-project.md)
+- [STC8G/8H SDK：board_config.h 三层开关架构与编译期静态检查](yjt/STC8H_8G/board-config-three-layer-switches.md)
+- [STC8 + TM1650 数码管：为什么必须软件 I2C 与影子寄存器做法](yjt/STC8H_8G/drv-tm1650-software-i2c.md)
+- [Keil C51 语言层坑合集（变参 3 字节指针 / data / 指针限定 / CONST / tick 撕裂）](yjt/STC8H_8G/keil-c51-language-pitfalls.md)
+- [Keil C51：OVERLAY 看不见函数指针调用（严重）](yjt/STC8H_8G/keil-c51-overlay-function-pointer.md)
+- [Keil C51：pdata 跨页 L18 与 Overlay 重入 L15 的区别（原 embedded/ 根，2026-10-15 移入）](yjt/STC8H_8G/keil-c51-pdata-overlay.md)
+- [STC8H 8 KB 容量预算与 Keil 编译/链接选项（含实测）](yjt/STC8H_8G/stc8h-rom-budget-and-keil-optimize.md)
+- [STC8G/8H SDK 工作流纪律：验证三件套 / 编码 / 提交规范](yjt/STC8H_8G/workflow-verification-discipline.md)
+- [分段线性查表少算一轮 → 除零 → 高浓度误报 LO（严重）](yjt/MultiParam/glu-range-lookup-off-by-one-lo.md)
 
 ### Zed
 

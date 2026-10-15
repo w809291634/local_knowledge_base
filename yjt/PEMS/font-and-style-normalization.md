@@ -72,6 +72,13 @@ formatting:
 
 ## 3. 执行要点
 
+> **先查共享原语**：`docx_ops.unify_document_fonts()` 已实现本节全部要点
+> （`iter_zone_paragraphs` 分区、删 `*Theme` 属性、遍历表格、跳过文本框、改样式默认值）。
+> 项目脚本只应做**薄封装**补自己的差异（如标题分级字号），不要再抄一份分区逻辑，
+> 否则库修了"主题属性优先级"这类 bug，项目那份仍带旧行为（`pitfalls.md` §30）。
+
+字号单位是**半磅**：小四=24、五号=21、三号=32、小三=30、四号=28。
+
 ```python
 def _apply_font(run, ea, ascii_font, size_pt, bold=None):
     run.font.name = ascii_font                    # python-docx 会同时写 ascii 与 hAnsi

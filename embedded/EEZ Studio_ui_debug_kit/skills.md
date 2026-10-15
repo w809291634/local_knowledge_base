@@ -1786,7 +1786,7 @@ PPA fill/blend 的 DMA 按 128B 块凑整、在帧缓冲末端越界写（一行
    而 `ROTATE_90` 之后 LVGL 宽是 800 ⇒ 每块实际只有 `0.6×buffer_height` 行：`buffer_height=50` ⇒ 30 行/块
    ⇒ 一帧 16 块。块边界是同步点，**块数 14→6→4 时均值 23.4→29.9→35.2fps**，是本项目最大的单项收益。
 4. **双核的收益取决于块大小，不是常量**：14 块时 `DRAW_UNIT_CNT=2` 比单核**慢**（19.9 vs 23.4）；
-   4 块时才转正（37.0 vs 35.2，+5%，与 `esp32/esp32-p4-lvgl9-touch-lcd-debug-optimization.md` §19 记的
+   4 块时才转正（37.0 vs 35.2，+5%，与 `embedded/esp32/esp32-p4-lvgl9-touch-lcd-debug-optimization.md` §19 记的
    "+6fps" 对上）⇒ 想判"双核有没有用"，先把块调大再测，否则结论是反的。
 5. **PPA 两条路线对「圆角卡片 + AA 文字」这种 UI 都吃不到**：原生 PPA draw unit 只认领
    `radius==0 && grad==NONE && opa==MAX` 的 FILL 和不缩放不旋转的 RGB565/888 IMAGE

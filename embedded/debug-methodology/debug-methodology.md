@@ -27,7 +27,7 @@
 
 ## 4. github issues 搜索法
 
-用开源库/工具链报错时，把错误字符串到该仓库 issues 里搜。典型战果：pybind 编译 so 出现 `undefined symbol: __cpu_model`，百度搜不到，github issues 里直接找到解答（cmake 需按 gcc 版本指定参数）。详见 [python/cv-ncnn-pybind-errors.md](../python/cv-ncnn-pybind-errors.md)。
+用开源库/工具链报错时，把错误字符串到该仓库 issues 里搜。典型战果：pybind 编译 so 出现 `undefined symbol: __cpu_model`，百度搜不到，github issues 里直接找到解答（cmake 需按 gcc 版本指定参数）。详见 [python/cv-ncnn-pybind-errors.md](../../python/cv-ncnn-pybind-errors.md)。
 
 ## 5. 数据显示异常的怀疑顺序
 

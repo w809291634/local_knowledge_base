@@ -3,10 +3,18 @@
 > 2026-10-06 整理。用途：把 `PLAYBOOK.md` §1.1 那套 `{占位符}` 填成**这台机器上的真实值**，
 > 并把"一条命令走到底"的顺序钉死。所有条目都是本项目实际用过的，不是抄官网。
 > 相关：帧率与 PPA 见 `reference/08_lvgl_esp32p4_frame_rate.md`；通用方法论见 `PLAYBOOK.md`。
+>
+> ★ **"这台机器"= 记录时的来源机器。本文件全文（不止 §0 那张表，含 §4 的 `addr2line`、各条命令示例里的
+> `D:\esp32_8266_files\...` 与 `C:\Users\Administrator\...`）都是那台机器的实测值，换机一律失效。**
+> 照抄前先换当前机器的真值，确认不了就问用户，禁止扫盘猜（见 `embedded/README.md` 第 5 节）。
 
 ---
 
 ## 0. 路径与占位符对照
+
+> ★ **下表全部绝对路径（`C:\Users\Administrator\...`、`D:\esp32_8266_files\...`）都是来源机器的实测值，换一台电脑即失效。**
+> 照着执行前必须先确认它在本机存在；确认不了就问用户，**禁止扫盘猜路径**（规矩同 `config.template.json` 的 `sim` 段注释）。
+> 本机与来源机器不一致时，以本机实测为准，并回来更新本表。
 
 | 占位符 | 实际值 | 备注 |
 |---|---|---|
@@ -121,7 +129,7 @@ cmd.exe //C "design\_idf_build.bat <t>"     t ∈ reconfigure|build|app-flash|fl
 ② 显式 `IDF_TOOLS_PATH` / `IDF_PYTHON_ENV_PATH` / `IDF_PATH`；③ **`.bat` 内容必须 ASCII-only**
 （UTF-8 中文注释在 GBK 代码页下会被解析成垃圾命令，报"'sks.json' 不是内部或外部命令"这类莫名错）。
 ★ 另：`idf_cmd_init.bat` 带参数会把 `IDF_TOOLS_PATH` 盖成参数值 —— **这是上游 idf-env 查表版的行为**；
-本机那份 `:11-13` 已把路径写死、全文不读 `%1`，带不带参数结果一样（见 `esp32/esp-idf-windows-build.md` §1）。
+本机那份 `:11-13` 已把路径写死、全文不读 `%1`，带不带参数结果一样（见 `embedded/esp32/esp-idf-windows-build.md` §1）。
 
 ### 4.3 产物与分区
 `{IDF_ROOT}\build\lvgl_demo_v9.bin`（当前 `0x4efae0`；app 分区 `0x800000`，38% free）；
