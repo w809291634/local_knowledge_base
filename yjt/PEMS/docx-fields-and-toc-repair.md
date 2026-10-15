@@ -105,6 +105,13 @@ r.addprevious(_fld('begin')); r.addprevious(instr_run); r.addprevious(_fld('sepa
 造错会变成"错误！未定义书签"。正确做法是**在 Word/WPS 里重建**：引用 → 目录 → 自动目录
 （或 COM 的 `TablesOfContents.Add`）；前提是正文小标题确实用了 Heading 样式，否则自动目录会抓不到标题。
 
+**只想改页码时的最小动作**：形态 C 的条目常常仍包在 `w:hyperlink` 里（条目文字与页码是 hyperlink 内的
+多个 `w:r`，段落直接子级没有 `w:r`）。此时 `p.runs` 为空 —— python-docx 不取 hyperlink 内的 run ——
+`set_paragraph` 会走 `add_run` 分支，把新文字**追加**在旧文字后面，条目变成"5. 结论55. 结论4"；
+而 `toc_diagnose` 报 `entry_has_field=False`，更容易让人误判成纯文本段。正确做法是只改
+hyperlink 内**最后一个 `w:t`**（页码），其余不动；同时把"含 `w:hyperlink` 的段落"与"含域段落"一起
+列入整段替换的排除名单。页码值从渲染后的 PDF 实测页号回填（见 `pitfalls.md` §33）。
+
 ## 6. 刷新页码（必做）
 
 ```python
