@@ -1162,3 +1162,195 @@ def release_orphan_word_locks(match=(), verbose=False):
     except Exception:
         pass
     return closed, quit_ok
+
+
+# --------------------------------------------------------------------------
+# 版式闸门：分页 / 标题树 / 图文同页 / 渲染判据
+# --------------------------------------------------------------------------
+
+_NUM_HEADING_RE = re.compile(
+    r'^(第\s*[0-9一二三四五六七八九十百]+\s*[章节篇部分]'      # 第X章 / 第X节
+    r'|\d+(?:\.\d+){0,2}\s'                                    # 1 / 1.1 / 1.1.1
+    r'|\d+(?:\.\d+){1,2}(?=[^\d.\-]))')                        # 1.1名称；排除 1.1-（图号）
+_CAPTION_RE = re.compile(r'^([图表]\s*[\d\-.]|\d+(?:\.\d+)*-\d+)')  # 图1 / 表2-1 / 2.7-1 流程图
+
+
+def _style_outline_map(doc):
+    """{styleId: (显示名, 样式自带 outlineLvl 或 None, basedOn)}。"""
+    m = {}
+    for s in doc.styles.element.findall(qn('w:style')):
+        nm = s.find(qn('w:name'))
+        ol = s.find('.//' + qn('w:outlineLvl'))
+        bo = s.find(qn('w:basedOn'))
+        m[s.get(qn('w:styleId'))] = (
+            nm.get(qn('w:val')) if nm is not None else '?',
+            int(ol.get(qn('w:val'))) if ol is not None else None,
+            bo.get(qn('w:val')) if bo is not None else None)
+    return m
+
+
+def effective_outline(p_el, smap, _depth=0):
+    """段落生效大纲级别：直接 pPr 优先，否则沿样式链；None = 正文级。
+
+    必须沿链判定（§34）：值常在样式里而不在段落自己手上。
+    """
+    pPr = p_el.find(qn('w:pPr'))
+    if pPr is None:
+        return None
+    direct = pPr.find(qn('w:outlineLvl'))
+    if direct is not None:
+        v = int(direct.get(qn('w:val')))
+        return None if v > 8 else v
+    st = pPr.find(qn('w:pStyle'))
+    sid = st.get(qn('w:val')) if st is not None else None
+    while sid and sid in smap and _depth <= 8:
+        name, ol, based = smap[sid]
+        if ol is not None:
+            return None if ol > 8 else ol
+        sid = based
+        _depth += 1
+    return None
+
+
+def pagination_audit(doc, cover_texts=()):
+    """分页 / 标题树体检（只读）。返回 dict，各项为空即通过。
+
+    对应 pitfalls §23 §24 §25 §38 §39 §41。`cover_texts` 传封面区文档名
+    （归一化去空白后比较），用于识别"封面短行被写成一级标题"。
+    """
+    smap = _style_outline_map(doc)
+    body = doc.element.body
+    kids = list(body.iterchildren())
+    # 以下三个 helper 作用于 CT_P 元素（库内 paragraph_text/has_graphic 收 Paragraph 对象）
+    etxt = lambda el: ''.join(t.text or '' for t in el.iter(qn('w:t')))
+    egra = lambda el: bool(el.findall('.//' + qn('w:drawing'))
+                           or el.findall('.//' + qn('w:pict')))
+
+    def flag(el, tag):
+        """布尔型 pPr 子元素：必须判 w:val，写成 val="0"/"false" 是**关闭**。"""
+        if el is None:
+            return False
+        e = el.find(qn(tag))
+        if e is None:
+            return False
+        v = (e.get(qn('w:val')) or '1').strip().lower()
+        return v not in ('0', 'false', 'off', 'none')
+
+    def in_field(el):
+        """段落是否落在某个域内（目录/索引条目自带编号文本与页码，§41 必须先排除）。"""
+        if el.findall('.//' + qn('w:fldChar')) or el.findall('.//' + qn('w:instrText')):
+            return True
+        st = el.find('.//' + qn('w:pStyle'))
+        sid = st.get(qn('w:val')) if st is not None else ''
+        nm = smap.get(sid, ('', None, None))[0]
+        return nm.startswith('TOC') or nm.startswith('目录')
+
+    out = dict(hard_page_breaks=0, stacked_breaks=[], body_page_break=[],
+               keep_on_body=[], chapter_pad=[], outline_anomaly=[],
+               numbered_not_in_tree=[], toc_field=False)
+
+    # 封面区边界：封面信息表之前的空段属封面留白，不是"章前顶页回车"（§23 只管正文区）
+    cover_end = len(kids)
+    for k, c in enumerate(kids):
+        if c.tag.split('}')[-1] == 'tbl' and '文件编号' in etxt(c):
+            cover_end = k
+            break
+
+    for b in doc.element.iter(qn('w:br')):
+        if b.get(qn('w:type')) == 'page':
+            out['hard_page_breaks'] += 1
+    out['toc_field'] = bool(re.search(r'<w:instrText[^>]*>\s*TOC',
+                                      doc.element.xml))
+
+    for i, c in enumerate(kids):
+        if c.tag.split('}')[-1] != 'p':
+            continue
+        pPr = c.find(qn('w:pPr'))
+        t = etxt(c).strip()
+        nt = re.sub(r'\s+', '', t)
+        lvl = effective_outline(c, smap)
+        pbb = flag(pPr, 'w:pageBreakBefore')
+        hard = any(b.get(qn('w:type')) == 'page'
+                   for b in c.iter(qn('w:br')))
+        if hard and pbb:
+            out['stacked_breaks'].append(t[:30] or '<空段>')          # §39
+        if pbb and lvl is None and t:
+            out['body_page_break'].append(t[:30])                     # §39
+        if lvl is None and pPr is not None and (
+                flag(pPr, 'w:keepNext') or flag(pPr, 'w:keepLines')):
+            out['keep_on_body'].append(                               # §38
+                ('<图/空段>' if egra(c) else '') + t[:30])
+        if lvl == 0:
+            n = 0
+            j = i - 1
+            while j >= 0 and kids[j].tag.split('}')[-1] == 'p' \
+                    and not etxt(kids[j]).strip() and not egra(kids[j]):
+                # 遇分节符载体段即停：其前空段属上一节，不是本章的顶页回车（§23 边界1）
+                if kids[j].find('.//' + qn('w:sectPr')) is not None:
+                    n = 0
+                    break
+                n += 1
+                j -= 1
+            if n >= 2 and i >= cover_end:
+                out['chapter_pad'].append((t[:24], n))                # §23
+            if nt in {re.sub(r'\s+', '', x) for x in cover_texts}:
+                out['outline_anomaly'].append(('封面短行带一级大纲', t[:24]))
+        if lvl is not None and not t and not in_field(c):
+            out['outline_anomaly'].append(('空标题段', ''))            # §24
+        if lvl is None and t and not in_field(c) \
+                and _NUM_HEADING_RE.match(t) and not _CAPTION_RE.match(t):
+            out['numbered_not_in_tree'].append(t[:30])                # §41
+    return out
+
+
+def page_ink_coverage(pdf_path, dpi=50, band=0.08, cutoff=200):
+    """逐页返回"正文区墨占比(%)"，用于空白页判据（§40）。
+
+    中文 PDF 常为子集字体且无 ToUnicode，pdftotext 只吐数字/拉丁，
+    "字数"判据会把正常纯中文页误判为空白页——墨占比不受字体影响。
+    经验档位：封面 2~3%，正文 3~13%，真空白页 0.0%。
+    """
+    import subprocess, tempfile, os, shutil
+    tmp = tempfile.mkdtemp()
+    try:
+        subprocess.run(['pdftoppm', '-png', '-r', str(dpi), pdf_path,
+                        os.path.join(tmp, 'p')], check=True, capture_output=True)
+        pages = sorted(f for f in os.listdir(tmp) if f.endswith('.png'))
+        res = []
+        try:
+            from PIL import Image
+        except ImportError:                                     # 退化：PyMuPDF
+            import fitz
+            doc = fitz.open(pdf_path)
+            for pg in doc:
+                pix = pg.get_pixmap(dpi=dpi, colorspace=fitz.csGRAY)
+                w, h = pix.width, pix.height
+                buf = pix.samples
+                y0, y1 = int(h * band), int(h * (1 - band))
+                seg = buf[y0 * w:(y1) * w]
+                res.append(round(sum(1 for v in seg if v < cutoff) / len(seg) * 100, 3))
+            doc.close()
+            return res
+        for f in pages:
+            im = Image.open(os.path.join(tmp, f)).convert('L')
+            w, h = im.size
+            crop = im.crop((0, int(h * band), w, int(h * (1 - band))))
+            px = list(crop.getdata())
+            res.append(round(sum(1 for v in px if v < cutoff) / len(px) * 100, 3))
+        return res
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def grade_pages_by_ink(coverage, blank=0.15, thin=0.8):
+    """按 §37 分级 + §40 墨占比判据给出 (阻断项, 提示项)。"""
+    block, warn = [], []
+    n = len(coverage)
+    for i, c in enumerate(coverage, 1):
+        if c < blank:
+            block.append('第%d页正文区无墨（空白页）' % i)
+        elif i < n and c < thin:
+            block.append('第%d页仅%.2f%%墨（疑似顶页/分页错位）' % (i, c))
+        elif i == n and c < thin:
+            warn.append('第%d页%.2f%%墨（末页溢出，交人决定）' % (i, c))
+    return block, warn

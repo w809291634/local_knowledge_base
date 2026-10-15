@@ -53,8 +53,22 @@ def dup_kind(a, b):
     return None
 
 
+def style_has_numbering(p):
+    """段落自己没有 w:numPr，但样式链（如 Figure）自带编号时同样属"编号段"。
+    只看段落级 pPr 会把这类列表项当正文，套上正文首行缩进（pitfalls §34）。"""
+    st, seen = p.style, set()
+    while st is not None and id(st) not in seen:
+        seen.add(id(st))
+        el = st.element.find(qn('w:pPr') + '/' + qn('w:numPr'))
+        if el is not None:
+            return True
+        st = st.base_style
+    return False
+
+
 def is_structural_paragraph(p):
-    """标题 / 目录 / 图题 / 含域 / 含图形 / 文本框 / 编号段：不参与正文重复与版式比对"""
+    """标题 / 目录 / 图题 / 含域 / 含图形 / 文本框 / 编号段（含样式链继承）：
+    不参与正文重复与版式比对"""
     el = p._p
     if el.find('.//' + qn('w:fldChar')) is not None \
             or el.find('.//' + qn('w:instrText')) is not None:
@@ -67,7 +81,7 @@ def is_structural_paragraph(p):
     if st.startswith('heading') or 'toc' in st or st in ('title', 'caption'):
         return True
     pPr = el.find(qn('w:pPr'))
-    if pPr is not None and pPr.find(qn('w:numPr')) is not None:
+    if (pPr is not None and pPr.find(qn('w:numPr')) is not None) or style_has_numbering(p):
         return True
     t = nws(''.join(n.text or '' for n in el.iter(qn('w:t'))))
     if re.match(r'^(图|表)\s*\d', t):
