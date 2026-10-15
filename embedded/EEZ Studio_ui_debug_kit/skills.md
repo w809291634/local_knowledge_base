@@ -1848,3 +1848,33 @@ PPA fill/blend 的 DMA 按 128B 块凑整、在帧缓冲末端越界写（一行
   ③ 上一条的 `cmd /c`。
 - 定下来的规矩：**每条命令都要有一个"确实跑了"的证据**（新产物时间戳 / 日志里的固定标记 / 设备回读的指纹行），
   拿不到证据就当它没跑，不看它的结果。
+
+
+### 11.35 EEZ 手势事件、"跟手"的物理边界，以及仿真喂输入的采样规矩（2026-10-15，P-0123）
+- **EEZ 原生有 GESTURE 事件**（别再在 native 手搓 indev 采样）：组件 `eventHandlers` 写
+  `{eventName:"GESTURE", handlerType:"flow"}` ⇒ 生成 `lv_obj_add_event_cb(..., LV_EVENT_ALL)` +
+  `if (event == LV_EVENT_GESTURE)`。读方向**必须写成 `Event.getGestureDir(evt)`** ——
+  表达式编译器只认「对象.方法」形式的调用，写成 `getGestureDir(event)` 会抛
+  `Invalid call expression`；参数只能是 input/local/global，所以要把**同一只 GESTURE 引脚再用数据线
+  连进目标组件的 `customInputs` 引脚**（只连执行线 ⇒ 报 identifier 不是 input/local/global）。
+- **LVGL 手势的三条白送规矩**（`lv_indev.c: indev_gesture()`）：累计 >50px 才成立（`:46`）；
+  这一拍 x/y 位移都 <3px 就把累计**清零**（`:49,1731`）⇒ 慢拖永远不成立；
+  `if(scroll_obj) return;`（`:1719`）⇒ 列表一开始滚就不发手势，**让路是免费的，别自己写让路表**；
+  收件人 = 冒泡链上第一个不带 `GESTURE_BUBBLE` 的祖先（`:1725`，而 `lv_obj.c:582` 给所有有父对象默认加该标志）
+  ⇒ 通常就是屏根；弹窗遮罩被摘掉该标志 ⇒ 模态开着时手势天然进不来。
+- ★ **结构性互斥（值得钉在墙上）**：`4 个独立 screen` 与 `拖动跟手` 不能同时要。切屏唯一入口是
+  `replacePageHook()` 里的 `lv_scr_load_anim(...)`（`eez-flow.cpp:6741`），一次性定时动画、无 scrub 接口。
+  要跟手 ⇒ 各页必须同属一个可滚容器。而 **`tab bar 在 LEFT/RIGHT 的 lv_tabview` 就是竖向跟手+吸附容器**
+  （`lv_tabview.c:196-203` 给它设 `flex COLUMN` + `scroll_snap_y=CENTER`），判据 `scroll_limit=10px`、
+  无速度门槛 —— 与手势通道的 50px+3px 差 5 倍，这就是"手势版要滑得很快"的全部原因。
+- **仿真里喂"输入类"行为的三条纪律**：① SDL 鼠标是 `LV_INDEV_MODE_EVENT`（`lv_sdl_mouse.c:64`）且事件模式下
+  读定时器仍被 resume（`lv_indev.c:1363`）⇒ 两次 motion 之间夹零位移读，累计被清零，**每拍要给到 64px 才稳**
+  （6 步×16px 实测十次只成一次）⇒ "仿真划不动"≠产品坏，真机 GT911 20ms 一拍都带真位移；
+  ② `lv_indev_get_active_obj()` 只在 indev 处理期间有值，走路线程读它恒 NULL，别当"没命中对象"的证据；
+  ③ 走路脚本的 `shoot()` 拍的是**屏对象**快照，看不见两屏叠着推的合成帧，屏动画走 translate、
+  `lv_obj_get_coords()` 也读不到 ⇒ 证明"某元素没跟着动"要靠**父层归属**（`lv_obj_get_parent(x)==lv_layer_top()`），不靠截图。
+- **API 形状要当场抓，别凭印象**：9.4 没有 `lv_obj_get_abs_x/y`、没有 `lv_obj_class_get_name()`（都链接不过）
+  ⇒ 取真实渲染矩形用 `lv_obj_get_coords`，认对象用 `lv_obj_has_class` 逐个比。
+- ★ 流程教训（本轮第三次栽同类）：**说"原来是什么样"之前先 `git show HEAD:<file>` 查**。
+  我曾断言"外层原来是横向 tabview、所以竖滑跟手做不到"，实际 HEAD 里是
+  `tabview(..., "LEFT", ..., id="main_nav")` —— 结论碰巧对，依据是猜的。
