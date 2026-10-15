@@ -8,6 +8,7 @@ docx_ops —— Word 文档「模板就地替换」通用原语库
 依赖：python-docx
 """
 import copy
+import difflib
 import hashlib
 import re
 import os

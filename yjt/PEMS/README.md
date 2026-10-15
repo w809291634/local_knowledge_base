@@ -21,6 +21,7 @@
 | `diagram-generation-and-figure-insertion.md` | 配图生成与 Word 插图替换（绘图三原则、五个插图坑、自检与校验） |
 | `case-study-anonymized.md` | 匿名化落地实例（仅保留方法，不是项目事实来源） |
 | `tools/docx_ops.py` | 通用原语库（统一封装共用函数） |
+| `tools/para_ops.py` | 段落级原语：重复段判据（四形态）、生效版式比对与锚点对齐、承接顺序 |
 | `tools/fig_tools.py` | 配图绘制原语（框图/流程图/拓扑图；1 单位=1 英寸、边界精确、箭头端点自动算） |
 | `tools/build_docs.py` | 配置驱动的生成入口 |
 | `tools/config.example.json` | 配置模板 |

@@ -75,6 +75,14 @@
   见 `font-and-style-normalization.md` §6/§7 与 `tools/docx_ops.py:unify_document_fonts`。
 - 承接旧稿做块对齐时：空段先剔除、封面区与目录域禁止插入、刷新后比对目录条目数，
   超阈值还原备份（`pitfalls.md` §11/§12）。
+- **承接与槽位是两条写入轨道，必须互相查重**：写前用"本轮正文池"拦承接／插入，写后全量扫
+  `dup_kind` 四形态（exact／near／same-lead／contained），优先级 本轮正文 > 模板原样 > 承接；
+  两段都是模板原样时只报不删，去重前确认独有事实已并入保留段（`pitfalls.md` §16）。
+- **段落版式按"生效版式"对齐**：本轮新写段以就近模板段为锚点，先双向对齐 `pStyle` 再抄其直接
+  pPr；只读段落 pPr、用多数派或互相参照都会误伤模板（`pitfalls.md` §18、
+  `font-and-style-normalization.md` §8）。闸门两条：无重复正文段、本轮正文段版式与锚点一致。
+- 同锚点多段插入必须按顺序 `append`；闸门校验承接段先后与来源版一致（`pitfalls.md` §17）。
+- 渲染复用只在"PDF 不比 docx 旧"时成立；页码补丁必须在渲染之后跑（`pitfalls.md` §19）。
 - 详细规则见 `one-pass-quality-gate.md`、`reference-format-profile-template.md`、`reference-document-format-and-diagram-requirements.md` 和 `diagram-generation-and-figure-insertion.md`。
 
 ## 通用性边界
