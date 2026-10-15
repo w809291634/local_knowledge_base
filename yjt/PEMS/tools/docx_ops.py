@@ -1127,3 +1127,38 @@ def substitute_wt_nodes(p, subs):
             t.text = new
             t.set(qn('xml:space'), 'preserve')
     return True
+
+
+def release_orphan_word_locks(match=(), verbose=False):
+    """释放"被杀掉的导出脚本"留下的无头 Word 锁。
+
+    场景：用 Word COM 导 PDF 的脚本被中途终止 → finally 不执行 → WINWORD 仍开着产物文件，
+    下一轮生成器写同名文件直接 PermissionError。判据要保守：**只处理 Visible=False 的实例**
+    （用户自己开的 Word 一定是可见的），且只关闭文件名命中 match 前缀的文档，
+    用 SaveChanges=0 不写盘（Word 在导出期会给文档打临时改动，写回去等于污染产物）。
+    返回 (关闭的文档数, 是否退出实例)。
+    """
+    import win32com.client as w
+    try:
+        app = w.GetActiveObject('Word.Application')
+    except Exception:
+        return 0, False
+    if getattr(app, 'Visible', True):
+        return 0, False                       # 用户正在用：不动
+    closed = 0
+    for d in list(app.Documents):
+        nm = d.Name
+        if match and not any(str(nm).startswith(m) for m in match):
+            continue
+        d.Close(SaveChanges=0)
+        closed += 1
+        if verbose:
+            print('closed', nm)
+    quit_ok = False
+    try:
+        if app.Documents.Count == 0:
+            app.Quit()
+            quit_ok = True
+    except Exception:
+        pass
+    return closed, quit_ok

@@ -348,3 +348,108 @@ def align_para_formats(doc, class_of, log=None):
             if para_format_sig(doc, p) != ref and log:
                 log('       ‼ 补齐后仍与锚点不同（样式链差异），需人工确认')
     return fixed
+
+
+# --------------------------------------------------------------------------
+# 分页与导航结构（章前分页、标题树、空标题段）
+# --------------------------------------------------------------------------
+def outline_level(p):
+    """段落大纲级别（直接 pPr 或样式链）。'9' = 正文级（不进导航窗格/目录）。"""
+    pPr = _ppr_direct(p)
+    if pPr is not None:
+        e = pPr.find(qn('w:outlineLvl'))
+        if e is not None:
+            return e.get(qn('w:val'))
+    st, seen = p.style, set()
+    while st is not None and id(st) not in seen:
+        seen.add(id(st))
+        e = st.element.find(qn('w:pPr') + '/' + qn('w:outlineLvl'))
+        if e is not None:
+            return e.get(qn('w:val'))
+        st = st.base_style
+    return None
+
+
+def set_outline_level(p, lvl):
+    """只写 outlineLvl，不改 pStyle —— 套 Heading 样式会连带改字号，违反标题基线。"""
+    pPr = _ensure_ppr(p, _ppr_direct(p))
+    for old in pPr.findall(qn('w:outlineLvl')):
+        pPr.remove(old)
+    e = OxmlElement('w:outlineLvl')
+    e.set(qn('w:val'), str(lvl))
+    pPr.append(e)
+
+
+def set_page_break_before(p, val='1'):
+    """章前分页用 pageBreakBefore，不要插 w:br type=page（会新增段落、可被误删）。"""
+    pPr = _ensure_ppr(p, _ppr_direct(p))
+    for old in pPr.findall(qn('w:pageBreakBefore')):
+        pPr.remove(old)
+    e = OxmlElement('w:pageBreakBefore')
+    e.set(qn('w:val'), val)
+    pPr.insert(0 if pPr.find(qn('w:pStyle')) is None else 1, e)
+
+
+def has_page_break_before(p):
+    pPr = _ppr_direct(p)
+    e = pPr.find(qn('w:pageBreakBefore')) if pPr is not None else None
+    return e is not None and e.get(qn('w:val')) not in ('0', 'false')
+
+
+def is_struct_carrier(p):
+    """删了会破坏结构的段落：图形载体、分节符载体、含域代码、夹在两个表格之间的隔离段。"""
+    el = p._p
+    if el.findall('.//' + qn('w:drawing')) or el.findall('.//' + qn('w:pict')):
+        return True
+    pPr = _ppr_direct(el)
+    if pPr is not None and pPr.find(qn('w:sectPr')) is not None:
+        return True
+    if el.find('.//' + qn('w:fldChar')) is not None or el.find('.//' + qn('w:instrText')) is not None:
+        return True
+    prv, nxt = el.getprevious(), el.getnext()
+    return bool(prv is not None and prv.tag == qn('w:tbl')
+                and nxt is not None and nxt.tag == qn('w:tbl'))
+
+
+def tidy_navigation(doc, chapter_heading, log=None):
+    """删空标题段与章前顶页空段；结构载体不能删的，降级为 outlineLvl=9。
+
+    必须按最新段落表反复重扫：删一段后序号全变，一次性遍历会漏（实测连续空段只删一半）。
+    """
+    body = doc.element.body
+    removed = demoted = 0
+    for _round in range(6):
+        ps = doc.paragraphs
+        last = ps[-1]._p if ps else None
+        did = 0
+        for i, p in enumerate(ps):
+            el = p._p
+            if el is last or el.getparent() is not body or nws(p.text):
+                continue
+            lvl = outline_level(p)
+            st = (p.style.name or '').lower() if p.style else ''
+            heading_like = lvl not in (None, '9') or st.startswith('heading') or st.startswith('title')
+            carrier = is_struct_carrier(p)
+            if heading_like and carrier:
+                set_outline_level(p, 9)
+                demoted += 1
+                continue
+            if carrier:
+                continue
+            ahead = False
+            if heading_like:
+                ahead = True
+            else:
+                j = i + 1
+                while j < len(ps) and not nws(ps[j].text):
+                    j += 1
+                ahead = j < len(ps) and chapter_heading(ps[j])
+            if ahead:
+                body.remove(el)
+                removed += 1
+                did += 1
+        if not did:
+            break
+    if log:
+        log('  [导航] 删除空标题段/顶页空段 %d 个，降级结构载体 %d 个' % (removed, demoted))
+    return removed, demoted
