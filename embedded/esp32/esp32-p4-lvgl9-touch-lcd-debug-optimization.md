@@ -2,11 +2,11 @@
 
 Waveshare ESP32-P4-WIFI6-Touch-LCD-4.3 开发板（480x800 MIPI-DSI ST7701 屏 + GT911 触摸 + ESP-IDF v5.5.5 + LVGL v9.4 + esp_lvgl_adapter）调试经验总结。
 
-> ★ **路径口径**：本文的路径写于来源机器（用户 `Administrator`）。2026-10-15 在本机实测：IDF 根
-> `D:\esp32_8266_files\esp-idf-v5.5.5_ol` 与工程根 `...\p4_touch_lcd4_3_exp\lvgl_demo_ai\eez-test` **都在**，
-> `C:\Users\Administrator\...` 换成当前用户名基本都能命中；但 `.qoder-cn\tmp` 里的度量脚本与串口解析器、
-> `{IDF_ROOT}\build`、PC 仿真器根 `common\PC_SIM\...`、`common\APL\apl_lvgl_v9_4` 本机**没有**。
-> 逐条对照表见 `embedded/README.md` 第 6 节；确认不了就问用户，禁止扫盘猜。跨机可复用的是结论、判据和取证方法。
+> ★ **路径口径**：本文的路径写于来源机器（用户 `Administrator`）。IDF 根 `D:\esp32_8266_files\esp-idf-v5.5.5_ol`
+> 与工程根 `...\p4_touch_lcd4_3_exp\lvgl_demo_ai\eez-test` 属 **A 类（只与用户名绑定）**，本机实测都在，换用户名即用。
+> 但 **PC 仿真器根 `common\PC_SIM\...`、LVGL 内核 `common\APL\apl_lvgl_v9_4`、`.qoder-cn\tmp` 里的度量与串口脚本、
+> 官方参照工程位置**属 **B 类（每台电脑都不一样）**：用之前必须让用户指定本机真值，禁止扫盘猜、禁止照抄本文命令。
+> 分类与对照表见 `embedded/README.md` 第 6 节。跨机可复用的是结论、判据和取证方法。
 
 ## 1. 芯片修订 (rev) 问题
 

@@ -56,41 +56,52 @@ C51 相关经验今后统一进 `yjt/STC8H_8G/`。
   `embedded/esp32/esp-idf-windows-build.md` 里的 `../EEZ Studio_ui_debug_kit/...` 是同层兄弟引用，仍有效。
 - 「`esp32` 子库」「ui_debug_kit」这类**称呼**保持稳定，变的只是路径。
 
-## 6. 机器相关路径：统一规矩（适用于本库所有文件）
+## 6. 机器相关路径：A/B 两类，处置方式完全不同
 
-库里若干文件写着 `C:\Users\Administrator\...`、`D:\esp32_8266_files\...`、`~/.qoder-cn/tmp\...`。
-2026-10-15 在本机（用户 `yjt54`）逐条到文件系统实测过，**结论不是"全都失效"，而是分三类**：
+本库多篇文件写着 `C:\Users\Administrator\...`、`D:\esp32_8266_files\...`、`~/.qoder-cn/tmp\...`。
+判别的唯一标准是：**这条路径是"用户名不同、布局相同"，还是"每台电脑都按个人习惯乱放"。**
 
-| 文档里的写法 | 本机实测 |
-|---|---|
-| `D:\esp32_8266_files\esp-idf-v5.5.5_ol`（IDF 根） | ✅ 存在 |
-| IDF 根 `idf_cmd_init.bat` + `idf_build.bat`（构建通路唯一入口） | ✅ 两个都在 |
-| `{ROOT}` = `...\examples\idf_v555_my_exps\p4_touch_lcd4_3_exp\lvgl_demo_ai\eez-test` | ✅ 存在（`design/`、`src/`、`test.eez-project`、`ui_debug_kit.config.json` 齐） |
-| `C:\Users\Administrator\.workbuddy\...\envs\default\Scripts\python.exe`（`{PY}`，唯一装了 PIL 的解释器） | ✅ 本机等价物存在，只是用户名换成 `yjt54` 后同布局命中 |
-| `C:\Users\Administrator\AppData\Local\Programs\eezstudio\EEZ Studio.exe` | ✅ 同上，换用户名即命中 |
-| `...\AppData\Local\Espressif\ComponentManager\Cache\`（托管组件干净副本） | ✅ 本机 `%LOCALAPPDATA%` 下存在 |
-| `.workbuddy\binaries\node\versions\22.22.2-3\node.exe` | ⚠️ 版本号不同：本机是 `22.22.2-6` |
-| `D:\esp32_8266_files\esp-idf-tools_for_idf_v5_5_5`（工具链目录） | ❌ 不存在。本机只有 `esp-idf-tools_for_idf_v5_5_1` 与默认 `C:\Users\yjt54\.espressif\tools` |
-| `...\idf_v555_my_exps\common\PC_SIM\lv_port_pc_vscode_v9.5`（PC 仿真器根） | ❌ 不存在（`common/` 下只有 `APL`、`DRV`） |
-| `...\common\APL\apl_lvgl_v9_4`（LVGL 内核） | ❌ 不存在（`APL` 下只有 apl_atomic / apl_console* / apl_utility） |
-| `{IDF_ROOT}\build` | ❌ 不存在（本机尚未构建过） |
-| `C:\Users\Administrator\.qoder-cn\tmp\` 里的 `run_round.sh` / `cap_serial.py` / `idf.ps1` | ❌ 不存在。本机 `.qoder-cn\tmp` 是会话临时目录，只有 session 子目录 |
-| `C:\Users\yjt54\eez-projects\examples\eez_lvgl_demo`（官方参照工程） | ❌ 不存在（本机 `eez-projects` 下只有 `eez-test`） |
+**A 类 · 只与用户名绑定** —— 目录布局本身通用，把 `Administrator` 换成当前用户名即可用。
+允许"推断 + 实测确认"，不必每次问用户。
 
-规矩：
+**B 类 · 每机都不同的变量** —— 位置与目录名随各人的存放习惯变化，**经验库里不得存成事实**。
+文档中一律按 `{占位符}` 看待，写死的那串字符只是**来源机器的样本**；
+**用之前必须让用户指定这台电脑上的真值**，禁止扫盘猜，也禁止拿样本值直接跑。
 
-1. 表里标 ✅ 且只是用户名不同的，直接把 `Administrator` 换成当前用户名即可，不必再猜；
-2. 标 ⚠️ / ❌ 的**不得当事实使用**：确认不了就问用户，禁止扫盘猜（`EEZ Studio_ui_debug_kit/config.template.json` 的 `sim` 段已写明同一条）；
-3. 本机实测到新真值就回来更新本表并标日期；表里没有的路径按第 1 条流程先测再记。
-4. **工程侧文件不在本库范围内**：`D:\...\eez-test\ui_debug_kit.config.json` 的 `binaries.python` / `python_venv` / `node` /
-   `runtime.exe` 四条目前仍写 `Administrator`，在本机跑 kit 会被 `config_check.py` ERROR 阻断（这正是它的设计）。
-   改那 4 行属于**改工程配置**，需用户确认后再动，本库只做记录。
-5. 已加顶注/行内标注的 4 份文件：`embedded/esp32/esp-idf-windows-build.md`、
-   `embedded/esp32/esp32-p4-lvgl9-touch-lcd-debug-optimization.md`、
-   `embedded/EEZ Studio_ui_debug_kit/reference/09_build_flash_debug_lvgl_demo_ai.md`、
-   `embedded/EEZ Studio_ui_debug_kit/CONFIG.md`（§4.1 行内）。顶注只指路到本表，不再各自重复结论。
-6. `intake/`、`prompts/` 里出现的历史路径属于**证据记录**，按第 7 节规矩只追加、不改写
-   （已知：`P-0017`、`P-0043`、`P-0065`、`P-0101`、`PROMPT_LOG` 数条）。
+| 文档里的写法 | 类别 | 2026-10-15 在 `yjt54` 机器的抽样 |
+|---|---|---|
+| `D:\esp32_8266_files\esp-idf-v5.5.5_ol`（IDF 根） | A | 存在 |
+| IDF 根 `idf_cmd_init.bat` + `idf_build.bat`（构建通路唯一入口） | A | 两个都在 |
+| `{ROOT}` = `...\examples\idf_v555_my_exps\p4_touch_lcd4_3_exp\lvgl_demo_ai\eez-test` | A | 存在（`design/`、`src/`、`test.eez-project`、`ui_debug_kit.config.json` 齐） |
+| `C:\Users\Administrator\.workbuddy\...\envs\default\Scripts\python.exe`（`{PY}`，装了 PIL 的解释器） | A | 等价物存在，换用户名即命中 |
+| `...\AppData\Local\Programs\eezstudio\EEZ Studio.exe`（`{EXE}` 的宿主） | A | 同上 |
+| `...\AppData\Local\Espressif\ComponentManager\Cache\`（托管组件干净副本） | A | `%LOCALAPPDATA%` 下存在 |
+| `.workbuddy\binaries\node\versions\22.22.2-3\node.exe` | A（版本号是变量） | 本机实际为 `22.22.2-6`，取目录里在的版本 |
+| `D:\esp32_8266_files\esp-idf-tools_for_idf_v5_5_5`、`IDF_TOOLS_PATH`、`IDF_PYTHON_ENV_PATH` | **B** | 未命中。本机只有 `esp-idf-tools_for_idf_v5_5_1` 与默认 `.espressif\tools`，且 `.espressif` 下无 `python_env` |
+| `...\idf_v555_my_exps\common\PC_SIM\lv_port_pc_vscode_v9.5`（PC 仿真器根） | **B** | 未命中（本机 `common/` 下只有 `APL`、`DRV`） |
+| `...\common\APL\apl_lvgl_v9_4`（LVGL 内核源码目录） | **B** | 未命中（本机 `APL` 下只有 apl_atomic / apl_console* / apl_utility） |
+| `.qoder-cn\tmp` 里的 `run_round.sh` / `cap_serial.py` / `idf.ps1` | **B** | 未命中；本机 `.qoder-cn\tmp` 是会话临时目录，只放 session 子目录 |
+| `eez-projects\examples\eez_lvgl_demo`（官方参照工程） | **B** | 未命中（本机 `eez-projects` 下只有 `eez-test`） |
+| `{IDF_ROOT}\build` | 派生物 | 未命中（本机尚未构建过；跑一次构建即出现，不是要找的路径） |
+
+怎么用这张表：
+
+1. 读经验碰到 **A 类** → 直接换用户名，实测存在就照用；
+2. 碰到 **B 类** → **先问用户要这一台机器上的真值**，拿到再执行。真值写进**工程侧配置**
+   （kit 的 `ui_debug_kit.config.json`、或作业卡里标"本机"的那一段），
+   **不要回填进经验正文**——正文只留占位符、做法和判据。`config.template.json` 的 `sim` 段注释就是这个设计；
+3. 本表"抽样"那一列只用于**判类别**，不构成长期事实；换一台机器重新看一遍即可，无需逐条改正文。
+
+补充：`D:\...\eez-test\ui_debug_kit.config.json` 的 `binaries.python` / `python_venv` / `node` / `runtime.exe` 四条目前仍写 `Administrator`，
+在本机跑 kit 会被 `config_check.py` ERROR 阻断（这正是它的设计）。改那 4 行属于**改工程配置**，需用户确认后再动，本库只做记录。
+
+已加顶注 / 行内标注的 4 份文件：`embedded/esp32/esp-idf-windows-build.md`、
+`embedded/esp32/esp32-p4-lvgl9-touch-lcd-debug-optimization.md`、
+`embedded/EEZ Studio_ui_debug_kit/reference/09_build_flash_debug_lvgl_demo_ai.md`、
+`embedded/EEZ Studio_ui_debug_kit/CONFIG.md`（§4.1 行内）。它们的顶注只指路到本节，不各自重复结论。
+
+`intake/`、`prompts/` 里出现的历史路径属于**证据记录**，按第 7 节规矩只追加、不改写
+（已知：`P-0017`、`P-0043`、`P-0065`、`P-0101`、`PROMPT_LOG` 数条）。
 
 ## 7. 记录区纪律（`embedded/EEZ Studio_ui_debug_kit/intake/`、`prompts/`）
 
