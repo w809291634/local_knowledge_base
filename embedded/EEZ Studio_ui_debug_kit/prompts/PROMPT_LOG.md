@@ -1772,3 +1772,27 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：切屏时左侧导航不要跟着淡；且希望这个改法留在 EEZ 侧
   - 产出/结论：先中后否 —— EEZ 没有跨屏常驻层（app.asar 里 lv_layer_top 全是 LVGL-WASM 导出桩、topLayer 全是 Floating-UI；屏生命周期只有 createAtStart/deleteOnScreenUnload/screensLifetimeSupport），而 lv_scr_load_anim 作用于整个 screen，画在屏里的 rail 必然跟着动。EEZ 内的正确解=屏间过渡一律 NONE（build_ui 单点 SCREEN_GOTO_FADE，rail+tile 都读它；EEZ 实测接受 "NONE"：build 无错无警告、工程里 16 条 changeScreen 的 fadeMode 全 NONE/speed 全 0），native 语音切屏同步改 LV_SCR_LOAD_ANIM_NONE 保持两条路径同一观感。仿真 rc=0 门禁 9.85%、[rail] 点击切屏断言照旧过；设备 build rc=0。真·顶层要 native 一行 reparent + 把退役的 CHECKED 运行期同步请回来，等用户点头再做。
   - 关联：P-0122
+### PR-0204 · 2026-10-15 11:40 · Qoder
+  - 提示词：我还是想要  垂直 滑动切换 ，像 原来的 tabview
+  - 诉求：把上一轮删掉的跨屏滑动以竖向形式做回来
+  - 产出/结论：EEZ 原生 GESTURE 竖滑切四屏，仿真三连 up 全对、门禁 10.83%、设备 rc=0
+  - 关联：（待补）
+
+### PR-0205 · 2026-10-15 11:40 · Qoder
+  - 提示词：EEZ 有咩哟手势
+  - 诉求：想知道该不该在 native 手搓手势判定
+  - 产出/结论：实证 EEZ 有 GESTURE 事件 + Event.getGestureDir(evt)，改为全 EEZ、native 零代码
+  - 关联：（待补）
+
+### PR-0206 · 2026-10-15 11:40 · Qoder
+  - 提示词：我刚刚仿真试过了，我发现和 tabviewr 里面的滑动效果不一样，并且要求滑动的很快，我要求保持参数和效果和 tabview里面的一致
+  - 诉求：手感必须与原 tabview 一致（跟手+吸附+10px）
+  - 产出/结论：量化两条判据差异（50px+每拍3px vs scroll_limit=10px）并证明 4 独立 screen 与跟手互斥
+  - 关联：（待补）
+
+### PR-0207 · 2026-10-15 11:40 · Qoder
+  - 提示词：那就算了，那就还原 原来的 tabview 方案
+  - 诉求：放弃 4 屏拆分，回到单屏 + LEFT tabview
+  - 产出/结论：还原方案已定：五个文件整文件回 HEAD（先备份 tmp/backup_4screen），待执行
+  - 关联：（待补）
+
