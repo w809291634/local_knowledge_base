@@ -1807,8 +1807,17 @@ def audit_table_geometry(doc, first_cell_text='文件编号'):
                 if e is None or v in ('single', 'thick', 'double', 'dotted', 'dashed'):
                     first_col_has = True
                     break
+            # §51 规则 D：表级与样式都没有任何可见框线的，是设计上无框线的表，不是缺陷
+            other_sides = [x for x in ('right', 'top', 'bottom', 'insideH', 'insideV')
+                           if b is not None
+                           and b.find(qn('w:' + x)) is not None
+                           and (b.find(qn('w:' + x)).get(qn('w:val')) or '').lower()
+                           not in ('', 'none', 'nil', 'hidden')]
             if not tbl_left_ok and not first_col_has:
-                p.append('左边框真缺失（表级无且首列单元格也无单线）')
+                if other_sides or nilc:
+                    p.append('左边框真缺失（该表其他边有框线，唯独左边没有）')
+                else:
+                    p.append('整表无框线（设计上无网格，不补线）')
             elif not tbl_left_ok:
                 p.append('表级左边框缺失（首列单元格有单线，视觉正常，仅提示）')
         nilc = 0
@@ -2013,3 +2022,165 @@ def normalize_heading_format(doc, profile, levels=(0, 1, 2), first_cell_text='�
             set_rPr(rPr, profile[lv])
 
     return {'changed': changed, 'demoted_lead_in': demoted}
+
+
+
+def _style_sz_chain(doc, sid):
+    """沿 basedOn 链找样式自带字号（§34：值常在样式里而不在段落自己手上）。"""
+    raw = {st.get(qn('w:styleId')): st for st in doc.styles.element.findall(qn('w:style'))}
+    seen = 0
+    while sid and sid in raw and seen < 8:
+        e = raw[sid].find('.//' + qn('w:sz'))
+        if e is not None:
+            return e.get(qn('w:val'))
+        bo = raw[sid].find(qn('w:basedOn'))
+        sid = bo.get(qn('w:val')) if bo is not None else None
+        seen += 1
+    return None
+
+
+def _effective_sz(p_el, doc):
+    """段落生效字号：run 显式值 > 样式链 > Normal。Word 刷新目录时会把等价的 run 级字号
+    归并进样式（§13），只读 run 会误判成"没有字号"，闸门必须走这条链。"""
+    for r in p_el.findall(qn('w:r')):
+        if not ''.join(t.text or '' for t in r.iter(qn('w:t'))).strip():
+            continue
+        rPr = r.find(qn('w:rPr'))
+        if rPr is not None:
+            e = rPr.find(qn('w:sz'))
+            if e is not None:
+                return e.get(qn('w:val'))
+        break
+    pPr = p_el.find(qn('w:pPr'))
+    st = pPr.find(qn('w:pStyle')) if pPr is not None else None
+    sid = st.get(qn('w:val')) if st is not None else None
+    v = _style_sz_chain(doc, sid)
+    if v:
+        return v
+    for s_ in doc.styles.element.findall(qn('w:style')):
+        nm = s_.find(qn('w:name'))
+        if nm is not None and nm.get(qn('w:val')) == 'Normal':
+            e = s_.find('.//' + qn('w:sz'))
+            return e.get(qn('w:val')) if e is not None else None
+    return None
+
+def check_heading_tiers(doc, body_sz=None, levels=(0, 1, 2), first_cell_text='文件编号'):
+    """§10.5 跨档闸门：各级标题字号必须互不相同、严格递减，且章标题必须大于正文。
+
+    只查"每级只剩一种取值"的闸门查不出"三级挤在同一档"这种退化——
+    把 L1/L2/L3 全压成正文号时闸门全绿，但层级感已经消失。返回 (ok, 说明列表)。
+    """
+    S = _style_outline_map(doc)
+    kids = list(doc.element.body.iterchildren())
+    cover_end = _cover_end_index(doc, first_cell_text)
+    per = {}
+    for i, c in enumerate(kids):
+        if c.tag.split('}')[-1] != 'p' or i < cover_end:
+            continue
+        lv = effective_outline(c, S)
+        if lv not in levels:
+            continue
+        t = ''.join(x.text or '' for x in c.iter(qn('w:t'))).strip()
+        if not t or LEAD_IN_RE.search(t):
+            continue
+        if c.findall('.//' + qn('w:fldChar')) or c.findall('.//' + qn('w:instrText')):
+            continue
+        sz = _effective_sz(c, doc)
+        if sz:
+            per.setdefault(lv, set()).add(int(sz))
+    notes = []
+    ok = True
+    if body_sz is None:
+        for s_ in doc.styles.element.findall(qn('w:style')):
+            nm = s_.find(qn('w:name'))
+            if nm is not None and nm.get(qn('w:val')) == 'Normal':
+                e = s_.find('.//' + qn('w:sz'))
+                if e is not None:
+                    body_sz = int(e.get(qn('w:val')))
+                break
+    for lv in levels:
+        v = per.get(lv)
+        if v is None:
+            continue
+        if len(v) > 1:
+            ok = False
+            notes.append('L%d 内部多档 %s' % (lv + 1, sorted(v)))
+    got = {lv: sorted(per[lv])[-1] for lv in levels if per.get(lv)}
+    seq = [got[lv] for lv in levels if lv in got]
+    if any(a <= b for a, b in zip(seq, seq[1:])):
+        ok = False
+        notes.append('各级未严格递减: %s（全级别同字号=层级不可辨，见 §10.5）' % seq)
+    if body_sz and seq and seq[0] <= body_sz:
+        ok = False
+        notes.append('章标题 %s <= 正文 %s，与正文同号' % (seq[0], body_sz))
+    return ok, notes or ['各级成档: %s，正文 %s' % (seq, body_sz)]
+
+
+NUM_MECH_HAND = '手写'
+NUM_MECH_STYLE_AUTO = '自动-样式'
+NUM_MECH_PARA_AUTO = '自动-段落'
+NUM_MECH_NONE = '无编号'
+
+
+def _style_has_numpr(doc, sid):
+    raw = {st.get(qn('w:styleId')): st for st in doc.styles.element.findall(qn('w:style'))}
+    seen = 0
+    while sid and sid in raw and seen < 8:
+        if raw[sid].find('.//' + qn('w:numPr')) is not None:
+            return True
+        bo = raw[sid].find(qn('w:basedOn'))
+        sid = bo.get(qn('w:val')) if bo is not None else None
+        seen += 1
+    return False
+
+
+def heading_numbering_mechanisms(doc, levels=(0, 1, 2), first_cell_text='文件编号'):
+    """按级别统计标题的编号机制三态 -> {级别: {机制: 段数}}，并给出混用清单。
+
+    三态：
+      手写        序号写在文字里（`1.1 编写目的`、`第X章 …`）
+      自动-样式    文字里没有序号，编号来自 pStyle 沿链的 w:numPr
+      自动-段落    文字里没有序号，编号来自段落自己的 w:pPr/w:numPr（numId 非 0）
+      无编号      三者皆无（如"概述""用户界面和体验"这类靠样式或纯文字的章名）
+
+    返回 (per_level, mixed)；mixed = [(级别, {机制: 段数}), ...] 只含"同级别出现 2 种以上
+    编号机制"的级别。**即使当前渲染完全正确、没有 §8 的双编号，混用本身也是一致性缺陷**：
+    插删一章时只有自动那部分会重排，手写的不会跟着变，编号当场断裂。
+    """
+    S = _style_outline_map(doc)
+    kids = list(doc.element.body.iterchildren())
+    cover_end = _cover_end_index(doc, first_cell_text)
+    per = {}
+    for i, c in enumerate(kids):
+        if c.tag.split('}')[-1] != 'p' or i < cover_end:
+            continue
+        t = ''.join(x.text or '' for x in c.iter(qn('w:t'))).strip()
+        if not t:
+            continue
+        if c.findall('.//' + qn('w:fldChar')) or c.findall('.//' + qn('w:instrText')):
+            continue                       # 目录域条目文字里自带序号与页码，不参与判定
+        lv = effective_outline(c, S)
+        if lv not in levels:
+            continue
+        pPr = c.find(qn('w:pPr'))
+        np_ = pPr.find(qn('w:numPr')) if pPr is not None else None
+        nid = np_.find(qn('w:numId')) if np_ is not None else None
+        own = nid is not None and (nid.get(qn('w:val')) or '0') != '0'
+        st = pPr.find(qn('w:pStyle')) if pPr is not None else None
+        sid = st.get(qn('w:val')) if st is not None else None
+        sty = _style_has_numpr(doc, sid) if sid else False
+        hand = bool(re.match(r'^(\s*(第\s*[0-9一二三四五六七八九十百]+\s*[章节篇])'
+                             r'|\d+(\.\d+)*[\s.、])', t))
+        if hand:
+            mech = NUM_MECH_HAND
+        elif sty:
+            mech = NUM_MECH_STYLE_AUTO
+        elif own:
+            mech = NUM_MECH_PARA_AUTO
+        else:
+            mech = NUM_MECH_NONE
+        per.setdefault(lv, {}).setdefault(mech, 0)
+        per[lv][mech] += 1
+    mixed = [(lv, m) for lv, m in sorted(per.items())
+             if len([k for k in m if k != NUM_MECH_NONE]) > 1]
+    return per, mixed
