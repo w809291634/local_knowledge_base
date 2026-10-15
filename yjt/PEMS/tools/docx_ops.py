@@ -1607,6 +1607,330 @@ def set_cover_spacers(doc, n=3, first_cell_text='文件编号', body_style=None)
     return {'before': before, 'after': kept + added, 'removed': removed, 'added': added}
 
 
+def set_cover_top_spacers(doc, n=9, first_cell_text='文件编号', body_style=None):
+    """把"封面标题之前的空段"统一成 n 行 —— 让封面整块落在版心**居中偏上**。
+
+    为什么不用 `w:vAlign` + 分节（两条都实测踩过）：
+      1. vAlign 是**节**属性。想让封面单独居中就得让封面单独成节，而新建节的 sectPr 只要
+         带着与正文节相同的 headerReference/footerReference（哪怕换 r:id 指向同一部件），
+         Word 就判"文件可能已经损坏"；把引用**搬**到封面节又会让正文节的首页眉脚状态改变，
+         而且同节里被一起拖进来的目录页/前言页也会被竖排居中。
+      2. 有的模板第一节本来就含目录/前言（封面不是独立节），节边界与封面页不是一回事。
+    段前空段是纯流式排版：不碰节、不碰眉脚、不影响其它页，且**幂等**（先把已有前导空段
+    清成基准再补到 n），换字号时按渲染墨区复核一次即可。
+    返回 dict {before, after, removed, added}。
+    """
+    body = doc.element.body
+    kids = list(body.iterchildren())
+    is_p = lambda c: c.tag == qn('w:p')
+    etxt = lambda el: ''.join(x.text or '' for x in el.iter(qn('w:t')))
+    tb = next((i for i, c in enumerate(kids)
+               if c.tag == qn('w:tbl') and first_cell_text in etxt(c)), None)
+    if tb is None:
+        return {'skipped': '未找到封面信息表'}
+    ti = next((i for i in range(tb) if is_p(kids[i]) and etxt(kids[i]).strip()), None)
+    if ti is None:
+        return {'skipped': '封面表之前没有标题段'}
+    lead = []
+    for c in kids[:ti]:
+        if not is_p(c):
+            continue
+        if etxt(c).strip() or c.findall('.//' + qn('w:sectPr'))                 or c.findall('.//' + qn('w:drawing')) or c.findall('.//' + qn('w:pict'))                 or c.findall('.//' + qn('w:fldChar')):
+            break                       # 遇到非空/载体段就停，封面顶部留白只数最靠近标题的那一段
+        lead.append(c)
+    before = len(lead)
+    removed = 0
+    for c in lead[n:]:
+        body.remove(c)
+        removed += 1
+    kept = min(before, n)
+    donor = body_style
+    if donor is None:
+        st = kids[ti].find('.//' + qn('w:pStyle'))
+        donor = st.get(qn('w:val')) if st is not None else None
+    # 前导空段要紧贴标题之上：以第一个保留的空段为锚往它前面补；一个不剩就直接插到标题前
+    added = 0
+    cursor = lead[0] if kept else kids[ti]
+    for _ in range(n - kept):
+        p = OxmlElement('w:p')
+        if donor:
+            pPr = OxmlElement('w:pPr')
+            s = OxmlElement('w:pStyle')
+            s.set(qn('w:val'), donor)
+            pPr.append(s)
+            p.append(pPr)
+        cursor.addprevious(p)
+        added += 1
+    return {'before': before, 'after': kept + added, 'removed': removed, 'added': added}
+
+
+def set_cover_block_valign(doc, valign='center', first_cell_text='文件编号', below_spacers=0,
+                           body_style=None, raise_pt=0):
+    """让封面整块（标题文字＋封面信息表）在版心里**居中**，并用"表后空段"把可视块顶到**偏上**。
+
+    为什么不用"标题前空段"定位：那要数准每行行高，字号／行距／软件（Word、WPS、LibreOffice）
+    一变就漂；`w:vAlign` 由排版引擎按实际内容高度居中，天然稳。
+    "居中偏上" = `vAlign=center` 的对称中心被**表后的 n 个空段**上移：
+    居中对象变成"封面块＋尾部空段"，可见块上移约 (n × 行高)/2。
+
+    只动封面所在那一节（封面表所在节），正文节不受影响。
+    `valign=None` 且 below_spacers=0 时等于撤销本函数留下的设置。
+    返回 dict：{sectPr 是否改, vAlign 值, 表后空段 before/after}。
+    """
+    body = doc.element.body
+    kids = list(body.iterchildren())
+    etxt = lambda el: ''.join(x.text or '' for x in el.iter(qn('w:t')))
+    is_p = lambda c: c.tag.split('}')[-1] == 'p'
+    ti = next((i for i, c in enumerate(kids) if is_p(c) and etxt(c).strip()), None)
+    tb = next((i for i, c in enumerate(kids)
+               if c.tag.split('}')[-1] == 'tbl' and first_cell_text in etxt(c)), None)
+    if tb is None:
+        return {'skipped': '未找到封面信息表'}
+    # 封面所在节的 sectPr：从封面表往后找到第一个带 sectPr 的段落（找不到就是 body 末尾那个）
+    sect = None
+    for c in kids[tb:]:
+        if c.tag.split('}')[-1] == 'p':
+            pPr = c.find(qn('w:pPr'))
+            if pPr is not None and pPr.find(qn('w:sectPr')) is not None:
+                sect = pPr.find(qn('w:sectPr'))
+                anchor = c
+                break
+    if sect is None:
+        # 封面**不单独成节**（整份文档只有一个 body 级 sectPr）时绝不能回退去改那个 sectPr：
+        # 那是"最后一节"的属性，会把**全文每一页**都竖排居中，页数与正文排版一起崩
+        # （实测一份只有 1 节的模板：封面块从 2%~98% 变成 28%~72%，且全文多出一页）。
+        return {'skipped': '封面不单独成节，vAlign 会作用到全文；先让封面成节或改用段前空段定位'}
+    r = {'sect_found': sect is not None}
+    if sect is not None:
+        e = sect.find(qn('w:vAlign'))
+        if valign is None:
+            if e is not None:
+                sect.remove(e)
+        else:
+            if e is None:
+                e = OxmlElement('w:vAlign')
+                # w:vAlign 在 CT_SectPr 里排在 pgMar 之后、cols 之前；追加后 Word 也能读，
+                # 但为稳妥按 schema 顺序插到 cols/type 之前
+                for tag in ('w:cols', 'w:docGrid', 'w:printerSettings', 'w:type'):
+                    at = sect.find(qn(tag))
+                    if at is not None:
+                        at.addprevious(e)
+                        break
+                else:
+                    sect.append(e)
+            e.set(qn('w:val'), valign)
+        r['vAlign'] = valign
+    # "偏上"的量：加大**本节**的下页边距。vAlign 是按版心高度居中的，
+    # 版心下边界上移 → 居中块整体上移，且**不往节里塞内容**，不会有溢出成空白页的风险
+    # （实测垫空段的方案：某份文档加 2 段就多出整整一页空白）。
+    if raise_pt:
+        pgmar = sect.find(qn('w:pgMar'))
+        if pgmar is None:                     # 本节没写 pgMar 时先从最后一节克隆一份，再改下边距
+            bs0 = body.find(qn('w:sectPr'))
+            bm0 = bs0.find(qn('w:pgMar')) if bs0 is not None else None
+            if bm0 is not None:
+                import copy as _c
+                pgmar = _c.deepcopy(bm0)
+                at = sect.find(qn('w:pgSz'))
+                if at is not None:
+                    at.addnext(pgmar)
+                else:
+                    sect.append(pgmar)
+        body_mar = pgmar.get(qn('w:bottom')) if pgmar is not None else None
+        if pgmar is not None and body_mar is not None:
+            try:
+                base_twip = int(body_mar)
+            except (TypeError, ValueError):
+                base_twip = 0
+            # 页脚位置由 pgMar@footer（距页面下边界）决定，与下边距无关，所以不用动它；
+            # 下边距只会变大，正文更不会压到页脚。
+            pgmar.set(qn('w:bottom'), str(base_twip + int(raise_pt * 20)))
+            r['bottom_margin_twip'] = pgmar.get(qn('w:bottom'))
+    # 表后空段（尾部垫高，让可见块上移）
+    if True:
+        after = kids[tb + 1:]
+        donor = body_style
+        span, stopped = [], False
+        for c in after:
+            if not is_p(c):
+                break
+            pPr = c.find(qn('w:pPr'))
+            if (etxt(c).strip() or pPr is not None
+                    and pPr.find(qn('w:sectPr')) is not None):
+                break
+            if c.findall('.//' + qn('w:drawing')) or c.findall('.//' + qn('w:pict'))                     or c.findall('.//' + qn('w:fldChar')):
+                break
+            span.append(c)
+        if donor is None and span:
+            st = span[0].find('.//' + qn('w:pStyle'))
+            donor = st.get(qn('w:val')) if st is not None else None
+        before = len(span)
+        for c in span[below_spacers:]:
+            body.remove(c)
+        anchor_el = kids[tb]
+        kept = min(before, below_spacers)
+        for c in span[:kept]:
+            anchor_el = c
+        added = 0
+        for _ in range(below_spacers - kept):
+            p = OxmlElement('w:p')
+            if donor:
+                pPr = OxmlElement('w:pPr')
+                s = OxmlElement('w:pStyle')
+                s.set(qn('w:val'), donor)
+                pPr.append(s)
+                p.append(pPr)
+            anchor_el.addnext(p)
+            anchor_el = p
+            added += 1
+        r['spacers'] = {'before': before, 'after': kept + added}
+    return r
+
+
+def ensure_cover_section(doc, first_cell_text='文件编号'):
+    """让"标题＋封面信息表"自成一节（下一页分节符），这样封面才能单独做垂直对齐。
+
+    有些模板整份文档只有一个 body 级 `sectPr`，封面和正文同属一节。此时想给封面设
+    `w:vAlign` 只能改那个唯一的 sectPr，而它是"最后一节"的属性 —— 结果全文每一页都被竖排
+    居中（实测：封面块从 2%~98% 变成 28%~72%，正文页也跟着居中，页数还多出一页）。
+    所以先补一节：把分节符插在**正文首块之前**，分节符段自己归封面节。
+
+    新节的 `sectPr` 从 body 级那份整体克隆，页面尺寸、页边距、页眉页脚引用与正文节完全一致
+    （dod 第 12/15 项要求逐节页宽页距一致），并把 `w:type` 强制为 `nextPage`。
+    返回 dict；封面已单独成节时只报告不重复插。
+    """
+    body = doc.element.body
+    kids = list(body.iterchildren())
+    etxt = lambda el: ''.join(x.text or '' for x in el.iter(qn('w:t')))
+    cover_tbl = next((c for c in kids
+                      if c.tag.split('}')[-1] == 'tbl' and first_cell_text in etxt(c)), None)
+    if cover_tbl is None:
+        return {'skipped': '未找到封面信息表'}
+    idx = kids.index(cover_tbl)
+    # 封面节应当在此结束：往后找第一个"带 sectPr 的段落"与第一个"有文字的正文块"
+    first_body = None
+    for c in kids[idx + 1:]:
+        if c.tag.split('}')[-1] != 'p':
+            break
+        if etxt(c).strip():
+            first_body = c
+            break
+        if c.find('.//' + qn('w:pPr') + '/' + qn('w:sectPr')) is not None:
+            return {'already': True}          # 封面后面已有分节符，本就自成一节
+    if first_body is None:
+        return {'skipped': '封面之后找不到正文首块'}
+    base = body.find(qn('w:sectPr'))
+    if base is None:
+        return {'skipped': '文档没有 body 级 sectPr，无法克隆节属性'}
+    import copy
+    sect = copy.deepcopy(base)
+    # 页眉页脚引用**只能有一个节带着**：同一个眉脚部件被两节同时引用（哪怕换 r:id），
+    # Word 直接判"文件可能已经损坏"（实测克隆 body 级 sectPr 插入分节符后 LibreOffice 与 Word
+    # 都拒绝打开）。正确做法是把引用**整体搬进封面节**，正文节不带引用 → 按 Word 的
+    # link-to-previous 模型自动继承封面节的眉脚，每一页都还在。
+    moved = 0
+    # 克隆体自带的引用必须**先删**：deepcopy 已经把 base 的四条引用复制过来了，
+    # 再把 base 的原元素插进去就成了"同一个 r:id 在同一个 sectPr 里写两遍"，
+    # Word 直接判文件损坏（实测 RD-057/RD-069 打不开，LibreOffice 也不出图）。
+    for tag in ('w:headerReference', 'w:footerReference'):
+        for e in list(sect.findall(qn(tag))):
+            sect.remove(e)
+    # 只有 headerReference/footerReference 需要搬（CT_SectPr 里它们排在最前，插到 pgSz 之前合法）；
+    # titlePg 克隆体里本来就有，正文节那一份要**删掉**——它已不再引用首页眉脚，
+    # 留着会让正文节第一页页眉变空白。
+    for tag in ('w:headerReference', 'w:footerReference'):
+        for e in list(base.findall(qn(tag))):
+            base.remove(e)
+            at = sect.find(qn('w:pgSz'))
+            if at is not None:
+                at.addprevious(e)
+            else:
+                sect.insert(0, e)
+            moved += 1
+    for e in list(base.findall(qn('w:titlePg'))):
+        base.remove(e)
+    typ = sect.find(qn('w:type'))
+    if typ is None:
+        typ = OxmlElement('w:type')
+        sect.insert(0, typ)
+    typ.set(qn('w:val'), 'nextPage')
+    p = OxmlElement('w:p')
+    pPr = OxmlElement('w:pPr')
+    pPr.append(sect)
+    p.append(pPr)
+    first_body.addprevious(p)
+    return {'inserted': True, 'before': etxt(first_body).strip()[:20],
+            'moved_refs': moved}
+
+
+_TBLPR_AFTER_BORDERS = ('w:shd', 'w:tblLayout', 'w:tblCellMar', 'w:tblLook', 'w:tblCaption',
+                        'w:tblDescription')
+_SIDES = ('top', 'left', 'bottom', 'right', 'insideH', 'insideV')
+
+
+def set_table_borders_six_way(doc, first_cell_text='文件编号', sz=4, val='single',
+                              color='auto', skip_cover=True):
+    """给每张表补齐**六向**实线（top/left/bottom/right/insideH/insideV）。
+
+    这是一条"项目/用户显式排版要求"，按 `generality-boundaries-and-precedence.md` 第一节
+    的优先级高于 §51 的通用默认（§51 通用默认是"表级与样式都无框线属设计，什么都不加；
+    只补 left、绝不补 inside*"）。经验库里保留 §51 原语不动，另设本函数，
+    需要六向边框的项目显式调用，两边都不污染对方。
+
+    同时清掉单元格级 `w:tcBorders` 里 `val="nil|none"` 的边——不摘的话表级补了线也照样缺边。
+    返回 {表号: [处置]}。
+    """
+    body = doc.element.body
+    kids = list(body.iterchildren())
+    etxt = lambda el: ''.join(x.text or '' for x in el.iter(qn('w:t')))
+    cover_tbl = next((c for c in kids
+                      if c.tag.split('}')[-1] == 'tbl' and first_cell_text in etxt(c)), None)
+    res = {}
+    for i, tbl in enumerate(doc.tables):
+        el = tbl._tbl
+        if skip_cover and el is cover_tbl:
+            continue
+        acts = []
+        tblPr = el.find(qn('w:tblPr'))
+        if tblPr is None:
+            tblPr = OxmlElement('w:tblPr')
+            el.insert(0, tblPr)
+        bds = tblPr.find(qn('w:tblBorders'))
+        if bds is None:
+            bds = OxmlElement('w:tblBorders')
+            ref = next((tblPr.find(qn(tag)) for tag in _TBLPR_AFTER_BORDERS
+                        if tblPr.find(qn(tag)) is not None), None)
+            if ref is not None:
+                ref.addprevious(bds)
+            else:
+                tblPr.append(bds)
+        for side in _SIDES:
+            e = bds.find(qn('w:' + side))
+            if e is None:
+                e = OxmlElement('w:' + side)
+                bds.append(e)
+            if (e.get(qn('w:val')) or 'single') in ('nil', 'none'):
+                acts.append('table:%s %s->%s' % (side, e.get(qn('w:val')), val))
+            e.set(qn('w:val'), val)
+            e.set(qn('w:sz'), str(sz))
+            e.set(qn('w:space'), '0')
+            e.set(qn('w:color'), color)
+        for tcPr in el.findall('.//' + qn('w:tcPr')):
+            cb = tcPr.find(qn('w:tcBorders'))
+            if cb is None:
+                continue
+            for side in _SIDES:
+                e = cb.find(qn('w:' + side))
+                if e is not None and (e.get(qn('w:val')) or '') in ('nil', 'none'):
+                    cb.remove(e)
+                    acts.append('cell:%s nil 摘除' % side)
+            if cb is not None and not len(cb):
+                tcPr.remove(cb)
+        if acts:
+            res[i + 1] = acts
+    return res
+
+
 def normalize_table_geometry(doc, first_cell_text='文件编号', keep_cover_float=True,
                              border_sz=4, apply=('indent', 'borders', 'float', 'grid'),
                              grid_overrides=None, verbose=False):

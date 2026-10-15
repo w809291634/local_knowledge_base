@@ -171,6 +171,14 @@
 - **无头 Office/LibreOffice 失败多为状态残留**：`GetActiveObject` 取的是 ROT 里任意一个实例
   （同一句代码可能取到用户的可见实例）；"服务器运行失败 / Operation unavailable" 先回收孤儿实例再退避重试；
   LibreOffice 每次转换用**全新** `UserInstallation` 目录并重试 3 次；判占用先试 `os.rename()`。§50、§44。
+- **新判据入库后先回扫自己上一轮的脚本**（§54）：库里刚禁止的写法，往往正躺在更早写的收口脚本里。
+  实测抓到两处活例——用 `id(p._p)` 记段落身份（§43）导致可收录标题少算、一次正确的目录刷新被误判越界还原；
+  共享原语路径只在"转换失败才走"的分支里插入，导致成功那轮 import 不到、墨占比判据静默退化。
+- **判据跑不起来必须失败退出**（§55）：导入失败、缺依赖、拿不到中间产物时不许退回弱判据还报"全部通过"；
+  报告里要把"判据是否生效"本身当一项打印（墨占比区间、参照文档 `votes/total`、识别出的章标题个数）。
+- **补空段排在删空段之后，压继承要写零**（§56）：按配置补的封面空段会被后续清理/刷新目录吃掉，
+  必须"清完再补、补完复核封面仍恰好一页"；样式链带来的缩进不能靠删 `w:ind`（删了就是放回继承），
+  要显式写 `0` 并按**生效值**复算验收。
 - 以上修复动作一律走同源原语 `tools/docx_ops.py:pagination_repair(doc, cover_texts=[...], apply=[...])`
   （动作：`drop_hard_break` / `drop_pbb_after_sect` / `drop_pad_tabs` / `drop_chapter_pad` /
   `demote_cover` / `demote_empty` / `drop_body_keep` / `drop_keep_before_table`），
