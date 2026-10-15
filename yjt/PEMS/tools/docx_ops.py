@@ -1909,7 +1909,8 @@ def set_table_borders_six_way(doc, first_cell_text='文件编号', sz=4, val='si
             if e is None:
                 e = OxmlElement('w:' + side)
                 bds.append(e)
-            if (e.get(qn('w:val')) or 'single') in ('nil', 'none'):
+                acts.append('table:+%s' % side)      # 补了哪几条边要报出来：闸门只查"六向齐不齐"，
+            elif (e.get(qn('w:val')) or 'single') in ('nil', 'none'):  # 没有这行日志就看不出改动痕迹
                 acts.append('table:%s %s->%s' % (side, e.get(qn('w:val')), val))
             e.set(qn('w:val'), val)
             e.set(qn('w:sz'), str(sz))
