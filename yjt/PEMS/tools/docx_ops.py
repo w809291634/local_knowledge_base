@@ -1296,7 +1296,8 @@ def pagination_audit(doc, cover_texts=()):
         nm = smap.get(sid, ('', None, None))[0]
         return nm.startswith('TOC') or nm.startswith('目录')
 
-    out = dict(hard_page_breaks=0, stacked_breaks=[], body_page_break=[],
+    out = dict(hard_page_breaks=0, stacked_breaks=[], redundant_breaks=[],
+               body_page_break=[],
                keep_on_body=[], chapter_pad=[], outline_anomaly=[],
                numbered_not_in_tree=[], toc_field=False)
 
@@ -1330,7 +1331,9 @@ def pagination_audit(doc, cover_texts=()):
         elif pbb:
             prv = kids[i - 1] if i > 0 else None                     # §39 分节符+段前分页
             if prv is not None and prv.tag.split('}')[-1] == 'p' and sect_breaks_page_el(prv):
-                out['stacked_breaks'].append('分节符+段前分页：' + (t[:24] or '<空段>'))
+                # 实测：分节符(nextPage) 已换页，再加段前分页 Word 会折叠掉，
+                # 并不必然多一页 —— 所以记"冗余"交渲染结果裁决，不当阻断项误报。
+                out['redundant_breaks'].append('分节符+段前分页：' + (t[:24] or '<空段>'))
         if pbb and lvl is None and t:
             out['body_page_break'].append(t[:30])                     # §39
         if lvl is None and pPr is not None and (
@@ -1553,3 +1556,460 @@ def pagination_repair(doc, cover_texts=(), apply=None):
             if not did:
                 break
     return {k: v for k, v in stats.items() if v}
+
+
+def set_cover_spacers(doc, n=3, first_cell_text='文件编号', body_style=None):
+    """把「封面标题文字」与「封面信息表」之间的空段统一为 n 个正文空行。
+
+    返回 dict。空段一律用正文样式（body_style 传样式 id；缺省沿用已存在空段的
+    样式，没有则不写 pStyle 即 Normal）。只动封面区，不碰正文。
+    护栏：标题与封面表之间若混入非空段或图形，直接跳过不动，交人处理。
+    """
+    body = doc.element.body
+    kids = list(body.iterchildren())
+    is_p = lambda c: c.tag.split('}')[-1] == 'p'
+    etxt = lambda el: ''.join(t.text or '' for t in el.iter(qn('w:t')))
+    ti = next((i for i, c in enumerate(kids) if is_p(c) and etxt(c).strip()), None)
+    tb = next((i for i, c in enumerate(kids)
+               if c.tag.split('}')[-1] == 'tbl' and first_cell_text in etxt(c)), None)
+    if ti is None or tb is None or tb <= ti:
+        return {'skipped': '未定位到封面标题或封面表'}
+    span = [c for c in kids[ti + 1:tb] if is_p(c)]
+    empties = [c for c in span if not etxt(c).strip()
+               and not c.findall('.//' + qn('w:drawing'))
+               and not c.findall('.//' + qn('w:pict'))
+               and c.find('.//' + qn('w:sectPr')) is None]
+    if len(empties) != len(span):
+        return {'skipped': '标题与封面表之间含非空段或图形，不动', 'before': len(empties)}
+    donor = body_style
+    if donor is None and empties:
+        st = empties[0].find('.//' + qn('w:pStyle'))
+        donor = st.get(qn('w:val')) if st is not None else None
+    before = len(empties)
+    removed = 0
+    for c in empties[n:]:
+        body.remove(c)
+        removed += 1
+    kept = max(0, before - removed)
+    added = 0
+    anchor = kids[ti]
+    for _ in range(n - kept):
+        p = OxmlElement('w:p')
+        if donor:
+            pPr = OxmlElement('w:pPr')
+            s = OxmlElement('w:pStyle')
+            s.set(qn('w:val'), donor)
+            pPr.append(s)
+            p.append(pPr)
+        anchor.addnext(p)
+        anchor = p
+        added += 1
+    return {'before': before, 'after': kept + added, 'removed': removed, 'added': added}
+
+
+def normalize_table_geometry(doc, first_cell_text='文件编号', keep_cover_float=True,
+                             border_sz=4, apply=('indent', 'borders', 'float', 'grid'),
+                             grid_overrides=None, verbose=False):
+    """修表格"左边框丢失/像被隐藏"的四类根因，返回 {表号: 处置列表}。
+
+    四类根因症状相同、成因不同，必须分开判：
+      indent  负 `w:tblInd` 把整表左推出对齐线 -> 归 0，左边框回到版心左沿
+      borders 表级 `w:tblBorders/w:left` 缺失，或单元格 `w:tcBorders/w:left val="nil"`
+              把左边框显式删掉 -> 只补"其他边有框线、唯独左边没有"的真缺失；
+              设计上无框线的表（四边皆 nil 且表级/样式无框线）不动，避免加出线来
+      float   正文表格继承了封面模板的 `w:tblpPr`（浮动 + `horzAnchor=page` +
+              `tblpX` 小于左页边距）-> 去浮动改回行内；封面表按 §2 保留浮动
+      grid    `w:tblGrid` 列宽总和大于版心 -> 按原比例缩放到版心宽，并同步 tcW/tblW；
+              超过版心 2 倍者判为**列宽数据污染**（等比缩放后首列仍是一字宽），
+              只报不改，除非在 `grid_overrides` 里给出该表的显式列宽
+    `grid_overrides`: {表号(1 基): [各列 twips]}，长度须等于列数，总和自动等比归一到版心宽。
+    """
+    is_p = lambda c: c.tag.split('}')[-1] == 'p'
+    etxt = lambda el: ''.join(t.text or '' for t in el.iter(qn('w:t')))
+    body = doc.element.body
+    kids = list(body.iterchildren())
+    cover_tbl = next((c for c in kids
+                      if c.tag.split('}')[-1] == 'tbl' and first_cell_text in etxt(c)), None)
+    sec = doc.sections[0]
+    text_w = sec.page_width.twips - sec.left_margin.twips - sec.right_margin.twips
+    res = {}
+    for i, t in enumerate(doc.tables):
+        tbl = t._tbl
+        acts = []
+        tblPr = tbl.find(qn('w:tblPr'))
+        if tblPr is None:
+            tblPr = OxmlElement('w:tblPr')
+            tbl.insert(0, tblPr)
+        is_cover = (tbl is cover_tbl)
+        if 'indent' in apply:
+            ind = tblPr.find(qn('w:tblInd'))
+            if ind is not None:
+                try:
+                    v = int(ind.get(qn('w:w')) or 0)
+                except (TypeError, ValueError):
+                    v = 0
+                if v < 0:
+                    ind.set(qn('w:w'), '0')
+                    ind.set(qn('w:type'), 'dxa')
+                    acts.append('indent:%d->0' % v)
+        if 'borders' in apply:
+            # 1) 先摘掉单元格级把边框显式设成 nil/none 的写法（"像被隐藏"的直接元凶）
+            fixed = 0
+            for tcPr in tbl.findall('.//' + qn('w:tcPr')):
+                cb = tcPr.find(qn('w:tcBorders'))
+                if cb is None:
+                    continue
+                for side in ('left', 'right', 'top', 'bottom'):
+                    e = cb.find(qn('w:' + side))
+                    if e is not None and (e.get(qn('w:val')) or '').lower() in ('nil', 'none', 'hidden'):
+                        cb.remove(e)
+                        fixed += 1
+            if fixed:
+                acts.append('cell-border-nil:%d' % fixed)
+            # 2) 只在"表级无左边框 且 首列单元格也没有单线"时补表级左边框。
+            #    表级缺失但首列有单线的表渲染正常，补 insideH/insideV 反而会给
+            #    设计上无内线的表凭空加线——所以这里只补 left，绝不动 inside*。
+            b = tblPr.find(qn('w:tblBorders'))
+            le = b.find(qn('w:left')) if b is not None else None
+            tbl_left_ok = le is not None and (le.get(qn('w:val')) or '').lower() not in ('none', 'nil', 'hidden')
+            first_col_line = False
+            for r in tbl.findall(qn('w:tr')):
+                tcs = r.findall(qn('w:tc'))
+                if not tcs:
+                    continue
+                tcPr = tcs[0].find(qn('w:tcPr'))
+                cb = tcPr.find(qn('w:tcBorders')) if tcPr is not None else None
+                if cb is None:
+                    first_col_line = True   # 单元格未覆盖 -> 跟随表级/样式，视为有
+                    break
+                e = cb.find(qn('w:left'))
+                if e is None or (e.get(qn('w:val')) or '').lower() not in ('nil', 'none', 'hidden'):
+                    first_col_line = True
+                    break
+            if not tbl_left_ok and not first_col_line:
+                if b is None:
+                    b = OxmlElement('w:tblBorders')
+                    tblPr.append(b)
+                e = OxmlElement('w:left')
+                e.set(qn('w:val'), 'single')
+                e.set(qn('w:sz'), str(border_sz))
+                e.set(qn('w:space'), '0')
+                e.set(qn('w:color'), 'auto')
+                ex = b.find(qn('w:left'))
+                if ex is not None:
+                    b.remove(ex)
+                b.append(e)
+                acts.append('add-table-left-border')
+        if 'float' in apply and not (is_cover and keep_cover_float):
+            if tblPr.find(qn('w:tblpPr')) is not None:
+                tblPr.remove(tblPr.find(qn('w:tblpPr')))
+                acts.append('unfloat')
+        if 'grid' in apply:
+            grid = tbl.find(qn('w:tblGrid'))
+            if grid is not None:
+                cols = grid.findall(qn('w:gridCol'))
+                ws = [int(c.get(qn('w:w')) or 0) for c in cols]
+                tot = sum(ws)
+                if tot > int(text_w * 1.05) and tot > 0:
+                    override = (grid_overrides or {}).get(i + 1)
+                    if override and len(override) == len(cols):
+                        s = text_w / float(sum(override))
+                        new = [max(300, int(w * s)) for w in override]
+                        for c, w in zip(cols, new):
+                            c.set(qn('w:w'), str(w))
+                        for r in tbl.findall(qn('w:tr')):
+                            tcs = r.findall(qn('w:tc'))
+                            for j, tc in enumerate(tcs):
+                                tcPr = tc.find(qn('w:tcPr'))
+                                if tcPr is None:
+                                    continue
+                                tcw = tcPr.find(qn('w:tcW'))
+                                if tcw is None or (tcw.get(qn('w:type')) or 'dxa') != 'dxa':
+                                    continue
+                                span = tcPr.find(qn('w:gridSpan'))
+                                k = int(span.get(qn('w:val'))) if span is not None else 1
+                                w = sum(new[j:j + k]) if j + k <= len(new) else new[j]
+                                tcw.set(qn('w:w'), str(w))
+                        tw = tblPr.find(qn('w:tblW'))
+                        if tw is not None:
+                            tw.set(qn('w:w'), str(text_w))
+                            tw.set(qn('w:type'), 'dxa')
+                        acts.append('grid-override:%d->%s' % (tot, new))
+                    elif tot > text_w * 2:
+                        # 超过版心 2 倍不是"略微溢出"，而是列宽数据被复制污染
+                        # （典型形态：从两列表拷来，后几列全等于同一个 5803）。
+                        # 等比缩放后首列仍会被压成一字宽，必须人工指定列宽 -> 只报不改。
+                        acts.append('grid-corrupt:%d(需人工指定列宽)' % tot)
+                    else:
+                        scale = text_w / float(tot)
+                        for c, w in zip(cols, ws):
+                            c.set(qn('w:w'), str(max(300, int(w * scale))))
+                        for tcw in tbl.findall('.//' + qn('w:tcW')):
+                            if (tcw.get(qn('w:type')) or 'dxa') != 'dxa':
+                                continue
+                            try:
+                                v = int(tcw.get(qn('w:w')) or 0)
+                            except (TypeError, ValueError):
+                                continue
+                            if v:
+                                tcw.set(qn('w:w'), str(max(300, int(v * scale))))
+                        tw = tblPr.find(qn('w:tblW'))
+                        if tw is not None:
+                            tw.set(qn('w:w'), str(text_w))
+                            tw.set(qn('w:type'), 'dxa')
+                        acts.append('grid:%d->%d' % (tot, text_w))
+        if acts:
+            res[i + 1] = acts
+            if verbose:
+                print('  表%d: %s' % (i + 1, ', '.join(acts)))
+    return res
+
+
+def audit_table_geometry(doc, first_cell_text='文件编号'):
+    """只读体检：返回 {表号: [问题]}，供 dod-checklist 的表格项核对。"""
+    etxt = lambda el: ''.join(t.text or '' for t in el.iter(qn('w:t')))
+    kids = list(doc.element.body.iterchildren())
+    cover_tbl = next((c for c in kids
+                      if c.tag.split('}')[-1] == 'tbl' and first_cell_text in etxt(c)), None)
+    sec = doc.sections[0]
+    lm = sec.left_margin.twips
+    text_w = sec.page_width.twips - lm - sec.right_margin.twips
+    bad = {}
+    for i, t in enumerate(doc.tables):
+        tbl = t._tbl
+        tblPr = tbl.find(qn('w:tblPr'))
+        p = []
+        if tblPr is not None:
+            ind = tblPr.find(qn('w:tblInd'))
+            if ind is not None and (int(ind.get(qn('w:w')) or 0) < 0):
+                p.append('负 tblInd=%s' % ind.get(qn('w:w')))
+            if tblPr.find(qn('w:tblpPr')) is not None and tbl is not cover_tbl:
+                e = tblPr.find(qn('w:tblpPr'))
+                x = int(e.get(qn('w:tblpX')) or 0)
+                p.append('正文表仍浮动(tblpX=%d, 左页边距=%d%s)'
+                         % (x, lm, ', 已压进页边距' if x < lm else ''))
+            b = tblPr.find(qn('w:tblBorders'))
+            le = b.find(qn('w:left')) if b is not None else None
+            tbl_left_ok = le is not None and (le.get(qn('w:val')) or '').lower() not in ('none', 'nil', 'hidden')
+            # 表级左边框缺失本身不等于看不见：首列单元格自带单线时渲染正常，
+            # 只有"表级无 + 首列也没有"才是真的丢边框，避免误改 20 张正常表。
+            first_col_has = False
+            for r in tbl.findall(qn('w:tr')):
+                tcs = r.findall(qn('w:tc'))
+                if not tcs:
+                    continue
+                tcPr = tcs[0].find(qn('w:tcPr'))
+                cb = tcPr.find(qn('w:tcBorders')) if tcPr is not None else None
+                if cb is None:
+                    continue
+                e = cb.find(qn('w:left'))
+                v = (e.get(qn('w:val')) or '').lower() if e is not None else ''
+                if e is None or v in ('single', 'thick', 'double', 'dotted', 'dashed'):
+                    first_col_has = True
+                    break
+            if not tbl_left_ok and not first_col_has:
+                p.append('左边框真缺失（表级无且首列单元格也无单线）')
+            elif not tbl_left_ok:
+                p.append('表级左边框缺失（首列单元格有单线，视觉正常，仅提示）')
+        nilc = 0
+        for tcPr in tbl.findall('.//' + qn('w:tcPr')):
+            cb = tcPr.find(qn('w:tcBorders'))
+            if cb is None:
+                continue
+            e = cb.find(qn('w:left'))
+            if e is not None and (e.get(qn('w:val')) or '').lower() in ('nil', 'none', 'hidden'):
+                nilc += 1
+        if nilc:
+            p.append('%d 个单元格左边框被设为 nil' % nilc)
+        grid = tbl.find(qn('w:tblGrid'))
+        if grid is not None:
+            tot = sum(int(c.get(qn('w:w')) or 0) for c in grid.findall(qn('w:gridCol')))
+            if tot > int(text_w * 1.05):
+                p.append('列宽和 %d > 版心 %d（首列会被压窄、整表溢出）' % (tot, text_w))
+        if p:
+            bad[i + 1] = p
+    return bad
+
+
+LEAD_IN_RE = re.compile(r'(如下所示|如下图所示|如右图|见下图|见上图|见图|见表)')
+
+
+def _run_font_of(p_el):
+    """段落第一个"有文字"的 run 的字体/字号/加粗（同档内比对用，不解析样式链）。"""
+    for r in p_el.findall(qn('w:r')):
+        if not ''.join(t.text or '' for t in r.iter(qn('w:t'))).strip():
+            continue
+        rPr = r.find(qn('w:rPr'))
+        out = {}
+        if rPr is None:
+            return out
+        rf = rPr.find(qn('w:rFonts'))
+        if rf is not None:
+            out['ea'] = rf.get(qn('w:eastAsia'))
+            out['latin'] = rf.get(qn('w:ascii'))
+        e = rPr.find(qn('w:sz'))
+        out['sz'] = e.get(qn('w:val')) if e is not None else None
+        b = rPr.find(qn('w:b'))
+        out['bold'] = (b is not None
+                       and (b.get(qn('w:val')) or '1') not in ('0', 'false'))
+        return out
+    return {}
+
+
+def _cover_end_index(doc, first_cell_text='文件编号'):
+    kids = list(doc.element.body.iterchildren())
+    for k, c in enumerate(kids):
+        if c.tag.split('}')[-1] == 'tbl' and first_cell_text in ''.join(
+                t.text or '' for t in c.iter(qn('w:t'))):
+            return k
+    return len(kids)
+
+
+def heading_format_profile_from(doc, levels=(0, 1, 2), first_cell_text='文件编号'):
+    """从参照文档统计正文区各级标题的"多数派"格式 -> {级别: {sz,ea,latin,bold,votes}}。
+
+    取多数派而非首段或平均值：参照文档自身常有一两段偏离（实测某份 22 段一致、1 段漏加粗），
+    多数派才能把这些也纠正过来。封面区与引导句都不参与投票。
+    """
+    S = _style_outline_map(doc)
+    kids = list(doc.element.body.iterchildren())
+    cover_end = _cover_end_index(doc, first_cell_text)
+    votes = {}
+    for i, c in enumerate(kids):
+        if c.tag.split('}')[-1] != 'p' or i < cover_end:
+            continue
+        lv = effective_outline(c, S)
+        if lv not in levels:
+            continue
+        t = ''.join(x.text or '' for x in c.iter(qn('w:t'))).strip()
+        if not t or LEAD_IN_RE.search(t):
+            continue
+        f = _run_font_of(c)
+        key = (f.get('sz'), f.get('ea'), f.get('latin'), f.get('bold'))
+        votes.setdefault(lv, {})
+        votes[lv][key] = votes[lv].get(key, 0) + 1
+    prof = {}
+    for lv, d in votes.items():
+        if not d:
+            continue
+        k = max(d, key=lambda x: d[x])
+        prof[lv] = {'sz': k[0], 'ea': k[1], 'latin': k[2], 'bold': k[3], 'votes': d[k],
+                    'total': sum(d.values())}
+    return prof
+
+
+def normalize_heading_format(doc, profile, levels=(0, 1, 2), first_cell_text='文件编号',
+                             demote_lead_in=True, also_style=True):
+    """把正文区各级标题统一到 profile 的字号/字体/加粗。
+
+    profile 由 heading_format_profile_from(参照文档) 得到，形如
+    {0: {'sz':'24','ea':'宋体','latin':'Times New Roman','bold':True}, 1: {...}, 2: {...}}
+
+    四条硬护栏：
+      1. 只动封面表之后的段落。封面大标题也是 outlineLvl=0（实测 sz=72），
+         不排除会被一起压成正文号，七份封面同时毁掉。
+      2. 跳过目录域内段落（含 fldChar/instrText 或 TOC/目录 样式）：改了会与正文标题不一致。
+      3. 跳过表格内段落（只遍历 body 直接子级，天然满足）。
+      4. 引导句（"××如下图所示："）被误标成标题级时降级为正文级，而不是给它套标题格式。
+    also_style 同时改 heading 1/2/3 样式的默认字号，避免 Word 保存时按样式回涨（§13）。
+    """
+    S = _style_outline_map(doc)
+    body = doc.element.body
+    kids = list(body.iterchildren())
+    cover_end = _cover_end_index(doc, first_cell_text)
+
+    def in_field(el):
+        if el.findall('.//' + qn('w:fldChar')) or el.findall('.//' + qn('w:instrText')):
+            return True
+        st = el.find('.//' + qn('w:pStyle'))
+        sid = st.get(qn('w:val')) if st is not None else ''
+        return S.get(sid, ('',))[0].startswith(('TOC', '目录'))
+
+    def set_rPr(rPr, spec):
+        rf = rPr.find(qn('w:rFonts'))
+        if rf is None:
+            rf = OxmlElement('w:rFonts')
+            rPr.insert(0, rf)
+        for a in ('asciiTheme', 'hAnsiTheme', 'eastAsiaTheme', 'cstheme'):
+            if rf.get(qn('w:' + a)) is not None:
+                del rf.attrib[qn('w:' + a)]
+        for a, v in (('w:ascii', spec.get('latin')), ('w:hAnsi', spec.get('latin')),
+                     ('w:eastAsia', spec.get('ea')), ('w:cs', spec.get('latin'))):
+            if v:
+                rf.set(qn(a), v)
+        for tag in ('w:sz', 'w:szCs'):
+            v = spec.get('sz')
+            if v:
+                e = rPr.find(qn(tag))
+                if e is None:
+                    e = OxmlElement(tag)
+                    rPr.append(e)
+                e.set(qn('w:val'), str(v))
+        bold = spec.get('bold')
+        if bold is not None:
+            for tag in ('w:b', 'w:bCs'):
+                e = rPr.find(qn(tag))
+                if bold:
+                    if e is None:
+                        e = OxmlElement(tag)
+                        rPr.append(e)
+                    if qn('w:val') in e.attrib:
+                        del e.attrib[qn('w:val')]
+                elif e is not None:
+                    rPr.remove(e)
+
+    changed = {lv: 0 for lv in levels}
+    demoted = []
+    for i, c in enumerate(kids):
+        if c.tag.split('}')[-1] != 'p' or i < cover_end:
+            continue
+        lv = effective_outline(c, S)
+        if lv not in levels:
+            continue
+        t = ''.join(x.text or '' for x in c.iter(qn('w:t'))).strip()
+        if not t or in_field(c):
+            continue
+        if demote_lead_in and LEAD_IN_RE.search(t):
+            pPr = c.get_or_add_pPr()
+            e = pPr.find(qn('w:outlineLvl'))
+            if e is None:
+                e = OxmlElement('w:outlineLvl')
+                pPr.append(e)
+            e.set(qn('w:val'), '9')
+            demoted.append(t[:24])
+            continue
+        spec = profile.get(lv)
+        if not spec:
+            continue
+        for r in c.findall(qn('w:r')):
+            if not ''.join(x.text or '' for x in r.iter(qn('w:t'))).strip():
+                continue
+            rPr = r.find(qn('w:rPr'))
+            if rPr is None:
+                rPr = OxmlElement('w:rPr')
+                r.insert(0, rPr)
+            set_rPr(rPr, spec)
+        pPr = c.find(qn('w:pPr'))
+        if pPr is not None:
+            prPr = pPr.find(qn('w:rPr'))
+            if prPr is None:
+                prPr = OxmlElement('w:rPr')
+                pPr.append(prPr)
+            set_rPr(prPr, spec)
+        changed[lv] += 1
+
+    if also_style:
+        want = {0: 'heading 1', 1: 'heading 2', 2: 'heading 3'}
+        for s in doc.styles.element.findall(qn('w:style')):
+            nm = s.find(qn('w:name'))
+            n = nm.get(qn('w:val')) if nm is not None else ''
+            lv = next((k for k, v in want.items() if v == n), None)
+            if lv is None or lv not in profile:
+                continue
+            rPr = s.find(qn('w:rPr'))
+            if rPr is None:
+                rPr = OxmlElement('w:rPr')
+                s.append(rPr)
+            set_rPr(rPr, profile[lv])
+
+    return {'changed': changed, 'demoted_lead_in': demoted}

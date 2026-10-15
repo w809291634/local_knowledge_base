@@ -137,6 +137,17 @@
   中间页 <0.8% 阻断、末页 <0.8% 记提示（分级沿用 §37）。§41。
 - 标题／图题判据四条收紧（图题用位置判据、图号 `2.7-1` 不算小节号、目录域内段落先剔除、
   封面区空段不算顶页回车）见 `pitfalls.md` §42。
+- **表格"左边框丢失/像被隐藏"有四类根因，症状同名成因不同**（负 `tblInd`、正文表继承封面浮动、
+  单元格把左边设 `nil`、本就无框线的两栏列表）。只补"其他边有框线唯独左边没有"的真缺失，
+  **只补 `left`、绝不补 `insideH`/`insideV`**；列宽和超版心 2 倍判为数据污染，禁止等比缩放蒙混，
+  须显式 `grid_overrides` 指定列宽并重渲染核账。见 `pitfalls.md` §51。
+- 封面「标题文字→封面信息表」之间的空行数**必须显式配置并统一**（如 3 行），用 `set_cover_spacers`；
+  加完复核封面仍恰好一页。见 `pitfalls.md` §52。
+- **标题字号族内统一：以参照文档为基线，不要手写字号表。** 用 `heading_format_profile_from(参照文档)` 取逐级别多数派，再 `normalize_heading_format(每份, prof)` 套用。
+  四条硬护栏：只动封面表之后的段落（**封面大标题也带 outlineLvl=0，不排除会被一起压成正文号**）、
+  跳过目录域内段落、跳过表内段落、引导句降级而不是套标题格式；同时改 `Heading N` 样式默认值，
+  否则 Word 保存会按样式回涨。终检：每档每级只剩一种取值 + 封面字号回读等于改前值 + 页数与空白页复测。
+  见 `font-and-style-normalization.md` §10、`dod-checklist.md` H 组。
 - 上述全部判据已封装为一条原语，交付时直接调用，不要另写：
   `tools/docx_ops.py:pagination_audit(doc, cover_texts=[...])` 返回 `hard_page_breaks` /
   `stacked_breaks` / `body_page_break` / `keep_on_body` / `chapter_pad` / `outline_anomaly` /
