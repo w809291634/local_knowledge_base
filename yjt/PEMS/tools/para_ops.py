@@ -158,7 +158,10 @@ def _in_textbox(el):
 
 
 def _ppr_direct(p):
-    return p._p.find(qn('w:pPr'))
+    """取段落自己的 w:pPr。兼容两种入参：Paragraph 对象，或已经取出来的 CT_P 元素
+    （`is_struct_carrier` 内部传的是 `p._p`，只认 Paragraph 会 AttributeError）。"""
+    el = getattr(p, '_p', p)
+    return el.find(qn('w:pPr')) if el is not None else None
 
 
 def has_direct_format(p):
