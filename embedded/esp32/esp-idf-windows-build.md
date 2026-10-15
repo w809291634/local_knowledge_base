@@ -2,10 +2,11 @@
 
 > ★ **路径口径**：本文写的是来源机器（用户 `Administrator`）上的路径。IDF 根 `D:\esp32_8266_files\esp-idf-v5.5.5_ol`
 > 与那对脚本 `idf_cmd_init.bat` / `idf_build.bat` 属 **A 类（只与用户名绑定）**，2026-10-15 在本机实测都在，
-> §1 那条唯一入口可直接照用。但**工具链与 Python 环境目录**（`esp-idf-tools_for_idf_v5_5_5`、`IDF_TOOLS_PATH`、
-> `IDF_PYTHON_ENV_PATH`）和 §5 放在 `.qoder-cn\tmp` 的那三个脚本属 **B 类（每台电脑都不一样）**：
-> 用之前必须让用户指定本机真值，禁止扫盘猜。分类与对照表见 `embedded/README.md` 第 6 节。
-> 跨机可复用的是做法本身：清 `MSYSTEM`、显式三个 IDF 路径、`.bat` 内容 ASCII-only、退出码恒 0 因此只看日志。
+> §1 那条唯一入口可直接照用。文中提到的工具包与 py env 目录名（`esp-idf-tools_for_idf_v5_5_5`、`idf5.5_py3.11_env`）
+> **由本机 IDF 安装和用户环境自行配置，已配好，不必逐机核对**，别把它当缺失项。
+> 真正属 **B 类（每台电脑都不一样）** 的是 §5 放在 `.qoder-cn\tmp` 的那三个脚本：用之前必须让用户指定本机真值，禁止扫盘猜。
+> 分类与对照表见 `embedded/README.md` 第 6 节。跨机可复用的是做法本身：
+> 清 `MSYSTEM`、显式三个 IDF 路径、`.bat` 内容 ASCII-only、退出码恒 0 因此只看日志。
 
 适用范围：**这台机器上的所有 ESP-IDF 工程**（非某个工程专属）。从
 `esp32-p4-lvgl9-touch-lcd-debug-optimization.md` §21 拆出（2026-10-11），那份文档以后只留指针。

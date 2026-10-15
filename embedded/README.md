@@ -68,6 +68,10 @@ C51 相关经验今后统一进 `yjt/STC8H_8G/`。
 文档中一律按 `{占位符}` 看待，写死的那串字符只是**来源机器的样本**；
 **用之前必须让用户指定这台电脑上的真值**，禁止扫盘猜，也禁止拿样本值直接跑。
 
+**不算待办的一类**：IDF 工具包与 Python 环境（`esp-idf-tools_for_idf_v5_5_5`、`IDF_TOOLS_PATH`、`IDF_PYTHON_ENV_PATH`）
+由本机 IDF 安装和用户自己的环境配置解决，**已经配好了**；经验库里出现的那串目录名只说明当时装在哪，
+不需要每机核对，也不要拿它当"缺失项"提醒用户。
+
 | 文档里的写法 | 类别 | 2026-10-15 在 `yjt54` 机器的抽样 |
 |---|---|---|
 | `D:\esp32_8266_files\esp-idf-v5.5.5_ol`（IDF 根） | A | 存在 |
@@ -77,7 +81,6 @@ C51 相关经验今后统一进 `yjt/STC8H_8G/`。
 | `...\AppData\Local\Programs\eezstudio\EEZ Studio.exe`（`{EXE}` 的宿主） | A | 同上 |
 | `...\AppData\Local\Espressif\ComponentManager\Cache\`（托管组件干净副本） | A | `%LOCALAPPDATA%` 下存在 |
 | `.workbuddy\binaries\node\versions\22.22.2-3\node.exe` | A（版本号是变量） | 本机实际为 `22.22.2-6`，取目录里在的版本 |
-| `D:\esp32_8266_files\esp-idf-tools_for_idf_v5_5_5`、`IDF_TOOLS_PATH`、`IDF_PYTHON_ENV_PATH` | **B** | 未命中。本机只有 `esp-idf-tools_for_idf_v5_5_1` 与默认 `.espressif\tools`，且 `.espressif` 下无 `python_env` |
 | `...\idf_v555_my_exps\common\PC_SIM\lv_port_pc_vscode_v9.5`（PC 仿真器根） | **B** | 未命中（本机 `common/` 下只有 `APL`、`DRV`） |
 | `...\common\APL\apl_lvgl_v9_4`（LVGL 内核源码目录） | **B** | 未命中（本机 `APL` 下只有 apl_atomic / apl_console* / apl_utility） |
 | `.qoder-cn\tmp` 里的 `run_round.sh` / `cap_serial.py` / `idf.ps1` | **B** | 未命中；本机 `.qoder-cn\tmp` 是会话临时目录，只放 session 子目录 |

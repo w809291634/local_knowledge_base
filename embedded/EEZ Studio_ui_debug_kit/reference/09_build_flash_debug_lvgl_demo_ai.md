@@ -24,7 +24,7 @@
 | ❌ | 仿真器根 | `...\idf_v555_my_exps\common\PC_SIM\lv_port_pc_vscode_v9.5` | 当前机器 `common/` 下只有 `APL`、`DRV`，没有 `PC_SIM` ⇒ PC 仿真那套在这台机器跑不了，需向用户确认目录去哪了 |
 | ❌ | `{EXE}` | 仿真器根 `\bin\main.exe` | 随上一行，未命中 |
 | ❌ | LVGL 内核 | `...\common\APL\apl_lvgl_v9_4` | 本机 `APL` 下只有 apl_atomic / apl_console* / apl_utility ⇒ 读源码定 API 前要先确认版本目录名 |
-| ⚠️ | IDF | `D:\esp32_8266_files\esp-idf-v5.5.5_ol`（✅，`idf_cmd_init.bat` + `idf_build.bat` 都在），工具链 `esp-idf-tools_for_idf_v5_5_5`（❌ 本机只有 `esp-idf-tools_for_idf_v5_5_1` 和默认 `C:\Users\yjt54\.espressif\tools`），py env `idf5.5_py3.11_env`（❌ `.espressif` 下无 `python_env`） | 构建入口可用，但 `IDF_TOOLS_PATH` / `IDF_PYTHON_ENV_PATH` 两个显式值必须按本机重新确认 |
+| ✅ | IDF | `D:\esp32_8266_files\esp-idf-v5.5.5_ol`（`idf_cmd_init.bat` + `idf_build.bat` 都在），工具链 `esp-idf-tools_for_idf_v5_5_5`，py env `idf5.5_py3.11_env` | 构建入口本机可用。工具包与 py env 目录名只说明当时装在哪，**由本机 IDF 安装/用户环境配置解决，已配好，不必逐机核对** |
 | ⚠️ | 小智 | `{IDF_ROOT}\xiaozhi-esp32`（✅ 存在，vendored，**不改**）；板级胶水 `{IDF_ROOT}\main\board_p4_audio.cc`（⚠️ 该文件未命中，改前先定位真名） | |
 
 ---
