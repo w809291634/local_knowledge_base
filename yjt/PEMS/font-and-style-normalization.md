@@ -186,3 +186,29 @@ def _apply_font(run, ea, ascii_font, size_pt, bold=None):
 2. **本轮正文段版式与锚点一致**：`para_ops.para_format_issues` 必须为空。
    判定必须依赖生成器记录的"每段来历"（slot/extra/carry/base）—— 没有来历就分不清
    "本轮写坏了"与"模板本来就这样"，只能整片重排，既越界又危险。
+
+## 9. 正文段落基线（全量套用，与字体基线并列）
+
+字体/字号统一之后，剩下的"段落格式不同"全部属于**段落属性**层面。基线要显式写进配置，
+并在生成末尾对所有正文段全量套用；只补齐"本轮新写段"不够（模板自带段本身就不统一）。
+
+```
+body_format = { first_line_chars, first_line_twips, left, right, jc, line, style }
+# 典型取值：首行缩进 2 字符（firstLineChars=200 + firstLine 兜底）、左右无缩进、
+#          单倍行距（不写 w:spacing）、左对齐、正文样式 Normal
+body_format_sig = 生效版式指纹（用于闸门逐段核对）
+```
+
+落地要点（都是实测踩出来的）：
+1. **先删后写**：`pStyle / ind / spacing / jc / autoSpaceDE / autoSpaceDN / adjustRightInd /
+   snapToGrid / textAlignment / contextualSpacing / widowControl` 全删，再按基线写，
+   元素顺序须符合 `CT_PPr` 的 schema（pStyle → 开关 → ind → spacing → jc）。
+2. **排除项与版式比对共用同一函数**（标题/目录/图题/编号段/含域/含图形/文本框/封面区），
+   否则会出现"闸门说统一、其实漏了三类段"。
+3. **标题判据要含纯文本形态**：只按"整段加粗"会漏掉"编号 run 加粗、文字 run 不加粗"的小标题，
+   它们会被加上正文缩进（见 `pitfalls.md` §21）。
+4. **封面区＝分节符之前且非成段正文**：前言可能在封面节里。
+5. **例外用配置声明**（`body_format_keep`），例如带左侧标签栏的挂缩进块。
+
+闸门三条硬检查（非零退出阻断）：① 每份文档所有正文段的生效版式 == 基线指纹；
+② 正文段末尾都有句末标点（`no_punct_allow` 例外）；③ 标题无"同名不同号"。
