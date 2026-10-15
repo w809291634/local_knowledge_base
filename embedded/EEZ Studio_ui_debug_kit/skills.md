@@ -1747,7 +1747,7 @@ LVGL 在 ESP32-P4 上想同时拿 PPA 和双核软渲染，**两条 PPA 路线�
   与两个 SW unit 并存 ⇒ **可以和双核同时用**。
 
 ★★ **同日更正（这条"②可以试"是未测的乐观推荐，而①已被实测否决）**：
-本工程在 `local_knowledge_base/esp32/esp32-p4-lvgl9-touch-lcd-debug-optimization.md` §16 里
+本工程在 `local_knowledge_base/embedded/esp32/esp32-p4-lvgl9-touch-lcd-debug-optimization.md` §16 里
 **早就实测过①**：`.enable_ppa_accel = true` 会在启动约 0.5s 内 `Store access fault`，
 栈在 TLSF `remove_free_block`，被覆盖的 free-list 值是 RGB565 像素颜色 ——
 PPA fill/blend 的 DMA 按 128B 块凑整、在帧缓冲末端越界写（一行 960B ÷ 128 除不尽 + 脏块边缘悬空）。

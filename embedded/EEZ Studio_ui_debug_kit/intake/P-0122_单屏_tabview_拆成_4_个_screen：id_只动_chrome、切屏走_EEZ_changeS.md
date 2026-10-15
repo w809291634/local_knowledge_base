@@ -80,3 +80,22 @@ native 侧语音切屏同步改成 `eez_flow_set_screen(SCREEN_ID_MUSIC, LV_SCR_
 **还想要"内容有动效、导航不动"**：只能走 `NONE + EEZ playAnimation 给每屏内容容器做入场动画`，
 但"屏加载时"这个触发事件 EEZ 有没有暴露**未查**（`eez-flow.cpp` 只见 `LV_EVENT_SCREEN_UNLOADED` 被用来销毁屏）。
 要推入式（MOVE_LEFT）则导航栏必然跟着滑 —— 这一点先讲清再选，别等烧完才发现不是想要的。
+
+
+## ★ 追加更正（2026-10-15）：本方案的「外层 4 屏」已作废，外层还原为「单屏 + LEFT tabview」
+- **作废原因（用户判据是手感，不是功能）**：「我发现和 tabviewr 里面的滑动效果不一样，并且要求滑动的很快，
+  我要求保持参数和效果和 tabview里面的一致」→「那就算了，那就还原 原来的 tabview 方案」。
+- **本条目里当时写错/写漏的一处**：正文按「外层原来是横向 tabview」的假设写（见同日追加段
+  「若要内容有动效而导航不动…」的推演）。实际 HEAD 里外层是
+  `main_nav = tabview(0, SB_H, SCREEN_W, CONTENT_H, "LEFT", 0, 0, id="main_nav")`（`build_ui.py:2493`），
+  而 `lv_tabview_set_tab_bar_position(LEFT/RIGHT)` 会把内容容器设成 `flex COLUMN` +
+  `scroll_snap_y = CENTER`（`lv_tabview.c:196-203`）⇒ **原来那个跟手竖滑就是 LEFT tabview 自带的**，
+  不是横向。教训：写「原来是什么样」之前先 `git show HEAD:<file>` 查，别拿印象当依据。
+- **仍然成立、下次别重新推导的三条**（本条目的真正价值）：
+  ① EEZ 只 tick 当前屏（`ui_tick → tick_screen(g_currentScreen)`）⇒ 跨屏常驻的绑变量控件必须每屏一份、
+     只显示当前那份；② `changeScreen` 这版引擎只有 push，`useStack` 运行时没人读，要 replace 语义只能
+     `eez_flow_set_screen()`；③ EEZ 无「跨屏常驻层」，顶层只能 native（`lv_obj_set_parent(..., lv_layer_top())`）。
+- **被本条目否掉后又翻回来的一条**：拆屏时把外层 `switchTab`+`onTabChange` 两条动作链退役了（理由是高亮
+  退回 DSL 画死）；还原 tabview 后**必须恢复这两条**，真值源回到 `main_page_idx`。
+- 后续手势方案（屏根 GESTURE + `Event.getGestureDir`）的实证与「4 独立 screen 与跟手互斥」的结论在 **P-0123**；
+  通则见 **skills.md §11.35**。

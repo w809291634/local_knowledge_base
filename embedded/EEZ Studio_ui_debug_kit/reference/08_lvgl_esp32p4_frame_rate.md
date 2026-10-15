@@ -3,7 +3,7 @@
 > **第二版（2026-10-06 同日更正）**。第一版是错的，而且错得危险：我把**已被实测证明必崩、
 > 并且被刻意关掉**的 `enable_ppa_accel` 当成"待试优化"写进清单，还推荐了一条未测的 PPA 路线。
 > 根因是取证范围不全——我只在 `EEZ Studio_ui_debug_kit/` 里 grep 了「帧率/PPA/FPS」就说"全库零命中"，
-> 而**同一知识库的另一个子库 `local_knowledge_base/esp32/` 里早有整篇实测结论**。
+> 而**同一知识库的另一个子库 `local_knowledge_base/embedded/esp32/` 里早有整篇实测结论**。
 > ★ 权威出处（先读这两节，本文只是索引 + 本工程当前配置）：
 > - `../esp32/esp32-p4-lvgl9-touch-lcd-debug-optimization.md` **§8 帧率优化清单（横屏+PPA 约束下已到顶）**
 > - 同文 **§16 LVGL PPA 绘制单元 DMA 越界写 → PSRAM 堆损坏崩溃（禁用 enable_ppa_accel 解决）**
@@ -138,7 +138,7 @@
 
 - 第一版（同日 20 分钟前）错在三处：①把已实测必崩的 `enable_ppa_accel` 列为"候选优化"；
   ②把未测的 `CONFIG_LV_USE_PPA` 推荐成"保双核的正解"；③声称"知识库此前无此总结"——
-  实际漏搜了 `local_knowledge_base/esp32/` 子库与 `.workbuddy/memory/` 工程日志。
+  实际漏搜了 `local_knowledge_base/embedded/esp32/` 子库与 `.workbuddy/memory/` 工程日志。
 - 教训（已同步进 `skills.md §11.30` 的更正段）：**"全库没有"这种话，必须先把所有子库和工程日志
   一起 grep，或者干脆问用户一句"这块以前做过吗"。**
 
