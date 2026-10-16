@@ -120,3 +120,28 @@ STM32F4 各协议最大速度（只有标题无数值）、F4 ADC 转换时间�
    是本表 B 类矛盾的根源，建议合并成单一出处。
 6. **截图承载关键数据**：F1/F4 各协议最大速度表、ADC 采样时间表、IWDG 公式等只在图里 →
    文本检索与 AI 检索都取不到。重要数值建议同时写成文字。
+   （2026-10-16 起逐章 OCR 补录，见 G 类与 `COVERAGE-覆盖度与缺口.md` §6。）
+
+## G. 截图层新增校核项（逐章 OCR 时发现，2026-10-16）
+
+> 这些**只有看图才会发现**，文字层完全看不出来；按"哪一类"归到 B/C/D 的口径，但单列一节便于追溯。
+
+| # | 位置 | 图里读到 | 与什么冲突 | 处置 |
+|---|---|---|---|---|
+| G1 | ch02/004~006 `CLKCONCMD` | 位表把 `OSC32K` 放 **bit7**、`OSC` bit6、`TICKSPD` 5:3、`CLKSPD` **2:0（3 位）**；IAR 面板 `CLKCONCMD=0x80` 显示 `OSC32K=1` 与之一致 | 常见 CC2530 手册口径是 `OSC32K`=bit6、`OSC`=bit5、`TICKSPD`=4:3、`CLKSPD`=2:1、bit0=STATH | **上机前必对官方手册**。它直接改变 `CLKCONCMD &= ~0x7F` 的语义：按图表保留 OSC32K，按手册口径会连 OSC32K 一起清掉 |
+| G2 | ch02/007 | 官方协议栈配置后 `CLKCONCMD=0x00`（**全清**） | 文字层强调 `&= ~0x7F`（保留 bit7） | 两种写法结果不同；官方栈是 0x00 ⇒ 记录为"两种口径并存，按工程实测选" |
+| G3 | ch02/056、057、065 `tasksArr[]` | 图里注册的是 `macEventLoop, nwk_event_loop, Hal_ProcessEvent, MT_ProcessEvent, APS_event_loop, ZDApp_event_loop, …`，且 `osalInitTasks` 内还有 `#if defined(ZIGBEE_FRAGMENTATION…)`、`#if defined(ZIGBEE_FREQ_AGILITY…)`、`ZDNwkMgr…` 等**条件项** | 本库 §1 写"顺序 mac→nwk→Hal→MT→APS→ZDApp→SAPI"（固定 7 项） | §1 是简化说法；**表项数随宏变**，对照 callstack/事件位前先数工程实际项数 |
+| G4 | ch02/069 taskID 图 | `mac=0, nwk=1, Hal=2, MT=3, APS=4, ZDApp=5, SAPI=6`，而 `MT_TaskInit` 在 `#if defined(MT_TASK)` 里 | 无（新事实，但影响判读） | **不开 `MT_TASK` 时其后 taskID 整体前移 1** ⇒ 跨工程说"idx=5 是谁"必须先确认该宏 |
+| G5 | ch02/086 `MT_AppCommandProcessing` | 图中写作 `sfFindEndPointDesc`、`osal_msg_allocator`、`ZSuccess`、`sapiCmdMsg_t` | 常见 TI 写法是 `afFindEndPointDesc`、`osal_msg_allocate` | 疑**截图 OCR 误读**或版本确有差异 ⇒ 抄代码前先在源码里搜函数名 |
+| G6 | ch02/070 vs 095 | 同族常量两种拼法：`ZG_DEVICE_TYPE_ENDDEVICE`（070）与 `ZG_DEVICEYPE_COORDINATOR`（095，图中即如此） | 互相矛盾 | 至少一处是笔误/OCR；**以工程头文件的 `ZG_DEVICE_TYPE_*` 为准** |
+| G7 | ch02/099 vs 本库 printf 条目 | 图里 `General Options → Library Configuration → Print formatter` 选的是 **`Large`**（列表另有 `Full formatting`） | `cc2530-cc2538-cc2640.md` §1 写"printf 要选 Full formatting" | IAR 版本不同下拉项不同；**以"能编过 + 串口有输出"为准** |
+| G8 | ch02/097 vs §5 第 4 条 | 图里库文件名 `EndDevice-Prod.lib`（同批还有 `Security.lib`、`MAC_CC2530.lib`） | 文字层写 `Router-Pro.lib` ↔ `EndDevice-Pro.lib` | **文件名以库目录为准**，少打一个 d 就是链接失败 |
+| G9 | ch02/066 `Hal_ProcessEvent` | 取消息是 `while (msgPtr) { osal_msg_deallocate; msgPtr = osal_msg_receive(...); }` **抽干** | §1 表述"`osal_msg_receive` 一次最多取 2 条" | 不冲突但易误读：**取干净是调用方的责任**；自定义任务也应 `while` 抽干 |
+| G10 | ch02/076 | `HalledBlink(HAL_LED_2, 0, 50, 500);`（图中大小写如此，非 `HalLedBlink`） | 与 HAL API 命名不符 | 疑原文笔误/OCR，照抄编不过；**按 `HalLedBlink` 查工程** |
+| G11 | ch02/080 `MT_UartProcessZToolData` | FCS 分支：校验通过 `osal_msg_send(AppTaskID, pMsg)`，**else 分支确有 `osal_msg_deallocate(pMsg)`** | 无（补全 §4 的收帧状态机） | 记录为正向结论：**该处不泄漏**；此前"疑泄漏"的说法不成立，已删 |
+| G12 | ch02/024 vs 034 | SDK 路径分别是 `simplelink_cc2640r2_sdk_3_10_00_15-062b9cd` 与 `…_1_35_00…` | 本库 §3 只记 3_10_00_15 | 同章混了两版本截图 ⇒ 版本相关结论按工程实际版本复核 |
+| G13 | ch02/022、023（CC2538 `J7`） | 原理图只见 `VDD33`/`DC`/`RST` 三网络，`GND` 对应引脚号不可辨 | 文字层表格碎片写 `3.3v3.3vGNDGNDRSTRST` | "只接 3.3V/GND/RST"保留为文字层结论，**引脚号未证实** |
+| G14 | ch02/014、015（P0 复用表） | 截图被裁切：`USART0 SPI Alt.2` 行只有列 4/3/2/1 有值且信号名缩略（`C/SS/M0/MI`），`TIMER1 备用2` 行两格位置不可辨 | 无 | **不要据此表接线**，回 CC2530 手册引脚表 |
+| G15 | ch02/051 | IAR 弹窗 `Warning: Possible IDATA stack overflow detected…`，作者小标题归因"可能是单片机本身问题" | 该警告本义是 **IDATA 栈越界**（8051 栈在 IDATA，与递归/局部变量有关） | 原文归因标"未验证"，**先查递归与局部数组**再怀疑芯片 |
+
+
