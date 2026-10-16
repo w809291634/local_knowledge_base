@@ -2982,31 +2982,74 @@ def strip_char_scaling(doc, first_cell_text='文件编号', keep_cover=True):
     return n
 
 
-def trim_empty_after_tables(doc, keep=1, first_cell_text='文件编号'):
-    """表格之后的连续空段压到 keep 个（模板常留 2~12 个回车，页面看就是"表格下面一片空白"）。
+def is_pure_pad_paragraph(el):
+    """纯空段：没有文字，也不携带分节符/域/图形/硬分页符。
 
-    只删**纯空段**：带分节符/域/图形/硬分页符的段落一律保留（删了会毁分页与目录域）。
-    返回删掉的段数。"""
+    带这些载体的空段**不是留白**，删了会毁分页、目录域或图（§23 边界、§47）。
+    文本只含空格也算"有内容"吗？不算——但含图形的段必须先排除，所以判据顺序不能反。"""
+    if el.tag != qn('w:p'):
+        return False
+    if el.findall('.//' + qn('w:pict')) or el.findall('.//' + qn('w:drawing')):
+        return False
+    if el.find('.//' + qn('w:sectPr')) is not None             or el.find('.//' + qn('w:fldChar')) is not None             or el.find('.//' + qn('w:instrText')) is not None:
+        return False
+    if any(br.get(qn('w:type')) == 'page' for br in el.findall('.//' + qn('w:br'))):
+        return False
+    return not ''.join(x.text or '' for x in el.iter(qn('w:t'))).strip()
+
+
+def empty_run_audit(doc, keep=1, first_cell_text='文件编号'):
+    """正文区（封面表之后）里超过 keep 个的连续纯空段，返回 [(起始索引, 段数, 前一处内容)]。"""
     body = doc.element.body
     kids = list(body.iterchildren())
-    n = 0
-    for j, el in enumerate(kids):
-        if el.tag != qn('w:tbl'):
+    cover_end = _cover_end_index(doc, first_cell_text)
+    out, j = [], 0
+    while j < len(kids):
+        if j < cover_end or not is_pure_pad_paragraph(kids[j]):
+            j += 1
             continue
-        run = []
-        k = j + 1
-        while k < len(kids):
-            e = kids[k]
-            if e.tag != qn('w:p'):
-                break
-            if ''.join(x.text or '' for x in e.iter(qn('w:t'))).strip():
-                break
-            if e.find('.//' + qn('w:sectPr')) is not None                     or e.find('.//' + qn('w:fldChar')) is not None                     or e.find('.//' + qn('w:instrText')) is not None                     or e.findall('.//' + qn('w:pict')) or e.findall('.//' + qn('w:drawing'))                     or any(br.get(qn('w:type')) == 'page' for br in e.findall('.//' + qn('w:br'))):
-                break
-            run.append(e)
+        k = j
+        while k < len(kids) and is_pure_pad_paragraph(kids[k]):
             k += 1
-        for e in run[keep:]:
-            if e.getparent() is body:
-                body.remove(e)
-                n += 1
+        if k - j > keep:
+            prev = kids[j - 1] if j else None
+            tag = '表' if prev is not None and prev.tag == qn('w:tbl') else '段'
+            out.append((j, k - j, tag + ':' + ''.join(
+                x.text or '' for x in prev.iter(qn('w:t')))[:12] if prev is not None else ''))
+        j = k
+    return out
+
+def collapse_empty_runs(doc, keep=1, first_cell_text='文件编号'):
+    """把正文区（封面表之后）的连续纯空段压到 keep 个。
+
+    模板继承的"连续回车"是页面出现大片空白的头号原因（§61）。
+    **删除必须按元素身份，不能按索引**：一轮里删完第一处后，后面每处的索引都前移了，
+    再用 `kids[start:start+count]` 切一次会把中间的正常段落当成空段删掉
+    ——本项目实测因此删掉过整章内容与三张表，靠"逐节页宽/页边距==模板"这项闸门才抓到。
+    封面区整体跳过：封面块的定位本来就靠段前空段（§63）。"""
+    body = doc.element.body
+    cover_end = _cover_end_index(doc, first_cell_text)
+    n = 0
+    for _round in range(8):
+        kids = list(body.iterchildren())
+        doomed, j = [], cover_end
+        while j < len(kids):
+            if not is_pure_pad_paragraph(kids[j]):
+                j += 1
+                continue
+            k = j
+            while k < len(kids) and is_pure_pad_paragraph(kids[k]):
+                k += 1
+            doomed.extend(kids[j + keep:k])
+            j = k
+        if not doomed:
+            break
+        did = 0
+        for el in doomed:
+            if el.getparent() is body:
+                body.remove(el)
+                did += 1
+        n += did
+        if not did:
+            break
     return n
