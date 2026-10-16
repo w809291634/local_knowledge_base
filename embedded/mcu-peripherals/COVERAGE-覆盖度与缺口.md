@@ -19,7 +19,7 @@
 合计约 **3,100 行**。
 
 ⇒ **这是蒸馏，不是转录**：约 17.8k 有字行压到约 3.1k 行，压缩比约 5.7:1；
-且**图片内容大部分未提取**（1,018 张里过了第 1~5 章共 155 张，见 §6）。
+且**图片内容大部分未提取**（1,018 张里过了第 1~6 章共 197 张，见 §6）。
 
 ## 2. 逐章覆盖矩阵
 
@@ -32,7 +32,7 @@
 | 03 | GD32 | 145 | 32 | 23 | `mcu-chip-families/gd32.md`、recipes §1 | GDF4xx 系列差异表未逐条；**HXTAL/AF 表原图未 OCR** |
 | 04 | AT32 | 1085 | 581 | 258 | `mcu-chip-families/at32.md`（§7 截图结论）、`at32-flash-zw-dmamux-tables.md`（表格档）、recipes §2 | **表格类已闭档**；仍缺：XMC、DVP/摄像头、USB、加密、CAN、ADC 触发的**逐外设完整例程**（文字层多为骨架） |
 | 05 | PY32 | 34 | 24 | 9 | `py32-ht32-holtek.md` | 体量极小；PC0=NRST 已收全 |
-| 06 | HT32（实为 Holtek 8 位） | 408 | 104 | 73 | `py32-ht32-holtek.md` | OPA/SADC/血糖流程已收；**H4=33 里校准算法、LCD 驱动段、USIM 配置只到摘要** |
+| 06 | HT32（实为 Holtek 8 位 BH67F2472） | 408 | 104 | 73 | `py32-ht32-holtek.md` §2 + **§3 截图层补充** | **已闭档**：OPA/IREFC/GSC 位表、SADC0/1/SADOL/SADOH 与 `ADRFS` 对齐、向量表 04H~34H、六模式表、e-Link32 排针；**并结案"低速模式串口不打印"的根因** |
 | 07 | STC | 1554 | 155 | 133 | `stc-c51-and-ch32-wch.md`、recipes §3 | EEPROM/Flash 读写擦、PWMA 死区、看门狗、掉电唤醒 —— **原文本身无代码**；`OPTIMIZE(9)`/`__declspec` 等 AI 段已入 ERRATA 但正文未逐条重写 |
 | 08 | CH（沁恒） | 561 | 228 | 140 | 同上 + recipes §4 | **H5=55**：SPI/I2C/GPIO 中断/USB/触摸/ADC 例程未逐条；BLE 各 Profile 只收骨架 |
 | 09 | 杰理 | 10 | 14 | 2 | — | 本章近乎空；已由 `embedded/jieli_soundbox_sdk/` 17 篇 + 该 SDK 源码替代 |
@@ -88,7 +88,7 @@ IWDG/WWDG 公式、选项字节 RDP、Standby 唤醒源表 —— 这些**不该
 | 03 GD32 | 5 | 已入库 | **已完成 5/5** | → `mcu-chip-families/gd32.md` §5（时钟树全图数据、PH0/PH1=HXTAL、MDMA+EDMA、libopt.h） |
 | 04 AT32 | 28 | **已补蒸馏：新增表格档** | **已完成 28/28** | → `mcu-chip-families/at32.md` §7 + 新档 `at32-flash-zw-dmamux-tables.md`；ERRATA H1~H10 |
 | 05 PY32 | 3 | 已入库 | **已完成 3/3** | → `mcu-chip-families/py32-ht32-holtek.md` §1.1：**PC0/PB6 三种归属的选项位表**（含以前没记录的 `1 1`＝SWD 挪到 PC0） |
-| 06 HT32（Holtek） | 42 | 只到摘要 | 未开始 | |
+| 06 HT32（实为 Holtek 8 位） | 42 | 已入库 | **已完成 42/42** | → `mcu-chip-families/py32-ht32-holtek.md` §3；ERRATA I1~I6 |
 | 07 STC | 15 | 已入库 | 未开始 | |
 | 08 CH（沁恒） | 35 | 只到骨架 | 未开始 | |
 | 09 杰理 | 0 | 空章 | — | 由 `embedded/jieli_soundbox_sdk/` 替代 |
@@ -111,7 +111,7 @@ IWDG/WWDG 公式、选项字节 RDP、Standby 唤醒源表 —— 这些**不该
 
 ## 7. 一句话结论
 
-**文字层已通读全部 21 章**（入库约 3,100 行）；**截图层完成第 1~5 章（155/1048 处）**；
+**文字层已通读全部 21 章**（入库约 3,100 行）；**截图层完成第 1~6 章（197/1048 处）**；
 H4 以下细粒度约 1,800+ 小节未按条目收录；同目录其余 18 份文档未开始。
 
 **逐章协议的两条硬规矩**（第 2 章踩坑后加）：
