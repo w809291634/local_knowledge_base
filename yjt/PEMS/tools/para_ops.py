@@ -66,6 +66,23 @@ def style_has_numbering(p):
     return False
 
 
+LEADISH_RE = re.compile(r'如下|所示|见图|见表|如下所|下列|见下表|见下图')
+
+
+
+def _is_bold_lead_in(t):
+    """整段加粗的短段里，**读起来是句子**的那些（引导句）不算结构段。
+
+    旧规则一刀切把"加粗短段"当标题/图题，于是"本产品型号配置如下表所示："这类引导句
+    既不吃正文基线、又不进标题分档，模板带来的负缩进、字符缩放、1 字符首行缩进全部留着，
+    视觉上就是"这段字体不对"。判据：以句末标点结尾，或以冒号结尾且含"如下/所示/见表/见图"。"""
+    if t.endswith(('。', '；')):
+        return True
+    if t.endswith(('：', ':')) and LEADISH_RE.search(t):
+        return True
+    return False
+
+
 def is_structural_paragraph(p):
     """标题 / 目录 / 图题 / 含域 / 含图形 / 文本框 / 编号段（含样式链继承）：
     不参与正文重复与版式比对"""
@@ -87,7 +104,7 @@ def is_structural_paragraph(p):
     if re.match(r'^(图|表)\s*\d', t):
         return True
     runs = [r for r in p.runs if r.text.strip()]
-    if runs and len(t) < 40 and all(r.bold for r in runs):
+    if runs and len(t) < 40 and all(r.bold for r in runs) and not _is_bold_lead_in(t):
         return True
     jc = pPr.find(qn('w:jc')) if pPr is not None else None
     if jc is not None and jc.get(qn('w:val')) == 'center' and len(t) < 60:

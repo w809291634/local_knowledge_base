@@ -2958,3 +2958,55 @@ def header_footer_text_audit(doc, allow=()):
                     continue
                 out.append((si, kind, pi, txt[:24]))
     return out
+
+def strip_char_scaling(doc, first_cell_text='文件编号', keep_cover=True):
+    """删掉正文区 run 上的 `w:w`（字符缩放）与 `w:spacing`（字符加宽）。
+
+    模板继承常带 `w=99`、`spacing=±1~2`，同页里字宽被压 1%、字距被加减，
+    肉眼看就是"这段字体跟别处不一样"，而字号、字体名、缩进全都查不出问题。
+    只动封面表之后的正文与标题段；封面区/页眉页脚/文本框保持模板原样。"""
+    body = doc.element.body
+    cover_end = _cover_end_index(doc, first_cell_text)
+    n = 0
+    for i, c in enumerate(list(body.iterchildren())):
+        if c.tag != qn('w:p') or i < cover_end:
+            continue
+        if c.find('.//' + qn('w:txbxContent')) is not None:
+            continue
+        for rPr in [r for r in c.iter(qn('w:rPr'))]:
+            for tag in ('w:w', 'w:spacing'):
+                e = rPr.find(qn(tag))
+                if e is not None:
+                    rPr.remove(e)
+                    n += 1
+    return n
+
+
+def trim_empty_after_tables(doc, keep=1, first_cell_text='文件编号'):
+    """表格之后的连续空段压到 keep 个（模板常留 2~12 个回车，页面看就是"表格下面一片空白"）。
+
+    只删**纯空段**：带分节符/域/图形/硬分页符的段落一律保留（删了会毁分页与目录域）。
+    返回删掉的段数。"""
+    body = doc.element.body
+    kids = list(body.iterchildren())
+    n = 0
+    for j, el in enumerate(kids):
+        if el.tag != qn('w:tbl'):
+            continue
+        run = []
+        k = j + 1
+        while k < len(kids):
+            e = kids[k]
+            if e.tag != qn('w:p'):
+                break
+            if ''.join(x.text or '' for x in e.iter(qn('w:t'))).strip():
+                break
+            if e.find('.//' + qn('w:sectPr')) is not None                     or e.find('.//' + qn('w:fldChar')) is not None                     or e.find('.//' + qn('w:instrText')) is not None                     or e.findall('.//' + qn('w:pict')) or e.findall('.//' + qn('w:drawing'))                     or any(br.get(qn('w:type')) == 'page' for br in e.findall('.//' + qn('w:br'))):
+                break
+            run.append(e)
+            k += 1
+        for e in run[keep:]:
+            if e.getparent() is body:
+                body.remove(e)
+                n += 1
+    return n
