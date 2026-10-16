@@ -57,3 +57,17 @@ eez-test 唱片律动：all.py --shots EXIT=0；[np] playing orbit_w=104/disc_y=
 stopped 96/58 精确复位；11 屏对照 8.65% 无回归；Studio Run 模式预览由用户验收。
 官方参照工程：`C:\Users\Administrator\eez-projects\examples\eez_lvgl_demo`
 （其动画 = Start → Loop(0→3600,70) → SET_PROPERTY(IMAGE_ANGLE) → Delay 50）。
+
+## ★ 追加更正（2026-10-16，P-0131，watch 工程复盘）
+
+坑 2 的**「`%` 也永远返回 double」不成立**。本 runtime（eez-flow.cpp，eez-framework
+commit 10f714f9）`op_mod` 源码：int×int → `Value((int)(a.int32Value % b.int32Value),
+VALUE_TYPE_INT32)`；只有任一边是 double 才走 double 分支。
+受控实验（恒等改写法）：把滚轮表达式 `N >> 21` 临时改成 `(N % 2147483647) >> 21`
+（N≤153M，恒等），全链重建后盘径与基线**逐位一致**（192/212/243/219/195）——
+若 `%` 产 double，`>>` 会对非整数直接报错、行保持静态值，实测非此。
+推断当初观测到 "MOD 返回 double" 的表达式里已含 double（如前面有 `/`），属过度概括。
+
+**修正后的纪律（仍保守）**：真正约束 = **喂给整数动作（getUint32 路径）的值必须整数型**；
+`/` 是头号雷（int/int 也产 double），`%`/`>>`/`<<`/`&` 在纯整数入参下安全。
+文档落点：reference/07 §10 陷阱 1（已改写）、skills §11.37、CHANGELOG v0.9.6。

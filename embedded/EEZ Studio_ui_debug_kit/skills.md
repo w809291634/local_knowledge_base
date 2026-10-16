@@ -1913,3 +1913,56 @@ PPA fill/blend 的 DMA 按 128B 块凑整、在帧缓冲末端越界写（一行
   只有人眼看交互模式才暴露。判据：入口打一行 `eez_flow_get_current_screen()`。
 - 往 Python 的 **raw 字符串模板**里写 C 的 `\n`，工具层可能落成 `\\n`（字面反斜杠 + n，编译照过、只是不打换行）
   ⇒ 生成之后 `od -c` 数反斜杠个数，别用眼睛看。
+
+### 11.37 ★ 滚动联动不必"事件驱动"：常驻轮询链（纯 EEZ flow 滚轮复盘，2026-10-16，P-0131/0132/0133）
+
+**背景**：AppList 滚轮动效（滑到哪一行、哪一行放大，按行到屏幕中心距离连续缩放）曾因
+"EEZ 可绑定事件只有 12 种、没有 SCROLL"被判"EEZ 表达不了"而走了 native；用户要求复查
+官方英文资料后推翻：**动效不必事件驱动——常驻轮询链同样成立**，且全程零 C 代码。
+
+#### 一、★ 排查纪律："XX 能不能做到"要四面对查（只查事件面必误判）
+
+（1）**事件面**：可绑定事件清单（本框架 12 种，无 SCROLL——这是事实，但只是四面之一）；
+（2）**动作/API 面**：A43 LVGL 动作组——`Set Obj Style Prop`（写任意样式属性，手册已列；
+`property` 用 style catalog 名，如 `transform_scale_x` → 运行时数字码 110/111）；
+★ `Obj Get Display X/Y`（读**屏幕坐标**，含滚动位移，正是本动效的钥匙）——**手册本版未列
+（只列了父相对的 Obj Get Y），出处=本版 Studio asar 注册表（id 63/64，"relative to the
+display origin"）+ 运行时源码 + 实测**：多面证据并存时，认"实现面"（Studio/运行时）为准，
+手册是参考不是全集；
+（3）**调度语义面**：A42 Loop `start/next → @seqout/done`；P6.2——**无入线组件在 flow 启动
+时立即执行**（Start 的触发原理）；Delay 跨帧重排队（不忙等）；页 flow 在 `create_screen` 时
+`getFlowState(0,pageIdx)` 建立，页面 unload 即释放（离开页面自动停，天然省电）；
+（4）**运行时源码面**：`executeLVGLApiComponent` 把 actions 数组**同步顺序执行**
+（读→写可穿插成序列）；`lv_obj_get_coords` 含滚动；`UINT32_PROP` 直读 union（见二·①）。
+先搜官方样例工程（eez-test 里就有常驻 Loop 与逐帧改样式的完整范式），再下结论。
+
+#### 二、三条硬约束（每条都有源码/实验双证）
+
+1. **帧表达式必须整数型**：`/` 在 int×int 上**恒返回 double**（`op_div` 源码），而样式值经
+   `getUInt32()` **直读 union** → double 位型毒化（P-0043 的 disc_y=0x66666666）。
+   ★ **更正 P-0043**："`%` 也永远 double"是**错的**——本 runtime `op_mod` int×int 返回
+   int32（源码 + 恒等 `% 2147483647` 受控实验：盘径与基线逐位一致）；只要一边是 double
+   才会传染。定点化：`s = base + ((k*k*1236) >> 21)`（1236/2²¹≈73/352²；移位建议外层再套括号，
+   别依赖 `+`/`>>` 的相对优先级）。
+2. **动作里引用控件写"规范化标识符"**：`object` 参数不是 JSON 里的原始 `identifier`，
+   而是 `getName('', identifier, UnderscoreLowerCase)` 规范化名（`row_SportMode` →
+   `row_sport_mode`）；写错 → 构建 110 条 `Widget index not found`（P-0132）。
+3. **双态一起写**：`lv_obj_style.c` 状态权重——CHECKED 样式表(权重 1)压过 local
+   DEFAULT(权重 0) ⇒ 聚焦行只写 DEFAULT 会被静态 CHECKED 样式锁住；同权重时 local 优先。
+   `objStyleSetProperty` 的 `state` 参数（DEFAULT/CHECKED）写四份（x/y × 两态）。
+
+#### 三、推荐骨架与验收
+
+```
+Start（无入线=启动即执行）→ Loop(var, 0, 2147483646, 1, version:1)   # 常驻
+  @seqout → Delay(30ms) → LVGLAction(每帧动作组：读坐标→算→写样式) → 回连 Loop@next
+```
+- 写 JSON 别漏 Loop 的 `"version":1`（无它 beforeLoadHook 会把 `to` 改写 `to + " - 1"`）；
+- 验收四层：EEZ 构建 `No error and no warning` → 仿真静止/滚动两态**数值反推**与公式逐位对齐
+  → dragtest 回归（点击/拖拽）→ **EEZ Run（F5）肉眼可见可交互**（纯 flow 的最大红利：
+  以前 native 方案在 Studio 里看不到）；
+- 已知代价：常驻 30ms 轮询（空闲也逐帧写样式）。优化方向：Compare+SetVariable 做
+  "y 未变则跳过整组写入"的守卫（不破坏 EEZ-first 形态）。
+
+**落地**：watch 工程 `design/build_watch_ui.py: wheel_flow_applist()`；样例工程实证与
+连线端口名见 `reference/07` §8.1a/§8.4/§9；报告 §18；native 版本已退役留档。

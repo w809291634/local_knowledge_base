@@ -330,6 +330,14 @@ env -u ELECTRON_RUN_AS_NODE "{EXE}" \
 for i in $(seq 1 15); do curl -s --max-time 1 http://127.0.0.1:9222/json/version >/dev/null 2>&1 && break; sleep 1; done
 ```
 
+> ⚠ **工程路径必须放在所有开关的最后**（P-0133）：EEZ Studio 主进程取
+> `process.argv[argv.length-1]` 作为待打开工程（`open-command-line-project`），
+> 开关排最后会被当路径打开 → 窗口停在 Home、以为"参数无效"。
+> 另：单实例机制下，已有实例在跑时再次启动不会带起调试口——先 `taskkill /F /IM
+> "EEZ Studio.exe"` 再起。窗口标题从 "Home - EEZ Studio" 变成 "<工程名> - EEZ Studio"
+> 才算真打开。
+
+
 参数避坑表（无 GPU 环境通用）：
 
 | 参数 | 结论 |

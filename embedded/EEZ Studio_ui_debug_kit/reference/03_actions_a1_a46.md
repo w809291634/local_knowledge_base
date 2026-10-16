@@ -1050,6 +1050,10 @@ User widget 的参数化接口，用于把外部数据传入可复用控件逻�
   - Object / X（或 Store result into 存结果）
 - **Obj Set Y / Obj Get Y**：设置/获取对象的 y 坐标
   - Object / Y（或 Store result into）
+- ★ **Obj Get Display X / Obj Get Display Y**（手册本版**未列**，本版 Studio 实装
+  id 63/64，"relative to the display origin"）：读对象**屏幕坐标**（含滚动位移，
+  `lv_obj_get_coords`）——滚轮类"按位置逐帧改样式"动效的钥匙动作；
+  出处=studio asar 注册表 + 运行时 `eez-flow.cpp` + 实测（P-0131/报告 §18）。
 - **Obj Set Width / Obj Get Width**：设置/获取对象宽度
   - Object / Width（或 Store result into）
 - **Obj Set Height / Obj Get Height**：设置/获取对象高度

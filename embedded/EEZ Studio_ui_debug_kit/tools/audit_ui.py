@@ -431,9 +431,21 @@ def a8_chain_parity(cfg, code="A8"):
             key = chk.get("links_key", "connectionLines")
             container = chk.get("links_container", "userPages")
             items = data if container in (None, "", "root") else (data.get(container) or [])
-            nums["project"] = sum(len(p.get(key) or []) for p in items if isinstance(p, dict))
+            lines = [l for p in items if isinstance(p, dict) for l in (p.get(key) or [])]
+            # links_event_outputs：只统计事件源连线（生成代码侧数的是事件回调，
+            # 流程内部连线如 Start→Loop→Delay 不产生回调，需排除，否则误报）。
+            filt = chk.get("links_event_outputs")
+            if filt:
+                lines = [l for l in lines if isinstance(l, dict) and l.get("output") in filt]
+            nums["project"] = len(lines)
         except Exception:
             pass
+
+    # 生成器直出 EEZ JSON（无中间 DSL）的工程：design_src == project_file，
+    # 设计侧与工程侧同源，计数取同一份数据（显式开关，默认关，不影响其它工程）。
+    if chk.get("a8_design_equals_project") and "project" in nums:
+        dsl_n = nums["project"]
+        nums["design"] = dsl_n
 
     gen = kit.cfg_path(cfg, "paths.screens_c") or os.path.join(
         kit.cfg_path(cfg, "project.gen_dir") or "", "screens.c")

@@ -163,7 +163,13 @@
   ] }
 ```
 
-- ⚠ `object` 存控件 **identifier 字符串**；assignable 参数（如 `result`）是
+- ⚠ `object` 存控件 **identifier 字符串**——但注意：**必须写"规范化源码标识符"**
+  （`getName('', identifier, UnderscoreLowerCase)` 的结果，如工程里 `row_SportMode`
+  → 动作里写 `row_sport_mode`）。codegen 的 `getWidgetObjectIndexByName` 在
+  `identifiers[]`（存的就是规范化名）里 indexOf，写原始 camelCase 会报
+  **`Widget index not found for "xxx"`**（P-0132，实测 110 条）。identifier 本身
+  全小写时两者相同（所以只出现大写字母时才踩）。
+- assignable 参数（如 `result`）是
   **裸表达式字符串、没有 `xxxType` 后缀字段**（有 Type 后缀的都是 literal 参数）。
 - **`animated` 必须 false**：程序切 tab/设值用动画会有竞态（铁律：程序切 tab
   一律 LV_ANIM_OFF）。
@@ -172,6 +178,26 @@
   `objClearFlag` / `tabviewSetActiveTab` / `tabviewGetActiveTab` / `objSetX` /
   `objSetY` / `objSetWidth` / `objSetHeight` / `objSetStyleOpa` / `imageSetAngle` /
   `imageSetZoom` / `labelSetText` / `arcSetValue` / `barSetValue` / `sliderSetValue`。
+
+### 8.1a 通用样式读写（objGetDisplayY / objStyleSetProperty）✅ 实测
+
+```json
+{ "action": "objGetDisplayY", "object": "row_sport_mode", "objectType": "literal",
+  "result": "wly" },
+{ "action": "objStyleSetProperty", "object": "row_sport_mode", "objectType": "literal",
+  "property": "transform_scale_x", "propertyType": "literal",
+  "value": "176 + (((352 - Math.min(Math.abs(wly - 207), 352)) * …) >> 21)",
+  "valueType": "expression",
+  "part": "MAIN", "partType": "literal", "state": "DEFAULT", "stateType": "literal" }
+```
+
+- `objStyleSetProperty.property` 用 **style catalog 属性名**（`transform_scale_x` /
+  `bg_color` …，codegen 查表转 `LV_STYLE_*` 数字码）；`part/state` 用枚举成员名。
+- ⚠ **数值表达式必须整数型**：运行时 `UINT32_PROP` 直读 union（`getUInt32()`），
+  double 结果会位型毒化（P-0043）。`+ - * % >> << Math.abs/min` 在整数入参下
+  保持整数；**`/` 恒产 double**（`op_div` 源码为证），用 `>>` 定点化替代。
+- `objGetDisplayY/X` 读的是**屏幕坐标**（含滚动位移，lv_obj_get_coords），
+  常驻动效链因此可以"轮询"代替滚动事件。
 
 ### 8.2 SET_PROPERTY（高层形式，codegen 降级）✅🔍
 
@@ -210,9 +236,12 @@
 ```
 
 - from/to/step 都是**表达式字符串**；`step` 可为负（27→0 递减，闭区间 28 次执行）。
+- ⚠ 别漏 `"version": 1`：beforeLoadHook 对**无 version 的老格式**会把 `to` 改写为
+  `to + " - 1"`（历史独占语义）——手写 JSON 带上 version 才不会被动改表达式。
 - 输入输出端口（见 §9）：body 走 `@seqout`，迭代推进连回 **`"next"`**，启动连
   **`"start"`**，结束发 **`"done"`**。
-- ⚠ **无限循环 = done 自连 start**（官方 demo 同款），或外层 to 给大数。
+- ⚠ **无限循环 = done 自连 start**（官方 demo 同款），或外层 to 给大数
+  （实测 to="2147483646" 常驻，每圈由 body 末尾回连 "next" 推进）。
 
 ### 8.5 DelayActionComponent ✅
 
@@ -271,9 +300,13 @@
 - 支持：四则 `+ - * / %`、比较 `== != < > <= >=`（也可 `=`）、`&& || !`、
   **三目 `?:`**、位运算、`MATH_SIN/COS/ABS/FLOOR/CEIL/ROUND/MIN/MAX…`、
   `SYSTEM_GET_TICK`、字符串/数组/JSON 系列列（手册 P8.4）。
-- ⚠ **陷阱 1：`/` 与 `%` 永远返回 double**（eez-flow.cpp 实证）——结果塞给
+- ⚠ **陷阱 1：`/` 恒返回 double**（int×int 亦然，`op_div` 源码实证）——结果塞给
   objSetY 等整数动作会变成位型垃圾坐标（实测 disc_y=0x66666666）。
-  **帧表达式必须纯整数**；小数步进用多段三目或调整步长规避。
+  ★ 更正（2026-10-16，P-0131）：**`%` 并不恒返回 double**——`op_mod` int×int 返回
+  int32（源码+恒等 `% 2147483647` 受控实验双证）；任一边是 double 才传染为 double。
+  `>>`/`<<`/`&`/`|`/`^` 在整数入参下亦保整数。
+  **统一纪律：帧表达式对整数动作只喂整数**；需要小数比例时用 `>>` 定点化，
+  别用 `/`。`Math.abs/min/round/floor` 对整数入参结果仍是整数（round/floor 是恒等）。
 - ⚠ **陷阱 2**：表达式里的裸名解析顺序：页面局部变量 → 全局变量；两处都不存在
   时构建期**不报错、运行期抛错**，务必核对 variables[]/localVariables 声明。
 

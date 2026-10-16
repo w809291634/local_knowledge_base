@@ -7,6 +7,43 @@
 
 ---
 
+## v0.9.6 — A8 支持「只统计事件源连线」+ ★ 常驻轮询链入库（当前）
+
+- 背景（P-0131，watch 工程纯 EEZ flow 滚轮）：工程连线里出现了**流程内部连线**
+  （Start→Loop→Delay→动作组、Loop@next 回连，output 为 `@seqout`/`done` 等），
+  它们不产生 screens.c 事件回调 → A8 代码侧只数得到 CLICKED 回调，工程侧却数全部连线，
+  三层计数假红（19 vs 19 vs 15）。
+- 新增 `checks.links_event_outputs`（可选，默认不过滤、不影响存量工程）：列出"事件源
+  output"白名单（watch 工程配 `["CLICKED"]`），工程侧只统计这些连线，与代码侧
+  事件回调语义对齐。
+- 排查记录：流程内部连线的计数真值由工程侧 **G2（design/check_nav.py）** 的
+  「连线数（其中导航 N）」一行给出；G2 同步改为只对 CLICKED 线计入导航基线，
+  非事件线仍做 source/target 存在性校验。
+- ★ **新增 skills §11.37：滚动联动不必"事件驱动"——常驻轮询链**（纯 EEZ flow 滚轮复盘，
+  P-0131/0132/0133）：四面对查纪律（事件面/动作面/调度语义/运行时源码）；
+  骨架 `Start → Loop(To=大数) → Delay(30ms) → LVGLAction(读坐标→写样式) → 回连 next`；
+  三硬约束（整数表达式/规范化标识符/双态写入）。
+- ★ **更正 v0.8.6 与 P-0043 的「`%` 也永远返回 double」**（P-0131 受控实验+源码双证）：
+  本 runtime `op_mod` int×int 返回 int32；`/` 才是恒产 double 的头号雷。
+  reference/07 §10 陷阱 1 已改写；P-0043 已追加更正块。
+- reference/07 §7/§8.1a/§8.4 补充：动作 `object` 参数须写**规范化源码标识符**
+  （`row_sport_mode`，P-0132）；objGetDisplayY/objStyleSetProperty 序列化与整数约束；
+  Loop `"version":1` 缺失会被 beforeLoadHook 改写 `to`（P-0131 期间实证）。
+- PLAYBOOK §3.2 补启动小注：CDP 启动 EEZ Studio 时**工程路径必须放 argv 最后**
+  （主进程取 argv[last] 为待打开工程）、旧实例先 taskkill（P-0133）。
+
+## v0.9.5 — A8 适配「生成器直出」工程：设计侧计数同源开关（当前）
+
+- 背景（P-0127，watch 工程就绪核查）：A8 把设计侧跳转数硬编码为「节点级 goto 字段遍历」，
+  而生成器直出 EEZ JSON 的工程没有中间 DSL（design_src == project_file），链路表达为
+  **页级 connectionLines** → 设计侧恒为 0，门禁假红。
+- 新增 `checks.a8_design_equals_project`（默认 false，不影响存量工程）：置 true 时
+  A8 设计侧计数与工程侧同源（显式声明「本工程 design≡project」）。
+- 配套在工程侧建立 **G2 跳转体检**（`design/check_nav.py`：链路计数/死链/死胡同清单，
+  基线数写在脚本内，补导航时同步改）——直出型工程的跳转真值全部取 page 级连线。
+- ⚙ 运维注：Windows GBK 控制台跑本工具套件会因 ✓/✗ 字符 UnicodeEncodeError 崩溃，
+  跑前 `export PYTHONIOENCODING=utf-8`（P-0128）。
+
 ## v0.9.4 — 新增 reference/07：.eez-project 工程 JSON 序列化语法速查（当前）
 
 - 背景（PR-0069，用户问「有没有总结 eez 工程 json 语法，参考手册总结到经验文档」）：

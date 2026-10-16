@@ -44,7 +44,7 @@
 | P-0040 | 2026-10-01 | 变量死活审计：三态合并判据（JSON 结构化绑定/表达式裸引用/native 读写），唯一死变量 battery_pct 已删（33→32）；GUI 里 hiddenExpr/native 引用不可见易误判 | 变量审计,hiddenExpr,Label绑定,native读写,死变量,battery_pct | fixed |
 | P-0041 | 2026-10-01 | native 变量死活审计：四点闭环判据（UI表达式/EEZ消费/io写入/io读回），删 wifi_rssi/wifi_icon/wifi_bars_visible/battery_charging（io写UI不读）；brightness 保留（滑块接口暂留）；六文件同步删除 | native变量,APP_IN,io写入,死变量,三向审计,变量删除,双向绑定 | fixed |
 | P-0042 | 2026-10-01 | 画布组件重叠：渲染高度公式低估（EEZ 组件渲染高 ≈ 40+n*30，行距须按渲染高+间距）+ 律动链区起点相撞（新链区起点=前一链区右缘之外，单行排布） | 画布布局,渲染高度,行距,堆叠,律动链,tabsync,防重叠 | fixed |
-| P-0043 | 2026-10-01 | EEZ 动画能力边界与纯 flow 律动模式：PLAY_ANIMATION 一次性无循环；Loop+Delay+SET_PROPERTY 循环链（Run 预览真实执行）；三坑=Loop 输入 start/next、`/` `%` 返回 double、停止检查须帧级 | EEZ-flow,动画,Loop,Delay,SET_PROPERTY,预览,Run模式,double陷阱 | fixed |
+| P-0043 | 2026-10-01 | EEZ 动画能力边界与纯 flow 律动模式：PLAY_ANIMATION 一次性无循环；Loop+Delay+SET_PROPERTY 循环链（Run 预览真实执行）；三坑=Loop 输入 start/next、`/` `%` 返回 double（★% 部分已被 P-0134 更正：int×int 保整数）、停止检查须帧级 | EEZ-flow,动画,Loop,Delay,SET_PROPERTY,预览,Run模式,double陷阱 | fixed |
  | P-0044 | 2026-10-01 | 设置 tab 页数/顺序变更的三处同步点：CATS 表、onTabChange 分组、sim nav_btn_for+VIEWS —— 漏一处就内容串位；断言只查序号抓不住，必须目检子页截图 | tabview,页序,nav_btn_for,VIEWS,串位,目检 | fixed |
  | P-0045 | 2026-10-01 | 设备侧专属文件（io_esp.cpp）是 PC 构建盲区：TODO 注释漏 */ 吞掉下游函数签名，潜伏到真机 idf.py build 才爆且报错点远离病灶；改后必须配平检查/跑一次真机构建 | io_esp,注释,潜伏,Werror=comment,真机构建,盲区 | fixed |
  | P-0046 | 2026-10-01 | LVGL 9.4 CHECKABLE 翻转发生在 LV_EVENT_RELEASED（lv_obj.c:829-835）而非 CLICKED：CHECKED 绑变量后命令走 VALUE_CHANGED，冒烟脚本模拟点击必须发 RELEASED（CLICKED 只过用户 handler 不翻状态） | LVGL9,CHECKABLE,RELEASED,VALUE_CHANGED,冒烟脚本,checkedState,真状态 | fixed |
@@ -335,3 +335,11 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0124 | 2026-10-16 | 开机视频段仿真黑屏：LVGL 9.4 解**内存里的 JPEG** 要先开 LV_USE_FS_MEMFS（tjpgd 的 VARIABLE 分支整段被它包住），外加盘符和 no_cache | JPEG解码,lv_image,FS_MEMFS,lv_image_decoder_private,include路径,lv_conf生成,开机视频,MP4,MJPEG,黑屏,仿真上屏 | fixed(仿真)/open(真机端口) |
 | P-0125 | 2026-10-16 | EEZ 应用侧处理全量 simhei 字体不稳：画布/Run 中文豆腐块 + 深触字体崩溃 | EEZ,字体,豆腐块,Run模式,崩溃,simhei,字体提取 | fixed |
 | P-0126 | 2026-10-16 | EEZ 会话状态损坏导致工程无法打开（首页按钮无效/双击条目崩溃） | EEZ,应用状态,工程打不开,恢复 | fixed |
+| P-0127 | 2026-10-16 | watch 工程就绪缺口四项：design_src 非 JSON 崩溃 / node 裸命令 / A8 设计侧口径 / check_project.py 悬空 | kit,配置,就绪,A8,check_nav,node,直出型工程 | fixed |
+| P-0128 | 2026-10-16 | kit 工具在 Windows GBK 控制台因 ✓/✗ 字符 UnicodeEncodeError 崩溃 | kit,编码,GBK,控制台,PYTHONIOENCODING | fixed |
+| P-0129 | 2026-10-16 | 图标改动后 design/icons_out 看似未变——陈旧预览目录误导（真源=构建直出 watch/assets/） | 图标,icons_out,assets,误导,陈旧目录 | fixed |
+| P-0130 | 2026-10-16 | EEZ 可绑定事件清单只有 12 种（无 SCROLL/SCREEN_LOADED）【事件面事实仍对，但「⇒无法在 EEZ 声明」的结论已被 P-0131 推翻：常驻轮询链可实现】 | EEZ,事件,SCROLL,asar,滚动联动,wheel,能力边界 | fixed |
+| P-0131 | 2026-10-16 | 过早断言「EEZ 表达不了」——滚轮动效其实可用纯 flow 实现（Loop+Delay+LVGL 动作组整数表达式链） | eez-flow,loop,delay,objStyleSetProperty,objGetDisplayY,转换样式,整数表达式 | fixed |
+| P-0132 | 2026-10-16 | EEZ 动作里引用控件要写『规范化源码标识符』（row_SportMode → row_sport_mode）而非原始 identifier | eez-codegen,标识符规范化,getWidgetObjectIndexByName,动作参数,Widget index not found | fixed |
+| P-0133 | 2026-10-16 | CDP 启动 EEZ Studio 打开工程：工程路径必须放在 argv 最后（主进程取 argv[last] 作为待打开工程） | cdp,eez-studio,启动参数,单实例,argv | fixed |
+| P-0134 | 2026-10-16 | 旧经验「`%` 也永远返回 double」是错的——int×int 的 % 保整数（源码+受控实验双证） | 表达式引擎,op_mod,整数类型,getUInt32,位型毒化,受控实验,P-0043更正 | fixed |
