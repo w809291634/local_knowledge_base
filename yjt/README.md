@@ -1,7 +1,7 @@
 # yjt/ — 按芯片/项目归档的经验库索引
 
 > 与 `embedded/` 的分工：**这里放"换一颗芯片就不成立"的经验**，跨项目可复用的方法论与工具进 `embedded/`。
-> 判据和落库规矩见仓库根 `AGENTS.md` 与本文件末尾第 5 节。最后更新：2026-10-15。
+> 判据和落库规矩见仓库根 `AGENTS.md` 与本文件末尾第 5 节。最后更新：2026-10-16。
 
 ## 1. `PEMS/` — 模板化 Word 文档族方法论（体量最大，单独有入口）
 
@@ -18,7 +18,7 @@
 - 可复用脚本在 `yjt/PEMS/tools/`：`docx_ops.py`（封面/分节/目录域/插图/校验原语）、`fig_tools.py`（框图绘制，1 单位=1 英寸）、
   `build_docs.py`、`consistency_check.py`、`release_ops.py`。**用 `sys.path.insert` 直接 import，别再写第二份。**
 
-## 2. `STC8H_8G/` — Keil C51 / STC8G-8H 全系列（7 篇）
+## 2. `STC8H_8G/` — Keil C51 / STC8G-8H 全系列（10 篇）
 
 | 文件 | 一句话 |
 |---|---|
@@ -29,6 +29,9 @@
 | `keil-c51-pdata-overlay.md` | COMPACT 模型下 `L18 pdata 跨页` 与 `L15 Overlay 重入` 是两类独立问题（2026-10-15 自 `embedded/` 移入） |
 | `stc8h-rom-budget-and-keil-optimize.md` | 8 KB Flash 容量怎么看、Keil 编译/链接选项怎么选（含实测） |
 | `workflow-verification-discipline.md` | 工作流纪律：验证三件套 / 编码 / 工程文件 / 并发 / 提交规范 |
+| `stc8g-uart-library-tx-handshake.md` | ★ 库串口发送靠 UART ISR 清 `B_TX_busy`，关 ISR 则首次打印即死循环（严重） |
+| `ntc-temperature-measurement-pitfalls.md` | NTC 测温：比率式不受 VCC 影响 / 采样窗口盖不住 PWM 周期 / 单点测不到面温 |
+| `stc8h-gpio-power-on-latch-and-sfr-access.md` | 输出脚上电闪一下（锁存器默认全 1，先写锁存再切推挽）；SFR 不能用数据指针访问 |
 
 三篇 C51 编译链接类文章的分工：语言层 / 链接器 Overlay 机制 / 内存模型警告。**今后 C51 相关经验统一进这个目录。**
 

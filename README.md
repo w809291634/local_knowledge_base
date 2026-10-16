@@ -2272,6 +2272,9 @@ If you've learned something here, support my efforts writing daily TILs by
 - [Keil C51：pdata 跨页 L18 与 Overlay 重入 L15 的区别（原 embedded/ 根，2026-10-15 移入）](yjt/STC8H_8G/keil-c51-pdata-overlay.md)
 - [STC8H 8 KB 容量预算与 Keil 编译/链接选项（含实测）](yjt/STC8H_8G/stc8h-rom-budget-and-keil-optimize.md)
 - [STC8G/8H SDK 工作流纪律：验证三件套 / 编码 / 提交规范](yjt/STC8H_8G/workflow-verification-discipline.md)
+- [STC8G 库串口发送依赖 UART ISR（关掉即挂死，严重）](yjt/STC8H_8G/stc8g-uart-library-tx-handshake.md)
+- [NTC 测温与控温：比率式 / 采样窗口 / 热耦合三类坑](yjt/STC8H_8G/ntc-temperature-measurement-pitfalls.md)
+- [STC8H 输出脚上电闪烁与 SFR 不可间接访问](yjt/STC8H_8G/stc8h-gpio-power-on-latch-and-sfr-access.md)
 - [分段线性查表少算一轮 → 除零 → 高浓度误报 LO（严重）](yjt/MultiParam/glu-range-lookup-off-by-one-lo.md)
 - [AC695N 项目自写驱动：RF315 / DMX512 / 断码屏 SEG / 引脚冲突表](yjt/ac695n_soundbox/user_apps-custom-drivers.md)
 
