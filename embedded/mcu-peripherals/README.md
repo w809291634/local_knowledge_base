@@ -16,6 +16,7 @@
 | `timer-pwm-adc-dma.md` | 定时器分类/时基/对齐模式/编码器/死区、ADC（转换时间/通道/模式/DMA/校准）、DMA（F1 通道 vs F4 流+通道/FIFO/双缓冲/流控制器/H7 缓存一致性） |
 | `clock-gpio-nvic-exti.md` | F1/F4/H7/GD32/AT32 时钟树与 PLL、SysTick 与微秒计时、GPIO 模式与复用、NVIC 优先级分组、EXTI 线与屏蔽手段(PRIMASK/FAULTMASK/BASEPRI) |
 | `ERRATA-单片机外设和调试基础知识.md` | **校核结论：原文中已被判定为错误/自相矛盾/单位笔误/型号错配的条目清单** |
+| `COVERAGE-覆盖度与缺口.md` | **本库对源 docx 的实际覆盖率**：逐章矩阵、3,387 个空表块（图片层 0 提取）、蒸馏损耗、同目录其余 18 份文档清单 |
 
 ### 代码配方（`recipes-*.md`，与上面主题篇一一对应）
 

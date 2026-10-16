@@ -21,7 +21,7 @@
 | ESP32 / ESP-IDF 构建、LVGL 帧率与显示调试 | `embedded/esp32/`（入口：`embedded/README.md` 第 1 节） |
 | UI 效果对照、生成式 UI 的回归门禁（EEZ Studio、LVGL、各类前端） | `embedded/EEZ Studio_ui_debug_kit/README.md` → `PLAYBOOK.md` |
 | 杰理（Jieli）蓝牙音频 SoC / soundbox SDK / AC695N | `embedded/jieli_soundbox_sdk/README.md`（先分"跨型号 `common/`"还是"`<型号>_<内核>/`"） |
-| 单片机外设（串口/I2C/SPI/CAN/定时器/ADC/DMA/时钟）、各家芯片差异、调试取证 | `embedded/mcu-peripherals/README.md` + `embedded/mcu-chip-families/README.md`；**要代码骨架看同目录 `recipes-*.md`；引用个人 study_doc 前先查 `embedded/mcu-peripherals/ERRATA-*.md`** |
+| 单片机外设（串口/I2C/SPI/CAN/定时器/ADC/DMA/时钟）、各家芯片差异、调试取证 | `embedded/mcu-peripherals/README.md` + `embedded/mcu-chip-families/README.md`；**要代码骨架看同目录 `recipes-*.md`；引用个人 study_doc 前先查 `embedded/mcu-peripherals/ERRATA-*.md`；要判断"这条库里有没有"先查 `embedded/mcu-peripherals/COVERAGE-覆盖度与缺口.md`（源 docx 的图片层尚未提取）** |
 | 模板化 Word 文档族（医疗器械注册 PEMS、技术要求、说明书、验证/确认记录） | `yjt/PEMS/AGENTS.md`（硬约束）+ `yjt/PEMS/README.md`（文件索引） |
 | 具体芯片/项目经验（Keil C51 / STC8H、CH571 BLE、参数标定查表） | `yjt/README.md`（按目录分区索引） |
 
