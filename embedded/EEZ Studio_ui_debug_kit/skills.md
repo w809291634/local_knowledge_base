@@ -1947,16 +1947,25 @@ display origin"）+ 运行时源码 + 实测**：多面证据并存时，认"实
 2. **动作里引用控件写"规范化标识符"**：`object` 参数不是 JSON 里的原始 `identifier`，
    而是 `getName('', identifier, UnderscoreLowerCase)` 规范化名（`row_SportMode` →
    `row_sport_mode`）；写错 → 构建 110 条 `Widget index not found`（P-0132）。
-3. **双态一起写**：`lv_obj_style.c` 状态权重——CHECKED 样式表(权重 1)压过 local
-   DEFAULT(权重 0) ⇒ 聚焦行只写 DEFAULT 会被静态 CHECKED 样式锁住；同权重时 local 优先。
-   `objStyleSetProperty` 的 `state` 参数（DEFAULT/CHECKED）写四份（x/y × 两态）。
+3. **让样式冲突在源头消失，别绕着写**：`lv_obj_style.c` 状态权重——CHECKED 样式表
+   (权重 1)会压过 local DEFAULT(权重 0)。两条路：a) 控件身上**有**静态 CHECKED 缩放样式时，
+   flow 必须双态双写（x/y × DEFAULT/CHECKED 四份）；b) **更优（2026-10-16 追加）**——把
+   静态缩放样式从生成端**删掉**，冲突源头消失，flow **单写 DEFAULT** 即可：帧动作直接
+   −40%（110→66）、表达式副本 −50%，且点击不再出现"静态放大残留"（watch 实测，报告 §19）。
+   选 b 的取舍：flow 未跑时控件回落到原始尺寸（无静态兜底）。
 
 #### 三、推荐骨架与验收
 
 ```
 Start（无入线=启动即执行）→ Loop(var, 0, 2147483646, 1, version:1)   # 常驻
-  @seqout → Delay(30ms) → LVGLAction(每帧动作组：读坐标→算→写样式) → 回连 Loop@next
+  @seqout → Delay(30ms) → A1[单读基准行→wy] → SetVariable[k0..k21 短式]
+            → A2[每行写样式，值只引用 k_i] → 回连 Loop@next
 ```
+- ★ **单读 + 短中继（编辑器减负利器，2026-10-16 追加）**：同容器刚性子项（间距固定）⇒
+  读一个基准项的屏幕坐标一次即可推全表（22 次读→1 次）；再用 **SetVariable 组件**
+  （entries:[{variable,value}]，均表达式字符串）把逐行中间量写成短变量；写样式的动作组
+  里只引用短变量——**编辑器里每行 ≤40 字符、无换行公式墙**（watch 实测帧执行 67≈66 持平，
+  报告 §21）。SetVariable 是"动作参数无法赋值"时唯一的中继手段（A43 组内没有赋值动作）。
 - 写 JSON 别漏 Loop 的 `"version":1`（无它 beforeLoadHook 会把 `to` 改写 `to + " - 1"`）；
 - 验收四层：EEZ 构建 `No error and no warning` → 仿真静止/滚动两态**数值反推**与公式逐位对齐
   → dragtest 回归（点击/拖拽）→ **EEZ Run（F5）肉眼可见可交互**（纯 flow 的最大红利：

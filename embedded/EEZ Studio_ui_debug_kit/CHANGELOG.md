@@ -7,6 +7,20 @@
 
 ---
 
+## v0.9.7 — 案例 B11 + 「公用函数」查档入库 + 单读中继配方（当前）
+
+- ★ **新增案例 `cases/B11`**（七段式）：滚动动效被误判"EEZ 表达不了"→ 四面对查推翻 →
+  native 退役 → 动作面板"公式墙"以「单读+中继」消除。三次误判（只查事件面/CHECKED 双写必须/
+  公式该做成公用函数）全部记录在案；含跨栈对照（≈ rAF 轮询 + getBoundingClientRect + CSS 变量）。
+- **「公用函数」查档入库（P-0136）**：`reference/07 §4` 补——User Action 的 `implementationType`
+  含 `"flow"`（流实现的公用函数，输入/输出=userProperties+Input/Output 动作）；
+  调用=**Call Action 组件**（属性 `{action, userPropertyValues:{values:{<propId>:<表达式>}}}`
+  ——输入走 expression、输出走 assignable，asar 实证）；⚠ **flow 表达式不能内联调用用户函数**。
+  单点复用场景保持内联（升级触发条件=第二处复用；采用前须最小原型验 Call Action 出参）。
+- **skills §11.37 三·追加「单读+短中继」配方（P-0137）**：同容器刚性子项 ⇒ 读一个基准项推全表；
+  SetVariable 组件（`entries:[{variable,value}]`，均表达式串）做中继——编辑器每行 ≤40 字符、
+  帧执行与逐行版持平。案例与配方互链。
+
 ## v0.9.6 — A8 支持「只统计事件源连线」+ ★ 常驻轮询链入库（当前）
 
 - 背景（P-0131，watch 工程纯 EEZ flow 滚轮）：工程连线里出现了**流程内部连线**
@@ -23,6 +37,9 @@
   P-0131/0132/0133）：四面对查纪律（事件面/动作面/调度语义/运行时源码）；
   骨架 `Start → Loop(To=大数) → Delay(30ms) → LVGLAction(读坐标→写样式) → 回连 next`；
   三硬约束（整数表达式/规范化标识符/双态写入）。
+- ★ §11.37 硬约束 3 细化（同日追加）：**双态双写仅当控件存在静态 CHECKED 样式**；
+  更优路径 = 生成端删静态样式、源头消冲突 → flow 单写 DEFAULT（帧动作 −40%、表达式副本 −50%，
+  watch 实测零视觉差异，报告 §19）。
 - ★ **更正 v0.8.6 与 P-0043 的「`%` 也永远返回 double」**（P-0131 受控实验+源码双证）：
   本 runtime `op_mod` int×int 返回 int32；`/` 才是恒产 double 的头号雷。
   reference/07 §10 陷阱 1 已改写；P-0043 已追加更正块。
