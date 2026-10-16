@@ -332,3 +332,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0121 | 2026-10-11 | lvgl_demo_ai 显示驱动整体换成 mipi_dsi 自拼管线：旧路线的 8ms 只能改托管组件才能藏，自拼反而零改库 | LVGL,帧率,ESP32-P4,自拼管线,DIRECT,LV_OS_CUSTOM,include路径,COMPILE_OPTIONS,managed_components,GT911,真机取证 | open |
 | P-0122 | 2026-10-14 | 单屏 tabview 拆 4 个 screen：共用 alias 让 534 个 id 不变；identifier 去重表必须跨页共享；changeScreen 只有 push（useStack 被忽略） | EEZ,多screen,identifier,changeScreen,fadeMode,门禁,nav命令 | fixed |
 | P-0123 | 2026-10-15 | EEZ 原生 GESTURE 竖滑切 4 屏做通了，但「跟手」与「独立 screen」互斥 ⇒ 外层还原 LEFT tabview | EEZ,手势,tabview,screen结构,仿真输入 | open |
+| P-0124 | 2026-10-16 | 开机视频段仿真黑屏：LVGL 9.4 解**内存里的 JPEG** 要先开 LV_USE_FS_MEMFS（tjpgd 的 VARIABLE 分支整段被它包住），外加盘符和 no_cache | JPEG解码,lv_image,FS_MEMFS,lv_image_decoder_private,include路径,lv_conf生成,开机视频,MP4,MJPEG,黑屏,仿真上屏 | fixed(仿真)/open(真机端口) |

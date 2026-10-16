@@ -1878,3 +1878,34 @@ PPA fill/blend 的 DMA 按 128B 块凑整、在帧缓冲末端越界写（一行
 - ★ 流程教训（本轮第三次栽同类）：**说"原来是什么样"之前先 `git show HEAD:<file>` 查**。
   我曾断言"外层原来是横向 tabview、所以竖滑跟手做不到"，实际 HEAD 里是
   `tabview(..., "LEFT", ..., id="main_nav")` —— 结论碰巧对，依据是猜的。
+
+### 11.36 ★ 让 LVGL 解「内存里的 JPEG」：卡点是 FS 驱动，不是解码器（2026-10-16，P-0124）
+- **症状**：帧字节喂给 `lv_image`（`header.cf = LV_COLOR_FORMAT_RAW`）→ 整屏黑、**不报错**，
+  而 `lv_image_decoder_get_info()` 是过的（尺寸对、控件占位正常）。
+  **根因**：9.4 的 tjpgd 对 `LV_IMAGE_SRC_VARIABLE` 分支整段被 `#if LV_USE_FS_MEMFS` 包着
+  （`src/libs/tjpgd/lv_tjpgd.c:158`，`get_info` 同理 :94）—— 它不直接吃指针，而是把内存包成假文件走 `lv_fs_*`。
+  开关关 ⇒ open 返回 INVALID，只留一条默认级别看不见的 `LV_LOG_WARN`。lottie 同理。
+- **两个连带的坑**：① `LV_FS_MEMFS_LETTER` 默认 `'\0'` = 驱动不注册，光把 `LV_USE_FS_MEMFS` 置 1 不够，
+  还要给一个没被占用的大写字母；② 缓存按**源指针**索引 ⇒ 逐帧传同一个 `&raw` 必须 `args.no_cache = true`，
+  否则第 0 帧解一次、后面全命中缓存，画面冻在第一帧。
+- **`lv_image_decoder_dsc_t` 的完整类型在 private 头**：公开头只有前向声明，
+  结构体在 `src/draw/lv_image_decoder_private.h`（内核 `lv_draw_image.c` 自己也 include 它）。
+- ★ **报 `No such file or directory` 先去看目标的 include 列表，别急着下"路径没挂上"的结论**：
+  `build/CMakeFiles/<tgt>.dir/includes_CXX.rsp` 里 `-isystem` 那些也是包含路径。
+  本仿真挂的是 **lvgl 根**，所以 `#include "src/draw/..."` 可以、`#include "draw/..."` 不行 ——
+  拼错前缀和真没挂上症状一模一样，我据此误判成"要改仿真器目录"，白等了一轮。
+- **逐 MCU 条带解码的循环形状**照内核 `lv_draw_image.c:img_decode_and_draw()`：四个坐标先全填
+  `LV_COORD_MIN`，`while(res==LV_RESULT_OK){ res = get_area(...); if(res!=OK) break; 搬 band; }`。
+  返回 INVALID 那一拍的 `decoded_area` 是**上一拍的残留**，别拿它当"解完了"的坐标用，也别拿返回值判失败。
+- **格式选 RGB888 不选 565**：tjpgd 原生输出就是 24bit（`dsc->header.cf=RGB888; stride=w*3`），
+  仿真端再转一次只是多一趟全帧遍历；真机要 565 是在**写面板 fb 那一层**按面板格式转。
+- **`lv_conf.h` 是生成物时，开关要加在生成函数里**：本工程的仿真那份由 `design/sim.py:write_lvconf()`
+  从 `design/lv_conf.h` 加工出来，手改 `design/sim_cmake/lv_conf.h` 下次生成就没了；
+  真机那份保持关闭（真机端口直写 DPI fb，根本不经 LVGL）—— 一份需求两个目标，各自有真值源。
+- ★ **EEZ 生成代码自己会定首屏，入口别再 `lv_screen_load`**：`eez_flow_init()` 末尾固定有一句
+  `replacePageHook(1, 0, 0, 0)`，而 `replacePageHook` 里 `screenIndex = pageId - 1`
+  ⇒ **pageId 是 1 基**，`1` 就是 `userPages[0]`。手动再 load 一次别的屏 = 画面和 `g_currentScreen`
+  对不上，而且**走路脚本查不出来**（脚本进门先自己切屏，走的是正规 `eez_flow_set_screen`），
+  只有人眼看交互模式才暴露。判据：入口打一行 `eez_flow_get_current_screen()`。
+- 往 Python 的 **raw 字符串模板**里写 C 的 `\n`，工具层可能落成 `\\n`（字面反斜杠 + n，编译照过、只是不打换行）
+  ⇒ 生成之后 `od -c` 数反斜杠个数，别用眼睛看。

@@ -1796,3 +1796,15 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 产出/结论：还原方案已定：五个文件整文件回 HEAD（先备份 tmp/backup_4screen），待执行
   - 关联：（待补）
 
+
+### PR-0208 · 2026-10-16 12:10 · Qoder
+  - 提示词：搭建 boot_video 框架与仿真接口
+  - 诉求：MP4 播放框架一份，平台差异全收进端口里，先能在仿真器里看见，真机只换接口
+  - 产出/结论：boot_video.h 端口表 + bv_mp4.cpp（共享解封装/时间轴 + ESP_PLATFORM 分界端口）+ make_boot_mp4.py 测试片 + bvid 走路命令；真机三端口诚实返回 BVID_ERR_PORT
+  - 关联：P-0124
+
+### PR-0209 · 2026-10-16 12:10 · Qoder
+  - 提示词：修仿真上屏:把 JPEG 解码成 RGB565 再喂 LVGL
+  - 诉求：仿真里视频是黑的，要真解码出像素再交给 LVGL
+  - 产出/结论：根因不是解码器缺，是 LV_USE_FS_MEMFS=0 把 tjpgd 的 VARIABLE 分支整段关掉；在 sim.py 的 write_lvconf() 里开 MEMFS+盘符，端口改走 lv_image_decoder_open/get_area/close（RGB888=tjpgd 原生输出，省一趟转 565）；60/60 帧 0 丢 0 错
+  - 关联：P-0124
