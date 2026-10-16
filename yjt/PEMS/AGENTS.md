@@ -200,7 +200,8 @@
   新判据必须反向验证：上一版已知有缺陷的产物要能命中，本版必须 0 命中。
 - 以上修复动作一律走同源原语 `tools/docx_ops.py:pagination_repair(doc, cover_texts=[...], apply=[...])`
   （动作：`drop_hard_break` / `drop_pbb_after_sect` / `drop_pad_tabs` / `drop_chapter_pad` /
-  `demote_cover` / `demote_empty` / `drop_body_keep` / `drop_keep_before_table`），
+  `demote_cover` / `demote_empty` / `drop_body_keep` / `drop_keep_before_table` /
+  `drop_page_lead_pad`（换页边界后夹着的纯空段，任意级别标题都管，§68）），
   顶页空段判据与 audit 共用 `chapter_pad_map(doc)`；项目里不再自写第二套分页修复。
 
 ## 第二轮改同一批文档时的七条硬约束（2026-10-15 追加）
