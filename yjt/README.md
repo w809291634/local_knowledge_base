@@ -32,6 +32,11 @@
 
 三篇 C51 编译链接类文章的分工：语言层 / 链接器 Overlay 机制 / 内存模型警告。**今后 C51 相关经验统一进这个目录。**
 
+**与 `embedded/` 的分工**：STC8H 的**芯片资源层**（IRC 与时钟切换、XFR/EAXSFR、五个定时器与 1T/12T、
+串口波特率发生器与 `S1_S/S2_S` 引脚切换、GPIO 四态与上电默认高阻、ADC/PWMA-PWMB、EEPROM 页与寿命、
+ISP 硬件选项、4 线自动下载原理、浮点的 ROM 代价）以及**沁恒 CH57x/CH58x/CH32V** 全部在
+`embedded/mcu-chip-families/stc-c51-and-ch32-wch.md`。判据：**语言/工具链层面的坑留这里，芯片寄存器层面的事进 embedded。**
+
 ## 3. `ch571/` — 沁恒 CH573/CH57x BLE（2 篇）
 
 | 文件 | 一句话 |

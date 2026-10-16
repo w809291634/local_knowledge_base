@@ -304,6 +304,16 @@ If you've learned something here, support my efforts writing daily TILs by
 - [杰理 SDK：升级与 OTA（单双备份、回滚、json.txt、MD5/ufw）](embedded/jieli_soundbox_sdk/common/ota-dual-backup-update.md)
 - [杰理 SDK：协议接入（RCSP / AI 中间层 / 涂鸦 / 天猫精灵 Mesh）](embedded/jieli_soundbox_sdk/common/protocol-integration-rcsp-app-tuya.md)
 - [杰理 AC695N / BR23：芯片资源表与 19 个板级映射](embedded/jieli_soundbox_sdk/ac695n_br23/chip-resources-and-board-variants.md)
+- [单片机外设与调试 · 索引（UART/I2C/SPI/CAN/定时器/ADC/DMA/时钟）](embedded/mcu-peripherals/README.md)
+- [勘误与校核清单：《单片机外设和调试基础知识.docx》](embedded/mcu-peripherals/ERRATA-单片机外设和调试基础知识.md)
+- [串行总线：UART / RS485 / CAN / MODBUS](embedded/mcu-peripherals/serial-uart-rs485-can-modbus.md)
+- [I2C / SPI 协议与器件驱动（OLED、24C02、PCA9685、W25Q128、DM9051）](embedded/mcu-peripherals/i2c-spi-and-device-drivers.md)
+- [定时器 / PWM / ADC / DMA](embedded/mcu-peripherals/timer-pwm-adc-dma.md)
+- [时钟树 / GPIO 配置 / NVIC 中断与 EXTI](embedded/mcu-peripherals/clock-gpio-nvic-exti.md)
+- [各家单片机与 STM32 的差异总表（GD32/AT32/PY32/STC/CH/TI）](embedded/mcu-chip-families/README.md)
+- [ZigBee / Z-Stack 的 OSAL 运行机制与工程实践](embedded/mcu-chip-families/zigbee-zstack-osal.md)
+- [工具链、启动模式、Flash 与烧录（Keil/MicroLIB/scatter/IAP）](embedded/mcu-toolchain-boot-flash/README.md)
+- [死机与异常取证（HardFault / 栈溢出 / 内存越界）](embedded/debug-methodology/hardfault-crash-forensics.md)
 
 ### Elixir
 

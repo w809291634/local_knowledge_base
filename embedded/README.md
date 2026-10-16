@@ -24,11 +24,18 @@
 
 | 文件夹 | 内容 | 一句话 | 什么时候查 |
 |---|---|---|---|
-| `embedded/debug-methodology/` | `debug-methodology.md` | 四种通用排查打法：参考示例入手 / 对比法 / 问题点法 / github issues 搜索法 | **没头绪时先读这篇**，它是本目录其余各篇的上一层方法 |
-| `embedded/debugger/` | `debugger-jlink-stlink-wchlink.md` | J-Link V8 刷固件救砖、WCH-Link 双接口双驱动、ST-LINK | 调试器连不上 / 报 defective / 变砖 |
-| `embedded/ide/` | `iar-keil-ide-issues.md` | IAR、Keil MDK、RT-Thread Studio 的 IDE 层坑（跳转失效、优化导致变量不可见、编码与路径） | 编译能过但调试行为诡异 |
+| `embedded/debug-methodology/` | `debug-methodology.md`、`hardfault-crash-forensics.md` | 四种通用排查打法 + **死机/异常取证**（callstack、栈溢出判据、memset 越界、断言两种行为、寄存器读法） | **没头绪时先读前者**；崩了就查后者 |
+| `embedded/debugger/` | `debugger-jlink-stlink-wchlink.md`、`stlink-jlink-remote-oscilloscope.md` | 调试器固件与驱动救砖 + **ST-Link 自制固件版本、J-Link 远程调试、示波器操作、SWD 引脚占用** | 调试器连不上 / 要远程调 / 要量波形 |
+| `embedded/ide/` | `iar-keil-ide-issues.md` | IAR、Keil MDK、RT-Thread Studio 的 IDE 层坑 | 编译能过但调试行为诡异 |
+| `embedded/mcu-peripherals/` | **7 篇 + ERRATA 档**：UART/485/CAN/MODBUS、I2C/SPI 与器件驱动、SD/DCMI/FSMC、I2S/WAV、定时器/ADC/DMA、时钟/GPIO/NVIC/EXTI | 单片机**外设原理与用法**（跨芯片通用为主） | 配任何外设前；以及**引用那份 docx 前先查 ERRATA** |
+| `embedded/mcu-chip-families/` | 6 篇：各家与 STM32 差异总表、GD32、AT32、PY32/Holtek、STC+沁恒 CH、CC2530/2538/2640、Z-Stack OSAL | **换芯片/换家时的"哪一点会咬人"清单** | 移植到 GD32/AT32/PY32/STC/CH/TI 时 |
+| `embedded/mcu-toolchain-boot-flash/` | `README.md` | 启动链与堆栈、Keil/MicroLIB/scatter/map、BOOT 模式与串口 ISP 烧录、Flash 扇区与选项字节、IAP 跳转 | 改时钟、加烧录、做 IAP、看 map |
 | `embedded/rt-thread/` | `rt-thread-pitfalls.md` | RT-Thread hard fault 定位、线程栈溢出的统一根因、定时器回调上下文限制 | RT-Thread 上 assertion failed / 随机死机 |
 | `embedded/stm32/` | `stm32-hal-pitfalls.md` | STM32/HAL 经典坑：时钟先使能、printf 重定向三件套、JTAG 引脚复用前必须释放 | 配置看不出问题但外设就是不工作 |
+
+**注意与本次新增的三目录的分工**：`stm32/`、`debug-methodology/`、`debugger/` 里的老篇来自
+《问题解决和汇总 v1.2》；`mcu-peripherals/`、`mcu-chip-families/`、`mcu-toolchain-boot-flash/` 来自
+《单片机外设和调试基础知识.docx》（2026-10-16 精读）。**同一主题两边都有时，以 `⚠校核` 标注和 ERRATA 为准。**
 
 新增同主题经验请**往对应文件夹里加文件**，不要退回本目录根平铺。
 新芯片/新主题 → 新建一个文件夹，并在本表加一行。
