@@ -185,6 +185,12 @@
 - **补空段排在删空段之后，压继承要写零**（§59）：按配置补的封面空段会被后续清理/刷新目录吃掉，
   必须"清完再补、补完复核封面仍恰好一页"；样式链带来的缩进不能靠删 `w:ind`（删了就是放回继承），
   要显式写 `0` 并按**生效值**复算验收。
+- **插入正文段不要克隆供体**（§67）：克隆标题锚点、或"随便找一个正文样式段"（会命中封面大标题），
+  都会产出**挂标题样式的正文段**——正文基线按样式当它是标题、标题分档按文字形态当它不是标题，
+  **两条链路一起放过**，几百项闸门可以全绿。原语：`new_body_paragraph()` 新建、
+  `demote_paragraph_to_body()` 降段（**必须改样式**，只改直接格式没用）、
+  `body_paragraphs_with_heading_style()` 给闸门做 dod 45d 检查。
+  新判据必须反向验证：上一版已知有缺陷的产物要能命中，本版必须 0 命中。
 - 以上修复动作一律走同源原语 `tools/docx_ops.py:pagination_repair(doc, cover_texts=[...], apply=[...])`
   （动作：`drop_hard_break` / `drop_pbb_after_sect` / `drop_pad_tabs` / `drop_chapter_pad` /
   `demote_cover` / `demote_empty` / `drop_body_keep` / `drop_keep_before_table`），

@@ -147,6 +147,10 @@ def insert_paragraphs_after(p, texts, drop_numbering=True):
     在段落 p 之后依次插入新段落；新段深拷贝自 p，
     - drop_numbering=True 时去掉自动编号（numPr），避免正文继承标题编号；
     - 沿用 p 末个 run 的 rPr，保持字号字体。
+
+    ⚠ 只适合"锚点本身就是正文段"的场景。锚点是标题时，克隆会把 pStyle/大纲级/居中/大字号
+      一起带进正文，而正文基线与标题分档两条链路都会按样式放过它（pitfalls §67）——
+      那种场合用 `new_body_paragraph()` 新建空段，版式交给正文基线统一写。
     """
     prev = p._p
     for txt in texts:
@@ -177,6 +181,80 @@ def insert_paragraphs_after(p, texts, drop_numbering=True):
         new_p.append(r)
         prev.addnext(new_p)
         prev = new_p
+
+
+# --------------------------------------------------------------------------
+# 正文段：新建 / 降级 / 审计（pitfalls §67）
+# --------------------------------------------------------------------------
+def demote_paragraph_to_body(p_el, style_name='Normal'):
+    """把一个段落元素降成正文段：套正文样式 + 摘 numPr/outlineLvl + 清 run 级 sz·b。
+
+    必须改**样式**而不是只改直接格式：多数正文基线与闸门按样式名判"这是标题段"，
+    样式留着 Heading 时，字号／缩进／行距各环节会一起跳过它（§67）。"""
+    pPr = p_el.find(qn('w:pPr'))
+    if pPr is None:
+        pPr = OxmlElement('w:pPr')
+        p_el.insert(0, pPr)
+    for tag in ('w:outlineLvl', 'w:numPr'):
+        for old in pPr.findall(qn(tag)):
+            pPr.remove(old)
+    ps = pPr.find(qn('w:pStyle'))
+    if ps is None:
+        ps = OxmlElement('w:pStyle')
+        pPr.insert(0, ps)
+    ps.set(qn('w:val'), style_name)
+    for rPr in p_el.findall(qn('w:r') + '/' + qn('w:rPr')):
+        for tag in ('w:sz', 'w:szCs', 'w:b', 'w:bCs'):
+            for old in rPr.findall(qn(tag)):
+                rPr.remove(old)
+    return p_el
+
+
+def new_body_paragraph(text, style_name='Normal'):
+    """新建"干净"正文段（只有正文样式 + 一个 run），供插入正文用。
+
+    不要克隆文档里现成的段当正文供体：供体句写死模板原话会随模板失配，
+    而"随便找一个正文样式段"又会命中封面大标题之类的特例段。
+    正文段的字号／缩进／行距应由正文基线环节统一写。"""
+    p = OxmlElement('w:p')
+    r = OxmlElement('w:r')
+    t = OxmlElement('w:t')
+    t.set(qn('xml:space'), 'preserve')
+    t.text = text
+    r.append(t)
+    p.append(r)
+    return demote_paragraph_to_body(p, style_name)
+
+
+def body_paragraphs_with_heading_style(doc, cutoff=0, min_len=12, heading_shape=None,
+                                       allow=()):
+    """审计"文字形态是正文、样式却是标题"的段，返回 [(段号, 样式名, 文本前 20 字)]。
+
+    这类段**两条链路都不管**：正文基线按样式当它是标题而跳过，标题分档按文字形态
+    把它排除，于是字号／缩进／行距全部失控，而常规闸门一片绿（§67）。
+    `heading_shape(text, para) -> bool` 由项目传入自己的"文字形态是不是标题"判据
+    （编号式／冒号式小节名等）；不给则只用样式 + 有无 numPr 判定，容易误伤真标题。
+    不要用 `para_ops.is_structural_paragraph` 的否定面代替它：那条还包含"居中短段、
+    加粗短段、表 N 引导句"，反过来用会把一批正常正文段误报成缺陷。"""
+    out = []
+    for i, p in enumerate(doc.paragraphs):
+        if i < cutoff:
+            continue
+        t = re.sub(r'\s+', '', paragraph_text(p))     # 与 nws 同口径：判长度要连内部空白一起算
+        if len(t) < min_len:
+            continue
+        if heading_shape is not None and heading_shape(t, p):
+            continue
+        sty = (p.style.name or '') if p.style is not None else ''
+        if not (sty.lower().startswith('heading') or sty.startswith('标题')):
+            continue
+        pPr = p._p.find(qn('w:pPr'))
+        if pPr is not None and pPr.find(qn('w:numPr')) is not None:
+            continue                       # 带自动编号＝模板真标题
+        if t[:20] in set(allow):
+            continue
+        out.append((i, sty, t[:20]))
+    return out
 
 
 # --------------------------------------------------------------------------
