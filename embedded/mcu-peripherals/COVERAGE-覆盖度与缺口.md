@@ -19,7 +19,7 @@
 合计约 **3,100 行**。
 
 ⇒ **这是蒸馏，不是转录**：约 17.8k 有字行压到约 3.1k 行，压缩比约 5.7:1；
-且**图片内容基本未提取**（1,018 张里只过了第 1 章的 13 张，见 §6）。
+且**图片内容大部分未提取**（1,018 张里过了第 1~4 章共 152 张，见 §6）。
 
 ## 2. 逐章覆盖矩阵
 
@@ -30,7 +30,7 @@
 | 01 | 单片机调试基础方法 | 250 | 35 | 37 | `debug-methodology/hardfault-crash-forensics.md`、`debugger/stlink-jlink-remote-oscilloscope.md` | H4 里 25 个小节只挑了 callstack/cm_backtrace/memset/ST-Link/J-Link/示波器；**寄存器现场截图 35 处未 OCR** |
 | 02 | TI CC2530 + Z-Stack | 1309 | 460 | 248 | `mcu-chip-families/cc2530-cc2538-cc2640.md`、`zigbee-zstack-osal.md`、`recipes-code-skeletons.md` §5 | **CC2530 裸机外设无代码配方**（当时被"由别路负责"漏掉）；水温传感器驱动、CC2640 协议栈各章、ZDO/绑定细节、**协调器上位机协议属项目事实未入库** |
 | 03 | GD32 | 145 | 32 | 23 | `mcu-chip-families/gd32.md`、recipes §1 | GDF4xx 系列差异表未逐条；**HXTAL/AF 表原图未 OCR** |
-| 04 | AT32 | 1085 | 581 | 258 | `mcu-chip-families/at32.md`、recipes §2 | **最大未覆盖体量**：XMC、DVP/摄像头、USB、加密、CAN、ADC 触发、TMR 各例只到骨架；ZW/NZW 无代码；**581 个空表 = 一半以上信息在图里** |
+| 04 | AT32 | 1085 | 581 | 258 | `mcu-chip-families/at32.md`（§7 截图结论）、`at32-flash-zw-dmamux-tables.md`（表格档）、recipes §2 | **表格类已闭档**；仍缺：XMC、DVP/摄像头、USB、加密、CAN、ADC 触发的**逐外设完整例程**（文字层多为骨架） |
 | 05 | PY32 | 34 | 24 | 9 | `py32-ht32-holtek.md` | 体量极小；PC0=NRST 已收全 |
 | 06 | HT32（实为 Holtek 8 位） | 408 | 104 | 73 | `py32-ht32-holtek.md` | OPA/SADC/血糖流程已收；**H4=33 里校准算法、LCD 驱动段、USIM 配置只到摘要** |
 | 07 | STC | 1554 | 155 | 133 | `stc-c51-and-ch32-wch.md`、recipes §3 | EEPROM/Flash 读写擦、PWMA 死区、看门狗、掉电唤醒 —— **原文本身无代码**；`OPTIMIZE(9)`/`__declspec` 等 AI 段已入 ERRATA 但正文未逐条重写 |
@@ -86,7 +86,7 @@ IWDG/WWDG 公式、选项字节 RDP、Standby 唤醒源表 —— 这些**不该
 | 01 调试基础方法 | 13 | 已入库 | **已完成 13/13** | → `debug-methodology/hardfault-crash-forensics.md` §4.1、`debugger/stlink-jlink-remote-oscilloscope.md` §5 |
 | 02 TI CC2530 + Z-Stack | 106 | 已入库（骨架） | **已完成 106/106** | → `mcu-chip-families/cc2530-cc2538-cc2640.md` §5、`zigbee-zstack-osal.md` §6；新增 ERRATA G1~G15 |
 | 03 GD32 | 5 | 已入库 | **已完成 5/5** | → `mcu-chip-families/gd32.md` §5（时钟树全图数据、PH0/PH1=HXTAL、MDMA+EDMA、libopt.h） |
-| 04 AT32 | 28 | 只到骨架 | 未开始 | 文字层增量也未做 |
+| 04 AT32 | 28 | **已补蒸馏：新增表格档** | **已完成 28/28** | → `mcu-chip-families/at32.md` §7 + 新档 `at32-flash-zw-dmamux-tables.md`；ERRATA H1~H10 |
 | 05 PY32 | 3 | 已入库 | 未开始 | 量小 |
 | 06 HT32（Holtek） | 42 | 只到摘要 | 未开始 | |
 | 07 STC | 15 | 已入库 | 未开始 | |
@@ -111,7 +111,7 @@ IWDG/WWDG 公式、选项字节 RDP、Standby 唤醒源表 —— 这些**不该
 
 ## 7. 一句话结论
 
-**文字层已通读全部 21 章**（入库约 3,100 行）；**截图层完成第 1、2、3 章（124/1048 处）**；
+**文字层已通读全部 21 章**（入库约 3,100 行）；**截图层完成第 1~4 章（152/1048 处）**；
 H4 以下细粒度约 1,800+ 小节未按条目收录；同目录其余 18 份文档未开始。
 
 **逐章协议的两条硬规矩**（第 2 章踩坑后加）：

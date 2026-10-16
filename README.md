@@ -318,6 +318,7 @@ If you've learned something here, support my efforts writing daily TILs by
 - [定时器 / PWM / ADC / DMA](embedded/mcu-peripherals/timer-pwm-adc-dma.md)
 - [时钟树 / GPIO 配置 / NVIC 中断与 EXTI](embedded/mcu-peripherals/clock-gpio-nvic-exti.md)
 - [各家单片机与 STM32 的差异总表（GD32/AT32/PY32/STC/CH/TI）](embedded/mcu-chip-families/README.md)
+- [AT32 手册表格唯一副本：ZW↔SRAM 分配、EOPB 系统选项、闪存结构、IOMUX MUX 表、DMAMUX 1~123](embedded/mcu-chip-families/at32-flash-zw-dmamux-tables.md)
 - [ZigBee / Z-Stack 的 OSAL 运行机制与工程实践](embedded/mcu-chip-families/zigbee-zstack-osal.md)
 - [工具链、启动模式、Flash 与烧录（Keil/MicroLIB/scatter/IAP）](embedded/mcu-toolchain-boot-flash/README.md)
 - [死机与异常取证（HardFault / 栈溢出 / 内存越界）](embedded/debug-methodology/hardfault-crash-forensics.md)

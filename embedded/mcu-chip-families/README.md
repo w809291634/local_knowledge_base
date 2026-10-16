@@ -8,7 +8,8 @@
 | 文件 | 内容 |
 |---|---|
 | `gd32.md` | GD32F4xx 时钟/库命名/AF 表差异，**用 STM32 库直换的 4 个具体不兼容点**；§5 收**完整时钟树截图数据**（TIMER0 在 APB2、ADC 双分频链、PH0/PH1=HXTAL、MDMA+EDMA、QEI0） |
-| `at32.md` | AT32F435/437 与 F403A：时钟与 PLL 命名、库函数名、**ZW/NZW 零等待分区**、XMC、外设映射 |
+| `at32.md` | AT32F435/437 与 F403A：时钟与 PLL 命名、库函数名、**ZW/NZW 零等待分区**、XMC、外设映射；§7 是截图层结论汇总 |
+| `at32-flash-zw-dmamux-tables.md` | **手册表格唯一副本（原文只有图）**：ZW↔SRAM 352KB 分配、表 5-6 `EOPB` 三档编码、闪存结构 4032K/1024K、6.2.8 复用+HDRV、6.2.9 IOMUX MUX0~15、WorkBench 288MHz 取值与供电限制、SPI 11 种模式、**表 9-3 DMAMUX 请求映射 1~123**、表 9-4 触发源、DMA 配置页与中断向量 |
 | `py32-ht32-holtek.md` | PY32（普冉）PC0=NRST 的选项字节坑；"HT32"章实为 Holtek 8 位 BH67F2472 血糖仪方案 |
 | `stc-c51-and-ch32-wch.md` | STC8H 全系要点（时钟/XFR/定时器/串口/GPIO/ADC/PWM/ISP 下载/C51 语言层）+ 沁恒 CH57x/CH58x/CH32V（RISC-V PFIC、Flash 映射、BLE SDK） |
 | `cc2530-cc2538-cc2640.md` | CC2530 外设实操（时钟切换必须连 TICKSPD 一起清、T1/PWM、printf、内部 flash）、CC2538 救砖、CC2640 环境与坑 |
