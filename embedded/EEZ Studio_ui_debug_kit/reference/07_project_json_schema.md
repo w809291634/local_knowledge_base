@@ -82,6 +82,15 @@
   查找失败、生成空 CLICKED 分支且零报错）。
 - 固件侧实现 `extern "C" void action_<name>(lv_event_t *e)`，三件套生成：
   actions.h / ui.c 动作表 / screens.c 回调直调。
+- ★ **`implementationType` 还有 `"flow"`** = 流实现的"公用函数"（手册 P7.3.2）：
+  动作体 = 自己的 flow（可用 Start/End/Input/Output 与任意组件），
+  参数/返回值 = userProperties + A32 Input / A54 Output 动作（数据流）；
+  调用 = **Call Action 组件**（asar 实装：属性 `{action:<名字>, …userPropertyValues}`，
+  按目标动作用户属性动态开输入/输出口；手册 A 列表未列它）——出参走 assignable
+  表达式（写法同 objGet 的 result）。
+- ⚠ **flow 表达式不能内联调用用户函数**（表达式函数目录只有内建 System/Flow/
+  Date/Math/String/Array/JSON/LVGL）——"公用函数"只能作为流程节点被调用，
+  无法写进别的表达式里当纯函数用（选型判据见 skills §11.37 / 报告 §20）。
 
 ## 5. 页面 userPages[i] 结构 ✅
 
@@ -198,6 +207,8 @@
   保持整数；**`/` 恒产 double**（`op_div` 源码为证），用 `>>` 定点化替代。
 - `objGetDisplayY/X` 读的是**屏幕坐标**（含滚动位移，lv_obj_get_coords），
   常驻动效链因此可以"轮询"代替滚动事件。
+- **状态写入策略**（P-0131 追加）：控件若带静态 CHECKED 样式（权重 1）→ 须双态双写；
+  更优=生成端删静态样式、单写 DEFAULT（冲突源头消除，帧动作 −40%）。
 
 ### 8.2 SET_PROPERTY（高层形式，codegen 降级）✅🔍
 

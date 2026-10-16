@@ -343,3 +343,5 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0132 | 2026-10-16 | EEZ 动作里引用控件要写『规范化源码标识符』（row_SportMode → row_sport_mode）而非原始 identifier | eez-codegen,标识符规范化,getWidgetObjectIndexByName,动作参数,Widget index not found | fixed |
 | P-0133 | 2026-10-16 | CDP 启动 EEZ Studio 打开工程：工程路径必须放在 argv 最后（主进程取 argv[last] 作为待打开工程） | cdp,eez-studio,启动参数,单实例,argv | fixed |
 | P-0134 | 2026-10-16 | 旧经验「`%` 也永远返回 double」是错的——int×int 的 % 保整数（源码+受控实验双证） | 表达式引擎,op_mod,整数类型,getUInt32,位型毒化,受控实验,P-0043更正 | fixed |
+| P-0135 | 2026-10-16 | 常驻动效链瘦身：静态缩放样式在源头删除 + flow 单写 DEFAULT（双态双写只在有静态 CHECKED 样式时才必要） | eez-flow,objStyleSetProperty,双态双写,样式权重,源头消冲突,帧动作瘦身 | fixed |
+| P-0136 | 2026-10-16 | 选型查档：EEZ『公用函数』=User Action+Call Action；flow 表达式不能内联调函数——单点复用保持内联更优 | user-action,call-action,公用函数,表达式边界,选型对比,objGetDisplayY同族 | fixed |
