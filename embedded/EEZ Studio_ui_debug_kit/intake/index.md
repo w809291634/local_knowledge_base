@@ -345,3 +345,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0134 | 2026-10-16 | 旧经验「`%` 也永远返回 double」是错的——int×int 的 % 保整数（源码+受控实验双证） | 表达式引擎,op_mod,整数类型,getUInt32,位型毒化,受控实验,P-0043更正 | fixed |
 | P-0135 | 2026-10-16 | 常驻动效链瘦身：静态缩放样式在源头删除 + flow 单写 DEFAULT（双态双写只在有静态 CHECKED 样式时才必要） | eez-flow,objStyleSetProperty,双态双写,样式权重,源头消冲突,帧动作瘦身 | fixed |
 | P-0136 | 2026-10-16 | 选型查档：EEZ『公用函数』=User Action+Call Action；flow 表达式不能内联调函数——单点复用保持内联更优 | user-action,call-action,公用函数,表达式边界,选型对比,objGetDisplayY同族 | fixed |
+| P-0137 | 2026-10-16 | LVGL 动作组'公式墙'减负：单读（刚性子项）+ SetVariable 短变量中继 | objGetDisplayY,setvariable,中继,编辑器可读性,刚性子项,帧表达式 | fixed |

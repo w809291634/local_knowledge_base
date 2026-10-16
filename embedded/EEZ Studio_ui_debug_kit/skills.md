@@ -1958,8 +1958,14 @@ display origin"）+ 运行时源码 + 实测**：多面证据并存时，认"实
 
 ```
 Start（无入线=启动即执行）→ Loop(var, 0, 2147483646, 1, version:1)   # 常驻
-  @seqout → Delay(30ms) → LVGLAction(每帧动作组：读坐标→算→写样式) → 回连 Loop@next
+  @seqout → Delay(30ms) → A1[单读基准行→wy] → SetVariable[k0..k21 短式]
+            → A2[每行写样式，值只引用 k_i] → 回连 Loop@next
 ```
+- ★ **单读 + 短中继（编辑器减负利器，2026-10-16 追加）**：同容器刚性子项（间距固定）⇒
+  读一个基准项的屏幕坐标一次即可推全表（22 次读→1 次）；再用 **SetVariable 组件**
+  （entries:[{variable,value}]，均表达式字符串）把逐行中间量写成短变量；写样式的动作组
+  里只引用短变量——**编辑器里每行 ≤40 字符、无换行公式墙**（watch 实测帧执行 67≈66 持平，
+  报告 §21）。SetVariable 是"动作参数无法赋值"时唯一的中继手段（A43 组内没有赋值动作）。
 - 写 JSON 别漏 Loop 的 `"version":1`（无它 beforeLoadHook 会把 `to` 改写 `to + " - 1"`）；
 - 验收四层：EEZ 构建 `No error and no warning` → 仿真静止/滚动两态**数值反推**与公式逐位对齐
   → dragtest 回归（点击/拖拽）→ **EEZ Run（F5）肉眼可见可交互**（纯 flow 的最大红利：
