@@ -1,0 +1,134 @@
+# EEZ 为主、仿真为辅 —— 开发流程与框架方案（EEZ / LVGL UI）
+
+> 定稿：2026-10-16（Qoder 会话沉淀，关联 PR-0210 / P-0125 / P-0126）。
+> 适用：嵌入式 LVGL 9.4 目标 + EEZ Studio 0.29+。
+> 与其它文档的关系：`PLAYBOOK.md` = 通用方法论；`skills.md` = 操作手册（A 设计 / B 对照 / C 仿真）；
+> **本文件 = 栈专属的「验证优先级 + 框架分层 + 七步主链」**，回答"每件事在哪个面做/验、代码怎么分层"。
+> 框架样板：`lvgl_demo_ai / eez-test`（参考工程，路径每机不同、用前核；本机记录于 reference/09）。
+
+## 0. 总则：验证优先级金字塔（EEZ 为主，仿真为辅）
+
+**一句话：效果以 EEZ 里看到的为准；仿真器只负责「量化与自动化」；真机负责终验。**
+
+| 验证对象 | 第一现场（主） | 辅助（次） | 终验 |
+| --- | --- | --- | --- |
+| 视觉 / 布局 | EEZ 编辑器画布（工程模型原生渲染） | 仿真出图（像素对照、批量回归） | 真机 |
+| 交互（点击/跳转/滑动/状态） | **EEZ Run 模式（F5）** —— 真运行时、可点可滑 | 仿真器脚本化（数值化，如拖拽位移 Δ） | 真机 |
+| 生成代码语义 | EEZ GUI Check/Build 或 headless CLI（二者语义一致，可互换） | 门禁断言 | 真机 |
+| 数值回归 / CI | — | 仿真快照 MD5、断言集 | — |
+
+四条纪律：
+
+1. **改动只落设计源 / 生成器 / EEZ 工程**；`src/ui` 是覆盖式重写的只读产物（沿用 kit 最高优先级铁律）。
+2. **编辑器画布没有输入**（skills §7.1）；要"在 EEZ 里点得动"，用 **Run 模式** —— 勿混淆这两个面。
+3. **每层能证明什么要写清**：画布证明观感与工程模型；Run 证明交互通路与工程语义；仿真证明可重复的量化；真机证明物理/性能/手感。
+4. **留痕**：提示词与问题按 `INTAKE.md` 规约记录（本文件即 PR-0210 的沉淀）。
+
+## 1. 框架方案（从样板工程提炼，可整体移植）
+
+### 1.1 目录分层
+
+```
+<固件工程>/                      ← IDF 工程根（build 目录在这）
+├── main/                       板级胶水
+├── components/                 板级组件（bsp / 显示 / 内存 …）
+└── <ui工程>/  (eez-test/ 或 watch/)
+    ├── xxx.eez-project         ★ EEZ 工程文件 —— UI 的真值
+    ├── xxx.eez-project-ui-state   编辑器界面状态（不参与构建）
+    ├── ui_debug_kit.config.json   工程侧配置（设计源路径 / 屏幕 / 字体 / 门禁挂载）
+    ├── designer/               【给人看】效果图唯一真值（与实现不一致时改设计源）
+    ├── design/                 【给机器】设计源 + 工具链
+    │   ├── build_ui.py          唯一设计源（DSL 构建脚本；或等价生成器）
+    │   ├── json2eez.py          DSL → EEZ 工程（与"生成器直出 EEZ JSON"二选一）
+    │   ├── eez_build.py         EEZ headless CLI 构建
+    │   ├── eez_font_engine.py / gen_fonts.py    字体烘焙与校验
+    │   ├── sim.py               仿真器编译 + 逐屏截图（+ 对照）
+    │   ├── compare.py           仿真图 vs 效果图对照（兼任门禁）
+    │   └── architecture/        框架文档（回调 / 变量 / 仿真硬件分层）
+    ├── src/
+    │   ├── ui/                  EEZ 生成代码（只读产物）
+    │   └── native/              用户代码隔离层（手写）
+    └── build/                   本地产物（截图 / 报告；gitignore）
+```
+
+**三条铁律**（样板工程原话，照用）：
+
+1. `designer/` 是给人看的效果图、`design/` 是给机器用的设计源；两者不一致时，改设计源。
+2. `src/ui` 由 EEZ 导出（覆盖式重写），**不要手改**；逻辑一律进 `src/native`。
+3. **界面只在设计源里定义一次**（build_ui.py 或其等价物）；效果图、EEZ 工程、C 代码、仿真全部由它派生。
+
+### 1.2 隔离层（UI 与用户程序只见契约）—— 四层
+
+```
+生成层  src/ui/*         EEZ 生成，永远不手改；接缝 = native_vars[]（get_var_ / set_var_）
+适配层  native_vars.cpp  薄转发（get/set → app_get_input_* / app_set_output）
+契约层  app_model.h      共享状态 + 输出命令队列（UI 与逻辑的合同）
+平台层  platform/io_pc.cpp ← PC 仿真（假数据） / io_esp.cpp ← 真机（真硬件）
+```
+
+**PC 与真机唯一差别是平台层的一个文件** —— 上面三层（含 UI）完全相同。变量契约要点：
+输入 `get_var_`（state / 电量 / 时钟…）、输出 `set_var_` 命令（`_cmd` 后缀、脉冲语义）、
+派生输入在 native 侧现算；变量挂 `variables.globalVariables`、类型用 `"integer"`（踩坑见 src/native/README）。
+
+### 1.3 双环境编译
+
+- 固件：`<ui工程>/src` 挂成 IDF 组件（ui → native 链接顺序坑见 skills §7.6）。
+- 仿真：独立 port（PC_SIM 或独立沙箱目录），**单向同步**工程源码进去编译，不污染工程；
+  工具链路径在工程的 kit 配置 `sim` 段（**每机必须问用户，禁止猜**）。
+- 快照流水线：仿真 exe 支持"逐屏快照"模式（skills §5.6），出图后可做 MD5 / 对照回归。
+
+## 2. 开发流程（主链七步；EEZ 看效果是主验收）
+
+| 步 | 动什么 | 入口 / 命令 | 判据 | 常见坑 |
+| --- | --- | --- | --- | --- |
+| ① 改设计源 | `design/`（DSL 或生成器） | 编辑 build_ui.py 等 | — | 别手改 src/ui |
+| ② 生成 | 生成器 → EEZ 工程 | `python design/build_ui.py` → 生成器 / json2eez | 工程 JSON 合法、页面/字体条目齐全 | 字体条目字段形态（§3.2） |
+| ③ EEZ 构建 | 工程 → src/ui | GUI Check/Build **或** headless（`eez_build.py`） | 构建完成、连接检查无报错 | GUI 会重写 src/ui；CLI 不烘字体需单独烘 |
+| ④ **EEZ 里看效果（主验收）** | — | 打开工程：画布核视觉；**Run（F5）核交互** | 观感 → 画布；点击/滑动 → Run 实测 | 画布无输入；见 §3 |
+| ⑤ 仿真辅助 | 编译 + 出图 / 交互 | `python design/sim.py`；脚本化拖拽 | 出图齐全、与基线/对照一致 | tick 源、输入设备等（§3.4） |
+| ⑥ 门禁 | 断言集 | `python tools/run_gate.py` | 全绿才提交 | 缺屏/超阈值会非 0 退出 |
+| ⑦ 真机 | 烧录终验 | `idf.py flash monitor`（R 段条例） | 物理 / 性能 / 手感 | ①②证通路不证真值；`#if ESP_PLATFORM` 代码仿真编不到 |
+
+**顺序纪律：④ 在 ⑤ 之前** —— EEZ 里不对，先回工程改，别先跑仿真绕开。
+
+## 3. EEZ 应用侧实测注意（2026-10-16 补充，源自 watch 工程排障）
+
+### 3.1 Run 模式（F5）是可交互的运行时
+
+- 入口：工具栏 `Edit / Run / Debug` 的 **Run**（title "Enter run mode (F5)"）；渲染到真实分辨率画布。
+- 可自动驱动：CDP（`--remote-debugging-port=9222`）+ 注入真实鼠标事件；实测点击导航 ✓、拖拽滚动 ✓（工具见 §5）。
+- Run 吃**工程模型**（widgetFlags 等）：生成器一改、重生成即生效。
+
+### 3.2 字体条目形态影响应用侧（P-0125）
+
+- 画布 / Run 的中文依赖"会话内字体提取"完成；**提取完成前必是豆腐块**（对照工程实测：成功通知出现后即时自愈）。
+- **全量大 TTF（如 9.7MB simhei）会让应用侧不稳**（挂起 / 崩溃 / 退回首页）→ 提取永远完不成。
+  对 C 端无影响（kit 内核 / CLI 构建逐字节正确、真机渲染完好）。
+- 候选修法（未闭环，动手前先登记验证）：字体源换**小体量子集 TTF**（数十 KB），C 端字形/渲染不变、应用侧变轻。
+
+### 3.3 会话状态损坏的恢复（P-0126）
+
+- 症状：工程打不开（首页按钮无效 / 双击条目崩溃 / 带参启动停在首页）；工程文件本身无恙。
+- 处置：备份并删除 `%APPDATA%/eezstudio` 的 `Local Storage` + `Session Storage`，重启即恢复。
+
+### 3.4 GUI 与 headless 等效性 + 回归守卫
+
+- GUI Check/Build 与 headless CLI 产物**语义一致**（本栈实测：GUI 重写 src/ui 后，出图与基线逐张 MD5 一致、回归断言与拖拽复测全过）。
+- GUI 构建**会重写 `src/ui`**（正常行为）；重写后重跑 ⑤⑥ 再交付。
+
+## 4. 误区速查
+
+| 误区 | 实际 |
+| --- | --- |
+| "EEZ 里点不了" | 编辑器**画布**点不了；**Run 模式可以**（skills §7.1 续注） |
+| "仿真过了就行" | 仿真只是辅助；交互主验收在 EEZ Run，终验在真机 |
+| "手改一下 src/ui" | 覆盖式重写；永远回上游改设计源 |
+| "字体全量 TTF 最省事" | C 端没问题，但 EEZ 应用侧可能崩；宜子集化 |
+
+## 5. 工具与记录索引（本机实测值，换机重核）
+
+- kit 工具：`<kit>/tools/`（run_gate / diff_report / ink_check / log_entry / eez_font_bake …）
+- 本机 kit 位置：`C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_ui_debug_kit`
+- CDP 驱动小工具（本机留档）：`C:\Users\yjt54\sim_watch\cdp.js`（eval/key/mouse/mouse-drag/dblclick/shot/canvas-shot）、`watch_console.js`、`toast_watch.js`
+- 拖拽量化夹具：`<watch工程>\verify\dragtest_main.c`
+- 相关记录：P-0125 / P-0126 / PR-0210；watch 工程的 `verify/校验报告.md` §13（仿真器输入链）/ §14（EEZ 侧实测）

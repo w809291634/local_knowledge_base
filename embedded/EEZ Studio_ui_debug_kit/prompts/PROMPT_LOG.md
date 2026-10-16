@@ -1808,3 +1808,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：仿真里视频是黑的，要真解码出像素再交给 LVGL
   - 产出/结论：根因不是解码器缺，是 LV_USE_FS_MEMFS=0 把 tjpgd 的 VARIABLE 分支整段关掉；在 sim.py 的 write_lvconf() 里开 MEMFS+盘符，端口改走 lv_image_decoder_open/get_area/close（RGB888=tjpgd 原生输出，省一趟转 565）；60/60 帧 0 丢 0 错
   - 关联：P-0124
+### PR-0210 · 2026-10-16 15:56 · Qoder
+  - 提示词：根据当前上下文，帮我梳理一个开发流程，我要求以 EEZ 为主，仿真器为辅，同时要求有一个框架，D:\esp32_8266_files\esp-idf-v5.5.5_ol\examples\idf_v555_my_exps\p4_touch_lcd4_3_exp\lvgl_demo_ai  可以参考这个的EEZ ui框架方案，总结到  本地经验库
+  - 诉求：沉淀「EEZ 为主、仿真为辅」的开发流程与框架方案到经验库
+  - 产出/结论：新增 EEZ_FIRST_WORKFLOW.md（优先级金字塔+框架分层+七步主链+应用侧注意）；登记 P-0125（应用侧字体不稳）、P-0126（会话状态损坏恢复）
+  - 关联：（待补）
+
