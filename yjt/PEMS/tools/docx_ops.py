@@ -1512,9 +1512,12 @@ def pagination_repair(doc, cover_texts=(), apply=None):
       drop_keep_before_table
                         标题段带 keepNext 且**下一块就是整张表**时摘掉（§45.2；
                         audit 的 keep_on_body 不收它——它不是"属性加错了段"，是"绑定对象太大"）
+      drop_page_lead_pad 任意级别标题**自己换页**时，删掉它前面紧挨着的纯空段（§68；
+                        `drop_chapter_pad` 只管章级，节级标题换页时同样会在页顶留 10+ 行空白）
     """
     ALL = ('drop_hard_break', 'drop_pbb_after_sect', 'drop_pad_tabs', 'drop_chapter_pad',
-           'demote_cover', 'demote_empty', 'drop_body_keep', 'drop_keep_before_table')
+           'demote_cover', 'demote_empty', 'drop_body_keep', 'drop_keep_before_table',
+           'drop_page_lead_pad')
     apply = set(ALL) if apply is None else set(apply)
     stats = dict.fromkeys(ALL, 0)
     smap = _style_outline_map(doc)
@@ -1631,6 +1634,62 @@ def pagination_repair(doc, cover_texts=(), apply=None):
                         body.remove(el)
                         did += 1
             stats['drop_chapter_pad'] += did
+            if not did:
+                break
+
+    # 节级/子节级标题换页时，标题前紧挨的纯空段会整块留在上一页底部或新页顶部（§68）。
+    # 判据与 drop_chapter_pad 同一条：只删"纯空段"，分节符/域/图形/硬分页载体一律不碰。
+    if 'drop_page_lead_pad' in apply:
+        def _pure_empty(el):
+            if el.tag != qn('w:p'):
+                return False
+            if ''.join(x.text or '' for x in el.iter(qn('w:t'))).strip():
+                return False
+            if el.find('.//' + qn('w:sectPr')) is not None                     or el.find('.//' + qn('w:fldChar')) is not None                     or el.find('.//' + qn('w:instrText')) is not None                     or el.findall('.//' + qn('w:pict')) or el.findall('.//' + qn('w:drawing')):
+                return False
+            for br in el.findall('.//' + qn('w:br')):
+                if br.get(qn('w:type')) == 'page':
+                    return False
+            return True
+
+        def _carries_break(el):
+            """这一段自己会把后续内容推到新的一页：段前分页 / 硬分页符 / 换页分节符。"""
+            if el.tag != qn('w:p'):
+                return False
+            pPr = el.find(qn('w:pPr'))
+            if pPr is not None and flag_on(pPr, 'w:pageBreakBefore'):
+                return True
+            for br in el.findall('.//' + qn('w:br')):
+                if br.get(qn('w:type')) == 'page':
+                    return True
+            return sect_breaks_page(el)   # 它自己会去找 pPr/sectPr，传段落元素
+
+        for _round in range(6):
+            kids2 = list(body.iterchildren())
+            did = 0
+            for idx, c2 in enumerate(kids2):
+                if c2.getparent() is not body or kids2.index(c2) < cover_end:
+                    continue
+                # 两种形态同一个病因：换页边界之后、下一处内容之前夹着的纯空段，
+                # 全部落在新页顶部（模板用连续回车把内容往下推）。
+                #   A 标题自己带段前分页 → 删它前面的空段
+                #   B 空段带分页、后面才是内容 → 删分页段与内容之间的空段
+                head_like = c2.tag == qn('w:p') and effective_outline(c2, smap) is not None                     and ''.join(x.text or '' for x in c2.iter(qn('w:t'))).strip()
+                if head_like and _carries_break(c2):
+                    prev = c2.getprevious()
+                    while prev is not None and _pure_empty(prev) and body.index(prev) >= cover_end:
+                        gone = prev
+                        prev = prev.getprevious()
+                        body.remove(gone)
+                        did += 1
+                elif _carries_break(c2):
+                    nxt = c2.getnext()
+                    while nxt is not None and _pure_empty(nxt):
+                        gone = nxt
+                        nxt = nxt.getnext()
+                        body.remove(gone)
+                        did += 1
+            stats['drop_page_lead_pad'] += did
             if not did:
                 break
     return {k: v for k, v in stats.items() if v}
@@ -2587,3 +2646,315 @@ def heading_numbering_mechanisms(doc, levels=(0, 1, 2), first_cell_text='文件�
     mixed = [(lv, m) for lv, m in sorted(per.items())
              if len([k for k in m if k != NUM_MECH_NONE]) > 1]
     return per, mixed
+
+
+# ---------------------------------------------------------------------------
+# 编号字形（numbering.xml 的 lvl/rPr）、表头底纹、标题间距（pitfalls §65 §68）
+# ---------------------------------------------------------------------------
+_RPR_ORDER = ('w:rStyle', 'w:rFonts', 'w:b', 'w:bCs', 'w:i', 'w:iCs', 'w:caps',
+              'w:smallCaps', 'w:strike', 'w:dstrike', 'w:outline', 'w:shadow',
+              'w:emboss', 'w:imprint', 'w:noProof', 'w:snapToGrid', 'w:vanish',
+              'w:webHidden', 'w:color', 'w:spacing', 'w:w', 'w:kern', 'w:position',
+              'w:sz', 'w:szCs', 'w:highlight', 'w:u', 'w:effect', 'w:bdr', 'w:shd',
+              'w:fitText', 'w:vertAlign', 'w:rtl', 'w:cs', 'w:em', 'w:lang',
+              'w:eastAsianLayout', 'w:specVanish', 'w:oMath')
+
+
+def _rpr_insert(rPr, tag):
+    """按 CT_RPr 的字元素顺序取回/插入子元素（append 到末尾可能不被 Word 认）。"""
+    e = rPr.find(qn(tag))
+    if e is not None:
+        return e
+    e = OxmlElement(tag)
+    idx = _RPR_ORDER.index(tag)
+    for child in rPr:
+        name = 'w:' + child.tag.split('}')[-1]
+        if name in _RPR_ORDER and _RPR_ORDER.index(name) > idx:
+            child.addprevious(e)
+            return e
+    rPr.append(e)
+    return e
+
+
+def _rpr_apply_font_sz(rPr, ea=None, latin=None, sz=None):
+    """往 rPr 上写 rFonts / sz / szCs，并删掉主题字体属性与 eastAsia 提示。"""
+    if rPr is None:
+        return
+    if ea or latin:
+        rf = _rpr_insert(rPr, 'w:rFonts')
+        for a in ('asciiTheme', 'hAnsiTheme', 'eastAsiaTheme', 'cstheme'):
+            if rf.get(qn('w:' + a)) is not None:
+                del rf.attrib[qn('w:' + a)]
+        if rf.get(qn('w:hint')) is not None:
+            del rf.attrib[qn('w:hint')]
+        for a, v in (('w:ascii', latin), ('w:hAnsi', latin), ('w:cs', latin),
+                     ('w:eastAsia', ea)):
+            if v:
+                rf.set(qn(a), v)
+    if sz:
+        for tag in ('w:sz', 'w:szCs'):
+            _rpr_insert(rPr, tag).set(qn('w:val'), str(sz))
+
+
+def _numbering_part(doc):
+    """返回 (numbering 根元素, part)。python-docx 把 numbering 当 XmlPart 装载：
+    必须改 `part._element` 那棵树，另 parse 一份 blob 改完再塞回 `_blob` 是**静默无效**的
+    （保存时 XmlPart.blob 从 _element 序列化，改动被丢弃）。"""
+    for rel in doc.part.rels.values():
+        if rel.reltype.endswith('/numbering'):
+            part = rel.target_part
+            el = getattr(part, '_element', None)
+            if el is not None:
+                return el, part
+            from lxml import etree
+            return etree.fromstring(part.blob), part
+    return None, None
+
+
+def numbering_usage(doc, first_cell_text='文件编号', levels=(0, 1, 2)):
+    """文档实际用到的编号层级：({(numId, ilvl): 大纲级别}, {(numId, ilvl): 'list'})。
+
+    级别＝该编号挂在哪个大纲级的段落上（含样式链上的 numPr）；'list'＝正文/列表段的编号。
+    只统计真正出现在本文档里的组合：numbering.xml 常挂着几十个从未使用的 lvl，
+    全量改会波及别的模板共用的定义，也让"改了哪些"无法核对。"""
+    S = _style_outline_map(doc)
+    body = doc.element.body
+    cover_end = _cover_end_index(doc, first_cell_text)
+    raw_styles = {st.get(qn('w:styleId')): st for st in doc.styles.element.findall(qn('w:style'))}
+
+    def style_numpr(sid, depth=0):
+        while sid and sid in raw_styles and depth < 8:
+            np_ = raw_styles[sid].find('.//' + qn('w:numPr'))
+            if np_ is not None:
+                nid = np_.find(qn('w:numId'))
+                ilv = np_.find(qn('w:ilvl'))
+                return (nid.get(qn('w:val')) if nid is not None else None,
+                        ilv.get(qn('w:val')) if ilv is not None else '0')
+            bo = raw_styles[sid].find(qn('w:basedOn'))
+            sid = bo.get(qn('w:val')) if bo is not None else None
+            depth += 1
+        return None
+
+    used, lists = {}, {}
+    for i, c in enumerate(list(body.iterchildren())):
+        if c.tag != qn('w:p') or i < cover_end:
+            continue
+        pPr = c.find(qn('w:pPr'))
+        if pPr is None:
+            continue
+        nid = ilvl = None
+        np_ = pPr.find(qn('w:numPr'))
+        if np_ is not None:
+            e1 = np_.find(qn('w:numId'))
+            e2 = np_.find(qn('w:ilvl'))
+            nid = e1.get(qn('w:val')) if e1 is not None else None
+            ilvl = e2.get(qn('w:val')) if e2 is not None else '0'
+        if not nid or nid == '0':
+            st = pPr.find(qn('w:pStyle'))
+            got = style_numpr(st.get(qn('w:val')) if st is not None else None)
+            if got:
+                nid, ilvl = got
+        if not nid or nid == '0':
+            continue
+        lv = effective_outline(c, S)
+        if lv in levels:
+            used[(nid, ilvl)] = lv
+        else:
+            lists.setdefault((nid, ilvl), 'list')
+    return used, lists
+
+
+def _lvl_elements(root):
+    """(numId, ilvl) -> w:lvl 元素；顺带返回 numId→abstractNumId 映射。"""
+    abs_by_id = {a.get(qn('w:abstractNumId')): a
+                 for a in root.findall(qn('w:abstractNum'))}
+    out = {}
+    for n in root.findall(qn('w:num')):
+        ai = n.find(qn('w:abstractNumId'))
+        aid = ai.get(qn('w:val')) if ai is not None else None
+        a = abs_by_id.get(aid)
+        if a is None:
+            continue
+        nid = n.get(qn('w:numId'))
+        for lvl in a.findall(qn('w:lvl')):
+            out[(nid, lvl.get(qn('w:ilvl')))] = lvl
+    return out
+
+
+def normalize_numbering_glyphs(doc, spec_by_level, list_spec=None,
+                               first_cell_text='文件编号', levels=(0, 1, 2)):
+    """把 numbering.xml 里**文档实际用到的** lvl/rPr 对齐到族基线（pitfalls §65）。
+
+    标题的"编号文字"（`第一章`、`1.1.`、`a)`）不是 run，字号与字体藏在
+    `abstractNum/lvl/rPr`，只改 run 与样式会留下"编号 22pt ＋ 标题文字 16pt"同行两档。
+    两条护栏：
+      * lvlText 里没有 `%` 占位的是**符号型**编号（Wingdings 圆点等），换字体会把符号
+        变成别的字符，一律不动，只在返回值里登记；
+      * 只改本文档用到的 (numId, ilvl)。
+    spec_by_level: {大纲级别: {'sz': 半磅, 'ea': 中文字体, 'latin': 西文字体}}；
+    list_spec 给正文列表编号（a) / (1) / 1)）套正文档。"""
+    root, part = _numbering_part(doc)
+    if root is None:
+        return {'aligned': [], 'skipped_symbol': [], 'missing': [], 'note': '无 numbering 部件'}
+    used, lists = numbering_usage(doc, first_cell_text, levels)
+    want = {}
+    for key, lv in used.items():
+        if spec_by_level.get(lv):
+            want[key] = spec_by_level[lv]
+    if list_spec:
+        for key in lists:
+            want.setdefault(key, list_spec)
+    lvls = _lvl_elements(root)
+    aligned, skipped, missing = [], [], []
+    for (nid, ilvl), spec in sorted(want.items()):
+        lvl = lvls.get((nid, ilvl))
+        if lvl is None:
+            missing.append((nid, ilvl))
+            continue
+        lt = lvl.find(qn('w:lvlText'))
+        text = lt.get(qn('w:val')) if lt is not None else ''
+        rPr = lvl.find(qn('w:rPr'))
+        if rPr is None:
+            rPr = OxmlElement('w:rPr')
+            lvl.append(rPr)
+        old = rPr.find(qn('w:sz'))
+        old_sz = old.get(qn('w:val')) if old is not None else None
+        if '%' not in (text or ''):
+            skipped.append((nid, ilvl, text, old_sz))
+            continue
+        _rpr_apply_font_sz(rPr, ea=spec.get('ea'), latin=spec.get('latin'), sz=spec.get('sz'))
+        aligned.append((nid, ilvl, text, old_sz, str(spec.get('sz'))))
+    if getattr(part, '_element', None) is not root:
+        # 只有"另 parse 一份 blob"的老样式部件才需要回写
+        from lxml import etree
+        part._blob = etree.tostring(root, xml_declaration=True,
+                                    encoding='UTF-8', standalone=True)
+    return {'aligned': aligned, 'skipped_symbol': skipped, 'missing': missing}
+
+
+def numbering_glyph_audit(doc, first_cell_text='文件编号', levels=(0, 1, 2)):
+    """闸门用：文档用到的每个 (numId, ilvl) 的 lvlText / 编号字号 / 编号字体。"""
+    root, _ = _numbering_part(doc)
+    if root is None:
+        return []
+    used, lists = numbering_usage(doc, first_cell_text, levels)
+    allk = dict(used)
+    for k in lists:
+        allk.setdefault(k, 'list')
+    lvls = _lvl_elements(root)
+    out = []
+    for (nid, ilvl), lv in sorted(allk.items()):
+        lvl = lvls.get((nid, ilvl))
+        if lvl is None:
+            continue
+        lt = lvl.find(qn('w:lvlText'))
+        rPr = lvl.find(qn('w:rPr'))
+        sz = rPr.find(qn('w:sz')) if rPr is not None else None
+        rf = rPr.find(qn('w:rFonts')) if rPr is not None else None
+        text = lt.get(qn('w:val')) if lt is not None else ''
+        out.append({'numId': nid, 'ilvl': ilvl, 'level': lv, 'lvlText': text,
+                    'symbol': '%' not in text,
+                    'sz': sz.get(qn('w:val')) if sz is not None else None,
+                    'ea': rf.get(qn('w:eastAsia')) if rf is not None else None,
+                    'ascii': rf.get(qn('w:ascii')) if rf is not None else None})
+    return out
+
+
+def unify_table_header_shading(doc, header_fill='D9D9D9', header_rows=1,
+                               first_cell_text='文件编号', skip_cover=True):
+    """表头底纹统一：每张表前 header_rows 行显式写 fill，其余单元格清掉底纹。
+
+    底纹散落在单元格级 `w:shd`，模板继承后常见四种状态混用（无 / FFFFFF / auto / 灰），
+    视觉上就是"有的表头有灰底、有的没有"。统一时**必须清掉非表头行**，
+    否则旧灰底会留在数据行上。封面信息表是填写栏不是表头，默认跳过。"""
+    body = doc.element.body
+    cover = find_cover_table(body, first_cell_text) if skip_cover else None
+    n_head = n_clear = 0
+    for tbl in doc.tables:
+        el = tbl._tbl
+        if cover is not None and el is cover:
+            continue
+        for ri, tr in enumerate(el.findall(qn('w:tr'))):
+            for tc in tr.findall(qn('w:tc')):
+                tcPr = tc.find(qn('w:tcPr'))
+                if tcPr is None:
+                    tcPr = OxmlElement('w:tcPr')
+                    tc.insert(0, tcPr)
+                shd = tcPr.find(qn('w:shd'))
+                if ri < header_rows:
+                    if shd is None:
+                        shd = OxmlElement('w:shd')
+                        tcPr.append(shd)
+                    shd.set(qn('w:val'), 'clear')
+                    shd.set(qn('w:color'), 'auto')
+                    shd.set(qn('w:fill'), header_fill)
+                    n_head += 1
+                elif shd is not None:
+                    tcPr.remove(shd)
+                    n_clear += 1
+    return {'header_cells': n_head, 'cleared': n_clear}
+
+
+def normalize_heading_spacing(doc, by_level, first_cell_text='文件编号', levels=(0, 1, 2)):
+    """各级标题的段前距/行距统一到 `by_level`：{级别: {spacing 属性: 值}}。
+
+    标题与上文之间"忽紧忽松"，是因为模板里三种口径并存：有的段显式写了 spacing、
+    有的吃样式默认、有的段前 1.5 行。同族文档只能有一套，且**按段落显式写**
+    （只改样式会被段落级直接格式盖住）。值为 None 表示删掉该属性。"""
+    S = _style_outline_map(doc)
+    body = doc.element.body
+    cover_end = _cover_end_index(doc, first_cell_text)
+    n = 0
+    for i, c in enumerate(list(body.iterchildren())):
+        if c.tag != qn('w:p') or i < cover_end:
+            continue
+        lv = effective_outline(c, S)
+        if lv not in levels or lv not in by_level:
+            continue
+        t = ''.join(x.text or '' for x in c.iter(qn('w:t'))).strip()
+        if not t:
+            continue
+        pPr = c.find(qn('w:pPr'))
+        if pPr is None:
+            pPr = OxmlElement('w:pPr')
+            c.insert(0, pPr)
+        sp = pPr.find(qn('w:spacing'))
+        if sp is None:
+            sp = OxmlElement('w:spacing')
+            pPr.insert(0, sp)
+        for k, v in by_level[lv].items():
+            if v is None:
+                if sp.get(qn('w:' + k)) is not None:
+                    del sp.attrib[qn('w:' + k)]
+            else:
+                sp.set(qn('w:' + k), str(v))
+        n += 1
+    return n
+
+
+def header_footer_text_audit(doc, allow=()):
+    """页眉页脚里**不含域、又不匹配白名单**的裸文字（模板残留的 `111` 这类）。
+
+    `allow` 是正则串元组（如 `^QR/RD/\\d+\\s+\\d\\.\\d` 是受控文件号，属正常内容）。
+    含 PAGE/NUMPAGES 等域的段落不算——python-docx 会把域的缓存结果读成文字（"1"/"11"），
+    那是页码不是残留。"""
+    pats = [re.compile(a) for a in allow]
+    out = []
+    for si, s in enumerate(doc.sections):
+        for kind, part in (('页眉', s.header), ('页脚', s.footer),
+                           ('首页眉', s.first_page_header), ('首页脚', s.first_page_footer)):
+            try:
+                paras = part.paragraphs
+            except Exception:
+                continue
+            for pi, p in enumerate(paras):
+                el = p._p
+                has_field = el.find('.//' + qn('w:fldChar')) is not None \
+                    or el.find('.//' + qn('w:instrText')) is not None
+                txt = ''.join(x.text or '' for x in el.iter(qn('w:t'))).strip()
+                if not txt or has_field:
+                    continue
+                if any(pat.search(txt) for pat in pats):
+                    continue
+                out.append((si, kind, pi, txt[:24]))
+    return out

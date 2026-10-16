@@ -15,12 +15,12 @@
 | `consistency-gate.md` | 多文档同数据一致性对账 + 说明书/代码/注意事项三方收口 |
 | `iteration-and-versioning.md` | 迭代机制与版本管理 |
 | `multi-ai-tool-adaptation.md` | 一套内容适配多种 AI 工具 |
-| `pitfalls.md` | 环境与格式坑（含"Word 判文件损坏"三坑、文本框节点级替换；§38–§42 分页控制属性误用、双重分页空白页、布尔属性 `w:val`、中文 PDF 空白页判据、标题/图题判据收紧；§45–§50 分页时序与形态、空段三种命运、域平衡与页数核账、闸门误报、无头实例瞬时失败；§51 表格左边框四类根因与列宽污染、§52 封面留白统一、§53 标题编号机制三态混用；§54 只有大标题分页与目录页码同步、§55 标题分档/零缩进/封面大标题被压、§56 空白页另外三种形态；§57 新判据入库后回扫旧脚本、§58 判据降级必须失败退出、§59 补空段时序与显式写零；§60 用户要求全表带边框时规则 D 让位、§61 连续回车顶页造成的空白块、§62 补空格正则要按最长合法前缀；§63 封面居中偏上的可行做法、§64 lxml 真值与配置解析器键模式两类静默失效；§65 自动编号的字形藏在 numbering.xml 的 lvl/rPr、§66 标题统一要量到渲染层（逐字 bbox 三条判据）、§67 插入正文段不要克隆供体（"文字正文·样式标题"两条链路都不管）） |
+| `pitfalls.md` | 环境与格式坑（含"Word 判文件损坏"三坑、文本框节点级替换；§38–§42 分页控制属性误用、双重分页空白页、布尔属性 `w:val`、中文 PDF 空白页判据、标题/图题判据收紧；§45–§50 分页时序与形态、空段三种命运、域平衡与页数核账、闸门误报、无头实例瞬时失败；§51 表格左边框四类根因与列宽污染、§52 封面留白统一、§53 标题编号机制三态混用；§54 只有大标题分页与目录页码同步、§55 标题分档/零缩进/封面大标题被压、§56 空白页另外三种形态；§57 新判据入库后回扫旧脚本、§58 判据降级必须失败退出、§59 补空段时序与显式写零；§60 用户要求全表带边框时规则 D 让位、§61 连续回车顶页造成的空白块、§62 补空格正则要按最长合法前缀；§63 封面居中偏上的可行做法、§64 lxml 真值与配置解析器键模式两类静默失效；§65 自动编号的字形藏在 numbering.xml 的 lvl/rPr、§66 标题统一要量到渲染层（逐字 bbox 三条判据）、§67 插入正文段不要克隆供体（"文字正文·样式标题"两条链路都不管）、§68 闸门全绿不等于文档没错（正文字号/标题间距/表头底纹/眉脚残留/编号字形五类盲区，生效值审计分三层）） |
 | `dod-checklist.md` | 交付质量清单（Definition of Done）；F 组为分页与标题树终检 7 条 |
 | `font-and-style-normalization.md` | 字体字号统一：正文/标题/表格/图题分区，样式默认值与配图字体一起改；§10 文档族内标题字号统一（以参照文档取基线、逐级别多数派、四条护栏） |
 | `diagram-generation-and-figure-insertion.md` | 配图生成与 Word 插图替换（绘图三原则、五个插图坑、自检与校验） |
 | `case-study-anonymized.md` | 匿名化落地实例（仅保留方法，不是项目事实来源） |
-| `tools/docx_ops.py` | 通用原语库（统一封装共用函数；分页/标题树闸门 `pagination_audit` 与同源修复 `pagination_repair`（共用判据 `chapter_pad_map` / `sect_breaks_page_el`）、渲染判据 `page_ink_coverage` / `grade_pages_by_ink`、样式链生效级别 `effective_outline`、表格版式体检与修复 `audit_table_geometry` / `normalize_table_geometry`、封面留白统一 `set_cover_spacers`、标题字号族内统一 `heading_format_profile_from` / `normalize_heading_format` / 跨档闸门 `check_heading_tiers`、编号机制审计 `heading_numbering_mechanisms`） |
+| `tools/docx_ops.py` | 通用原语库（统一封装共用函数；分页/标题树闸门 `pagination_audit` 与同源修复 `pagination_repair`（共用判据 `chapter_pad_map` / `sect_breaks_page_el`）、渲染判据 `page_ink_coverage` / `grade_pages_by_ink`、样式链生效级别 `effective_outline`、表格版式体检与修复 `audit_table_geometry` / `normalize_table_geometry`、封面留白统一 `set_cover_spacers`、标题字号族内统一 `heading_format_profile_from` / `normalize_heading_format` / 跨档闸门 `check_heading_tiers`、编号机制审计 `heading_numbering_mechanisms`、正文段原语 `new_body_paragraph` / `demote_paragraph_to_body` 与"文字正文·样式标题"闸门 `body_paragraphs_with_heading_style`、编号字形 `normalize_numbering_glyphs` / `numbering_glyph_audit`、表头底纹 `unify_table_header_shading`、标题间距 `normalize_heading_spacing`、眉脚残留 `header_footer_text_audit`） |
 | `tools/para_ops.py` | 段落级原语：重复段判据（四形态）、生效版式比对与锚点对齐、承接顺序 |
 | `tools/fig_tools.py` | 配图绘制原语（框图/流程图/拓扑图；1 单位=1 英寸、边界精确、箭头端点自动算） |
 | `tools/build_docs.py` | 配置驱动的生成入口 |
