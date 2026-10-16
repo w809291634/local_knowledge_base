@@ -85,7 +85,7 @@ IWDG/WWDG 公式、选项字节 RDP、Standby 唤醒源表 —— 这些**不该
 |---|---|---|---|---|
 | 01 调试基础方法 | 13 | 已入库 | **已完成 13/13** | → `debug-methodology/hardfault-crash-forensics.md` §4.1、`debugger/stlink-jlink-remote-oscilloscope.md` §5 |
 | 02 TI CC2530 + Z-Stack | 106 | 已入库（骨架） | **已完成 106/106** | → `mcu-chip-families/cc2530-cc2538-cc2640.md` §5、`zigbee-zstack-osal.md` §6；新增 ERRATA G1~G15 |
-| 03 GD32 | 5 | 已入库 | 未开始 | 量小，可快速过 |
+| 03 GD32 | 5 | 已入库 | **已完成 5/5** | → `mcu-chip-families/gd32.md` §5（时钟树全图数据、PH0/PH1=HXTAL、MDMA+EDMA、libopt.h） |
 | 04 AT32 | 28 | 只到骨架 | 未开始 | 文字层增量也未做 |
 | 05 PY32 | 3 | 已入库 | 未开始 | 量小 |
 | 06 HT32（Holtek） | 42 | 只到摘要 | 未开始 | |
@@ -111,7 +111,7 @@ IWDG/WWDG 公式、选项字节 RDP、Standby 唤醒源表 —— 这些**不该
 
 ## 7. 一句话结论
 
-**文字层已通读全部 21 章**（入库约 3,100 行）；**截图层完成第 1、2 章（119/1048 处）**；
+**文字层已通读全部 21 章**（入库约 3,100 行）；**截图层完成第 1、2、3 章（124/1048 处）**；
 H4 以下细粒度约 1,800+ 小节未按条目收录；同目录其余 18 份文档未开始。
 
 **逐章协议的两条硬规矩**（第 2 章踩坑后加）：

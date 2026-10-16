@@ -7,7 +7,7 @@
 
 | 文件 | 内容 |
 |---|---|
-| `gd32.md` | GD32F4xx 时钟/库命名/AF 表差异，**用 STM32 库直换的 4 个具体不兼容点** |
+| `gd32.md` | GD32F4xx 时钟/库命名/AF 表差异，**用 STM32 库直换的 4 个具体不兼容点**；§5 收**完整时钟树截图数据**（TIMER0 在 APB2、ADC 双分频链、PH0/PH1=HXTAL、MDMA+EDMA、QEI0） |
 | `at32.md` | AT32F435/437 与 F403A：时钟与 PLL 命名、库函数名、**ZW/NZW 零等待分区**、XMC、外设映射 |
 | `py32-ht32-holtek.md` | PY32（普冉）PC0=NRST 的选项字节坑；"HT32"章实为 Holtek 8 位 BH67F2472 血糖仪方案 |
 | `stc-c51-and-ch32-wch.md` | STC8H 全系要点（时钟/XFR/定时器/串口/GPIO/ADC/PWM/ISP 下载/C51 语言层）+ 沁恒 CH57x/CH58x/CH32V（RISC-V PFIC、Flash 映射、BLE SDK） |
