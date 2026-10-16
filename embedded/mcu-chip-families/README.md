@@ -12,6 +12,7 @@
 | `stc-c51-and-ch32-wch.md` | STC8H 全系要点（时钟/XFR/定时器/串口/GPIO/ADC/PWM/ISP 下载/C51 语言层）+ 沁恒 CH57x/CH58x/CH32V（RISC-V PFIC、Flash 映射、BLE SDK） |
 | `cc2530-cc2538-cc2640.md` | CC2530 外设实操（时钟切换必须连 TICKSPD 一起清、T1/PWM、printf、内部 flash）、CC2538 救砖、CC2640 环境与坑 |
 | `zigbee-zstack-osal.md` | **Z-Stack OSAL 运行机制**（任务轮询/事件位/消息队列/软定时器）+ 端点/地址/NV/串口帧/工程适配 |
+| `recipes-code-skeletons.md` | **各家代码配方**：GD32 改晶振/HSE 超时/`SPI1_SetSpeed` 为何删；AT32 `wk_spi1_init`+`dmamux_init` 三件套+288MHz 填法+`nvic_irq_enable`；STC `EAXSFR`+T1 波特率(含 1T 公式)+UART2 中断与轮询死锁+定时器 1T；CH `GetSysClock`+BLE main 骨架+**ISR 必须带 `WCH-Interrupt-fast`**；Z-Stack 描述符注册/`SAPI_ProcessEvent` 全文/`AF_DataRequest`/NV/MT |
 
 ## 跨族的共性结论（比单条更值钱）
 

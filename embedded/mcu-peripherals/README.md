@@ -17,6 +17,19 @@
 | `clock-gpio-nvic-exti.md` | F1/F4/H7/GD32/AT32 时钟树与 PLL、SysTick 与微秒计时、GPIO 模式与复用、NVIC 优先级分组、EXTI 线与屏蔽手段(PRIMASK/FAULTMASK/BASEPRI) |
 | `ERRATA-单片机外设和调试基础知识.md` | **校核结论：原文中已被判定为错误/自相矛盾/单位笔误/型号错配的条目清单** |
 
+### 代码配方（`recipes-*.md`，与上面主题篇一一对应）
+
+> 每份都是**照抄原文的代码骨架** + 调用顺序 + 参数怎么算 + 怎么验证 + 易误用清单；
+> 行号指向原文导出文本，`⚠校核` 处保留原样不修正，`原文无代码` 处**明确标注缺口**（不要以为库里有现成实现）。
+
+| 文件 | 配哪篇 | 内容 |
+|---|---|---|
+| `recipes-uart-rs485-can-modbus.md` | serial-uart… | 串口初始化(F1/F4/HAL)、ISR 双判模板、**DMA+IDLE 环形缓冲全套**、printf 重定向三种、WK2114 全骨架、485 方向脚、CAN(BTR/滤波器/回环自测)、Modbus 帧序 |
+| `recipes-i2c-spi-and-devices.md` | i2c-spi… | **三套软件 I2C 的 ACK 返回值口径对照表**、start/stop/读写骨架、OLED 写命令/Set_Pos/初始化序列/显存刷新、24C02 重复起始、PCA9685 设频、PCF8563 BCD、TM1650、SPI 初始化与分频、**W25Q128 跨页/跨扇区读-改-写**、DM9051 寄存器与 PHY 间接访问、GC9A01 MADCTL 与大小端 |
+| `recipes-timer-adc-dma.md` | timer-pwm-adc-dma | 时基/PWM(CubeMX 缺的两处)/编码器(函数顺序铁律)/级联 TRGO/F1 重映射事故；ADC+DMA 完整序列、EOC 不来与 OVR 常置的真实成因；F1 `DMA_Init` 全字段、F4 Stream+CHSEL+LINKDMA、循环模式取数算法、**正常模式重发顺序**、双缓冲 CT 位、H7 cache 位置 |
+| `recipes-clock-gpio-nvic.md` | clock-gpio-nvic | 改晶振两处宏、F4 `PLLCFGR` 组装、H7 时钟十步、SysTick 寄存器与"重复减一"、`micros()/hw_us_delay` 全文、FreeRTOS/RT-Thread 写法、CRL/CRH 直写与**位移未减 8 的坑**、位带宏、F4 外部中断七步、HAL 清标志两段、三种关中断粒度、RT-Thread 中断进出 |
+| `recipes-sd-dcmi-fsmc-audio.md` | sd-card / audio | SDIO 初始化(CMD0/CMD8/ACMD41/单块读轮询/DMA)、**SPI 模式固定 CRC 值表**、OV2640 复位与窗口设置、DCMI 启动顺序、FSMC SRAM 全套字段、I2S+PLLI2S 采样率查表、双缓冲播放链；**WM8978/录音/SD 后续 CMD 序列原文无代码，已逐条标出** |
+
 ## 关联目录（不要在这里重复找）
 
 - 崩溃与异常取证 → `embedded/debug-methodology/hardfault-crash-forensics.md`
