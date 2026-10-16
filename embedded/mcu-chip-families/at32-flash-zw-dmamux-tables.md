@@ -238,194 +238,138 @@
 面板 Tab 条：`参数设置 | GPIO设置 | 中断设置 | NVIC设置 | DMA设置 | EDMA设置`
 ⇒ **AT32 的 DMA 与 EDMA 是两个独立配置页**（与 §8 的 `DMA1 CH0~7` + `EDMA` 对应）。
 
-### 7.3 SPI1 驱动 LCD（不走 DMA）的完整勾选态（ch04/016~020）
+### 7.3 SPI1 驱动 LCD（不走 DMA）的完整勾选态（ch04/016~020，**界面是中文**）
 
-| 页 | 项 | 状态 |
+| 页 | 项 | 图里取值 |
 |---|---|---|
-| 模式与 CS | 模式 | `Full Duplex Master` |
-| | 硬件 CS | **勾选**（`NSS Output` 使能） |
-| | `NSS Pulse Mode` / `Input Only` / `2-Bit/4-Bit Mode` | 均未勾 |
-| 基本参数 | 帧格式 | `16 Bits` |
-| | 从选 | `Slave Select Hardware` |
-| | 首字节 | `MSB First` |
-| 时钟参数 | `CPOL` / `CPHA` | `Low` / `1st Edge` ⇒ **SPI 模式 0** |
-| | 分频 | `/256`（可选 `/2 … /256`） |
-| 高级参数 | `CRC Calculation` / `DMA Mode` | 均未勾 |
-| SWD | `SWD Pins` | **未勾**（勾上会占用 SWD 脚） |
+| 配置模式和硬件CS（016） | 模式 | `主机全双工模式` |
+| | 硬件 CS 信号 | **`关闭`** |
+| 配置基本参数（017） | 接口协议 | `Motorola模式` |
+| | 帧位个数 | **`8位`** |
+| | 最先传输位 | `MSB先传输` |
+| 配置时钟参数（018） | 时钟频率分频系数 | **`8`** |
+| | 时钟频率(0-50 MHz) | **`18 MHz`**（灰色只读，由分频系数自动算出） |
+| | 时钟极性 / 时钟相位 | `低电平` / `第一个边沿进行数据捕获` ⇒ **SPI 模式 0** |
+| 高级参数（019） | CRC 校验 | `关闭` |
+| | CS 信号类型 | **`软件CS`**（与 016"硬件 CS 关闭"呼应） |
+| SWD调试模式（020） | 调试接口 | `SWD` |
+| | SWO | **未勾选** |
 
-⇒ 84 MHz APB2 下 `/256` ≈ 328 kbit/s，是"先点亮再看"的保守起步值；
-⇒ **`SWD Pins` 这一项就是"配完 SPI 调试器连不上"的开关**，与 §5 的 PA13/PA14 结论一致。
+⇒ **`时钟频率` 框只读、由分频系数自动算** ⇒ 想改速率只能改分频系数；在代码里另设波特率会在下次生成时被覆盖。
+⇒ 该实例是 **8 位帧 + 软件 CS** ⇒ 驱动 LCD 时 **DC(命令/数据) 脚必须自己用 GPIO 控制**，不是硬件 NSS。
 
 ## 8. 表 9-3 DMA1 / DMA2 请求弹性映射（ch04/022）—— 本库唯一副本
 
-**适用前提（照抄）**：`仅适用于 AT32F435 系列`。请求源编号 **1~123**，即 `dmamux_init` 的 `request_id`。
+**表头结构（照抄）**：`DMA1MUX 请求` + **三组** `DMAMUX 请求`，每组含"编号 + 来源"两子列，编号到 **128**。
+⇒ **关键读法**：同一外设会出现**两个不同编号**（如 `SPI1_RX` 在 10 和 106），
+因为**DMA1 用 DMA1MUX 编号、DMA2/其余用 DMAMUX 编号，是两套表并排**，不是原文矛盾。
+`reserved` 表示该编号未分配请求源，**不要拿来用**。
 
-### 8.1 外部中断与存储器类（1~12）
+| # | DMA1MUX 来源 | # | 来源 | # | 来源 | # | 来源 |
+|---|---|---|---|---|---|---|---|
+| 1 | DMA1_MUXREQ01 | 33 | USART1_TX | 65 | TIMR3_CH4 | 97 | reserved |
+| 2 | DMA1_MUXREQ02 | 34 | reserved | 66 | TIMR3_TRIG | 98 | reserved |
+| 3 | DMA1_MUXREQ03 | 35 | reserved | 67 | TIMR3_CH1 | 99 | reserved |
+| 4 | DMA1_MUXREQ04 | 36 | ADC2 | 68 | TIMR3_CH2 | 100 | reserved |
+| 5 | ADC1 | 37 | reserved | 69 | TIMR3_CH3 | 101 | reserved |
+| 6 | DAC1 | 38 | reserved | 70 | TIMR3_CH4 | 102 | reserved |
+| 7 | reserved | 39 | SDIO1 | 71 | TIMR4_OVERFLOW | 103 | SDIO2 |
+| 8 | TIMR2_OVERFLOW | 40 | QSPI1 | 72 | TIMR5_CH1 | 104 | QSPI2 |
+| 9 | TIMR7_OVERFLOW | 41 | DAC2 | 73 | TIMR5_CH2 | 105 | DVP |
+| 10 | **SPI1_RX** | 42 | TIMR1_CH1 | 74 | TIMR5_CH3 | 106 | **SPI1_RX** |
+| 11 | **SPI1_TX** | 43 | TIMR1_CH2 | 75 | TIMR5_CH4 | 107 | **SPI1_TX** |
+| 12 | SPI2_RX | 44 | TIMR1_CH3 | 76 | TIMR5_OVERFLOW | 108 | SPI2_RX |
+| 13 | SPI2_TX | 45 | TIMR1_CH4 | 77 | SPI3_TX | 109 | SPI3_TX |
+| 14 | SPI3_RX | 46 | TIMR1_OVERFLOW | 78 | reserved | 110 | I2S2_EXT_RX |
+| 15 | SPI3_TX | 47 | TIMR1_TRIG | 79 | reserved | 111 | I2S2_EXT_TX |
+| 16 | I2C1_RX | 48 | TIMR1_HALL | 80 | I2S3_EXT_RX | 112 | I2S3_EXT_RX |
+| 17 | I2C1_TX | 49 | TIMR8_CH1 | 81 | I2S3_EXT_TX | 113 | I2S3_EXT_TX |
+| 18 | I2C2_RX | 50 | TIMR8_CH2 | 82 | reserved | 114 | UART6_RX |
+| 19 | I2C2_TX | 51 | TIMR8_CH3 | 83 | reserved | 115 | UART6_TX |
+| 20 | I2C3_RX | 52 | TIMR8_CH4 | 84 | reserved | 116 | UART7_RX |
+| 21 | I2C3_TX | 53 | TIMR8_OVERFLOW | 85 | UART8_TX | 117 | UART7_TX |
+| 22 | reserved | 54 | TIMR8_TRIG | 86 | TIMR20_CH1 | 118 | UART8_RX |
+| 23 | reserved | 55 | TIMR8_HALL | 87 | TIMR20_CH2 | 119 | UART8_TX |
+| 24 | UART1_RX | 56 | TIMR2_CH1 | 88 | TIMR20_CH3 | 120 | reserved |
+| 25 | UART1_TX | 57 | TIMR2_CH2 | 89 | TIMR20_CH4 | 121 | reserved |
+| 26 | UART2_RX | 58 | TIMR2_CH3 | 90 | TIMR20_OVERFLOW | 122 | reserved |
+| 27 | UART2_TX | 59 | TIMR2_CH4 | 91 | reserved | 123 | reserved |
+| 28 | UART3_RX | 60 | TIMR2_OVERFLOW | 92 | reserved | 124 | reserved |
+| 29 | UART3_TX | 61 | TIMR3_CH1 | 93 | TIMR20_TRIG | 125 | TIMR2_TRIG |
+| 30 | UART4_RX | 62 | TIMR3_CH2 | 94 | TIMR20_HALL | 126 | TIMR4_TRIG |
+| 31 | UART4_TX | 63 | TIMR3_CH3 | 95 | reserved | 127 | TIMR4_TRIG |
+| 32 | UART5_RX | 64 | TIMR3_CH4 | 96 | （截图不清） | 128 | （截图不清） |
 
-| 编号 | 请求源 | 编号 | 请求源 |
+**从这张表能直接得到的结论**：
+1. **`SPI1_TX` 有两个编号：DMA1 侧 11、DMAMUX 侧 107** ⇒ 填 `request_id` 前**必须先确定用的是哪个 DMA 控制器**，
+   这是 AT32 DMA 配置最常见的"配了不动作"原因。
+2. `TIMR4_TRIG` 在 126 与 127 **重复出现**、`SPI3_TX` 出现在 15/77/109 三处 ⇒ 截图列位仍有歧义，
+   **抄编号时以"控制器 + 该控制器对应的列"为准**（ERRATA H2）。
+3. 1~4 是 `DMA1_MUXREQ01~04` 占位 ⇒ **DMA1 的前 4 个 MUX 槽是留给"自定义映射"的**，不是外设请求。
+4. 出现 `QSPI1/QSPI2`、`DVP`、`SDIO2`、`TIMR20`、`UART6/7/8` ⇒ 这些是 **AT32F435 相对 STM32F4 多出来的资源**，
+   移植时容易漏配。
+
+## 9. 表 9-4 DMAMUX EXINT LINE 触发输入 / 同步输入（ch04/023）
+
+| 编号 | 来源 | 编号 | 来源 |
 |---|---|---|---|
-| 1 | 内存到内存 | 7 | DMARDMA1 |
-| 2 | EXINT_LINE0 | 8 | EADC1 |
-| 3 | EXINT_LINE1 | 9 | ETMR1 |
-| 4 | EXINT_LINE2 | 10 | USBFS1 |
-| 5 | EXINT_LINE…（**截图不清**） | 11 | USBFS2 |
-| 6 | DMAWRINT | 12 | SDIO1 |
+| 0 | `exit_gpio[0]` | 16 | `DMA_MUXext1` |
+| 1 | `exit_gpio[1]` | 17 | `DMA_MUXext2` |
+| 2 | `exit_gpio[2]` | 18 | `DMA_MUXext3` |
+| 3 | `exit_gpio[3]` | 19 | `DMA_MUXext4` |
+| 4 | `exit_gpio[4]` | 20 | `DMA_MUXext5` |
+| 5 | `exit_gpio[5]` | 21 | `DMA_MUXext6` |
+| 6 | `exit_gpio[6]` | 22 | `DMA_MUXext7` |
+| 7 | `exit_gpio[7]` | 23 | reserved |
+| 8 | `exit_gpio[8]` | 24 | reserved |
+| 9 | `exit_gpio[9]` | 25 | reserved |
+| 10 | `exit_gpio[10]` | 26 | reserved |
+| 11 | `exit_gpio[11]` | 27 | reserved |
+| 12 | `exit_gpio[12]` | 28 | reserved |
+| 13 | `exit_gpio[13]` | 29 | reserved |
+| 14 | `exit_gpio[14]` | 30 | reserved |
+| 15 | `exit_gpio[15]` | 31 | reserved |
 
-### 8.2 定时器类（13~56）
+⇒ **触发/同步输入只有两类可用**：16 路外部中断线（`exit_gpio[0..15]`）与 7 路 `DMA_MUXext1~7`，编号 23~31 全保留。
+⇒ 想做"外部信号触发一次 DMA 搬运"就用 `exit_gpio[n]`；`DMA_MUXext` 是**软触发线**。
 
-| 定时器 | 请求源 | 编号 |
+## 10. DMA 配置页实测取值（ch04/024~028，SPI1 + DMA 驱动 LCD）
+
+**选项卡行（ch04/024 照抄）**：`参数设置` | `GPIO设置` | `中断设置` | `NVIC设置` | **`DMA设置`（当前选中）** | `EDMA设置`
+⇒ **DMA 与 EDMA 是两个独立页**（两套资源），配 SPI1_TX 用的是 DMA 页。
+
+| 页 | 项 | 图里取值 |
 |---|---|---|
-| TM1 | CH1 / CH2 / CH3 / CH4 | 13 / 14 / 15 / 16 |
-| TM2 | CH1 / CH2 / CH3 / CH4 | 17 / 18 / 19 / 20 |
-| TM3 | CH1 / CH2 / CH3 / CH4 | 21 / 22 / 23 / 24 |
-| TM4 | TMR4_UP | 25 |
-| TM5 | CH1 / CH2 / CH3 / CH4 | 26 / 27 / 28 / 29 |
-| TM6 | TMR6_DACINT0 / TMR6_UP | 30 / 31 |
-| TM7 | TMR7_ADCINT0 / TMR7_UP | 32 / 33 |
-| TM8 | CH1 / CH2 / CH3 / CH4 | 34 / 35 / 36 / 37 |
-| TM9 | CH1 / CH2 / UP / BKIN | 38 / 39 / 40 / 41 |
-| TM10 | CH1 / CH2 / UP / BKIN | 42 / 43 / 44 / 45 |
-| TM11 | CH1 / CH2 / UP / BKIN | 46 / 47 / 48 / 49 |
-| TM12 | CH1 / CH2 / UP / BKIN | 50 / 51 / 52 / 53 |
-| TM13 | CH1 / CH2 / UP / BKIN | 54 / 55（**UP/BKIN 编号截图不清**） |
-| TM14 | TMR14_UP | 56 |
+| DMA设置（024、027） | DMA 请求 | `SPI1_TX` |
+| | 通道 | **`DMA1通道1`** |
+| | 传输方向 | `内存到外设` |
+| | 优先级 | **`中`** |
+| 中断设置（025、028） | 传输完成 (FDT) | **`开启`** |
+| | 半传输完成 (HDT) | `关闭` |
+| | 传输错误 (DTERR) | `关闭` |
+| | 同步溢出 (SYNCOVF) | `关闭`（**灰色不可编辑**） |
+| DMA请求参数（026、028） | 模式 | `普通` |
+| | 外设地址递增 | **`关闭`** |
+| | 内存地址递增 | **`开启`** |
+| | 外设数据宽度 | **`字节`** |
+| | 内存数据宽度 | **`字节`** |
 
-### 8.3 串口类（57~86）
+⇒ **发送 SPI 的标准组合**：内存到外设 + 外设不递增 + 内存递增 + 字节宽度 + 只开 FDT。
+⇒ 与 §7.3 的"8 位帧"一致 ⇒ **AT32 的 SPI 走 8 位时 DMA 两侧宽度都填"字节"**；
+若把数据宽度配成半字节/字而 SPI 是 8 位，表现为"发一半丢一半"。
+⇒ `SYNCOVF` 灰色 ⇒ **该通道不支持同步溢出中断**，别在代码里等这个标志。
 
-| 外设 | 请求源（**注意列序不同**） | 编号 |
-|---|---|---|
-| USART1 | CTS / TX / RX / RTU | 57 / 58 / 59 / 60 |
-| USART2 | CTS / TX / RX / RTU | 61 / 62 / 63 / 64 |
-| USART3 | **TX / RX / CTS** / RTU | 65 / 66 / 67 / 68 |
-| UART4 | TX / RX / RTU | 69 / 70 / 71 |
-| UART5 | TX / RX / RTU | 72 / 73 / 74 |
-| USART6 | CTS / TX / RX / RTU | 75 / 76 / 77 / 78 |
-| UART7 | **TX / RX / CTS** / RTU | 79 / 80 / 81 / 82 |
-| UART8 | **TX / RX / CTS** / RTU | 83 / 84 / 85 / 86 |
+## 11. DMA 中断事件 / 标志 / 清除 / 使能对照（ch04/021）
 
-⇒ **USART3/UART7/UART8 的列序与其余不同** ⇒ 编号按行内位置对应，**不能按"CTS 总是第一个"推**。
-
-### 8.4 SPI / I2C / 转换器 / 其他（87~123）
-
-| 外设 | 请求源 | 编号 |
-|---|---|---|
-| SPI1 | TX / RX | 87 / 88 |
-| SPI2 | TX / RX | 89 / 90 |
-| SPI3 / SPI4 | TX / RX | 91 / 92 |
-| SPI5 / SPI6 | TX / RX | 93 / 94 |
-| I2C1 | TX / RX | 95 / 96 |
-| I2C2 | TX / RX | 97 / 98 |
-| I2C3 | TX / RX | 99 / 100 |
-| I2C4 | TX / RX | 101 / 102 |
-| SDIO1 | SDIO1 | 103 |
-| CAN1 | TX_FIFO0 / RX_FIFO0 / RX_FIFO1 | 104 / 105 / 106 |
-| CAN2 | TX_FIFO0 / RX_FIFO0 / RX_FIFO1 | 107 / 108 / 109 |
-| CAN3 | TX_FIFO0 / RX_FIFO0 / RX_FIFO1 | 110 / 111 / 112 |
-| ADC1 / ADC2 / ADC3 / ADC4 | 数据 | 113 / 114 / 115 / 116 |
-| DAC1 | 请求1 / 请求2 | 117 / 118 |
-| DAC2 | 请求1 / 请求2 | 119 / 120 |
-| ACMP | 输出 | 121 |
-| I2S1 | TX / RX | 122 / 123 |
-| I2S2 ~ I2S6 | TX / RX | **截图不清（编号未列出）** |
-
-> ⚠校核（**编号冲突，用前必核**）：
-> ① `SDIO1` 同时是 **12** 和 **103**；② `SPI3/SPI4` 共用 91/92、`SPI5/SPI6` 共用 93/94；
-> ③ 1~12 区间左列部分行对不齐。⇒ 这三处都是**截图并排两列造成的歧义**，
-> **不能照本表直接填 `request_id`**，以工具生成的 `dmamux_init()` 实参或手册为准。
-
-## 9. 表 9-4 DMAMUX 触发输入 / 同步输入（ch04/023）
-
-**只承认前 23 项**（编号 0~23，图内清晰）：
-
-| 信号 | 编号 | 信号 | 编号 |
+| 中断事件 | 事件标志位 | 清除控制位 | 使能控制位 |
 |---|---|---|---|
-| EXINT_LINE0 | 0 | EXINT_LINE12 | 12 |
-| EXINT_LINE1 | 1 | EXINT_LINE13 | 13 |
-| EXINT_LINE2 | 2 | EXINT_LINE14 | 14 |
-| EXINT_LINE3 | 3 | EXINT_LINE15 | 15 |
-| EXINT_LINE4 | 4 | DMARDMA1 | 16 |
-| EXINT_LINE5 | 5 | DMAWRINT | 17 |
-| EXINT_LINE6 | 6 | DMARDMA2 | 18 |
-| EXINT_LINE7 | 7 | DMAWRINT2 | 19 |
-| EXINT_LINE8 | 8 | TMR6_TRGO | 20 |
-| EXINT_LINE9 | 9 | TMR2_TRGO | 21 |
-| EXINT_LINE10 | 10 | RTC_ALARN | 22 |
-| EXINT_LINE11 | 11 | RTC_WAKEUP | 23 |
+| 半传输 | `HDTF` | `HDTFC` | `HDTIEN` |
+| 传输完成 | `FDTF` | `FDTFC` | `FDTIEN` |
+| 传输错误 | `DTERRF` | `DTERRFC` | `DTERRIEN` |
 
-> ⚠校核（**整段不采信**）：从编号 24 起图里是 `IISDO/IISDI … IIS140DO/IIS140DI` 连续 278 条
-> （编号一路到 301）⇒ AT32F435 不可能有 140 个 I2S，**极可能是截图"信号列/编号列"串行产生的假数据**。
-> 本库**只登记"此处有 24~301 段但内容不可信"**，禁止用于配置。
-
-## 10. DMA 配置页实测取值（ch04/024~028）
-
-### 10.1 基本配置（ch04/024）
-
-| 项 | 可选值 | 图里选择 |
-|---|---|---|
-| 方向 | `Peripheral to Memory` / `Memory to Peripheral` / `Memory to Memory` | `Peripheral to Memory` |
-| 外设数据宽度 | `Byte` / `Half Word` / `Word` | **`Half Word`** |
-| 存储器数据宽度 | `Byte` / `Half Word` / `Word` | **`Half Word`** |
-| 外设地址递增 | `Enable` / `Disable` | `Disable` |
-| 存储器地址递增 | `Enable` / `Disable` | `Enable` |
-| 循环模式 | `Enable` / `Disable` | `Disable` |
-| 优先级 | `Very High` / `High` / `Medium` / `Low` | **`Very High`** |
-| 缓冲大小 | 0~65535 | `0x0000FFFF` |
-
-### 10.2 中断设置（ch04/025）
-
-四类中断**全部勾选**：`Transfer Error Interrupt`、`Half-Transfer Interrupt`、
-`Buffer Complete Interrupt`、`Block Transfer Complete Interrupt`。
-
-### 10.3 DMA 请求参数（ch04/026）
-
-| 项 | 可选值 | 图里选择 |
-|---|---|---|
-| 触发使能 | `Enable` / `Disable` | `Enable` |
-| 请求重映射 | `Enable` / `Disable` | `Disable` |
-| 同步类型 | `DMAMUX` / `EDMA` | `DMAMUX` |
-| 同步源 | `DMAMUX` / `EDMA` | `DMAMUX` |
-| 请求极性 | `Active Low` / `Active High` / `Rising Edge` / `Falling Edge` | `Active Low` |
-| 请求生成模式 | `Single Short Mode` / `Single Long Mode` / `Repeat Short Mode` / `Repeat Long Mode` | `Single Short Mode` |
-| DMA 模式 | `Normal Mode` / `Circular Mode` / `Double Normal Mode` / `Double Circular Mode` | `Normal Mode` |
-| 流控 | `Enable` / `Disable` | `Enable` |
-| 水位 | `1/4` / `1/2` / `3/4` / `Full` | `1/4` |
-| 固定突发 | `Fixed Burst 16 Beat` 复选框 | **未勾** |
-
-### 10.4 SPI1 + DMA 驱动 LCD 的实例（ch04/027、028）
-
-| 项 | 取值 |
-|---|---|
-| DMA 通道 | `DMA1 Channel1` |
-| 方向 | **`Memory to Peripheral`**（发送） |
-| 外设请求 | **`SPI1_TX`** |
-| 请求编号 | **`Request Id = 88`** |
-| 数据宽度 | 外设 `Half Word` / 存储器 `Half Word` |
-| 递增 | 外设 `Disable` / 存储器 `Enable` |
-| 循环 / 优先级 / 缓冲 | `Disable` / `Very High` / `0x0000FFFF` |
-| 中断 | 四类全勾 |
-| 请求参数 | 与 §10.3 完全一致（`Trigger Enable`、`Remapping Disable`、`Synchronization Type/Source = DMAMUX`、`Active Low`、`Single Short Mode`、`Normal Mode`、`Flow Control Enable`、`Watermark 1/4`） |
-
-> ⚠校核（**编号对不上**）：表 9-3 里 `SPI1_TX = 87`、`SPI1_RX = 88`，
-> 而 WorkBench 的 `SPI1_TX` 填出的 `Request Id` 是 **88** ⇒ 两者矛盾（截图列位歧义或工具编号体系不同）。
-> **以编译产物里的 `dmamux_init(...)` 实参为准**，别照文档手填。
-> 另：该下拉框里还出现 `USART1_TX` 等异常选项（疑截图串位），未采信。
-
-## 11. DMA 中断向量与标志表（ch04/021）
-
-| 中断向量 | 挂的标志位 | 服务的通道 |
-|---|---|---|
-| `CH0INT` | `HTIF` / `TIF` / `TERIF` / `GIF` | DMA1 Channel0、DMA2 Channel0 |
-| `CH1INT` | `HTIF` / `TIF` / `TERIF` / `GIF` | DMA1 Channel1、DMA2 Channel1 |
-| `CH2INT` | `HTIF` / `TIF` / `TERIF` / `GIF` | DMA1 Channel2、DMA2 Channel2 |
-| `CH3INT` | `HTIF` / `TIF` / `TERIF` / `GIF` | DMA1 Channel3、DMA2 Channel3 |
-| `CH4INT` | `HTIF` / `TIF` / `TERIF` / `GIF` | DMA1 Channel4、DMA2 Channel4 |
-| `CH5INT` | `HTIF` / `TIF` / `ERIF` / `GIF` | DMA1 Channel5、DMA2 Channel5 |
-| `CH6INT` | `HTIF` / `TIF` / `TERIF` / `GIF` | DMA1 Channel6、DMA2 Channel6 |
-| `CH7INT` | `HTIF` / `TIF` / `TERIF` / `GIF` | DMA1 Channel7、DMA2 Channel7 |
-
-⇒ **一个向量覆盖 DMA1 与 DMA2 的同号通道** ⇒ ISR 里必须自己判 `dma_flag_status` 分清是哪个控制器的中断，
-否则两个外设会互相吞标志。
-> ⚠校核：CH5INT 行图中写 `ERIF`（其余行是 `TERIF`），疑笔误/OCR。
+⇒ **三组"标志 / 清除 / 使能"名字一一对应**（后缀 `F` / `FC` / `IEN`）⇒
+ISR 里**写 `xxFC` 清标志**，不是写 0 清 `xxF`；漏清就是"进一次中断再也不进"。
+⇒ 表里**没有"块传输完成"一类的事件**（AT32 的 DMA 只有半传输/传输完成/传输错误三种）。
 
 ## 12. Keil DFP 包清单（ch04/001、002）
 
@@ -436,6 +380,6 @@
 | `ArteryTek.AT32F435_437_DFP` | **2.1.1（2022-08-23）**、2.0.6（2022-02-11） | Offline（待装） |
 | Device 页 | 厂商 **ArteryTek**；Boards 页 `AT32F4xx Series 104 Devices`、`F302 Series 1 Device` | — |
 
-> ⚠校核：`Keil.AT32F4xx_DFP 1.3.7` 的日期在两图里分别是 **2015-02-19** 与 **2021-05-19** ⇒ 至少一处 OCR/显示差异。
+> ⚠校核：`Keil.AT32F4xx_DFP 1.3.7` 的日期在两图里分别是 **2015-02-19** 与 **2021-05-19** ⇒ 至少一处显示/OCR 差异。
 > **两包是否互斥、能否共存，图里没有任何提示** —— 小标题"紧接着安装 2.1.1"只说明安装顺序，
 > 网传"旧包必须卸载否则识别不到 F435/437"**属推断，未验证**，不要当结论用。
