@@ -11,7 +11,7 @@
 | `at32.md` | AT32F435/437 与 F403A：时钟与 PLL 命名、库函数名、**ZW/NZW 零等待分区**、XMC、外设映射；§7 是截图层结论汇总 |
 | `at32-flash-zw-dmamux-tables.md` | **手册表格唯一副本（原文只有图）**：ZW↔SRAM 352KB 分配、表 5-6 `EOPB` 三档编码、闪存结构 4032K/1024K、6.2.8 复用+HDRV、6.2.9 IOMUX MUX0~15、WorkBench 288MHz 取值与供电限制、SPI 11 种模式、**表 9-3 DMA1MUX/DMAMUX 请求映射 1~128**、表 9-4 触发源、DMA 配置页与中断向量 |
 | `py32-ht32-holtek.md` | PY32（普冉）PC0/PB6 归属的**选项位表三档**（含"把 SWD 挪到 PC0"）；"HT32"章实为 Holtek 8 位 BH67F2472 —— §3 收**截图唯一副本**：OPA/IREFC/SADC 位表、中断向量表、六模式表、e-Link32 排针，并结案"低速模式串口不打印"根因 |
-| `stc-c51-and-ch32-wch.md` | STC8H 全系要点（时钟/XFR/定时器/串口/GPIO/ADC/PWM/ISP 下载/C51 语言层）+ 沁恒 CH57x/CH58x/CH32V（RISC-V PFIC、Flash 映射、BLE SDK） |
+| `stc-c51-and-ch32-wch.md` | STC8H 全系要点（时钟/XFR/定时器/串口/GPIO/ADC/PWM/ISP 下载/C51 语言层）+ **§1.1 截图唯一副本**：STC8H1K28 最小系统引脚复用表与三条上电坑（P3.2/P3.3 同低进下载模式、nRST 复用要断电生效、GND 电流污染 ADC）、功能脚切换寄存器地址位表、I/O 数与定时器位宽、LX51 `REMOVEUNUSED`；沁恒 CH57x/CH58x/CH32V（RISC-V PFIC、Flash 映射、BLE SDK） |
 | `cc2530-cc2538-cc2640.md` | CC2530 外设实操（时钟切换必须连 TICKSPD 一起清、T1/PWM、printf、内部 flash）、CC2538 救砖、CC2640 环境与坑 |
 | `zigbee-zstack-osal.md` | **Z-Stack OSAL 运行机制**（任务轮询/事件位/消息队列/软定时器）+ 端点/地址/NV/串口帧/工程适配 |
 | `recipes-code-skeletons.md` | **各家代码配方**：GD32 改晶振/HSE 超时/`SPI1_SetSpeed` 为何删；AT32 `wk_spi1_init`+`dmamux_init` 三件套+288MHz 填法+`nvic_irq_enable`；STC `EAXSFR`+T1 波特率(含 1T 公式)+UART2 中断与轮询死锁+定时器 1T；CH `GetSysClock`+BLE main 骨架+**ISR 必须带 `WCH-Interrupt-fast`**；Z-Stack 描述符注册/`SAPI_ProcessEvent` 全文/`AF_DataRequest`/NV/MT |
