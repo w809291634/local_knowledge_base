@@ -70,6 +70,7 @@ If you've learned something here, support my efforts writing daily TILs by
 * [NextAuth.js](#next-auth)
 * [Next.js](#nextjs)
 * [Phoenix](#phoenix)
+* [Photoshape](#photoshape)
 * [Planetscale](#planetscale)
 * [pnpm](#pnpm)
 * [PostgreSQL](#postgresql)
@@ -922,6 +923,10 @@ If you've learned something here, support my efforts writing daily TILs by
 - [Serve Static Assets From Custom Directory](phoenix/serve-static-assets-from-custom-directory.md)
 - [Specifying The Digest Directory](phoenix/specifying-the-digest-directory.md)
 - [Specifying The Server Port](phoenix/specifying-the-server-port.md)
+
+### Photoshape
+
+- [Amazon A+ 墙纸场景图：严格取色与一次成图 SOP](photoshape/amazon-a-plus-image-generation/README.md)
 
 ### Planetscale
 
