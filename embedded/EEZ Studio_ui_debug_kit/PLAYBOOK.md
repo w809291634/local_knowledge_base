@@ -336,6 +336,15 @@ for i in $(seq 1 15); do curl -s --max-time 1 http://127.0.0.1:9222/json/version
 > 另：单实例机制下，已有实例在跑时再次启动不会带起调试口——先 `taskkill /F /IM
 > "EEZ Studio.exe"` 再起。窗口标题从 "Home - EEZ Studio" 变成 "<工程名> - EEZ Studio"
 > 才算真打开。
+> 才算真打开。
+
+> ⚠ **路径含空格时禁用 PowerShell Start-Process 传参**（2026-10-17 实测）：
+> `-ArgumentList` 会把 `"C:\…\Design Watch\watch\watch.eez-project"` 拆成两个 argv，
+> EEZ 取到 argv[last]=`Watch\watch\…` 当相对路径 → ENOENT → 页内"Failed to load file!"
+> （症状酷似会话损坏，实为传参碎裂）。**用上面的 bash 直启配方**（引号完整）。
+> 同理：Run 预览画布在页面内的坐标会随窗口操作漂移，截图/连拍脚本**每帧前自量
+> 最大 canvas 的 getBoundingClientRect**，不要写死 clip（写死会截到编辑器画布，
+> 产生"整体平移+假静止"双伪影）。
 
 
 参数避坑表（无 GPU 环境通用）：
