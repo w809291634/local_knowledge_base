@@ -2061,3 +2061,33 @@ f4  = (wlc >> 3) % 4            # 烘焙姿势帧选通（240ms/帧）
 6. 验证面分工（血泪）：手势**只能**在 PC_SIM/真机验收（沙箱夹具
    `verify/gesturetest_main.c`：SDL 合成快扫 60px/拍 ×4 拍，逐断言 lv_screen_active()）；
    Run 预览的 CLICKED 是合成派发、没有 indev 管线，滑动永远零反应——别拿它判手势死刑。
+
+
+### 11.42 ★ EEZ 表达式字符串格式化与 native 外部变量桥（watch §38，2026-10-18，P-0142）
+
+**需求原型**："时间显示走一个变量，固件外部设置，界面自己跳动"——纯 EEZ 可达，零 UI 侧 C。
+
+1. **native 变量桥**（工程 JSON `variables.globalVariables`）：
+   `{name:'time_min', type:'integer', defaultValue:'11', persistent:false, native:true}`
+   → codegen 在 vars.h 发 `extern int32_t get_var_time_min(); / void set_var_time_min(int32_t)`
+   并登记 ui.c `native_vars[]`；实现放 `src/native/native_vars.c`（硬件/RTC 桥，铁律①合规面）。
+   读取是**惰性现读**：表达式每次引用经 PUSH_GLOBAL_VAR → VALUE_TYPE_NATIVE_VARIABLE →
+   get_var_x()（eez-flow.cpp:5940/2408）——固件写完即生效，无需通知 UI，也不用置脏。
+2. **String.format 真相**（8427）：只收 `(fmt, 单值)`；值的注入点=fmt **串尾**说明符
+   （扫最后一个字符定类型；尾字符非 d/i/u/x/f/s/c… → 直接 error）。
+   `"%02d:%02d"` 双值、`"%d:05"` 中部注入都不可用；`formatPrefix` 注册表有名、运行时是
+   **恒报错空桩**（8515）——注册表≠能力，落码前查 eez-flow.cpp（运行时面第四次立功）。
+3. **"HH:MM" 可用配方**：
+   `String.padStart(String.format("%d", H), 2, "0") + ":" + String.padStart(String.format("%d", M), 2, "0")`
+   （'+' 任一侧字符串=concatenateString，op_add 6993；padStart 真实现 8538）。
+   H/M 从分钟数还原：`H=(t*2185)>>17`（floor(t/60) 精确于 0..1439），`M=t%60`——
+   '/' 产 double 会毒化 %d，一律移位乘倒数（§31 除法毒化同款）。
+4. **刷新面分工（两轮实证纠错）**：label 定义级 `textType:'expression'` 在 LVGL 目标
+   被 codegen **编成空串**（screens.c `lv_label_set_text(obj, "")`，构建仍 0 错 0 警——
+   P-0143 静默坑，判据=产物里有无 eval 调用）。变量文本正道=flow 动作
+   `labelSetText`（asar id:29；JSON `{action:'labelSetText', object, text, textType:
+   'expression'}`，运行时 eez-flow.cpp:3891 STR_PROP 求值后 set_text）。样式属性走
+   `objStyleSetProperty`（本例两针 `transform_rotation`=(t%…)*N，全整型）；
+   常驻跳动=每页挂 1s 心跳链 Start→Loop→Delay(1000)→动作组（进页起、unload 停）。
+5. **表达式文本进字体子集要手动兜底**：采集器只收 literal；数字/冒号在生成器里
+   `all_text.update('0123456789:')`，否则换表达式绑定后 ':' 掉字。

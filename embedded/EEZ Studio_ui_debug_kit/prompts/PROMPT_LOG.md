@@ -1983,3 +1983,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：交互全覆盖升级为强制规则并门禁化
   - 产出/结论：§37——盘点修 3 类（运动模式行/齿轮、通用行、呼吸开始死按钮）→ 真可点容器+占位去向（29→37 页，全部带返回钮+右滑手势边）；nav_audit 新增规则 D（CLICKABLE 必挂 eventHandlers，原生开关/复选豁免），clickable_w/o_handler=0 PASS；沙箱 14 断言 ALL PASS；规则固化进 AGENTS.md 铁律⑤严格执行款+契约 §37 款+记忆。未跑 L4/dragtest（如实声明）
   - 关联：UI_BEHAVIOR_CONTRACT,P-0141
+
+### PR-0239 · 2026-10-18 · Qoder
+  - 提示词：主界面时钟需要支持时钟跳动，可以建立一个变量，用于时间显示，通过外部设置
+  - 诉求：表盘时钟随真实时间走动；时间来源做成变量、由固件外部写入
+  - 产出/结论：§38——①全局变量 time_min（integer 0..1439，native:true）= 当日分钟数唯一真值，codegen 实证 vars.h 双声明+ui.c native_vars 登记，表达式经 VALUE_TYPE_NATIVE_VARIABLE 惰性现读（写后即跳、无需通知 UI），固件桥实现 src/native/native_vars.c（占位+RTC 替换点）；②Dial 指针 1s 心跳链写两针 transform_rotation（(time_min%720)*5/(time_min%60)*60，全整型）；③35 页页头时间 label（htime_<page>）各挂 1s labelSetText 链，TIME_EXPR=padStart+两次 format 拼接（'/'毒化用 *2185>>17 消）；④两轮踩坑登记 P-0142（String.format 尾说明符限定、formatPrefix 空桩）与 P-0143（label textType:expression 被 codegen 编空、正道 labelSetText asar id:29）；同场抓到 P-0132 陈坑复发并修复（icon_anim_flow object 未 c_ident→stic_* 7 错）。构建 0 错 0 警、nav_audit PASS(37/72/35/0)、字体 7/7；运行时行为未实测（仿真未点名；Run 预览可看指针跳动，手势页进入受限 P-0141）。
+  - 关联：P-0142,P-0143,P-0132,skills §11.42,B12

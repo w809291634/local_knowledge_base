@@ -7,7 +7,20 @@
 
 ---
 
-## v0.9.10 — UI 通用铁律：导航闭环 + 语义控件（PR-0234）（当前）
+## v0.9.11 — 时钟变量桥 + 表达式格式化两面坑（watch §38，PR-0239）
+
+- ★ skills §11.42：EEZ native 外部变量桥（native:true → vars.h get/set_var_x 声明 +
+  ui.c native_vars[] 登记；表达式经 VALUE_TYPE_NATIVE_VARIABLE 惰性现读，固件写完即生效）；
+  String.format (fmt,单值)+尾说明符限定、formatPrefix 空桩、padStart/'+' 拼接可用面；
+  "HH:MM"=padStart+两次 format 配方。
+- ★ P-0143：LVGL 目标 label textType:'expression' 被 codegen 编成空串且 0 错 0 警——
+  变量文本正道是 flow `labelSetText` 动作（asar id:29）；"0 警≠产物正确"再加一条判据。
+- ⚠ P-0132 陈坑复发案例：§36 图标链 object 未过 c_ident → stic_* 驼峰 7 错；
+  规则落码要全表过规范化，别只对已知样本调试。
+
+---
+
+## v0.9.10 — UI 通用铁律：导航闭环 + 语义控件（PR-0234）
 
 - ★ `UI_BEHAVIOR_CONTRACT.md` 追加**通用铁律节**（适用所有 UI 工程）：每屏能进能回（真返回按钮）、
   按钮/开关必须原生控件、禁止图片冒充；规则按硬度四层落位（文档→生成器 assert→静态门禁→Run 回归），
