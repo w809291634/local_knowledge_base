@@ -123,6 +123,8 @@ EEZ Run 静止/滚动双截图（弧峰跟随屏心行）。
 | **静止门控灵敏度** | `condition` | Switch 组件 `tests[0]` | `wy == wyp` | 精确相等即跳过；若真机上出现 1px 抖动不省，可改 `(wy - wyp) * (wy - wyp) <= 4`（²px 容差，仍纯整数） |
 | 门控首帧保险 | `wyp` 初值 | `vars_` 里 defaultValue | **-99999** | 不可达哨兵：保证建页首帧必全量。改成 0 会与"top0=0 静止态 wy=0"相撞 → 首屏无缩放/弧线 |
 | 行平移越界兜底 | `scroll_right` | `build()` AppList 分支屏幕样式 | 0 | 关掉向右滚动方向；C 若加得很大（>380）此兜底更关键 |
+| **磁吸（选中吸附）** | `scrollSnapY` + 行 `SNAPPABLE` | `page_applist()` 的 scroll 节点 + `BASE_FLAGS['row']` | center | 纯工程模型（LVGL 原生 snap 动画），零 flow/C 代码；吸附目标=容器中心，务必与滚轮屏心一致（251）；顶/底端 clamp 边缘行吸不到中心属正常语义（§32） |
+| **磁吸贴边（贴顶/贴底）** | 两端行去 SNAPPABLE + 贴边锚点 | `BASE_FLAGS['row_ns']`（row_0..2/row_19..21）+ `snap_anchor_top/bottom`（1×1 透明 SNAPPABLE，y=251 与 内容高−251） | — | LVGL snap 恒吸「某行盘心=容器中心」且 lv_obj_scroll_by 不夹边界（内核源码实证）→ 边缘行必须退出磁吸，贴位由锚点当 0 距磁吸点；只加锚点不减行=锚点领地被 row_2 的 31px 居中位抢掉（§32b 实测 115px 黑缝） |
 | 组件描述名 | `description` ×**7** | 各组件 dict | 滚轮动效链·启动/常驻循环/30ms节拍/读基准行Y/**静止门控**/算各行偏心量/写缩放与弧线 | 编辑器黄色说明条；`name` 键无效 |
 
 **改弧线/缩放必须同步的三处**（否则门禁假红/假绿）：
