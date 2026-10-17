@@ -1959,3 +1959,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：导航闭环 + 语义控件，且必须对所有 AI 长期生效
   - 产出/结论：§33——盘点出 9 处死胡同（AppList 8 详情页+设置无返回、DialSet 无返回）与 13 个死按钮行（无目标页）；修复=全子页补真返回按钮（header sub assert 强制）、13 行挂占位页（功能开发中+返回）、AppList 加悬浮返回→Dial；新增 nav_audit.py 三查门禁（可达/返回边/假按钮，29 屏 PASS）+Run 三段往返抽测留证；规则四层落位（文档/生成器断言/静态门禁/Run 回归），AGENTS.md 铁律⑤+契约通用节+skills §11.40；未跑仿真（如实声明）
   - 关联：UI_BEHAVIOR_CONTRACT,B11
+
+### PR-0235 · 2026-10-17 · Qoder
+  - 提示词：watch/src/ui/ui_font_cn26.c 为什么你生成文件之后要删除这个，eez output 时候生成这个
+  - 诉求：查清字体文件被删的原因
+  - 产出/结论：P-0140——CLI codegen 不跑字体提取但按自身清单做孤儿清理→每次 CLI 构建删光字体 .c，GUI Build 才产出（用户观察完全正确）；旧 src/ui/fonts/+manifest 为烘字体时代重复产物已废弃；eez_build.py 升级自愈链（CLI→校验→自动 GUI 真鼠标点 Build→轮询补齐→不齐 rc=1），端到端实测通过
+  - 关联：P-0125,P-0133
