@@ -349,3 +349,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0138 | 2026-10-17 | PowerShell Start-Process 把含空格工程路径拆成两个 argv → "Failed to load file!" 假象（先查 argv 再疑会话） | cdp,eez-studio,启动参数,powershell,空格路径,failed-to-load-file | fixed |
 | P-0139 | 2026-10-17 | Run 预览画布坐标漂移：写死 clip 连拍截到编辑器画布 → "整体平移+假静止"双伪影；连拍须自量 canvas rect | cdp,burst_shot,截图裁剪,假静止,测量伪影 | fixed |
 | P-0140 | 2026-10-17 | EEZ CLI 构建每次把字体 .c 当孤儿删除（CLI 不跑字体提取），只有 GUI Build 产出；eez_build.py 已加"校验+自动起 GUI 点 Build 补齐"自愈链 | eez,cli,codegen,字体,孤儿清理,ui_font | fixed |
+| P-0141 | 2026-10-17 | EEZ Run 预览输入通道不产生 LVGL GESTURE（CLICKED 是合成派发）；手势验证必须走 PC_SIM/真机，夹具 verify/gesturetest_main.c 6/6 PASS | cdp,run-preview,gesture,验证面,仿真 | known-limitation |

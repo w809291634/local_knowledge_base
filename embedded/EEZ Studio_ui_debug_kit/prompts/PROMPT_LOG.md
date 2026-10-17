@@ -1965,3 +1965,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：查清字体文件被删的原因
   - 产出/结论：P-0140——CLI codegen 不跑字体提取但按自身清单做孤儿清理→每次 CLI 构建删光字体 .c，GUI Build 才产出（用户观察完全正确）；旧 src/ui/fonts/+manifest 为烘字体时代重复产物已废弃；eez_build.py 升级自愈链（CLI→校验→自动 GUI 真鼠标点 Build→轮询补齐→不齐 rc=1），端到端实测通过
   - 关联：P-0125,P-0133
+
+### PR-0236 · 2026-10-17 · Qoder
+  - 提示词：AppList 不需要箭头；表盘↔AppList 只靠手势；功能界面返回钮+右滑返回（功能页→AppList，AppList→表盘）；曲面屏返回箭头太靠边
+  - 诉求：手势导航口径 + 返回按钮内移
+  - 产出/结论：§35——①删 AppList 悬浮返回钮、Dial 去点击跳转（该对页纯手势）；②全功能页加 GESTURE 右滑=返回钮目标（宿主控件级绑定+grt_ 包裹层，Switch 判 getGestureDir(evt)==2→changeScreen，dataType=any、连线裸名 GESTURE 双线程）；3 列表锁 flagScrollDirection=ver 让横向滑成手势；④返回钮 x8→24、标题 50→76（曲面屏）；PC_SIM 夹具 6/6 PASS；发现 P-0141（Run 预览不产生 GESTURE，手势验证面=仿真/真机）；nav_audit 规则 B 放宽为"有 changeScreen 出边（钮或手势）"；未跑正式仿真回归（诊断性沙箱，如实声明）
+  - 关联：B11,P-0123,P-0141

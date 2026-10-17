@@ -2039,3 +2039,25 @@ f4  = (wlc >> 3) % 4            # 烘焙姿势帧选通（240ms/帧）
 经验：**"不得用图片掩盖控件"这类要求，只有变成"构建不通过"才算钉住**；
 纯文档版在换会话/换 AI 后必然回潮。占位页策略解决"目标页还没做"与"不留死按钮"的矛盾：
 行先接占位页（真返回），功能页后续原位替换（back_ident 命名规范不变）。
+
+
+### 11.41 ★ EEZ 手势导航绑定配方与验证面分工（watch §35，2026-10-17，P-0141）
+
+**绑定配方（纯工程模型+flow，零 C）**：
+1. 收件人=冒泡链上第一个**无 GESTURE_BUBBLE** 的祖先（lv_indev.c:1725）——所以
+   ① 宿主控件（屏根/容器）flags 必须去掉 GESTURE_BUBBLE；② 屏根虽无父，但 **Run 预览
+   收不到任何屏根级事件**（P-0141），一律绑在具体控件上：主页绑全屏 hit 容器、
+   列表页绑滚动容器本体、普通页加一个全屏 `grt_` 包裹容器（无该标志、bg_opa=0）。
+2. flow 三件套：宿主 `eventHandlers:[{eventName:'GESTURE',handlerType:'flow'}]`
+   → Switch(customInputs:[{name:'evt',**dataType:'any'**}]，'event' 不是合法值类型，
+   会把编辑器 mobx reaction 直接炸掉）→ changeScreen。
+3. 连线：事件的**执行线与数据线都用裸名 `'GESTURE'`**（执行线→@seqin、数据线→evt），
+   靠目标 input 区分；写 `'GESTURE@seqout'` 会被静默丢线（构建照样 0 警，别信门禁）。
+4. 方向判定 `Event.getGestureDir(evt) == N`：LV_DIR LEFT=1/RIGHT=2/TOP=4/BOTTOM=8
+   （lv_area.h），左滑=1 右滑=2。
+5. **让路是免费的**：列表滚动中 scroll_obj 非空 → LVGL 自动不发手势；但要把列表
+   `flagScrollDirection` 锁到 `'ver'`，否则横向被列表吃掉（尤其行 translate_x 撑出
+   横向溢出时）。手势门槛：累计 >50px 且每拍位移 ≥3px——**慢拖不成立**（真机快扫无感）。
+6. 验证面分工（血泪）：手势**只能**在 PC_SIM/真机验收（沙箱夹具
+   `verify/gesturetest_main.c`：SDL 合成快扫 60px/拍 ×4 拍，逐断言 lv_screen_active()）；
+   Run 预览的 CLICKED 是合成派发、没有 indev 管线，滑动永远零反应——别拿它判手势死刑。
