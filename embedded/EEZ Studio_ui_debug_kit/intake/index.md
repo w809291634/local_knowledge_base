@@ -346,3 +346,5 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0135 | 2026-10-16 | 常驻动效链瘦身：静态缩放样式在源头删除 + flow 单写 DEFAULT（双态双写只在有静态 CHECKED 样式时才必要） | eez-flow,objStyleSetProperty,双态双写,样式权重,源头消冲突,帧动作瘦身 | fixed |
 | P-0136 | 2026-10-16 | 选型查档：EEZ『公用函数』=User Action+Call Action；flow 表达式不能内联调函数——单点复用保持内联更优 | user-action,call-action,公用函数,表达式边界,选型对比,objGetDisplayY同族 | fixed |
 | P-0137 | 2026-10-16 | LVGL 动作组'公式墙'减负：单读（刚性子项）+ SetVariable 短变量中继 | objGetDisplayY,setvariable,中继,编辑器可读性,刚性子项,帧表达式 | fixed |
+| P-0138 | 2026-10-17 | PowerShell Start-Process 把含空格工程路径拆成两个 argv → "Failed to load file!" 假象（先查 argv 再疑会话） | cdp,eez-studio,启动参数,powershell,空格路径,failed-to-load-file | fixed |
+| P-0139 | 2026-10-17 | Run 预览画布坐标漂移：写死 clip 连拍截到编辑器画布 → "整体平移+假静止"双伪影；连拍须自量 canvas rect | cdp,burst_shot,截图裁剪,假静止,测量伪影 | fixed |
