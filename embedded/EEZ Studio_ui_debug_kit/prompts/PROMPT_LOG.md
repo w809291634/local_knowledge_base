@@ -1971,3 +1971,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：手势导航口径 + 返回按钮内移
   - 产出/结论：§35——①删 AppList 悬浮返回钮、Dial 去点击跳转（该对页纯手势）；②全功能页加 GESTURE 右滑=返回钮目标（宿主控件级绑定+grt_ 包裹层，Switch 判 getGestureDir(evt)==2→changeScreen，dataType=any、连线裸名 GESTURE 双线程）；3 列表锁 flagScrollDirection=ver 让横向滑成手势；④返回钮 x8→24、标题 50→76（曲面屏）；PC_SIM 夹具 6/6 PASS；发现 P-0141（Run 预览不产生 GESTURE，手势验证面=仿真/真机）；nav_audit 规则 B 放宽为"有 changeScreen 出边（钮或手势）"；未跑正式仿真回归（诊断性沙箱，如实声明）
   - 关联：B11,P-0123,P-0141
+
+### PR-0237 · 2026-10-17 · Qoder
+  - 提示词：保证功能界面的图标和 app list 一样，有一个完整的动画，流畅性保持和 app list 一致
+  - 诉求：所有功能页主图标常驻动画，帧率/缓动与 AppList 滚轮动画同级
+  - 产出/结论：§36——通道表提模块级共用，新增通用 icon_anim_flow()（每页一条 33fps 常驻链，进页即动 unload 自停，纯工程模型+flow）；page_anims() 覆盖 10 真实页+13 占位页（占位页=该行AppList 同款参数通道，叠层/姿势帧表现者给 FALLBACK）；目标控件补 ident+中心 pivot；沙箱夹具 T6 进心率页采样 hr_heart 缩放 226..285=搏动实证，7 断言全 PASS；构建 0/0、nav_audit PASS；Run 预览受 P-0141 限制看不了功能页动画（进页需手势），真机/仿真可看；未跑 L4/dragtest（如实声明）
+  - 关联：B12,skills §11.38,P-0141
