@@ -151,6 +151,7 @@ EEZ Run 静止/滚动双截图（弧峰跟随屏心行）。
 | 步态帧节奏 | `>> 3`（8 拍/帧） | f4 表达式 | 240ms/帧 | 帧数=姿势位图数；加帧改 `% 4` |
 | 叠层特效模式 | grow/rise/sweep/flash/sound/vib/breathe | `wheel_flow_applist()` 的 OVERLAY 分支 + `icon_anim.py` 素材 | 7 种 | 叠层=单张 76px 图，默认 opa 0，flow 写 opa/scale/translate 驱动；**图片名必须精确小写等于位图名**（B6 静默丢 src 坑）|
 | 谁接哪个动画 | 通道表增删 | 生成器 5 个 dict + `OVERLAY_ICONS` | 22 图标全覆盖 | 一个图标可叠多通道（呼吸=spin+pulse）；pulse 的图标缩放并入其 scale 式（A2/A3 双写），其余图标缩放仍 A2 单写 |
+| **心跳波形（§40）** | `hb=wlc%33` + `hbv` 双峰表 | SV entries；AppList ic_* 与功能页 'heartbeat' 通道共用 | 主搏 100→50→22→8，次搏 62→28→10，余 0 | 周期 33 拍≈1s（60bpm）；强度改承载式里的 `315`（主搏 +hbv*315>>10≈+12%）；**搏动只写图标本体 ic_*（pivot 38,38），盘 ib_* 恒走滚轮曲线**——用户口径"外面的⭕️不放大"；osc 正弦搏动仅其余 PULSE 图标沿用 |
 | 待机写入量（MCU 省） | A3 动作集 | `add_anim()` 只进 A3 | 43 写/30ms | 砍非屏心行=表达式已回 0，但写仍发生；真要省需按行拆表 |
 
 **功能页动画（§36）**：同一套通道机制抽出通用 `icon_anim_flow(page, anims)`——每页一条独立常驻链（30ms、相位变量同名 p/q/h/osc/rot，objID 带页名前缀），进页即动、unload 自停；通道表（SPIN/SWING/PULSE/DRIFTX/BOB）已提到模块级供 AppList 与功能页共用，page_anims() 加一行=新页接动画；缩放/旋转类目标必须给中心 pivot。

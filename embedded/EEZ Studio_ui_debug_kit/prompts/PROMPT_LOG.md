@@ -1989,3 +1989,15 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：表盘时钟随真实时间走动；时间来源做成变量、由固件外部写入
   - 产出/结论：§38——①全局变量 time_min（integer 0..1439，native:true）= 当日分钟数唯一真值，codegen 实证 vars.h 双声明+ui.c native_vars 登记，表达式经 VALUE_TYPE_NATIVE_VARIABLE 惰性现读（写后即跳、无需通知 UI），固件桥实现 src/native/native_vars.c（占位+RTC 替换点）；②Dial 指针 1s 心跳链写两针 transform_rotation（(time_min%720)*5/(time_min%60)*60，全整型）；③35 页页头时间 label（htime_<page>）各挂 1s labelSetText 链，TIME_EXPR=padStart+两次 format 拼接（'/'毒化用 *2185>>17 消）；④两轮踩坑登记 P-0142（String.format 尾说明符限定、formatPrefix 空桩）与 P-0143（label textType:expression 被 codegen 编空、正道 labelSetText asar id:29）；同场抓到 P-0132 陈坑复发并修复（icon_anim_flow object 未 c_ident→stic_* 7 错）。构建 0 错 0 警、nav_audit PASS(37/72/35/0)、字体 7/7；运行时行为未实测（仿真未点名；Run 预览可看指针跳动，手势页进入受限 P-0141）。
   - 关联：P-0142,P-0143,P-0132,skills §11.42,B12
+
+### PR-0240 · 2026-10-18 · Qoder
+  - 提示词：我发现各个功能界面返回按钮位置不是很好，可以适当靠边，你自己截图自己判断、自己调整优化（还要保证两边元素对称性）
+  - 诉求：页头左右元素对称、返回钮向边收但适度；授权截图自判迭代
+  - 产出/结论：§39——measure_header.py 墨迹量测基线 47/11（不对称 36px）→ 钮 48 宽 x=10 + 时间内收 14 → 复测 25/25 diff=0 SYMM（16 图抽 4 页全过）；构建 0/0、nav_audit PASS
+  - 关联：P-0141,UI_BEHAVIOR_CONTRACT
+
+### PR-0241 · 2026-10-18 · Qoder
+  - 提示词：app list中心跳的动画不好看，我要求图标心跳跳动动画符合心跳，并且外面的⭕️不放大
+  - 诉求：心率图标按真实心跳节律搏动；圆盘不参与放大
+  - 产出/结论：§40——PULSE 增量从盘挪到图标本体（补中心 pivot），新增 hbv 双峰 lub-dub 包络（1s/60bpm，主搏 +11.7%/次搏 +7.2%/静息）；AppList 与功能页 hr_heart 共用（icon_anim_flow 'heartbeat' 通道按需注入）；hearttest 夹具 3 断言 ALL PASS（盘 2s 恒 280、双峰+静息复现）；构建 0/0、nav_audit PASS
+  - 关联：B12,skills §11.38
