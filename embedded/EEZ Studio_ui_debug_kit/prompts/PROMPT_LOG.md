@@ -2013,3 +2013,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：页头改文字返回贴边对称、AppList 降密度、心跳换波形、放大不越界、诊断 Checks 卡死
   - 产出/结论：§42 去箭头标题文字即返回键（真可点容器保 btn_back ident，边距按实拍 22/25 SYMM）；§43 pitch 88→100 一屏5图标（截止400/弧140/缩放1374/门350 联动，峰值仍280）；§44 心跳 v2 单次强搏+弹性回弹 72bpm（AppList ic 与功能页 hr_heart 共用）；§45 越界修正 AppList amp 500→200（盘1.094×图标嵌套相乘顶满行距，降到88px留6px），hearttest 加有效尺寸上限断言 ALL PASS；诊断 Checks 转圈=P-0145 单实例抢占（自动化链CLI重写src/ui 撞用户开着的编辑器 + 9222 移交失效），eez_build 加早停诊断，关净重开验证 Checks 秒出。构建 0/0、nav_audit PASS、字体 7/7
   - 关联：P-0145,P-0144,PR-0240,PR-0241,B12
+
+### PR-0244 · 2026-10-18 · Qoder
+  - 提示词：为什么 eez check 一直无法检查结束 / 你可以 git 回退方式直到找到原因 / 那你就修复这个问题
+  - 诉求：定位并修复 EEZ Studio Checks 面板无限转圈
+  - 产出/结论：§46——git 二分定坏提交 2aad4d9(§35 手势)，内容二分+对照(好版本加未连接 customInput 即转圈)锁定根因=「组件带非空 customInputs」触发 EEZ1.22 检查器死循环(P-0146)；修复：每页手势唯一目标方向无关，删 Switch+evt 判 getGestureDir 改 host[GESTURE] 直连 changeScreen，customInputs 归零；验证 真实工程 Checks STOPPED、构建0/0、nav_audit PASS、gesturetest 15 断言 ALL PASS(含§43 pitch100坐标同步)。诊断法沉淀 spin_test.sh(像素差分判 spinner)
+  - 关联：P-0146,P-0141,PR-0236,B12

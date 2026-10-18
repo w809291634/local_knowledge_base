@@ -3,7 +3,7 @@
 - **工程**：watch (Design Watch)
 - **日期**：2026-10-18
 - **工具**：Qoder
-- **状态**：known-limitation
+- **状态**：fixed
 - **标签**：eez-studio,checks,死循环,switch,custominputs,手势,编辑器bug,git二分
 - **关联提示词**：PR-0244
 
@@ -23,9 +23,11 @@ git 版本二分（watch/.git 是仓库）定位：首个坏提交 = 2aad4d9（�
 
 ## 修复（做了什么）
 
-未改实现（手势运行时是对的，删 customInputs 会断 Event.getGestureDir(evt) 取事件）。
-定性为编辑器 Checks 的已知 bug：可安全忽略（不 block 任何产物）。
-候选规避（需再验运行时才做）：改用不带 customInputs 的决策构造接事件，或事件走 SetVariable 中继到普通变量再判。
+内容二分进一步证明：好版本加一个未连接 customInput（any 或 integer 皆）即转圈
+⇒ 触发点是「组件带非空 customInputs」本身，非 any 专属、非连线。SetVariable 中继也带 customInput 故无效。
+最终修复：本工程每页手势只有唯一目标，方向无关不影响导航 ⇒ 删「Switch+evt 判 getGestureDir」，
+改 host[GESTURE] 直连 changeScreen(固定目标)，全工程 customInputs 归零 → Checks 正常结束，
+gesturetest 15 断言仍全过（见报告 §46）。
 
 ## 证据（数字 / 命令输出）
 
