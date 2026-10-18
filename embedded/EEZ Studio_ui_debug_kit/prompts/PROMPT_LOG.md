@@ -2025,3 +2025,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：单变量裁决 Checks 永转真因，优先信手册
   - 产出/结论：§48——手册 A1.2.21+asar CustomInput{name,type}+编辑器 Convert-to-input 源码三源定案：类型字段=type，我们 §35 起误写 dataType 被静默丢弃→无类型输入→后台校验永不收敛。最小复现 repro_ok(带type)静止/repro_bad(缺type)转圈单变量闭环。生成器 37 处改 type:'any'；§46 删 Switch 方案回滚，方向判定手势与 Checks 静止兼得；gesturetest 恢复 T5 反向不跳转断言。教训：手写工程 JSON 字段名必须对照 asar classInfo 核实，编辑器对未知字段零告警
   - 关联：P-0146,P-0132,PR-0236,PR-0244
+
+### PR-0246 · 2026-10-18 · Qoder
+  - 提示词：但是我发现出现错误 check 发现错误了，修复一下 / 整理到经验库，避免类似问题
+  - 诉求：清掉 §48 修复后 Checks 亮出的红错，并把两轮裁决沉淀为门禁与方法论
+  - 产出/结论：§48b——37× `Output "NONE" is not connected`=§35 起悬空兜底输出（检查器收敛后才有机会报旧账）；删 NONE test（无 default Switch 合法），方向手势全保留。nav_audit 新增规则 E（E1 customInputs 必含 type、E2 Switch outputName 必有连线），坏版本 e1=37 e2=37 FAIL/修复版 0/0 PASS 双向验证，并入链路 ③.5。认知沉淀 skills §11.43：CLI 0错0警≠编辑器 Checks 干净（判据=徽标零错截图+静态门禁双保险）、转圈与红错是检查器两种状态、字段名对 asar classInfo/手册核实、最小复现工程单变量裁决法。P-0146 补 §48b 案并回改标题/索引；报告 §48b
+  - 关联：P-0145,P-0146,PR-0244,PR-0245,skills §11.41/§11.43

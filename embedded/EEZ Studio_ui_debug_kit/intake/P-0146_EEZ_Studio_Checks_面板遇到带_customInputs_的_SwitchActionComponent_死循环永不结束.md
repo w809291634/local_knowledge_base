@@ -1,10 +1,10 @@
-# P-0146 · EEZ Studio「Checks」面板遇到带 customInputs 的 SwitchActionComponent 会死循环永不结束（编辑器 bug，不影响构建/运行）
+# P-0146 · EEZ Studio「Checks」永转/红错的两次裁决（初判“编辑器bug”已作废，终版=我们写错 customInput 字段名）
 
 - **工程**：watch (Design Watch)
 - **日期**：2026-10-18
 - **工具**：Qoder
 - **状态**：fixed
-- **标签**：eez-studio,checks,死循环,switch,custominputs,手势,编辑器bug,git二分
+- **标签**：eez-studio,checks,custominputs,type字段,switch输出悬空,git二分,误判修正
 - **关联提示词**：PR-0244
 
 ## 现象（看到什么）
@@ -61,3 +61,19 @@ CLI 无头 Check（同一检查器批模式）新旧工程均 0 错 0 警 ⇒ �
 - 真实工程 35 处补 type:"any" 后 → 静止（5/5 采样）；生成器已改，dataType 全工程清零。
 - 连带作废：§46"删 customInputs 保静止"的取舍**不再需要**——方向判定手势与 Checks 静止兼得；
   §46 直连方案已从生成器回滚；P-0145 单实例抢占仍是独立真实问题（构建链与手工会话互斥）。
+
+---
+【§48b 补案 2026-10-18 晚（type:"any" 修好后 Checks 亮出 37 条红错）】
+- 补 type 后后台检查器**收敛并正常工作**，随即报 37× `Output "NONE" is not connected`——
+  这不是新问题，是它**终于有能力报错**了。根因：§35 手势 Switch 的 tests 里挂了一个
+  `outputName:"NONE"` 兜底分支却从未画连线；EEZ 规定 Switch 每个 test 的输出必须接连接线。
+- 修法：删 NONE test（条件不满足=flow 自然结束，是合法语义；无 default 的 Switch 合法）。
+  手势方向过滤（getGestureDir 判定）完整保留——终版方案=方向手势与 Checks 干净兼得。
+- 关键认知：**CLI 无头构建"0 错 0 警"≠编辑器 Checks 干净**。CLI 报"无错误"时同样的悬空 NONE
+  在编辑器里是 37 条红错——两套检查面覆盖不同。判据：①编辑器 Checks 徽标零错误（截图为证）；
+  ②静态门禁 nav_audit 规则 E（E1 customInputs 必带 type；E2 Switch 每个 outputName 必须有
+  对应 connectionLine）。E 已并入日常链路 ③.5，对旧坏版本 b8ed6ed 实测 e1=37 e2=37 FAIL，
+  对修复后版本 e1=0 e2=0 PASS——双向验证过。
+- 教训：手写工程 JSON 的**字段名与结构约束必须对照 asar classInfo / 手册核实**（dataType vs type
+  一个单词之差＝静默丢弃→永不收敛→误判"编辑器 bug"走了三轮弯路）；"转圈"与"红错"是检查器的
+  两种状态（不收敛 vs 收敛后报错），别把前者当后者、也别把后者当"工程坏了"。

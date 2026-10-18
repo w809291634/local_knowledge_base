@@ -2102,3 +2102,33 @@ f4  = (wlc >> 3) % 4            # 烘焙姿势帧选通（240ms/帧）
    想缩小显示用 transform_scale，不是改对象框。
 5. **表达式文本进字体子集要手动兜底**：采集器只收 literal；数字/冒号在生成器里
    `all_text.update('0123456789:')`，否则换表达式绑定后 ':' 掉字。
+
+
+### 11.43 ★ 手写工程 JSON 的字段对账法与 Checks 双判据（watch §48/§48b，2026-10-18，P-0146 终版）
+
+**需求原型**："Checks 一直转圈/突然一排红错，是不是 EEZ 的 bug？"——本案两轮裁决：
+转圈=字段名笔误，红错=检查器终于工作了。**以 §11.41 第 7 条为准，其第 2 条的
+`dataType` 写法已作废（正确见下）。**
+
+1. **字段名权威对账**：编辑器对未知字段**静默丢弃、零告警**。工程 JSON 手写的任何字段名，
+   落码前二选一对账：① 手册对应节（如 A1.2.21 customInput）；② asar 注册表
+   （`resources/app.asar` 里 classInfo，如 `CustomInput{name,type}`）。
+   customInput 的类型字段是 **`type`**（`{name:'evt',type:'any'}`）；写成 `dataType` =
+   无类型输入 → 后台校验永不收敛 → Checks 图标永转——一个单词之差走了三轮弯路。
+2. **Switch 的输出不得悬空**：每个 `tests[].outputName` 必须有对应 connectionLine
+   （source=该 Switch objID、output=该名字）；悬空即 `Output "X" is not connected`。
+   兜底/默认分支不是义务：**无 default 的 Switch 合法**（条件不满足=flow 自然结束）。
+3. **CLI 0错0警 ≠ 编辑器 Checks 干净**：headless 构建与编辑器后台检查器覆盖面不同——
+   同一工程 CLI 报"No error and no warning"时，编辑器里躺着 37 条红错。交付判据双保险：
+   ① 编辑器 Checks 徽标零错误（截图为证；打开方法=CDP 真实鼠标点底部
+   `.flexlayout__border_button`，合成 click 无效，徽标文本即 "Checks (N)"）；
+   ② 静态门禁（本工程 nav_audit 规则 E：E1 有 customInputs 必含 'type'、
+   E2 Switch 每个 outputName 有连线；对坏版本 e1=37 e2=37 FAIL/好版本 0/0 PASS 双向验证）。
+4. **"转圈"与"红错"是检查器的两种状态**：不收敛（图标永转、无条目）≠ 收敛后报错
+   （图标静止、红字列表）。别把前者当"工程坏了"，更别把后者当"修复引入的新问题"——
+   补 type 后亮出的 37 条 NONE 悬空错，其实从 §35 起就存在，只是检查器此前根本没机会报。
+5. **最小复现工程法（裁决平台行为的标准姿势）**：怀疑某字段/组件触发编辑器异常时，
+   生成一对只差该单变量的最小工程（本工程 `design/make_gesture_repro.py` →
+   repro_ok/repro_bad），用同一套像素差分脚本（`sim_watch/spin_test.sh`：启动带 9222、
+   等标题离开 Home、连拍 3 帧、对 spinner 区域做差分）判"转/停"。单变量闭环一次定案，
+   胜过在真实工程上剥离十轮。前提：EEZ 单实例——每次只允许一个链在跑（P-0145）。
