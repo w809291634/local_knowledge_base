@@ -354,3 +354,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0143 | 2026-10-18 | LVGL 目标 label textType:'expression' 被 codegen 编成空串（0 错 0 警的静默坑）；变量文本正道=flow labelSetText 动作（asar id:29，运行时支持 expression）；判据要看 codegen 产物有无 eval | label,textType,expression,codegen静默,labelSetText,asar | fixed |
 | P-0144 | 2026-10-18 | LVGL image 对象框<源图=静默切割（源按原生尺寸绘制、框只当裁剪窗；0 错 0 警）；缩显示要用 transform_scale 不是改框 | lvgl,image,裁剪,对象尺寸,静默 | fixed |
 | P-0145 | 2026-10-18 | EEZ 单实例被自动化链+手工会话双开抢占：用户 Checks 无限转圈、脚本 9222 移交失效空等超时；eez_build 加早停诊断+协作纪律 | eez-studio,单实例,cdp,checks转圈,自动化冲突 | fixed |
+| P-0146 | 2026-10-18 | EEZ Studio Checks 面板遇带 customInputs 的 SwitchActionComponent 死循环永不结束（编辑器 bug，不影响构建/运行/导航）；git+内容二分定位到手势链 evt 输入 | eez-studio,checks,死循环,switch,custominputs,手势 | known-limitation |
