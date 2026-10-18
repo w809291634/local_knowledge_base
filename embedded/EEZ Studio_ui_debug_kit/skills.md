@@ -2089,5 +2089,8 @@ f4  = (wlc >> 3) % 4            # 烘焙姿势帧选通（240ms/帧）
    'expression'}`，运行时 eez-flow.cpp:3891 STR_PROP 求值后 set_text）。样式属性走
    `objStyleSetProperty`（本例两针 `transform_rotation`=(t%…)*N，全整型）；
    常驻跳动=每页挂 1s 心跳链 Start→Loop→Delay(1000)→动作组（进页起、unload 停）。
+4b. **image 控件尺寸必须 ≥ 源图原生尺寸**（P-0144）：LVGL 的 lv_image 不缩放源图，
+   对象框只当裁剪窗——框小于源=静默切掉边缘（心率红心被切平实证，构建 0 错 0 警）；
+   想缩小显示用 transform_scale，不是改对象框。
 5. **表达式文本进字体子集要手动兜底**：采集器只收 literal；数字/冒号在生成器里
    `all_text.update('0123456789:')`，否则换表达式绑定后 ':' 掉字。
