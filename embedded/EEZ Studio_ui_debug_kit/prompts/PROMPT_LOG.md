@@ -2031,3 +2031,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：清掉 §48 修复后 Checks 亮出的红错，并把两轮裁决沉淀为门禁与方法论
   - 产出/结论：§48b——37× `Output "NONE" is not connected`=§35 起悬空兜底输出（检查器收敛后才有机会报旧账）；删 NONE test（无 default Switch 合法），方向手势全保留。nav_audit 新增规则 E（E1 customInputs 必含 type、E2 Switch outputName 必有连线），坏版本 e1=37 e2=37 FAIL/修复版 0/0 PASS 双向验证，并入链路 ③.5。认知沉淀 skills §11.43：CLI 0错0警≠编辑器 Checks 干净（判据=徽标零错截图+静态门禁双保险）、转圈与红错是检查器两种状态、字段名对 asar classInfo/手册核实、最小复现工程单变量裁决法。P-0146 补 §48b 案并回改标题/索引；报告 §48b
   - 关联：P-0145,P-0146,PR-0244,PR-0245,skills §11.41/§11.43
+
+### PR-0247 · 2026-10-18 · Qoder
+  - 提示词：心跳跳动放大之后边框变为正方形，你仔细核对一下 UI 还有很多问题
+  - 诉求：修裁切坑 + 全 UI 主动目检找剩余缺陷
+  - 产出/结论：§49——hbshot 夹具峰值帧取证实锤"LVGL 子件恒裁到父框、OVERFLOW_VISIBLE 只扩 ext_draw_size"（源码 lv_refr.c:140/lv_obj_pos.c:914）；载体重构：盘位图提为行直接子件+滚轮曲线并入 ic 表达式（静息280/峰299 逐点等价），hearttest 参数化 rest 基线后 ALL PASS、gesturetest 14 断言 ALL PASS、peak 复测正圆。全 16 屏拼图目检：修 Dial BPM 穿字（cy-14→cy+20 对实拍）；指针两轮裁决恢复原长（曾误收 62/92→26/34，真因只是 BPM 位置）——教训入 skills §11.44 第 5 条"逐项对照实拍，别顺手扩大改动面"。P-0147 登记
+  - 关联：P-0147,P-0144,skills §11.44,PLAYBOOK §2.9

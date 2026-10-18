@@ -355,3 +355,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0144 | 2026-10-18 | LVGL image 对象框<源图=静默切割（源按原生尺寸绘制、框只当裁剪窗；0 错 0 警）；缩显示要用 transform_scale 不是改框 | lvgl,image,裁剪,对象尺寸,静默 | fixed |
 | P-0145 | 2026-10-18 | EEZ 单实例被自动化链+手工会话双开抢占：用户 Checks 无限转圈、脚本 9222 移交失效空等超时；eez_build 加早停诊断+协作纪律 | eez-studio,单实例,cdp,checks转圈,自动化冲突 | fixed |
 | P-0146 | 2026-10-18 | 【终版+§48b】Checks 永转根因=customInput 类型字段笔误 dataType→应为 type（手册 A1.2.21）；补 type 后收敛并亮 37× Output "NONE" is not connected→删悬空兜底输出；**CLI 0错0警≠编辑器 Checks 干净**，门禁=nav_audit 规则 E（E1 必带 type / E2 Switch 输出不得悬空）；最小复现 repro_ok/repro_bad 单变量裁决；非 EEZ bug | eez-studio,checks,custominputs,type字段,switch输出,nav_audit规则E | fixed |
+| P-0147 | 2026-10-18 | LVGL 9 子件恒裁到父框：OVERFLOW_VISIBLE 只扩 ext_draw_size（lv_refr.c:140 实证），子件 scale>1 越界=静默切平（圆变方）；修复=把放大内容提为大容器直接子件并把父动画量并入自身表达式（逐点等价） | lvgl,裁切,overflow_visible,transform_scale,结构坑 | fixed |
