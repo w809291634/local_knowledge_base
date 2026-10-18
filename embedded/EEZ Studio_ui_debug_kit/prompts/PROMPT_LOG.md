@@ -2001,3 +2001,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：心率图标按真实心跳节律搏动；圆盘不参与放大
   - 产出/结论：§40——PULSE 增量从盘挪到图标本体（补中心 pivot），新增 hbv 双峰 lub-dub 包络（1s/60bpm，主搏 +11.7%/次搏 +7.2%/静息）；AppList 与功能页 hr_heart 共用（icon_anim_flow 'heartbeat' 通道按需注入）；hearttest 夹具 3 断言 ALL PASS（盘 2s 恒 280、双峰+静息复现）；构建 0/0、nav_audit PASS
   - 关联：B12,skills §11.38
+
+### PR-0242 · 2026-10-18 · Qoder
+  - 提示词：这个其他功能界面的返回还是不好看，文字可以左移，两边对称，然后心跳明显被切割（附心率页截图）
+  - 诉求：页头标题向箭头靠拢成组且两侧对称；心形图标被切割要修
+  - 产出/结论：§41——①hr_heart 对象框 40→原生 90（P-0144：LVGL image 不缩放源图、框小即静默裁切，pivot 中心+锚点换算保位）；②标题 76→62（箭头-标题间隙 26px 成组，出钮框 4px 防点击穿透）；复测心形红墨带 27→40px 尖端回归、页头 25/25 SYMM、hearttest ALL PASS、构建 0/0（插曲：GUI 字体提取偶发 6/7 判 FONT-EXTRACT-INCOMPLETE，重跑即齐，门禁有效）
+  - 关联：P-0144,PR-0240,PR-0241,B12
