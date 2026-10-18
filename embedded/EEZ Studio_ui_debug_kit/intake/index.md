@@ -353,3 +353,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0142 | 2026-10-18 | String.format 只收 (fmt,单值) 且说明符必须在串尾（中部 %d 不可用）；formatPrefix 运行时是恒报错空桩；"HH:MM"=padStart+两次 format+ '+' 拼接；同场抓到 P-0132 陈坑复发（stic_* 驼峰未 c_ident → Widget index not found×7） | 表达式引擎,String.format,padStart,formatPrefix,native变量,时间显示 | fixed |
 | P-0143 | 2026-10-18 | LVGL 目标 label textType:'expression' 被 codegen 编成空串（0 错 0 警的静默坑）；变量文本正道=flow labelSetText 动作（asar id:29，运行时支持 expression）；判据要看 codegen 产物有无 eval | label,textType,expression,codegen静默,labelSetText,asar | fixed |
 | P-0144 | 2026-10-18 | LVGL image 对象框<源图=静默切割（源按原生尺寸绘制、框只当裁剪窗；0 错 0 警）；缩显示要用 transform_scale 不是改框 | lvgl,image,裁剪,对象尺寸,静默 | fixed |
+| P-0145 | 2026-10-18 | EEZ 单实例被自动化链+手工会话双开抢占：用户 Checks 无限转圈、脚本 9222 移交失效空等超时；eez_build 加早停诊断+协作纪律 | eez-studio,单实例,cdp,checks转圈,自动化冲突 | fixed |
