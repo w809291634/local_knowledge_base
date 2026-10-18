@@ -2019,3 +2019,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：定位并修复 EEZ Studio Checks 面板无限转圈
   - 产出/结论：§46——git 二分定坏提交 2aad4d9(§35 手势)，内容二分+对照(好版本加未连接 customInput 即转圈)锁定根因=「组件带非空 customInputs」触发 EEZ1.22 检查器死循环(P-0146)；修复：每页手势唯一目标方向无关，删 Switch+evt 判 getGestureDir 改 host[GESTURE] 直连 changeScreen，customInputs 归零；验证 真实工程 Checks STOPPED、构建0/0、nav_audit PASS、gesturetest 15 断言 ALL PASS(含§43 pitch100坐标同步)。诊断法沉淀 spin_test.sh(像素差分判 spinner)
   - 关联：P-0146,P-0141,PR-0236,B12
+
+### PR-0245 · 2026-10-18 · Qoder
+  - 提示词：先确定是不是 customInputs 导致的 / 我已经删除了为什么还是不行，你自己查手册确定原因 / 单独创建一个工程，使用手势切换，简单的两个界面切换这种，在一个 custom 中查找问题，优先查手册找解决方法
+  - 诉求：单变量裁决 Checks 永转真因，优先信手册
+  - 产出/结论：§48——手册 A1.2.21+asar CustomInput{name,type}+编辑器 Convert-to-input 源码三源定案：类型字段=type，我们 §35 起误写 dataType 被静默丢弃→无类型输入→后台校验永不收敛。最小复现 repro_ok(带type)静止/repro_bad(缺type)转圈单变量闭环。生成器 37 处改 type:'any'；§46 删 Switch 方案回滚，方向判定手势与 Checks 静止兼得；gesturetest 恢复 T5 反向不跳转断言。教训：手写工程 JSON 字段名必须对照 asar classInfo 核实，编辑器对未知字段零告警
+  - 关联：P-0146,P-0132,PR-0236,PR-0244

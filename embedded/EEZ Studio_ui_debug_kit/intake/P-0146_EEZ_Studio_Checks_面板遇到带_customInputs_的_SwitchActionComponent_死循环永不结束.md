@@ -49,3 +49,15 @@ CLI 无头 Check（同一检查器批模式）新旧工程均 0 错 0 警 ⇒ �
 疑点定位到 A1.2.21（输入 type 用于校验所连数据线类型）：事件数据线类型无法在 customInput 上合法声明
 （'event' 直接崩编辑器 P-0141，'any'/'integer' 令后台检查永不收敛）——EEZ 1.22 事件输入类型体系不成熟。
 修复结论不受影响：能用「直连 changeScreen」就别用 customInputs。
+
+
+---
+【终版裁决 2026-10-18 晚（最小复现工程定案）】**根因=我们自己的字段名笔误，不是 EEZ bug**。
+- 手册 A1.2.21 + asar CustomInput{name,type}：自定义输入的类型字段叫 **`type`**（编辑器
+  "Convert to input" 写 `type:"any"`）；我们 §35 起一直写 **`dataType:"any"`** → 未知字段被
+  编辑器静默丢弃 → 输入**无类型** → 后台 Checks（按类型校验连线）永不收敛 → 图标永转。
+- 最小复现（design/make_gesture_repro.py 生成 gesture-repro/repro_ok|repro_bad，两页手势互切）：
+  repro_ok（evt 带 type:"any"）→ 静止；repro_bad（缺 type）→ 转圈。单变量闭环。
+- 真实工程 35 处补 type:"any" 后 → 静止（5/5 采样）；生成器已改，dataType 全工程清零。
+- 连带作废：§46"删 customInputs 保静止"的取舍**不再需要**——方向判定手势与 Checks 静止兼得；
+  §46 直连方案已从生成器回滚；P-0145 单实例抢占仍是独立真实问题（构建链与手工会话互斥）。
