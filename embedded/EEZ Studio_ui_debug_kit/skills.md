@@ -2058,6 +2058,14 @@ f4  = (wlc >> 3) % 4            # 烘焙姿势帧选通（240ms/帧）
 5. **让路是免费的**：列表滚动中 scroll_obj 非空 → LVGL 自动不发手势；但要把列表
    `flagScrollDirection` 锁到 `'ver'`，否则横向被列表吃掉（尤其行 translate_x 撑出
    横向溢出时）。手势门槛：累计 >50px 且每拍位移 ≥3px——**慢拖不成立**（真机快扫无感）。
+7. ★ **§46 大改（P-0146）**：旧配方「Switch + customInputs:[evt] 判 Event.getGestureDir(evt)」
+   会让 **EEZ Studio 1.22 的 Checks 面板无限转圈**——检查器遇到任何带非空 customInputs 的组件
+   就死循环（连好工程加一个未连接的 customInput 都中招，与 any/连线无关）。运行时不受影响，
+   但编辑器 Checks 永不结束。**新配方（零 customInputs）**：若每页手势只有唯一目标（常见于
+   表/列表导航），删掉 Switch，直接 `host[GESTURE 执行线] → changeScreen(固定目标)`，代价是
+   不判左右方向（任一手势触发该页唯一目标，导航等价）。确需按方向分流才保留 customInput，
+   并接受 Checks 转圈（或升级 EEZ 版本）。诊断法：导出历史工程版本 + 像素差分判 spinner
+   （sim_watch/spin_test.sh）。
 6. 验证面分工（血泪）：手势**只能**在 PC_SIM/真机验收（沙箱夹具
    `verify/gesturetest_main.c`：SDL 合成快扫 60px/拍 ×4 拍，逐断言 lv_screen_active()）；
    Run 预览的 CLICKED 是合成派发、没有 indev 管线，滑动永远零反应——别拿它判手势死刑。
