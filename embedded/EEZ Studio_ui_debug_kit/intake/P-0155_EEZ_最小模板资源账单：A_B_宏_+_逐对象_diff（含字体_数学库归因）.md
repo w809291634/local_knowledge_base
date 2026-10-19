@@ -30,3 +30,15 @@ EEZ 代价不是一个数：总差 flash +422714B / RAM +14449B，但其中只�
 ## 沉淀（新增断言 / 案例 / 文档）
 
 新增可复用测量法：A/B 编译宏 + esp_idf_size --files JSON 双构建 diff（比 parse_map.py 更直接）；续 P-0154 线程；模板脚手架见 reference/11_minimal_eez_project_scaffold.md
+
+## ★ 口径更正（2026-10-19，见 P-0158）：字体不是 EEZ
+
+原"合计（A/B 总差）+422,714B"把 **Montserrat 字体** 也算进了 EEZ，属口径不严。重做 A/B（同配置）并剥离字体后：
+
+- **EEZ 自身**（引擎 eez-flow.cpp + 生成的 screens/ui + 引擎连带 libm/esp_timer）：
+  **131,184B flash + 3,985B RAM**（优化后；优化前约 264KB / 14.8KB）
+- **字体**（Montserrat 26/24/22/20/18/16/12）：**164,138B** —— LVGL 资产，**非 EEZ**；
+  只因 sdkconfig 开了这 7 档、加上 EEZ 的 `fonts[]` 名字表按名引用，才被拉进固件。原生 LVGL 用同样字号也要付这笔。
+- 整机 991,024B = 裸底座 695,712B + EEZ 131,184B + 字体 164,138B。
+
+⇒ 引用本条数字时请注明是否含字体。详见 `P-0158_*.md`。

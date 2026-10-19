@@ -118,6 +118,16 @@ python -m esp_idf_size --files --format json build\lvgl_demo_template.map > buil
 > 注意：这三项**都不减那 222KB「引擎代码」的固有能力**，而是分别压 SRAM、压代码密度、去掉用不到的 EH 运行时。
 > 手册 Build 面板那 3 项里，**只有 `Execution queue size` 对本模板有效**；`Compress flow definition` 在最小 flow（`assets[332]`）下会**净增** flash（贴进 LZ4 库）。
 > 详见 `../intake/P-0157_*.md`。
+
+> **口径更正（2026-10-19）**：§3 表里的「A/B 总差」把 **字体** 也算进了 EEZ，那是不严的。剥离字体后：
+> **EEZ 自身 ≈ 131,184B flash + 3,985B RAM**（引擎 94,668 + 生成 screens/ui 740 + 引擎连带 35,776）；
+> **字体 164,138B** 是 LVGL 资产（因 sdkconfig 开了 7 档 + EEZ 字体名表按名引用才被拉入），**非 EEZ**。
+> 整机 991,024B = 裸底座 695,712 + EEZ 131,184 + 字体 164,138。
+>
+> ★ **别用 `.a`/`.o` 的文件大小估固件占用**：`libui.a` 磁盘 5.73MB，其中约 98% 是 `.debug_*` 与符号表；
+> `strip --strip-debug` 后仍有 2.14MB（含未被 `--gc-sections` 丢弃的未引用代码/字符串），
+> 而真正进固件只有 **95,408B flash + 3,553B RAM**（用 `idf.py size-files` 或 map 才作数）。
+> 详见 `../intake/P-0158_*.md`。
 ## §4 与 P-0154（lvgl_demo_ai 全量）的关系
 
 
