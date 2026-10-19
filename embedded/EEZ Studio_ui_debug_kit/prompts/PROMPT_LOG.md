@@ -2091,3 +2091,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 产出/结论：手册确认配置1（Place Tab widgets immediately under TabView）；结合内核证据确认真根因=Tab 页 SNAPPABLE 被裁，按 eez-test 形态（只裁 SCROLLABLE）重输工程，CLI+PC_SIM 0 错
   - 关联：P-0150
 
+### PR-0257 · 2026-10-19 15:58 · WorkBuddy
+  - 提示词：仔细阅读 手册，我要求 W1. AnimationImage 将这个输出到示例，并且总结到经验中，经验使用 官方示例 目录
+  - 诉求：按 EEZ 手册 W1. AnimationImage 输出一个示例工程，并把经验总结进经验库（引用官方手册/示例目录）
+  - 产出/结论：新建 w1-animation-image 示例（8 帧 spinner，Duration/Repeat 语义，lv_animimg 代码链）；发现 CLI 不产图片 .c，gen_images.py 补烘；经验入库 P-0151
+  - 关联：P-0151
+

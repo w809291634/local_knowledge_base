@@ -359,3 +359,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0148 | 2026-10-19 | 图标/字体源码分目录：separateFolderForImagesAndFonts 官方开关（images/ + fonts/，头文件恒在根），默认推荐开启；勾选后生成器要置位、fonts_ready 等路径硬编码要同步 | eez,构建产物,目录布局,separateFolderForImagesAndFonts,工具链路径,孤儿清理 | fixed |
 | P-0149 | 2026-10-19 | 手势"低速清零"规则（lv_indev.c:1731，|v|<3 清零、50px 触发，硬编码无 API）×三环境读点粒度：SDL 逐事件直通(仿真器,难触发)/EEZ WASM+DOM按帧合并(好触发)/真机30ms轮询(正常)；asar 实证 EEZ 预览=真 LVGL9.4.0 WASM（lvgl_runtime_v9.4.0.js）；修复=main.c 自建 30ms 轮询 indev（内核零改动）+ --gt 回归自测；LV_USE_GESTURE_RECOGNITION 无单指 swipe | gesture,低速清零,读点粒度,sdl,emscripten,wasm,asar取证,仿真器 | fixed |
 | P-0150 | 2026-10-19 | EEZ Tabview 页拖不动：Tab 页被裁 SNAPPABLE，吸附滚动零吸附点 | tabview,SNAPPABLE,吸附滚动,widgetFlags,remove_flag,SCROLL_CHAIN,PC_SIM,滑动切页 | fixed |
+| P-0151 | 2026-10-19 | EEZ 手册 W1 AnimationImage 落地：CLI 构建不产图片 .c，帧位图=data-URI 内嵌 | AnimationImage,animimg,位图,data-URI,CLI不烘图片,lv_image_dsc_t,ARGB8888,gen_images | fixed |
