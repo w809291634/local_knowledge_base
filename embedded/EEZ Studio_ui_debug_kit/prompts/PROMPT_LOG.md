@@ -2073,3 +2073,21 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：把该开关定为所有工程默认勾选并登记进经验库
   - 产出/结论：用户 GUI 勾选+Build 后实测迁移完成（images/ 58、fonts/ 7、根 0 散落）；生成器 build_watch_ui.py 置位 True 防重生成覆盖；eez_build.py fonts_ready 路径同步 src/ui/fonts 并改 docstring/报错语；fonts_ready()=True、py_compile 通过；P-0148 登记（含启用检查单）
   - 关联：P-0148,PR-0252
+### PR-0254 · 2026-10-19 15:31 · WorkBuddy
+  - 提示词：手势切换使用，我发现仿真器要求鼠标速度挪动很快才能够切换，你重新全检一个工程，使用tabview方式来实现，要求两个窗口之前可以使用滑动切换，要求tab隐藏
+  - 诉求：把手势切页换成 tabview 跟手滑动切页（两页、隐藏 tab 栏）
+  - 产出/结论：新建 tabview-swipe-switch：单 screen + Tabview(tabviewSize=0 隐藏栏) + 2 个 Tab（配置1），零流组件零连线，CLI+PC_SIM 编译通过；但用户实测无法滑动
+  - 关联：P-0150
+
+### PR-0255 · 2026-10-19 15:32 · WorkBuddy
+  - 提示词：我测试无法滑动
+  - 诉求：反馈 tabview 示例在仿真器里无法滑动切页
+  - 产出/结论：逐步定位：注入真实拖动 97 PRESSING/0 SCROLL→纯 LVGL 对照正常→探针锁定 SNAPPABLE 吸附点根因（详见 P-0150）
+  - 关联：P-0150
+
+### PR-0256 · 2026-10-19 15:32 · WorkBuddy
+  - 提示词：我已经找到方法了，tabview 里面必须放tab就可以实现了，你仔细查看手册，确认这点，然后总结到 本工程，重新输出工程
+  - 诉求：用户实测：Tabview 里必须放 Tab 控件才可实现滑动切页，要求查手册确认并重输工程
+  - 产出/结论：手册确认配置1（Place Tab widgets immediately under TabView）；结合内核证据确认真根因=Tab 页 SNAPPABLE 被裁，按 eez-test 形态（只裁 SCROLLABLE）重输工程，CLI+PC_SIM 0 错
+  - 关联：P-0150
+

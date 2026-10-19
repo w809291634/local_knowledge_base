@@ -2215,3 +2215,26 @@ f4  = (wlc >> 3) % 4            # 烘焙姿势帧选通（240ms/帧）
    折算成一次可控写入。
 5. **期望值从表达式推导，别拍脑袋**：首跑 4 FAIL 全是夹具判据错（swing 没按 amp512/1024
    分档、delta 误过 mx-mn 恒 0）——先核通道 amp 再定期望；夹具错就修夹具，别改工程。
+
+### 11.48 ★ LVGL"拖不动/滚不动"三查法 + tabview 吸附滚动特例（tabview-swipe-switch，2026-10-19，P-0150）
+
+**症状族**：仿真器里按住拖动无反应 / 滚动列表拖不动 / tabview 无法滑动切页；反面表相是
+"手势要快速滑动才触发"（拖动被消费/被掐断，只剩 GESTURE 能出来）。
+
+**三查（按序，全部看生成产物 screens.c 的 `lv_obj_remove_flag(...)` 列表）**：
+1. **查 SCROLL_CHAIN_\***：EEZ widgetFlags 是"最终态白名单"，按类默认差集发射
+   `lv_obj_remove_flag`——拖动路径上的对象（label/容器）被裁 `SCROLL_CHAIN_HOR/VER` 后，
+   不可滚动对象处滚动链直接 break（lv_indev_scroll.c:327-334）。
+2. **查 SNAPPABLE（吸附滚动特例）**：容器一旦设了 `lv_obj_set_scroll_snap_*`（tabview
+   内容区天生 SNAP_CENTER），内核拖动判定**不算普通溢出**，改走
+   `has_more_snap_points()`（lv_indev_scroll.c:353-360）只数**带 SNAPPABLE 的子对象**
+   当吸附点——页被裁 SNAPPABLE = 零吸附点 = 该方向判不可滚。tabview 的 Tab 页、
+   任何"页容器"都要保留 SNAPPABLE。tabview 可滑正确形态（eez-test 实测同款）：
+   **Tabview 与 Tab 都只裁 SCROLLABLE，其余全保留**。
+3. **查 SCROLLABLE**：确认真正承担滚动的对象（tabview 的内部 content，EEZ 不生成它、
+   别去裁）有 SCROLLABLE 且有溢出；离屏对象 `lv_obj_get_width()=0` 是惰性布局假象，
+   先 `lv_obj_update_layout()` 再读，勿误诊。
+
+**取证手法**：给疑点对象挂 `LV_EVENT_ALL` 回调 printf 事件码——"PRESSING 连发而
+0 次 SCROLL"= 输入链被掐；"SCROLL_BEGIN→SCROLL_END 秒切"= 吸附在拉回。再用纯 LVGL
+最小对照（同 build 同主循环）二分是"结构问题"还是"环境/EEZ 流问题"。
