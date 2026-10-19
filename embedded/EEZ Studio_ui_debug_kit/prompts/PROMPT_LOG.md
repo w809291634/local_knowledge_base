@@ -2097,3 +2097,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 产出/结论：新建 w1-animation-image 示例（8 帧 spinner，Duration/Repeat 语义，lv_animimg 代码链）；发现 CLI 不产图片 .c，gen_images.py 补烘；经验入库 P-0151
   - 关联：P-0151
 
+### PR-0258 · 2026-10-19 16:47 · WorkBuddy
+  - 提示词：有没有 类似 applist 滚动条示例  + 官方手册中是否有，或者 github 上是否有 + C:/Users/yjt54/Desktop/Design Watch\watch  这个有applist
+  - 诉求：想要 watch applist 同款可滚动列表示例；并确认官方手册/GitHub 是否有现成的
+  - 产出/结论：查证：手册 List(LVGL) 是 wip 且 EXAMPLES 空、Container 无示例、eez-open/studio 仓库无 examples 目录；新建 app-list-scroll 示例（容器 scrollSnapY/flagScrollDirection 自建吸附列表），CLI+PC_SIM 0 错；入库 P-0152
+  - 关联：P-0152
+
