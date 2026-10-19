@@ -30,3 +30,9 @@ EEZ CLI 构建（P-0140 的图片版）只发名表与声明，图片数据 .c �
 ## 沉淀（新增断言 / 案例 / 文档）
 
 w1-animation-image/README.md、根 README 索引第 8 行、workspace memory 2026-10-19、skills.md 可后续并入 §11.48 图片扩展
+
+## 补充（同日）
+- GUI 手动添加 AnimationImage 的完整操作文档已落在示例工程：
+  `EEz_stidio_examples/w1-animation-image/GUI-操作指南.md`
+  （导入帧图→拖控件→Images 批量添加含 No. of images 连填→Duration/Repeat→Build，
+  末尾附常见问题对照表；P-0150 的"flags 别乱裁"已写进注意事项）。
