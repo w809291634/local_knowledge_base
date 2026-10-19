@@ -128,6 +128,41 @@ python -m esp_idf_size --files --format json build\lvgl_demo_template.map > buil
 > `strip --strip-debug` 后仍有 2.14MB（含未被 `--gc-sections` 丢弃的未引用代码/字符串），
 > 而真正进固件只有 **95,408B flash + 3,553B RAM**（用 `idf.py size-files` 或 map 才作数）。
 > 详见 `../intake/P-0158_*.md`。
+**未优化 vs 优化后（分组级实测）**
+
+| 项 | 未优化 | 优化后 | 差值 |
+|---|---:|---:|---:|
+| 固件 bin（烧写） | 1.09 MB | **967.8 KB** | **−148.9 KB** |
+| 链接后合计 | 1.09 MB | 966.9 KB | −152.3 KB |
+| 内部 RAM (bss+data) | 197.5 KB | 186.9 KB | −10.6 KB |
+| EEZ 引擎 (eez-flow.cpp) | 216.8 KB | **92.4 KB** | **−124.4 KB** |
+| EEZ 生成 UI | 0.73 KB | 0.72 KB | — |
+| 字体资源 (Montserrat) | 174.9 KB | 174.9 KB | 0（属 LVGL 资产，省不掉） |
+| 字体渲染/加载 | 2.9 KB | 2.9 KB | 0 |
+| LVGL 内核 | 296.6 KB | 296.6 KB | 0 |
+| 显示/触摸/适配 | 35.1 KB | 35.1 KB | 0 |
+| 本项目组件 | 12.3 KB | 12.3 KB | 0 |
+| C/C++ 运行时 | 29.6 KB | 5.9 KB | −23.7 KB（异常运行时消失） |
+| IDF 内核 | 206.4 KB | 205.8 KB | −0.6 KB |
+| 其它 | 140.3 KB | 140.3 KB | 0 |
+| `.eh_frame` | 36.1 KB | 0 | −36.1 KB |
+
+> 未优化 = 队列 1000 + ui 无 `-Os` + CXX 异常/RTTI 开；优化后 = 队列 128 + ui `-Os` + 异常/RTTI 关。
+> 收益约 84% 来自「EEZ 引擎本体 + 异常运行时」；字体/LVGL/驱动等与这三项无关，两版完全不变。
+> 数据由 `../tools/ui_size_report.py` 出（同工程两配置各构建一次）；精确字节与逐文件明细见 `../intake/P-0159_*.md`。
+**递进阶梯（每步只叠加一项，各构建一次）**
+
+| 步骤 | 配置 | 固件 bin | 链接后 | 内部 RAM | EEZ 引擎 | C/C++ 运行时 | `.eh_frame` | 本步增量 |
+|---|---|---:|---:|---:|---:|---:|---:|---|
+| 0 | 未优化（队列1000 / -O2 / 异常开） | 1.09 MB | 1,142,430 | 197.5 KB | 216.8 KB | 29.6 KB | 36.1 KB | — |
+| 1 | + ui `-Os` | 1.01 MB | 1,062,465 | 197.5 KB | 138.7 KB | 29.6 KB | 29.0 KB | flash **−79.9 KB** |
+| 2 | + 队列 128 | 1.01 MB | 1,062,435 | 187.3 KB | 138.7 KB | 29.6 KB | 29.0 KB | RAM **−10.5 KB** |
+| 3 | + 关 CXX 异常/RTTI | **967.8 KB** | 990,092 | **186.9 KB** | **92.4 KB** | **5.9 KB** | **0** | flash **−72.4 KB** |
+
+> 边际：`-Os` 主要压引擎代码（顺带把 `.eh_frame` 36.9→29.7 KB）；队列只动静态 bss（每项 12B）；
+> 关异常删掉整套 EH 运行时（`.eh_frame`→0 + libgcc unwind + libstdc++ EH/typeinfo）。
+> 三者作用点不重叠 ⇒ **可加、且顺序不影响总量**。
+> 四步完整脚本 log 见 `../intake/P-0160_*.md`。
 ## §4 与 P-0154（lvgl_demo_ai 全量）的关系
 
 
@@ -149,5 +184,6 @@ python -m esp_idf_size --files --format json build\lvgl_demo_template.map > buil
 - `../intake/P-0155_*.md` — 最小模板资源账单（A/B 宏 + 逐对象 diff）
 - `../intake/P-0156_*.md` — EEZ 导出后 GLOB 不刷新 → undefined reference
 - `../intake/P-0154_*.md` — lvgl_demo_ai 资源实测（含两次更正与三重交叉验证）
+- `../tools/ui_size_report.py` — 固件 flash/RAM 占用报告工具（自包含，可直接拷进工程根目录跑）
 - `09_build_flash_debug_lvgl_demo_ai.md` — ai 工程的编译·烧写·调试作业卡
 - `10_hw_ui_separation.md` — 硬件 ⇄ UI 分离（跨项目模板）

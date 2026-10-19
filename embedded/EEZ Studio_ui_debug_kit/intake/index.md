@@ -367,3 +367,5 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0156 | 2026-10-19 | EEZ 首次导出新增 eez-flow.cpp 后构建报 undefined reference（file GLOB 未刷新） | EEZ,CMake,GLOB,reconfigure,undefined reference,构建坑,eez-flow.cpp | fixed |
 | P-0157 | 2026-10-19 | EEZ 引擎三处体积优化实测：执行队列、ui 组件 -Os、关 CXX 异常（flash -152KB / RAM -10.9KB） | EEZ,engine,-Os,CXX异常,RTTI,eh_frame,queue,EEZ_FLOW_QUEUE_SIZE,flash,RAM,体积优化,实测 | fixed |
 | P-0158 | 2026-10-19 | EEZ 占用口径澄清：剥离字体后 EEZ 自身约 131KB flash；产物三层大小（源码/库/固件） | EEZ,占用口径,字体非EEZ,libui.a,调试信息,size-files,flash,RAM,产物大小 | fixed |
+| P-0159 | 2026-10-19 | 未优化 vs size 优化 完整对比：EEZ 引擎 216.8→92.4KB、固件 1.09MB→967KB（分组级实测） | EEZ,体积对比,未优化,优化,-Os,执行队列,CXX异常,eh_frame,flash,RAM,分组账单,ui_size_report | fixed |
+| P-0160 | 2026-10-19 | 递进式分步实测：-Os → 队列128 → 关异常（逐步叠加，各出脚本 log） | EEZ,递进实测,分步优化,-Os,执行队列,CXX异常,eh_frame,flash,RAM,ui_size_report,边际收益 | fixed |

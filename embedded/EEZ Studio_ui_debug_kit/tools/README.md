@@ -240,6 +240,56 @@ if eez_font_bake.kernel_hash() != EXPECTED_HASH:   # 内核被改过就报警
 
 ---
 
+### `ui_size_report.py` —— 固件 flash/RAM 占用报告（按分组 + 逐文件）★
+
+回答「固件到底占了多少、被谁占了」。**自包含、只用标准库、不读工具箱配置**；
+拷进任意 ESP-IDF 工程根目录即可直接跑：
+
+```bash
+python ui_size_report.py                            # 工程名从 build/*.map 自动探测，无需参数
+python ui_size_report.py --name <工程名>              # 显式指定
+python ui_size_report.py --idf-python <python.exe>  # 指定能 import esp_idf_size 的解释器
+```
+
+输出六段：`[1]` 固件总体（.bin / 分区占用 / 内部 RAM）、`[2]` flash 按**分组**（EEZ 引擎 /
+EEZ 生成 UI / 字体资源 / 字体渲染 / LVGL 内核 / 显示触摸 / 本项目组件 / C 运行时 / IDF 内核 / 其它）、
+`[2b]`「EEZ 框架」与「字体资源」分开计、`[3]` **UI 组件逐文件**、`[4]` 字体逐档、
+`[5]` 内部 RAM 与 bss top、`[6]` 常驻 flash 段。单位一律 **KB（1 KB = 1024 B）**。
+
+以下是**示例输出**（取自某次构建；数字会随 sdkconfig / 优化开关变化）：
+
+```text
+[2] flash 按分组            (单位: KB, 1 KB = 1024 B)
+    分组                                             flash    占比
+    --------------------------------------------------------------
+    EEZ 引擎 (eez-flow.cpp)                        92.4 KB    9.6%
+    字体资源 (Montserrat)                         174.9 KB   18.1%
+    LVGL 内核                                     296.6 KB   30.7%
+    IDF 内核 (FreeRTOS/heap/log/...)              205.8 KB   21.3%
+    ...
+    合计                                          966.9 KB  100.0%
+```
+
+关键设计（都是踩过的坑）：
+
+- **数字来自 IDF 官方 `esp_idf_size --files --format json`** —— 报的是**链接后**的逐对象真实
+  占用（已过 `--gc-sections`），不是 `.o` 磁盘大小。
+- **解释器自动探测**：优先读 `build/CMakeCache.txt`（工程自己的构建记录里有 IDF 用的 python），
+  因此**普通终端、没设 IDF 环境变量也能命中**；再退到 `IDF_PYTHON_ENV_PATH` / `IDF_TOOLS_PATH` /
+  当前解释器 / PATH。可用 `--idf-python` 强制指定。
+- **不做 map 手写解析兜底**：实测手写解析会把 `.debug_*`（**不装载进固件**）也累加，
+  得出 **20.75 MB vs 真实 967 KB（虚高 22 倍）**。找不到解释器时**明确报错 + 给出解法**，绝不给错数字。
+- **`.a`/`.o` 文件大小 ≠ 固件占用**：`libui.a` 磁盘 5.73 MB，其中约 98% 是 `.debug_*` 与符号表，
+  真正进固件只有 95 KB；报告末尾保留这条提醒。
+- 表宽按**显示宽度**补齐（全角字符算 2 列），中文标签才不会错位。
+
+> 口径提醒：分组按**对象所属的库**归类，**不是**按**谁把它拉进来**。例如 `esp_timer`(7.3KB)、
+> `libm` 的 `pow/log`(~21KB)、被引擎拉入的 LVGL widget 都算在各自的库里，
+> 所以「EEZ 独有」是**保守下限**；要按因果算，需关掉 EEZ 做 A/B
+> （实测 EEZ 自身 ≈131 KB flash / 3.9 KB RAM，字体 182 KB 属 LVGL 资产、非 EEZ）。
+> 见 `../intake/P-0157_*.md`、`../intake/P-0158_*.md`。
+
+---
 ## 四、抓原生渲染图（Chromium / Electron 系）
 
 ### `cdp/launch.sh` —— 按配置启动并等端口
