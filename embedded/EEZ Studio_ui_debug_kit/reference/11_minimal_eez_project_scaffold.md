@@ -102,7 +102,24 @@ python -m esp_idf_size --files --format json build\lvgl_demo_template.map > buil
 
 ---
 
+### §3.1 压缩引擎的三项实测（2026-10-19，A/B 逐对象 diff）
+
+保留 `flowSupport` 时，能真正压引擎的手段与实测（基线：queue 1000 / -O2 / 引擎 222KB）：
+
+| 手段 | 怎么改 | 实测收益 | 代价/风险 |
+|---|---|---|---|
+| **执行队列 1000→128** | `.eez-project` 的 `executionQueueSize`（改生成头 `EEZ_FLOW_QUEUE_SIZE` 等价） | **内部 RAM −10,464 B**（12B/项，与理论精确吻合）；flash −122 | 队列满会报错；按 UI 复杂度调，勿过小 |
+| **ui 组件 `-Os`** | 顶层 `target_compile_options(ui PRIVATE -Os)`，LVGL 保 `-O2` | **flash −79,873 B**（引擎自身 −36%，其中 text −40%） | 只慢 flow 求值/UI 创建，渲染热路径不受影响 |
+| **关 CXX 异常/RTTI** | `sdkconfig.defaults` 去掉 `CONFIG_COMPILER_CXX_EXCEPTIONS` / `CXX_RTTI`（删旧 sdkconfig 重建） | **flash −72,343 B**（`.eh_frame` 29732→0，另有 34 个 unwind/typeinfo 对象消失）；RAM −393 | 需确认不依赖 C++ 异常——EEZ 引擎用自带 flow 级错误传播（`throwError`/`findCatchErrorComponent`，eez-flow.cpp:9572），**不用** C++ 异常，故安全 |
+
+**累计**（相对最初 EEZ-on 基线）：flash `1,142,430 → 990,092`（**−148.8 KB / −13.3%**）；RAM `202,224 → 191,367`（**−10.6 KB**）。
+⇒ 优化后「EEZ 相对裸 LVGL 的净代价」从 §3 表的 422,714B / 14,449B 降到 **约 270,376B flash / 3,592B RAM**。
+
+> 注意：这三项**都不减那 222KB「引擎代码」的固有能力**，而是分别压 SRAM、压代码密度、去掉用不到的 EH 运行时。
+> 手册 Build 面板那 3 项里，**只有 `Execution queue size` 对本模板有效**；`Compress flow definition` 在最小 flow（`assets[332]`）下会**净增** flash（贴进 LZ4 库）。
+> 详见 `../intake/P-0157_*.md`。
 ## §4 与 P-0154（lvgl_demo_ai 全量）的关系
+
 
 | | 工程 | UI 规模 | EEZ 核心口径 |
 |---|---|---|---|

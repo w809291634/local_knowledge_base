@@ -365,3 +365,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0154 | 2026-10-19 | EEZ 资源消耗实测：同构 tabview 下原生 LVGL vs EEZ（RAM/Flash 数据） | EEZ,资源消耗,lv_mem_monitor,flash,flow引擎,性能对照,内存 | fixed |
 | P-0155 | 2026-10-19 | EEZ 最小模板资源账单：A/B 宏 + 逐对象 diff（含字体/数学库归因） | EEZ,资源消耗,flash,RAM,A/B宏,esp_idf_size,字体归因,数学库,flow引擎,最小工程 | fixed |
 | P-0156 | 2026-10-19 | EEZ 首次导出新增 eez-flow.cpp 后构建报 undefined reference（file GLOB 未刷新） | EEZ,CMake,GLOB,reconfigure,undefined reference,构建坑,eez-flow.cpp | fixed |
+| P-0157 | 2026-10-19 | EEZ 引擎三处体积优化实测：执行队列、ui 组件 -Os、关 CXX 异常（flash -152KB / RAM -10.9KB） | EEZ,engine,-Os,CXX异常,RTTI,eh_frame,queue,EEZ_FLOW_QUEUE_SIZE,flash,RAM,体积优化,实测 | fixed |
