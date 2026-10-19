@@ -2103,3 +2103,33 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 产出/结论：查证：手册 List(LVGL) 是 wip 且 EXAMPLES 空、Container 无示例、eez-open/studio 仓库无 examples 目录；新建 app-list-scroll 示例（容器 scrollSnapY/flagScrollDirection 自建吸附列表），CLI+PC_SIM 0 错；入库 P-0152
   - 关联：P-0152
 
+### PR-0259 · 2026-10-19（补录） · Trae
+  - 提示词：D:\esp32_8266_files\esp-idf-v5.5.5_ol\examples\idf_v555_my_exps\p4_touch_lcd4_3_exp\lvgl_demo_template  参考 D:\esp32_8266_files\esp-idf-v5.5.5_ol\examples\idf_v555_my_exps\p4_touch_lcd4_3_exp\lvgl_demo_ai 这个工程，帮我适配最基础的eez 工程，读取本地经验库，进行适配
+  - 诉求：把 lvgl_demo_template 骨架适配成可编译运行的最小 EEZ 工程，先读本地经验库
+  - 产出/结论：去 xiaozhi，建 eez-test/src/ui 最小骨架 + src/native 真组件，保留三大链接机制；idf.py build 通过
+  - 关联：P-0155
+
+### PR-0260 · 2026-10-19（补录） · Trae
+  - 提示词：怎么没有看到eez 的对应工程
+  - 诉求：只有 src/ui 代码骨架，缺 EEZ Studio 工程文件（.eez-project）
+  - 产出/结论：基于 ai 工程最早备份生成 eez-test/test.eez-project（Main 屏 + Hello world），destinationFolder=src\ui、lvglInclude=lvgl.h
+  - 关联：P-0155
+
+### PR-0261 · 2026-10-19（补录） · Trae
+  - 提示词：为了验证eez的生成消耗用量，增加宏屏蔽eez代码，看看实际eez实际消耗用量
+  - 诉求：加开关屏蔽 EEZ 代码，量化 EEZ 实际消耗
+  - 产出/结论：加 APP_ENABLE_EEZ_UI 开关做 A/B；首次导出后 build 失败暴露 GLOB 不刷新坑
+  - 关联：P-0156
+
+### PR-0262 · 2026-10-19（补录） · Trae
+  - 提示词：我不推荐使用 kconfig配置，直接改成使用宏，然后确定占用这么多内存吗
+  - 诉求：开关改普通宏；核实内存/占用数字是否准确
+  - 产出/结论：Kconfig 项移除改 main.c 内 #define 宏；改用 esp_idf_size --files JSON 逐对象 diff，修正口径（引擎 222006B，字体 163955B）
+  - 关联：P-0155
+
+### PR-0263 · 2026-10-19 21:37 · Trae
+  - 提示词：记录本地知识库中
+  - 诉求：把本轮 EEZ 适配与用量实测写入本地经验库
+  - 产出/结论：新增 intake P-0155（资源账单+A/B 宏法）、P-0156（GLOB 不刷新坑）+ index 行 + prompts 补录 + reference/11 脚手架文档
+  - 关联：P-0155
+
