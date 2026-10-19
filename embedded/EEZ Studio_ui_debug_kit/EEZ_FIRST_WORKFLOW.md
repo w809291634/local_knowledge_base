@@ -149,6 +149,8 @@
 ## 5. 工具与记录索引（本机实测值，换机重核）
 
 - kit 工具：`<kit>/tools/`（run_gate / diff_report / ink_check / log_entry / eez_font_bake …）
+- 官方手册：`<kit>/EEZ-Studio-reference-guide.pdf`（784 页，2026-10-19 存档；提炼版 `reference/01~07`、
+  全量原始文本 `reference_guide_raw.txt`、工程 JSON 字段速查 `reference/07`——查事件/动作/字段先翻这里）
 - 本机 kit 位置：`C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_ui_debug_kit`
 - CDP 驱动小工具（本机留档）：`C:\Users\yjt54\sim_watch\cdp.js`（eval/key/mouse/mouse-drag/dblclick/shot/canvas-shot）、`watch_console.js`、`toast_watch.js`
 - 拖拽量化夹具：`<watch工程>\verify\dragtest_main.c`

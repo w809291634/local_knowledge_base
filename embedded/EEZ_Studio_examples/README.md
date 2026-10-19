@@ -19,6 +19,9 @@
 
 ### 2) 官方渠道
 
+- **官方 Reference Guide 本机存档（2026-10-19 起，查原文先翻这里，不必上网）**：
+  `embedded/EEZ Studio_ui_debug_kit/EEZ-Studio-reference-guide.pdf`（784 页；
+  全量文字版同目录 `reference_guide_raw.txt`，结构化提炼在其 `reference/01~07`）
 - 源码与文档：<https://github.com/eez-open/studio>（`docs/` 目录有使用文档）
 - **新建工程向导里的 Templates / Examples**：官方自带模板工程，是最直接的写法参照
 - 仓库 issues 区搜报错关键字（很多坑别人已踩过）

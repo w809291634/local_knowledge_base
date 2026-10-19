@@ -812,7 +812,8 @@ darkTheme、LV_FONT_DEFAULT、tabview 内部主题样式在预览里统统看不
 ### 11.11 用户事件：EEZ 官方 User Action（native 实现，2026-09-29 语音页光球 voice_stop 实战）
 
 官方依据（用户要求细读官方手册）：Reference Guide PDF（GitHub eez-open/studio
-`docs/reference guide/`，784 页）P7.3「Working with Actions」：LVGL 工程也有
+`docs/reference guide/`，784 页；本机存档 `<kit>/EEZ-Studio-reference-guide.pdf`，
+2026-10-19 起，查原文不必再上网）P7.3「Working with Actions」：LVGL 工程也有
 Actions 调色板（Fig.78），底部列 User Actions；A34.2.16「Event handlers」：控件
 事件 Handler type = **Flow | Action**，Action 需填 User action 名。源码交叉验证：
 `features/action/action.tsx`（Action{implementationType:"flow"|"native"}）、
