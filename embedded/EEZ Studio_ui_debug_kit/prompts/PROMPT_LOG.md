@@ -2049,3 +2049,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：把 §50 复原法升级为可自动化取证管线（切换/动画/像素三面）
   - 产出/结论：§51——① design/video_probe.py 取证三命令（10fps HSV 切段/皮肤掩膜运动热区/30fps 边界胶片）；② 转场实锤=30fps 边界 1-2 帧交叉淡化 ~100ms（10fps 会整段跳过误判直切）→ 全工程 changeScreen fadeMode FADE_IN speed100（原 NONE 直切）；③ 双侧同度量动画判定（视频 motion_report vs 仿真 animprobe anim_verdict，ECC 对齐+皮肤掩膜剔手指+中值参考帧差）；心率页 0% 假象=200ms 采样混叠+10×10 blob 阈值过粗，属性采样 hr_heart 248..280 证实在动；④ 新证据修复：睡眠页（1fps 漏采，10fps 抓到=大紫月+无记录，非占位）、设置页第 5 行是可滑容器露出（屏显 4 行，pitch90+SCROLL_CHAIN_VER，非 §50 全挤一屏）；⑤ 冲突裁决：视频心率/血压页图标静止 vs §36 用户要功能页动画，AskUser→用户选保留动画、差异记录不改。验收 navcycle 113 断言 ALL PASS（每页进出各滑多次）、构建 0/0、五查 PASS、位图 53→58。方法沉淀 skills §11.46
   - 关联：P-0147,PR-0248,skills §11.45/§11.46,PLAYBOOK §2.9
+
+### PR-0250 · 2026-10-19 · Qoder
+  - 提示词：每个界面至少核对一个动画周期，避免出现心跳类似问题
+  - 诉求：把 §51 心跳采样混叠误报升级为"每页覆盖≥1个完整动画周期"的确定性核对
+  - 产出/结论：§51b——夹具 verify/animcycle_main.c 每通道 30ms×52 拍(1.56s≥主周期1.2s/心跳0.84s) 直读 flow 写入的样式属性(scale/rotation/translate)取值域判"确在动"，绕开像素差分混叠与阈值盲区；静止页(Vibrate/Dnd/Aod/Sleep)反向断言 range==0；时钟类 set_var_time_min(600→601) 两拍折算慢动画(hand_min+6/hand_hour+5)。30 断言 ALL PASS(输出存档 verify/animcycle_output.txt)；首跑 4 FAIL 全是夹具判据错(swing 未按 amp 分档、delta 误过 mx-mn)，修夹具不改工程。方法沉淀 skills §11.47
+  - 关联：P-0147,PR-0249,skills §11.46/§11.47,B12
