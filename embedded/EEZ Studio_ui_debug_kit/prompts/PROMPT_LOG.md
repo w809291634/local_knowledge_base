@@ -2211,3 +2211,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 产出/结论：递进阶梯实测：步骤0→1(+Os)→2(+队列)→3(+关异常)，每步构建并抓脚本 log；新建 P-0160
   - 关联：P-0160
 
+### PR-0277 · 2026-10-19 23:14 · Trae
+  - 提示词：D:\esp32_8266_files\esp-idf-v5.5.5_ol\examples\idf_v555_my_exps\p4_touch_lcd4_3_exp\lvgl_demo_ai 这个工程优化，使用三种全优化Rom，并输出python结果
+  - 诉求：把三项优化套到 lvgl_demo_ai 并输出脚本结果
+  - 产出/结论：实测固件 -130.9KB/内部RAM -20.4KB；发现 xiaozhi 的 C++ 需异常，故异常只按 target 关在 ui 组件；新建 P-0161，并修正脚本字体分组
+  - 关联：P-0161
+

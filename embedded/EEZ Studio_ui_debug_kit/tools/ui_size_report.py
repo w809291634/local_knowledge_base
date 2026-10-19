@@ -193,14 +193,18 @@ GROUP_ORDER = [G_ENGINE, G_UIGEN, G_FONTDATA, G_FONTENG, G_LVGL,
 
 def classify(key):
     archive, _, member = key.partition(":")
-    if member.startswith("eez-flow.cpp"):
+    m = member.lower()
+    if m.startswith("eez-flow.cpp"):
         return G_ENGINE
+    # Font rules MUST come before the libui.a rule: EEZ bakes CJK fonts into the ui component
+    # (e.g. ui_font_ya_hei_*.c, measured 1.28 MB in lvgl_demo_ai), and billing that to the
+    # "EEZ framework" would be wrong -- it is a font asset, same class as Montserrat.
+    if m.startswith("lv_font_montserrat") or "montserrat" in m or m.startswith("ui_font_"):
+        return G_FONTDATA
+    if m.startswith("lv_font_"):
+        return G_FONTENG
     if archive == "libui.a":
         return G_UIGEN
-    if member.startswith("lv_font_montserrat"):
-        return G_FONTDATA
-    if member.startswith("lv_font_"):
-        return G_FONTENG
     if archive.startswith("liblvgl"):
         return G_LVGL
     if DRIVER_RE.search(archive):

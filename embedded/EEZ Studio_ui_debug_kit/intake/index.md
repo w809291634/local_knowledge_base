@@ -369,3 +369,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0158 | 2026-10-19 | EEZ 占用口径澄清：剥离字体后 EEZ 自身约 131KB flash；产物三层大小（源码/库/固件） | EEZ,占用口径,字体非EEZ,libui.a,调试信息,size-files,flash,RAM,产物大小 | fixed |
 | P-0159 | 2026-10-19 | 未优化 vs size 优化 完整对比：EEZ 引擎 216.8→92.4KB、固件 1.09MB→967KB（分组级实测） | EEZ,体积对比,未优化,优化,-Os,执行队列,CXX异常,eh_frame,flash,RAM,分组账单,ui_size_report | fixed |
 | P-0160 | 2026-10-19 | 递进式分步实测：-Os → 队列128 → 关异常（逐步叠加，各出脚本 log） | EEZ,递进实测,分步优化,-Os,执行队列,CXX异常,eh_frame,flash,RAM,ui_size_report,边际收益 | fixed |
+| P-0161 | 2026-10-19 | lvgl_demo_ai 三项优化实测：仅 ui 组件可关异常（xiaozhi 需 C++ 异常）；固件 -130.9KB / 内部RAM -20.4KB | EEZ,体积优化,-Os,-fno-exceptions,-fno-rtti,执行队列,ui_font 中文字体,分组账单,ui_size_report,xiaozhi | fixed |
