@@ -56,6 +56,9 @@ ui_debug_kit/
 │                              （含一份实战工程的路径示例 + UI 测试条例 D/G/R）
 ├── INTAKE.md               ← ★ 记录规约：新问题怎么登记、提示词怎么留痕（给任何 AI 工具看）
 ├── EEZ_FIRST_WORKFLOW.md   ← ★ 栈专属流程：EEZ 为主、仿真为辅（验证优先级金字塔 / 框架分层 / 七步主链 / 应用侧实测注意）
+├── EEZ-Studio-reference-guide.pdf ← ★ EEZ Studio 官方参考手册（用户 2026-10-19 存档，15.6MB；
+│                              查事件/动作组件/样式字段/工程 JSON schema 先翻它，
+│                              别凭记忆猜字段——编辑器对未知字段静默丢弃零告警）
 ├── config.template.json    ← 配置模板（**纯占位符**）
 ├── CONFIG.md               ← 配置字段说明 + 迁移清单 + 常见配置错误
 ├── CHANGELOG.md            ← 工具箱自身的迭代记录
