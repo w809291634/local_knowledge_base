@@ -2055,3 +2055,21 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：把 §51 心跳采样混叠误报升级为"每页覆盖≥1个完整动画周期"的确定性核对
   - 产出/结论：§51b——夹具 verify/animcycle_main.c 每通道 30ms×52 拍(1.56s≥主周期1.2s/心跳0.84s) 直读 flow 写入的样式属性(scale/rotation/translate)取值域判"确在动"，绕开像素差分混叠与阈值盲区；静止页(Vibrate/Dnd/Aod/Sleep)反向断言 range==0；时钟类 set_var_time_min(600→601) 两拍折算慢动画(hand_min+6/hand_hour+5)。30 断言 ALL PASS(输出存档 verify/animcycle_output.txt)；首跑 4 FAIL 全是夹具判据错(swing 未按 amp 分档、delta 误过 mx-mn)，修夹具不改工程。方法沉淀 skills §11.47
   - 关联：P-0147,PR-0249,skills §11.46/§11.47,B12
+
+### PR-0251 · 2026-10-19 · Trae
+  - 提示词：读取本地经验库，熟读本工程
+  - 诉求：进场先读 kit/.workbuddy 记忆，通读 Design Watch 工程现状
+  - 产出/结论：读完 MEMORY.md/两日日志/AGENTS.md/导航图/UI视频一致性流程.md 与 design 生成器；总结 16 屏结构、五条铁律、主链命令、未决事项（N1~N4 导航补齐、动效 backlog）
+  - 关联：PR-0252
+
+### PR-0252 · 2026-10-19 · Trae
+  - 提示词：C:\Users\yjt54\Desktop\Design Watch\watch\src\ui   我需要将这里的 图标源码  字体源码  分开目录管理，你看看 eez 有没有设置，我要去只能够通过EEz来修改，可以查询手册
+  - 诉求：ui_image_*.c / ui_font_*.c 分目录管理，只通过 EEZ 自身设置实现
+  - 产出/结论：asar 反查实锤官方开关 separateFolderForImagesAndFonts（Build 面板 "Store image and font files in a separate folder"；图像→images/、字体→fonts/，build.files 模板头文件恒在根；分离文件自包含仅 include lvgl.h）；预警三个连带影响：生成器会覆盖勾选、eez_build.py fonts_ready 硬编码 src/ui 根、仿真 CMake 非递归 glob 需核。P-0148
+  - 关联：P-0148,PR-0251,PR-0253
+
+### PR-0253 · 2026-10-19 · Trae
+  - 提示词：我已经勾选了，以后在本地经验默认勾选，推荐这么做
+  - 诉求：把该开关定为所有工程默认勾选并登记进经验库
+  - 产出/结论：用户 GUI 勾选+Build 后实测迁移完成（images/ 58、fonts/ 7、根 0 散落）；生成器 build_watch_ui.py 置位 True 防重生成覆盖；eez_build.py fonts_ready 路径同步 src/ui/fonts 并改 docstring/报错语；fonts_ready()=True、py_compile 通过；P-0148 登记（含启用检查单）
+  - 关联：P-0148,PR-0252
