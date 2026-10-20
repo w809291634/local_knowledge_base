@@ -594,3 +594,24 @@
 - **位图**：Bits per pixel(16/32)、Color format(LVGL 常量映射)、Always add to generated code、Resize to Fit Bitmap、Bitmap/Image widget。
 - **字体**：EEZ-GUI（FreeType/OpenType、pt、Create characters/blank）；LVGL（**lv_font_conv**、**Bits per pixel 1/2/4/8**、**Font size (pixels)**、**Ranges**、**Symbols**）。
 - **文本**：Texts panel(Text resources/Languages/Statistics)、`T"..."` / `Flow.translate`、SelectLanguage、XLIFF 1.2/2.0 导入导出。
+
+---
+
+## ★ 文字居中正解（P-0164 定论，20 坑复盘）
+
+**用 EEZ 新建一个按钮，照抄默认结构，只改文字。** 原生结构：
+子 label `widthUnit:"content", heightUnit:"content"`（自适应文字）+
+localStyles `align:"CENTER"`（widget 对齐，画布原生渲染）。
+
+三条铁律：
+1. **不自创结构**：label 铺满 + `text_align` 样式——真机居中但 **EEZ 画布
+   不渲染 text_align**（画布观感"不居中"）；
+2. **widget align 与显式定位互斥**（LVGL align 覆盖 x/y 语义）；label 无
+   width 字段时 EEZ 发 set_size(0,h)（0 宽+WRAP=文字叠竖条）——必须
+   `widthUnit:"content"`；
+3. **lv_obj_get_x 返回父容器相对偏移**，当屏幕坐标用会得出假偏移
+   （±40px 类），测量先换算坐标系。
+
+垂直居中：label 高收缩到文字高（14px）+ y 定位到行中心（LVGL label 文字
+从盒顶绘制，定高>文字高必偏上）。
+详见 `intake/P-0164`（15+5 坑复盘、对照实验、正解速查）。

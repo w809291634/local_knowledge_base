@@ -7,6 +7,60 @@
 - **标签**：防再犯,自检清单,check_project,hiddenFlag,字体条目,cmap过滤,GB2312,flow检查错误,extern C,注释闭合,孤儿清理,exit守卫,textarea,mingw,wlanapi
 - **关联提示词**：P-0163
 
+## ★ 正解速查（先看这里——本条目 20 个坑的最终答案）
+
+### 文字居中（按钮/标签）——一分钟正解
+
+> **用 EEZ 新建一个按钮，照抄它的默认结构，只改文字。完。**
+
+原生默认结构（EEZ Studio 0.29 / LVGL 9.4 实测）：
+```json
+{ "type": "LVGLButtonWidget", ..., "children": [{
+    "type": "LVGLLabelWidget",
+    "left": 0, "top": 0,
+    "width": 80, "height": 32,
+    "widthUnit": "content", "heightUnit": "content",   ← 自适应文字
+    "text": "连  接", "textType": "literal",
+    "localStyles": { "definition": { "MAIN": { "DEFAULT": {
+        "align": "CENTER",            ← widget 对齐（画布原生渲染）
+        "text_color": "0xFFFFFF", "text_font": "cn14" } } } }
+}]}
+```
+生成码 = `set_size(LV_SIZE_CONTENT, LV_SIZE_CONTENT)` + `set_style_align(LV_ALIGN_CENTER)`。
+
+**三条铁律**（每条都是一天工期换来的）：
+1. **不要自创结构**：子 label 铺满 + `text_align` 样式——真机居中但
+   **EEZ 画布不渲染 text_align**（eez-test 零使用佐证）→ 画布观感"不居中"；
+2. **不要用 widget align 配显式定位**：`align:CENTER` 与 top/left **互斥**
+   （LVGL align 覆盖 x/y 语义）；且 label **无 width 字段时 EEZ 发
+   set_size(0,h)**（0 宽+WRAP=文字叠成竖条）——必须显式
+   `widthUnit:"content"`；
+3. **测量先验证坐标系**：`lv_obj_get_x` 返回**父容器相对偏移**，当屏幕坐标
+   用会得出"+40px 假偏移"（作者连踩两次，见坑 16/20）。
+
+### 耗时复盘：为什么简单问题弄了一天
+
+| 失误 | 代价 |
+|---|---|
+| 没有第一时间照抄 EEZ 原生按钮结构，自创 text_align 铺满方案 | 源头错误，画布/真机表现分裂 |
+| 像素测量坐标系搞混（父相对当屏幕） | 把"居中"误判为"偏移 40px"，误启动修复 |
+| 凭单次可疑测量就连改两次布局（手工居中→widget align） | 每次修复引入新问题（+40 偏移→竖条→位置错乱） |
+| 修复前没测基线、修复后没用同一方法复测 | 无法及早发现"修复"本身是错的 |
+
+**正确节奏**：测量基线（验证坐标系）→ 定位根因 → 最小改动 → 同一方法复测。
+
+### 对照实验定论（font-test 工程，三实现并排+像素测量）
+
+| 实现 | 构建产物 | EEZ 画布 |
+|---|---|---|
+| A text_align 铺满 | 偏差 0 ✓ | 不渲染 text_align ✗ |
+| B align:CENTER + content | **label 飘出按钮** ✗ | 画布原生渲染 ✓ |
+| **C 收窄+坐标（推荐）** | 偏差 0 ✓ | 所见即所得 ✓ |
+
+（本工程按钮最终采用 **EEZ 原生形态**＝画布/真机双正确；C 为通用兜底。）
+
+---
+
 ## 现象（看到什么）
 
 wifi 全流程示例开发过程中连续踩 15 个坑（字体豆腐×3、面板盖屏、程序自退、链接错误×3、GUI extraction failed、演示抖动等），同类问题反复出现
