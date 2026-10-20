@@ -72,3 +72,21 @@ app-wifi-connect/design/check_project.py、README、KB 10号§12、模板说明.
    `build_example → cli_build(含 flow 守卫) → audit_chars → check_project → gen_font → sim build`
    ——顺序敏感（gen_font 必须在 cli 后；新文件删 build_rel）。
 3. **知识**：本条目 15 坑清单 + 关联条目（P-0123/0125/0140/0152/0163/10 号架构）。
+
+## ★ 坑 16（追加）：键盘位置三重坑——构造期对齐残留 + 坐标空间混淆
+
+- **现象**：密码面板的键盘贴底/偏右，怎么设 pos 都不对。
+- **根因（三层叠加）**：
+  ① LVGL 键盘**构造函数自带 `lv_obj_align(obj, LV_ALIGN_BOTTOM_MID, 0, 0)`**
+     （lv_keyboard.c:451）——EEZ 的 `lv_obj_set_pos` 只设 x/y style，**不清 align**，
+     最终位置 = BOTTOM_MID 基准 + set_pos 偏移 → 键盘贴父容器底部；
+  ② 修复时用 `lv_obj_get_x` 当屏幕坐标校验——**它返回的是父容器相对偏移**，
+     "x=70" 被误读成屏幕 70，实际屏幕位置 = 面板原点 + 70 = 110（右移 34 的真相）；
+  ③ 正解：`lv_obj_align(TOP_LEFT,0,0)` 清残留 + `lv_obj_set_pos(父相对设计位)`
+     （本例面板内 30,100）——像素实测键盘中心 240 = 设计 240。
+- **正解代码**（main.c，ui_init 之后）：
+  `lv_obj_align(objects.kb_main, LV_ALIGN_TOP_LEFT, 0, 0);`
+  `lv_obj_set_pos(objects.kb_main, 30, 100);  /* 父容器相对设计位 */`
+- **方法论**：UI 位置争议不要目测缩放图——**lv_snapshot 截图 + 叠设计参考线
+  （PIL ImageDraw）+ 像素测量**三件套，一次定位。lv_obj_get_x/y 返回父相对值，
+  当屏幕坐标用必被坑（本题 34px 偏差的全部来源）。
