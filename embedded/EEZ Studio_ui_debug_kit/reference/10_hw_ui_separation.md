@@ -303,3 +303,16 @@
 
 > 本文与 `framework.md` 的分工：**framework.md 是实例（带路径、带数量、会随工程漂移），
 > 本文是模板（换项目直接照抄结构）**。工程重构后请回改 framework.md，别把具体值写进本文。
+
+## 12. 可运行迷你实例（2026-10-20 新增）
+
+| 项 | 值 |
+|---|---|
+| 位置 | `EEz_stidio_examples/app-wifi-connect/` |
+| 规模 | 全架构最小可运行版：4 槽位 WiFi 扫描/连接全流程（扫描→列表→密码面板→键盘→连接→已连接）|
+| 结构映射 | EEZ 壳（6 状态变量绑定+面板）+ `src/native/`（app_model 契约/native_vars 桥/native_actions 投递）+ `platform/io_pc.cpp`（假驱动：scan 2s→4AP、join 2s→connected）+ `io_esp.cpp`（TODO 骨架）|
+| 验收 | CLI+PC_SIM 0 错；假 indev 自动演示日志断言（`[IO]/[STATE]/[TAP]/[DEMO]`）|
+| 文档 | 其 `README.md`（含 v1→v2 迁移原因与三条新坑：注释 `*/` 闭合、extern "C"、io 层去 LVGL）|
+
+用途：给"照本文搭新工程"的人一个**能跑、能断言、能对照**的起点——
+本文是模板，framework.md 是大工程实例，这里是**教学用迷你实例**。

@@ -2223,3 +2223,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 产出/结论：产出 w23-w59-w73-w16-select-switch（4 页 Tabview 可见页签）；联动=Dropdown/Roller selected 同绑 g_sel 双向同步；发现并剔除 ToggleButton（EEZ-GUI 件无 LVGL codegen）；per-tab bisect 排障法；CLI+PC_SIM 0 错；入库 P-0156
   - 关联：P-0156
 
+### PR-0279 · 2026-10-20 10:19 · WorkBuddy
+  - 提示词：帮我使用 eez 建立一个wifi连接的样例 要求全在eez里面实现 wifi扫描状态/扫描结果对象(信号强度/名称) 点击后进行连接 连接状态用变量表示 连接成功显示已连接 密码保存等 部分信息保存到native中 + 字体可以适配一下 部分元素注意居中 + GUI报 字体查找失败
+  - 诉求：WiFi 连接全流程示例（UI 全在 EEZ，数据走 native 桥），中文字体适配与元素居中
+  - 产出/结论：产出 app-wifi-connect：单屏+密码面板覆盖层（P-0080 模式），26 个 native 变量桥、9 个 native 动作、假 WiFi 驱动自动演示全流程（扫描→点行→连接→已连接）；cn14 中文字体（lv_font_conv 离线烘）；CLI+PC_SIM 0 错 + 演示日志断言；入库 P-0163
+  - 关联：P-0163
+
