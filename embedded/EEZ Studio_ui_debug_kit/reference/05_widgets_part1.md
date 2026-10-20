@@ -489,9 +489,9 @@
 
 ---
 
-## 30. W31 Image（图像）【重要·LVGL 变体】
+## 30. W30 Image（图像）【重要·LVGL 变体】
 
-**Description**：LVGL 图像对象（`lv_img`），支持旋转、缩放、枢轴与（scale needle 模式下的）指针值。
+**Description**：LVGL 9 图像对象（`lv_image`），支持旋转、缩放、枢轴与（scale needle 模式下的）指针值。
 
 **所属族**：LVGL 通用族 + 以下专属属性。
 
@@ -511,14 +511,33 @@
 | Preview value | String | — | 编辑器内预览用的指针值（仅 Value type=Expression 时可用）。 |
 
 **LVGL 特定说明（额外详细）**
-- **映射**：`lv_img_create(parent)` → `lv_img_set_src(obj, img_src)` → `lv_img_set_pivot` / `lv_img_set_scale(obj, scale)`（注意 LVGL 的 scale 单位：256 = 原始尺寸）/ `lv_img_set_angle(obj, angle)`（LVGL angle 单位为 0.1°）。
+- **映射（LVGL 9.4 正式 API）**：`lv_image_create(parent)` → `lv_image_set_src(obj, img_src)` → `lv_image_set_pivot` / `lv_image_set_scale(obj, scale)`（scale 单位：256 = 原始尺寸）/ `lv_image_set_rotation(obj, angle)`（0.1° 单位）。`lv_img_*` 是 v8 兼容别名，不能作为新代码/生成器的推荐写法。
 - **坐标/尺寸**：通用 `Left/Top/Width/Height`（px/%/content）。`content` 模式下尺寸贴合图像原始大小。
-- **scale needle 模式**：当 Image 作为 Scale widget 的子项时，`Value`/`Value type`/`Preview value` 出现，用于把图像当作指针按值旋转；此情形下 Image 本质是 `lv_img` 叠加在 `lv_scale` 之上。
+- **scale needle 模式**：当 Image 作为 Scale widget 的子项时，`Value`/`Value type`/`Preview value` 出现，用于把图像当作指针按值旋转；此情形下 Image 本质是 `lv_image` 叠加在 `lv_scale` 之上。
 - **对 `json2eez` / `center_in`**：`Scale=256` 必须原样映射为 LVGL 的 256（非 1.0）；`Rotation` 需 ×10 转为 LVGL angle；`center_in` 居中基于图像几何盒（旋转后包围盒由 LVGL 计算，Studio 元数据以未旋转盒为准）。
 
 ---
 
-## 31. W32 Input（输入框，EEZ-GUI 变体）
+## 31. W31 Imgbutton（图像按钮，Dashboard / EEZ-GUI 变体）
+
+**Description**：与普通 Button 类似，但以用户指定的图像而不是矩形绘制各个状态。
+
+**所属族**：Dashboard / EEZ-GUI；不是 LVGL widget，不能用于 LVGL 工程。
+
+**Specific 属性**
+
+| 属性 | 类型 | 含义 |
+|---|---|---|
+| Released image | ObjectReference | 释放状态图像。 |
+| Pressed image | ObjectReference | 按下状态图像。 |
+| Disabled image | ObjectReference | 禁用状态图像。 |
+| Checked released image | ObjectReference | Checked 且已释放状态图像。 |
+| Checked pressed image | ObjectReference | Checked 且按下状态图像。 |
+| Checked disabled image | ObjectReference | Checked 且禁用状态图像。 |
+
+---
+
+## 32. W32 Input（输入框，EEZ-GUI 变体）
 
 **Description**：EEZ-GUI 文本/数字输入 widget。
 
@@ -734,7 +753,7 @@
 
 ---
 
-## 42. W43 List（列表，LVGL 变体）【重要】
+## 42. W42 List（列表，LVGL 变体）【重要】
 
 > 注：原文编号为 W42（List LVGL）与 W43（Lottie）。此处按用户清单 W42 = List (LVGL)、W43 = Lottie。
 

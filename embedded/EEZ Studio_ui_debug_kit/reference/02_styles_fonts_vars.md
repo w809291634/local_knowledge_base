@@ -460,7 +460,12 @@
 | **Always add to the generated code（仅 EEZ-GUI）** | 构建（生成源码）时，默认只将项目中用到的位图插入源码。若某位图用于原生代码而非 EEZ Studio 项目，可用此选项强制将其加入源码。 |
 | **Color format（仅 LVGL）** | 见 https://docs.lvgl.io/8.3/overview/image.html#color-formats |
 
-- LVGL Color format 常量名与 EEZ Studio 取值对应关系：
+- ⚠️ **下表是手册所列的 LVGL 8 `LV_IMG_CF_*` 旧常量，仅供对照，不能直接用于本库的
+  LVGL 9.4 项目。**LVGL 9 的正式类型为 `lv_color_format_t`，常量前缀是
+  `LV_COLOR_FORMAT_*`（例如当前生成位图使用 `LV_COLOR_FORMAT_ARGB8888`）。编写生成器
+  时以目标版本的 `lv_color_format_t` 和实际生成的图片 `.c` 为准，勿把旧表当作 v9 API。
+
+- LVGL 8 旧常量名与 EEZ Studio 取值对应关系：
 
 | LVGL 常量名 | EEZ Studio 值 |
 |-------------|---------------|

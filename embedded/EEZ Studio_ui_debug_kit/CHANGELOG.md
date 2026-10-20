@@ -7,6 +7,28 @@
 
 ---
 
+## v0.9.28 — 官方手册使用边界钉死
+
+- `reference/README` 新增两条全局护栏：LVGL 8 手册术语遇 v9.4 时以头文件/生成代码为准；
+  WIP 的 custom-code 说明不构成 EEZ-first UI 出 C 授权，必须完成四面对查并获用户同意。
+
+## v0.9.27 — LVGL 9 Image 名称补正
+
+- `reference/05` 的 W30 描述从旧别名 `lv_img` 改为 LVGL 9 正式对象名 `lv_image`；已用
+  当前生成 `screens.c` 与 v9.4 `lv_image.h` 交叉核验。
+
+## v0.9.26 — 官方手册版本漂移勘误：LVGL 8 → 9.4 Image API
+
+- `reference/05` / `reference/07` 不再把兼容层 `lv_img_*` 作为主 API；LVGL 9.4 正式名称为
+  `lv_image_*`（create/src/pivot/scale/rotation）。
+- `reference/02` 标出手册 `LV_IMG_CF_*` 色彩格式表属于 LVGL 8；本库 LVGL 9.4 需使用
+  `LV_COLOR_FORMAT_*` 与实际生成位图 `.c` 核验。
+
+## v0.9.25 — 官方手册逐页对照：Widget 目录勘误
+
+- 对照官方 PDF W30–W43：修正 W30 Image 被错标为 W31、W32 Input 的序号错位、W42 List
+  被错标为 W43；补回缺失的 W31 Imgbutton（仅 Dashboard / EEZ-GUI）完整属性表。
+
 ## v0.9.24 — UI 经验库现行配方审计（第六轮）
 
 - 补足滚动 Container 的适用边界：它适用于固定/有上限行数；LVGL Flow 没有按数组长度创建

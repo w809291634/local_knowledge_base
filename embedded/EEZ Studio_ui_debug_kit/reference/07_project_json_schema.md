@@ -392,7 +392,8 @@
 ```
 
 - 只有 image 能转：旋转走 `SET_PROPERTY targetType:"image" property:"angle"`
-  （0.1° 单位，一圈 3600；`lv_img_set_angle` 收 int16，别超 32767）。
+  （0.1° 单位，一圈 3600；LVGL 9.4 正式 API 为 `lv_image_set_rotation`，别超 int16
+  可表达的范围。EEZ 生成的 flow 可能仍发 `lv_img_set_angle` 兼容别名，但新代码不应照抄）。
 
 ## 12.6 键盘与密码输入（LVGLKeyboardWidget / LVGLTextareaWidget）✅（2026-10-01 密码面板实测）
 
