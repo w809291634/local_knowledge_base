@@ -372,3 +372,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0161 | 2026-10-19 | lvgl_demo_ai 三项优化实测：仅 ui 组件可关异常（xiaozhi 需 C++ 异常）；固件 -130.9KB / 内部RAM -20.4KB | EEZ,体积优化,-Os,-fno-exceptions,-fno-rtti,执行队列,ui_font 中文字体,分组账单,ui_size_report,xiaozhi | fixed |
 | P-0162 | 2026-10-20 | 选择与开关组合：ToggleButton(W85) 是 EEZ-GUI 件无 LVGL codegen；Dropdown/Roller selected 可双向绑定做联动；Switch/Checkbox 无绑定属性 | Dropdown,Roller,Switch,Checkbox,ToggleButton,Tabview,联动,assignable,per-tab bisect,EEZ-GUI件,lvglBuild | fixed |
 | P-0163 | 2026-10-20 | WiFi 全流程 UI 的三个 EEZ 实现事实：隐藏表达式 JSON 键名是 hiddenFlag；Textarea 的 text 是 input 单向；字体条目 source 必须全量字体 | WiFi,hiddenFlag,hiddenFlagType,textarea,keyboard,native变量桥,动作,字体条目,lv_font_conv,居中,自动演示,假indev | fixed |
+| P-0164 | 2026-10-20 | EEZ+LVGL 应用级示例 15 连坑复盘（wifi 全流程）：每坑一个机器检查，防再犯 | 防再犯,自检清单,check_project,hiddenFlag,字体条目,cmap过滤,GB2312,flow检查错误,extern C,注释闭合,孤儿清理,exit守卫,textarea,mingw,wlanapi | fixed |
