@@ -187,3 +187,52 @@ python -m esp_idf_size --files --format json build\lvgl_demo_template.map > buil
 - `../tools/ui_size_report.py` — 固件 flash/RAM 占用报告工具（自包含，可直接拷进工程根目录跑）
 - `09_build_flash_debug_lvgl_demo_ai.md` — ai 工程的编译·烧写·调试作业卡
 - `10_hw_ui_separation.md` — 硬件 ⇄ UI 分离（跨项目模板）
+
+---
+
+## §6 ★ 铁律：控件结构必须照抄 EEZ 原生形态，禁止自创（P-0164 坑 20）
+
+**用 EEZ GUI 新建一个控件（如按钮），它的默认 JSON 结构就是唯一正确模板——
+照抄默认形态，只改 text/坐标/样式值。禁止自己发明控件内部结构。**
+
+### 反例（自创结构的三种翻车，全部实测）
+
+| 自创写法 | 后果 |
+|---|---|
+| 按钮子 label 铺满 + `text_align:"CENTER"` 样式 | 真机居中但 **EEZ 画布不渲染 text_align** → 画布观感"不居中" |
+| 子 label `align:"CENTER"` + `widthUnit:"content"`（EEZ 原生属性却在自创组合里用） | **label 飘出父容器**（定位锚定异常，EEZ v3 + LVGL 9.4 组合 bug） |
+| label **缺 width 字段** | EEZ 发 `set_size(0,h)` / `NaN` → 0 宽 + WRAP = 文字叠成竖条；C 侧 `NaN` 直接编译错 |
+
+### 正解流程（一分钟）
+
+1. **EEZ GUI 新建该控件**（如拖一个按钮）；
+2. **看它的默认 JSON**（另存 .eez-project 后读，或查 asar 内 `defaultValue`）；
+3. **照抄默认结构，只改 text / left / top / 样式值**；
+4. 交付前跑静态自检（`check_project.py`：引用审计/字体条目/字符集 ⊆ cmap）。
+
+### 正确示例：按钮文字居中（EEZ 原生默认形态，只改文字）
+
+```json
+{ "type": "LVGLButtonWidget", ..., "children": [{
+    "type": "LVGLLabelWidget",
+    "left": 0, "top": 0,
+    "width": 80, "height": 32,
+    "widthUnit": "content", "heightUnit": "content",   ← 自适应文字（必填！）
+    "text": "连  接", "textType": "literal",
+    "localStyles": { "definition": { "MAIN": { "DEFAULT": {
+        "align": "CENTER",                              ← widget 对齐，画布原生渲染
+        "text_color": "0xFFFFFF", "text_font": "cn14" } } } }
+}]}
+```
+生成码 = `set_size(LV_SIZE_CONTENT, LV_SIZE_CONTENT)` +
+`set_style_align(LV_ALIGN_CENTER)`——画布/真机同源渲染。
+
+### 相关陷阱速查
+
+- **widget `align` 与显式 left/top 定位互斥**（LVGL align 覆盖 x/y 语义）——
+  定宽铺满的整行 label 用 `text_align:"CENTER"` 做水平居中，**不要加
+  widget align**；
+- **`lv_obj_get_x` 返回父容器相对偏移**，当屏幕坐标用会得出假偏移；
+- label 文字**从盒顶绘制**——垂直居中 = label 高收缩到文字高（14px）+
+  y 定位到行中心；
+- 完整复盘（15+5 坑、对照实验）见 `intake/P-0163`、`P-0164`。

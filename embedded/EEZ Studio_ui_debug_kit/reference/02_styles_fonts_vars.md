@@ -604,8 +604,9 @@
 localStyles `align:"CENTER"`（widget 对齐，画布原生渲染）。
 
 三条铁律：
-1. **不自创结构**：label 铺满 + `text_align` 样式——真机居中但 **EEZ 画布
-   不渲染 text_align**（画布观感"不居中"）；
+1. **不自创结构**：label 铺满 + `text_align` 样式真机/画布都居中
+   （★勘误：EEZ 画布/Run 用真实 LVGL wasm 渲染，text_align 有效；
+   此前画布观感异常 = 字体缺字形，非对齐问题）；
 2. **widget align 与显式定位互斥**（LVGL align 覆盖 x/y 语义）；label 无
    width 字段时 EEZ 发 set_size(0,h)（0 宽+WRAP=文字叠竖条）——必须
    `widthUnit:"content"`；

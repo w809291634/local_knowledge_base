@@ -29,8 +29,10 @@
 生成码 = `set_size(LV_SIZE_CONTENT, LV_SIZE_CONTENT)` + `set_style_align(LV_ALIGN_CENTER)`。
 
 **三条铁律**（每条都是一天工期换来的）：
-1. **不要自创结构**：子 label 铺满 + `text_align` 样式——真机居中但
-   **EEZ 画布不渲染 text_align**（eez-test 零使用佐证）→ 画布观感"不居中"；
+1. **不要自创结构**：子 label 铺满 + `text_align` 样式——真机/画布都能居中
+   （★勘误：EEZ 画布与 Run 用真实 LVGL wasm 渲染，text_align 有效；此前
+   "画布不居中"实为字体缺字形导致的宽度异常，非对齐不支持——原文
+   "画布不渲染 text_align"是错误推断，eez-test 零使用≠不支持）；
 2. **不要用 widget align 配显式定位**：`align:CENTER` 与 top/left **互斥**
    （LVGL align 覆盖 x/y 语义）；且 label **无 width 字段时 EEZ 发
    set_size(0,h)**（0 宽+WRAP=文字叠成竖条）——必须显式
@@ -53,8 +55,8 @@
 
 | 实现 | 构建产物 | EEZ 画布 |
 |---|---|---|
-| A text_align 铺满 | 偏差 0 ✓ | 不渲染 text_align ✗ |
-| B align:CENTER + content | **label 飘出按钮** ✗ | 画布原生渲染 ✓ |
+| A text_align 铺满 | 偏差 0 ✓ | 偏差 0 ✓（★勘误：wasm 渲染，text_align 有效） |
+| B align:CENTER + content | **label 飘出按钮** ✗（EEZ/LVGL 组合定位锚定异常） | 画布原生渲染 ✓ |
 | **C 收窄+坐标（推荐）** | 偏差 0 ✓ | 所见即所得 ✓ |
 
 （本工程按钮最终采用 **EEZ 原生形态**＝画布/真机双正确；C 为通用兜底。）
@@ -182,8 +184,9 @@ app-wifi-connect/design/check_project.py、README、KB 10号§12、模板说明.
   x/y）→ 整行 label 位置错乱。
 - **最终正解**：定宽整行 label + `text_align:"CENTER"` 样式（LVGL 真机
   渲染正确，像素实测居中）；**不用 widget align**（与显式定位互斥）。
-  EEZ 画布对 text_align 的渲染：字体提取正常后待 GUI 复核（P-0125 证明
-  条目正确时画布渲染是好的——此前画布豆腐是字体问题非对齐问题）。
+  ★勘误：EEZ 画布/Run 用真实 LVGL wasm 渲染（Studio 自带 2MB wasm），
+  text_align 画布有效——此前画布"不居中"是字体缺字形（宽度异常）所致，
+  字库修复后画布同样居中。
 - **方法论教训（本轮最大）**：连续两次"修复"都引入新问题，因为每次都凭
   单一证据下结论就动手。正确节奏：**测量基线 → 定位根因 → 最小改动 →
   同一方法复测**；测量本身要先验证坐标系（坑 16 重演了两次）。
@@ -225,3 +228,23 @@ app-wifi-connect/design/check_project.py、README、KB 10号§12、模板说明.
   set_size(0,h)（NaN/0 宽陷阱），**必须显式 widthUnit:"content"**。
 - 布局说明：连接/取消按钮相邻无缝是用户还原的坐标（30/200 各 170 宽），
   非缺陷。
+
+
+---
+
+## ★ 勘误（2026-10-20 晚 · 用户要求核对本地经验）
+
+**本条目原"EEZ 画布不渲染 text_align"为错误结论，已全文勘误**：
+
+- 错误来源：把"EEZ 画布文字不居中"误判为"对齐样式不被渲染"。
+- 真相：①EEZ Studio 自带 LVGL wasm（~2MB），LVGL 工程的画布/Run 用
+  **真实 LVGL** 渲染，text_align 必然有效；②当时画布文字不居中/豆腐的
+  真因是**字体缺字形**（GB2312 未配置 + extraction failed），文字宽度
+  异常导致观感错位——字库修复后画布即正常。
+- 教训升级（坑 16 的元版本）：**观察异常时先把"环境是否完好"列为第一
+  嫌疑（字体/资源/缓存），再怀疑框架能力**——"框架不支持 X"这类结论
+  必须有框架源码或官方文档级证据，禁止从单次观感直接推断。
+- 影响范围：本条目 TL;DR 铁律 1、对照实验表 A 行、坑 18 定稿；
+  reference/02_styles_fonts_vars.md 文字居中节——均已同步勘误。
+- 仍然有效的部分：坑 16/20 的坐标空间、content 单位、w=0 陷阱、
+  B 方案 label 飘出按钮（实测）——不受本次勘误影响。
