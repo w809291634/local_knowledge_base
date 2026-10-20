@@ -90,3 +90,71 @@ app-wifi-connect/design/check_project.py、README、KB 10号§12、模板说明.
 - **方法论**：UI 位置争议不要目测缩放图——**lv_snapshot 截图 + 叠设计参考线
   （PIL ImageDraw）+ 像素测量**三件套，一次定位。lv_obj_get_x/y 返回父相对值，
   当屏幕坐标用必被坑（本题 34px 偏差的全部来源）。
+
+## ★ 补充：忘记网络 + 保存/不保存双路径（真 WiFi 全闭环）
+
+- 新增坑 17：EEZ actions 数组加了动作但 **native_actions.cpp 忘了实现** →
+  链接 undefined reference to action_xxx（对账手段：check_project 已比对
+  actions 数组与……未覆盖 C 实现——后续可加"生成 actions.h 声明逐一 grep
+  实现"检查）。
+- 双路径连接：记住=是 → WlanSetProfile + mode=profile（持久化=NVS 保存）；
+  记住=否 → wlan_connection_mode_temporary_profile（不保存）。mingw 旧头
+  WLAN_CONNECTION_PARAMETERS 无 strProfileXml 字段——temporary 模式下
+  strProfile 即 XML。
+- forget：WlanDeleteProfile + 若正连着先 WlanDisconnect（P-0085 语义）。
+- 三按钮布局：连接/忘记/取消 各 120 宽等缝对称（面板 400 宽 → x=0/140/280）。
+
+## ★ 补充：按钮文字居中实测 = 精确居中（-1px 渲染舍入）；测量工具 measure_ui.py
+
+- 用户报"按钮文字不居中"。像素测量（三按钮，屏幕坐标系）实测：文字中心与
+  按钮中心偏差 **-1px**（渲染舍入）= 精确居中；叠设计框线截图直观确认。
+- ★ 复盘：第一轮测量报"偏移 +40px"是**测量者自己踩了坑 16 的坐标空间混淆**
+  （测量窗口用了面板相对坐标，按钮实际在面板原点+EEZ 坐标）——坑 16 的
+  普遍性连作者都会再踩，故把"坐标系换算"写进 measure_ui.py 文档头。
+- 用户在 EEZ 画布/Run 看到的不居中 = GUI 渲染差异（同键盘 Run 差异）；
+  **权威验收 = PC_SIM 截图 + measure_ui.py 像素测量**。
+- 新工具 `design/measure_ui.py`：对 shot_fake.bmp 测量键盘中心/三按钮文字
+  中心/状态行中心（阈值按文字颜色特征：白字 vs 浅蓝字），±4px 内 OK。
+  彩蛋：键盘 -3px 来自 LVGL 键盘按键布局的非对称（1# 键窄），属正常。
+
+## ★ 坑 18 定稿：居中的正确姿势与两次错误修复的教训
+
+- **错误修复 1**：把"画布文字不居中"归因于 text_align 画布不渲染 → 改手工
+  坐标居中 → 实际把构建后居中的按钮搞偏 +40px（测量坐标系错误导致的误判，
+  见坑 16）。
+- **错误修复 2**：改用 widget align=CENTER + 无宽 label（EEZ 原生按钮形态）
+  → EEZ CLI 对无宽 label 发 set_size(0,h)，w=0+WRAP=逐字换行竖条；且
+  **widget align=CENTER 与 top/left 显式定位互斥**（LVGL align 语义覆盖
+  x/y）→ 整行 label 位置错乱。
+- **最终正解**：定宽整行 label + `text_align:"CENTER"` 样式（LVGL 真机
+  渲染正确，像素实测居中）；**不用 widget align**（与显式定位互斥）。
+  EEZ 画布对 text_align 的渲染：字体提取正常后待 GUI 复核（P-0125 证明
+  条目正确时画布渲染是好的——此前画布豆腐是字体问题非对齐问题）。
+- **方法论教训（本轮最大）**：连续两次"修复"都引入新问题，因为每次都凭
+  单一证据下结论就动手。正确节奏：**测量基线 → 定位根因 → 最小改动 →
+  同一方法复测**；测量本身要先验证坐标系（坑 16 重演了两次）。
+
+## ★ 坑 19（追加）：垂直居中——LVGL label 文字从盒顶绘制
+
+- **现象**：定高 label（h=22~30 > 文字 14px）里文字贴顶，"上下不居中"。
+- **根因**：LVGL label 的文字永远从盒子内容区**顶部**绘制；`text_align`
+  只管水平。定高 > 文字高 → 下方留空 = 视觉偏上。
+- **正解**：**label 高度收缩到文字高（14px）+ y 定位到所在行的垂直中心**
+  （y = 行y + (行h-14)/2）。按钮内 label 同理（y=(按钮h-14)/2=5）。
+  水平仍由 text_align:CENTER 承担。
+- 像素验证：按钮内文字 y 中心 285 vs 按钮中心 284（±1 ✓）。
+- ★ 规矩：**EEZ 里文字垂直居中不要靠"调高 label 再指望文字自己居中"——
+  直接把 label 高做成 14、y 给到行的中心**（与坑 18 的水平方案合用：
+  定宽 + text_align 水平居中 + 收缩高 + y 垂直居中 = 双轴精确）。
+
+## ★ 坑 20（对照实验定稿）：EEZ 原生 align:CENTER + content 组合 label 飘出父容器
+
+- 用户提示"新建一个按钮对照"→ 建 font-test 工程，三实现并排 + 像素测量：
+  A text_align 铺满 = 偏差 0 ✓；B widthUnit:content + align:CENTER =
+  **label 脱离按钮**（定位锚定异常，按钮内空、文字跑到屏幕下方）✗；
+  C 手工坐标 = 偏差 0 ✓。
+- **定论**：按钮文字居中正解 = **C 方案（label 收窄到文字宽 + x 居中，
+  零对齐属性依赖，画布/真机双端一致）**；A 方案真机正确、画布观感差异；
+  **B（EEZ 原生 align+content）在 EEZ v3 + LVGL 9.4 组合不可用**。
+- 工具沉淀：font-test 工程（对照实验模板）、text_w() 宽度估算、
+  measure_ui.py 像素校验。
