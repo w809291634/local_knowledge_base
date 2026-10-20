@@ -158,3 +158,16 @@ app-wifi-connect/design/check_project.py、README、KB 10号§12、模板说明.
   **B（EEZ 原生 align+content）在 EEZ v3 + LVGL 9.4 组合不可用**。
 - 工具沉淀：font-test 工程（对照实验模板）、text_w() 宽度估算、
   measure_ui.py 像素校验。
+
+## ★ 坑 20 正解落地：按钮子 label 改 EEZ 原生形态（content 单位 + align CENTER）
+
+- 按用户指示"新建按钮只改文字"：button() 的子 label 改为与官方 defaultValue
+  逐字段一致的形态——`width:80,height:32,widthUnit:"content",heightUnit:"content"`
+  （自适应文字）+ localStyles 仅 `align:"CENTER"`+text_color+text_font
+  （**不再铺满、不再 text_align、不再 ZERO_PAD**）。
+- 生成码 = `set_size(LV_SIZE_CONTENT, LV_SIZE_CONTENT)` + `set_style_align(
+  LV_ALIGN_CENTER)` —— 与 EEZ 新建按钮完全同源，画布/真机一致。
+- 像素实测：连接/取消文字中心偏差 -1px ✓。注意 EEZ 对"无 width 字段"发
+  set_size(0,h)（NaN/0 宽陷阱），**必须显式 widthUnit:"content"**。
+- 布局说明：连接/取消按钮相邻无缝是用户还原的坐标（30/200 各 170 宽），
+  非缺陷。
