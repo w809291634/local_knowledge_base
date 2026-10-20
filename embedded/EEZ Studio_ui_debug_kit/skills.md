@@ -2050,7 +2050,7 @@ f4  = (wlc >> 3) % 4            # 烘焙姿势帧选通（240ms/帧）
    收不到任何屏根级事件**（P-0141），一律绑在具体控件上：主页绑全屏 hit 容器、
    列表页绑滚动容器本体、普通页加一个全屏 `grt_` 包裹容器（无该标志、bg_opa=0）。
 2. flow 三件套：宿主 `eventHandlers:[{eventName:'GESTURE',handlerType:'flow'}]`
-   → Switch(customInputs:[{name:'evt',**dataType:'any'**}]，'event' 不是合法值类型，
+   → Switch(customInputs:[{name:'evt',**type:'any'**}]，'event' 不是合法值类型，
    会把编辑器 mobx reaction 直接炸掉）→ changeScreen。
 3. 连线：事件的**执行线与数据线都用裸名 `'GESTURE'`**（执行线→@seqin、数据线→evt），
    靠目标 input 区分；写 `'GESTURE@seqout'` 会被静默丢线（构建照样 0 警，别信门禁）。
@@ -2059,15 +2059,10 @@ f4  = (wlc >> 3) % 4            # 烘焙姿势帧选通（240ms/帧）
 5. **让路是免费的**：列表滚动中 scroll_obj 非空 → LVGL 自动不发手势；但要把列表
    `flagScrollDirection` 锁到 `'ver'`，否则横向被列表吃掉（尤其行 translate_x 撑出
    横向溢出时）。手势门槛：累计 >50px 且每拍位移 ≥3px——**慢拖不成立**（真机快扫无感）。
-7. ★ **§48 终版纠正（P-0146）**：customInput 的类型字段名是 **`type`**（手册 A1.2.21；
-   asar CustomInput{name,type}；编辑器"Convert to input"写 `type:"any"`）——§35 起我们误写
-   `dataType:"any"`，未知字段被编辑器静默丢弃 ⇒ 输入无类型 ⇒ 后台 Checks 按类型校验连线
-   永不收敛 ⇒ Checks 图标永转。**这不是 EEZ bug，是字段名笔误**；最小复现裁决见
-   design/make_gesture_repro.py（repro_ok 静止 / repro_bad 转圈）。方向判定手势与
-   Checks 静止可兼得，§46 的"删 customInputs"取舍已回滚。教训：编辑器对未知字段
-   零告警——工程 JSON 手写的字段名必须对照 asar classInfo/手册核实，dataType 这种
-   "看着合理"的名字最危险。
-6. 验证面分工（血泪）：手势**只能**在 PC_SIM/真机验收（沙箱夹具
+6. customInput 的类型字段必须是 **`type`**（手册 A1.2.21；asar
+   `CustomInput{name,type}`；编辑器“Convert to input”写 `type:"any"`）。工程 JSON
+   的字段名必须先对照 asar classInfo 或手册；未知字段会被编辑器静默丢弃、零告警。
+7. 验证面分工（血泪）：手势**只能**在 PC_SIM/真机验收（沙箱夹具
    `verify/gesturetest_main.c`：SDL 合成快扫 60px/拍 ×4 拍，逐断言 lv_screen_active()）；
    Run 预览的 CLICKED 是合成派发、没有 indev 管线，滑动永远零反应——别拿它判手势死刑。
 
@@ -2108,8 +2103,8 @@ f4  = (wlc >> 3) % 4            # 烘焙姿势帧选通（240ms/帧）
 ### 11.43 ★ 手写工程 JSON 的字段对账法与 Checks 双判据（watch §48/§48b，2026-10-18，P-0146 终版）
 
 **需求原型**："Checks 一直转圈/突然一排红错，是不是 EEZ 的 bug？"——本案两轮裁决：
-转圈=字段名笔误，红错=检查器终于工作了。**以 §11.41 第 7 条为准，其第 2 条的
-`dataType` 写法已作废（正确见下）。**
+转圈=字段名笔误，红错=检查器终于工作了。手写 customInput 时必须使用已核实的
+`type` 字段。
 
 1. **字段名权威对账**：编辑器对未知字段**静默丢弃、零告警**。工程 JSON 手写的任何字段名，
    落码前二选一对账：① 手册对应节（如 A1.2.21 customInput）；② asar 注册表

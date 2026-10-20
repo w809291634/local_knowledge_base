@@ -134,8 +134,9 @@
 - **hidden 三形态**：`hiddenFlagType:"literal"` + `hiddenFlag:true`；表达式绑定用
   `"hiddenFlagType":"expression"` + `hiddenFlag:"<表达式>"`（codegen 在
   tick_screen 里逐帧 evalBooleanProperty 并 diff HIDDEN flag）。
-- label 绑变量：`"text": "<变量名>", "textType": "expression", "useStaticText": false`
-  （裸变量名，**不加 @**）；⚠ 绑变量后静态字形收集失效，须 `"glyphs": "…"` 补种。
+- **LVGL Label 动态文本（Studio 1.22）**：不要在 widget 定义级把 `textType` 设为
+  `expression`；该路径的 codegen 会生成空字符串且不报警（P-0143）。保留字面占位文本，
+  用 flow 的 `labelSetText` 动作写入表达式；表达式字符仍须以 `glyphs` 补种。
 - tabview：`"tabs": [ … ]` 子项为 LVGLTabWidget（tabName 可写 FA 图标字符，
   字形须烘进对应字号）；`"tabSize": 0` 隐藏原生 tab 栏。
 

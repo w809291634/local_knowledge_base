@@ -7,6 +7,17 @@
 
 ---
 
+## v0.9.19 — UI 经验库现行配方审计
+
+- 删除 `skills.md` 手势配方中可被直接照抄的错误 `customInput.dataType` 写法，统一为
+  已验证的 `type:"any"`；历史 `intake/P-0146` 仍保留原始误判与最小复现证据。
+- 勘误 LVGL Label：Studio 1.22 的 widget 定义级 `Text type=Expression` 会被 codegen
+  编为空字符串，`reference/05`、`reference/07` 均改为 flow `labelSetText` 路线，并标明
+  版本边界，避免误伤其他 Studio/目标组合。
+- 清理 eez-test 行为契约中的过时输入栏/发送按钮描述（P-0107 已删除该功能）与“未实现可留死交互”
+  许可，使其与导航闭环、语义控件铁律一致。
+- 修正 README 案例索引的陈旧范围（B1~B10 → B1~B14）。
+
 ## v0.9.18 — Flow 事实核查（P-0165）+ 脚手架文档勘误
 
 - ★ 新增 P-0165：三条实测事实——Flow **已启用**（`ui.c` 调 `eez_flow_init`，`eez-flow.cpp`

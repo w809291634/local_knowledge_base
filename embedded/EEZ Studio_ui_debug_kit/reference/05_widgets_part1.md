@@ -583,7 +583,9 @@
 **LVGL 特定说明（额外详细）**
 - **映射**：`lv_label_create(parent)` → `lv_label_set_text(obj, text)`（或 `lv_label_set_text_fmt`）；`Long mode` 映射 `lv_label_set_long_mode`（WRAP/DOT/SCROLL/SCROLL_CIRCULAR/CLIP）；`Recolor` 映射 `lv_label_set_recolor`。
 - **坐标/尺寸**：通用 `Left/Top/Width/Height`（px/%/content）。`Width unit=content` 时常配合 `Long mode=WRAP` 自动按宽换行；`Long mode=SCROLL` 通常需要固定 Width。
-- **动态文字**：`Text type=Expression` 时，Studio 在生成代码前对 `Text` 表达式求值得到最终字符串传给 `lv_label_set_text`。
+- **动态文字（Studio 1.22 的 LVGL 目标）**：不要依赖 widget 定义级 `Text type=Expression`；
+  它会被 codegen 编成空字符串且不报警。动态文本应使用 flow 的 `labelSetText` 动作；
+  若换 Studio/目标版本，先检查生成产物确认该能力是否真实可用（P-0143）。
 - **对 `json2eez` / `center_in`**：`json2eez` 将 `Text`/`Preview value` 转为 `lv_label_set_text`；`Recolor` 需在文本中保留 `#rrggbb 文字#` 语法；`center_in` 居中依据标签几何盒（SCROLL 模式下为视口盒，非完整文本长度）。
 
 ---
