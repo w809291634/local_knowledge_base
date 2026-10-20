@@ -248,3 +248,60 @@ app-wifi-connect/design/check_project.py、README、KB 10号§12、模板说明.
   reference/02_styles_fonts_vars.md 文字居中节——均已同步勘误。
 - 仍然有效的部分：坑 16/20 的坐标空间、content 单位、w=0 陷阱、
   B 方案 label 飘出按钮（实测）——不受本次勘误影响。
+
+## ★ 补充：键盘弹出（LVGL 标准模式）+ 连接失败可见反馈（真 WiFi 诊断闭环）
+
+- **诊断**（假指针自动点行+点连接）：整条链路通（扫描→选中→动作→io 层），
+  "点连接无效果"真因 = **键盘不弹出没法输密码 + 守卫拒绝无可见反馈**
+  （日志 `[IO:WIN] locked network needs a password` 用户看不到）。
+- **修复 1（键盘弹出，LVGL 标准模式）**：`ui_behavior.cpp`（PC/真机共用）——
+  键盘初始隐藏；密码框 CLICKED → 移除 HIDDEN；键盘 READY/CANCEL → 加 HIDDEN。
+  画布不受影响（JSON 键盘仍在面板内设计位）。
+- **修复 2（失败可见反馈）**：wifi_state=3（请输入密码/连接失败）→ footer
+  表达式四分支。锁网络空密码守卫拒绝时发布 3；连接超时失败发布 3。
+- **教训**：守卫/失败路径必须有 **UI 可见反馈**，只打日志用户看不到
+  （"点连接无效果"的一半就是这个）。
+
+## ★★ PC 真 WiFi 连接"无效果"根因链（实测闭环，2026-10-20 18:50）
+
+用户现象：真 WiFi 模式点"连接"无任何反应。假指针自动点行+连接 + netsh
+交叉验证，定位五层根因：
+
+1. **mingw 头 `WlanSetProfile` 参数顺序与 MSDN 相反**：
+   mingw: (..., bOverwrite, pReserved, pdwReasonCode)
+   MSDN : (..., bOverwrite, pdwReasonCode, pReserved)
+   按 MSDN 传 → &reason 进了 pReserved（非 NULL）→ ERROR_INVALID_PARAMETER(87)。
+   修：`WlanSetProfile(h, guid, 0, xml, NULL, true, NULL, &reason)`
+2. **认证方式必须以真实 profile 为准**：该网络为 WPA3SAE + transitionMode，
+   硬编码 WPA2PSK 的 profile 无效。正解：加密网络统一 WPA3SAE +
+   <transitionMode>true</transitionMode>（兼容 WPA2/3）；SSID 用
+   <hex>…</hex><name>…</name> 双写 + xmlns。
+3. **高频轮询会卡死连接**：每 4ms 拍调 WlanQueryInterface(250Hz) →
+   接口卡 authenticating(state=7)。修：轮询节流 1s。
+4. **SetProfile 后立即 Connect 静默无效**（返回 0 但不连）→ 非阻塞延迟
+   800ms 再 Connect（pending 标志）。
+5. **密码以系统 profile 为准**：用户记录写成 `yjt888...`（含省略号，恰为
+   真密码）；先 `netsh wlan export profile key=clear` 核对 keyMaterial。
+
+附带：
+- 已保存 profile 存在 → WlanGetProfile 命中 → 直接 WlanConnect（免密码）✓
+- remember=否：temporary 不稳 / 连上后删 profile 即断 → Windows 后端
+  "不保存"暂不可行（两者均保存，已记录）
+- 验证三件套：show interfaces / show profiles / export key=clear（用完即删）
+- 测试钩子 WIFI_TEST_SSID/WIFI_TEST_PWD（env 注入，不落盘不打印）+
+  按 SSID 找行对象 + scroll_to_view + 实际坐标点击
+
+## ★ 补充：把"构建成功"与"截图对照"变成门槛（P-0165 同期）
+
+- **三假象**（只认 `BUILD RESULT:` 与 `N errors`，其余不算证据）：
+  ① `Build successfully finished` 但零产出（`settings.build.files` 被删，P-0005）；
+  ② `No error and no warning detected` 但 flow 引用错误非致命（本条目坑 5）；
+  ③ 满屏红字其实是 Chromium 噪音（P-0010/P-0016）。
+- **preflight 脚本**：按序跑 生成 → CLI → 字符审计 → 静态自检 → 字库，并在 CLI 之后
+  **校验产物文件**（screens.c/ui.c/vars.h/actions.h/structs.h 存在且非空）——P-0005 的
+  机器化落地；缺脚本时明确 SKIP，不把"没检查"伪装成"通过"（P-0012）。
+- **截图对照**：程序内 `lv_snapshot`（系统截图抓不到 GPU 帧、不可复现）→ BMP→PNG；
+  颜色反相用 `--swap-rb`（P-0008 通道序）；按设计坐标 spec 画绿框/红线，输出
+  "设计 SVG ｜ 截图 ｜ 叠加图" 三栏报告 + 每元素 Δx/Δy，±4px 为 PASS。
+- **判读口诀**：整块同向偏 20–40px = 坐标空间错（坑 16）；文字贴顶 = label 定高 >
+  文字高（坑 19）；方块字 = 先修字体（A2–A4）；颜色整体反相 = 快照通道（P-0008）。

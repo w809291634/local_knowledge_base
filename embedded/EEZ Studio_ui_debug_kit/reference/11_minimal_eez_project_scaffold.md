@@ -199,7 +199,8 @@ python -m esp_idf_size --files --format json build\lvgl_demo_template.map > buil
 
 | 自创写法 | 后果 |
 |---|---|
-| 按钮子 label 铺满 + `text_align:"CENTER"` 样式 | 真机居中但 **EEZ 画布不渲染 text_align** → 画布观感"不居中" |
+| 手工坐标居中（label 收窄 + x 手算） | 字宽估算一错就偏；改字号/文案即失效（实测偏 +40px） |
+| ~~按钮子 label 铺满 + `text_align`~~ | ~~画布不渲染~~ **已勘误**：画布是真实 LVGL wasm，`text_align` 有效；当时的画布异常是字体缺字形（见 P-0164 勘误节） |
 | 子 label `align:"CENTER"` + `widthUnit:"content"`（EEZ 原生属性却在自创组合里用） | **label 飘出父容器**（定位锚定异常，EEZ v3 + LVGL 9.4 组合 bug） |
 | label **缺 width 字段** | EEZ 发 `set_size(0,h)` / `NaN` → 0 宽 + WRAP = 文字叠成竖条；C 侧 `NaN` 直接编译错 |
 
