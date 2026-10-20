@@ -2217,3 +2217,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 产出/结论：实测固件 -130.9KB/内部RAM -20.4KB；发现 xiaozhi 的 C++ 需异常，故异常只按 target 关在 ui 组件；新建 P-0161，并修正脚本字体分组
   - 关联：P-0161
 
+### PR-0278 · 2026-10-20 09:29 · WorkBuddy
+  - 提示词：3/5 选择与开关 可以做多个界面，每个界面包含一种示例，要求有联动，界面容器可以可以是 tabview + tabview 可可以参考本地经验
+  - 诉求：组合 3/5 做成 Tabview 多页、每页一种控件、要求联动；tabview 写法参考本地经验
+  - 产出/结论：产出 w23-w59-w73-w16-select-switch（4 页 Tabview 可见页签）；联动=Dropdown/Roller selected 同绑 g_sel 双向同步；发现并剔除 ToggleButton（EEZ-GUI 件无 LVGL codegen）；per-tab bisect 排障法；CLI+PC_SIM 0 错；入库 P-0156
+  - 关联：P-0156
+

@@ -76,3 +76,13 @@ PC 推算的"EEZ 多 1.33MB flash"是**误读**：把字体/资源内容算进�
 4. 当前 sdkconfig 为 CONFIG_COMPILER_OPTIMIZATION_PERF(-O2)；切 SIZE(-Os)
    flow 引擎可再缩 15~30%（要压 flash 的开关）。
 结论维持：**EEZ 核心独有 ≈259KB flash + ≈28KB RAM**（当前 -O2 配置的实测值）。
+
+## 补充：EEZ 侧滑动运行时验证（假指针 indev 法，2026-10-20）
+
+用户报告"perf 对照的 EEZ 窗口没有动画效果"。用**假指针 indev**（lv_indev_create
++ set_read_cb 脚本化按下/移动/抬起——走真实输入管线，不动真鼠标）无头验证：
+EEZ 侧 tabview 拖动**完全正常**（scroll_x=480 翻页、39 次 SCROLL、frag 0）。
+P-0150 的 SNAPPABLE 修复运行时有效。窗口"静止"是因为两侧 tab 栏都隐藏
+（perf 同构要求），页间切换唯一方式是拖动，无自动轮播。
+方法沉淀：**无头输入注入 = 假 indev + lv_indev_set_read_cb 脚本化状态机**，
+比 SendInput 干净（不抢鼠标、可自动化、可断言），已在 perf-eez main.c 落地。
