@@ -101,3 +101,40 @@ app-wifi-connect/README.md、根 README 索引、workspace memory 2026-10-20
 - lv_font_conv 传 7445 字 symbols：subprocess 列表参数（CreateProcess 32KB 上限内），
   不要走 cmd.exe shell（8191 上限会截断）。
 - 真模式加测试钩子：WIFI_AUTOSCAN/WIFI_AUTOEXIT 环境变量（默认关，零自动化不变）。
+
+## ★ 补充：flow 检查错误是非致命的——CLI "ok" 会掩盖表达式引用错变量
+
+- 用户 GUI 构建报 `identifier 'wifi_conn_ssid' is neither input or local or global
+  variable`（×2）：v3 变量改名 conn_ssid 时**底部状态表达式漏改**。EEZ 的 flow
+  检查错误**不阻断构建**（"2 errors and no warning" 后照样 Build successfully
+  finished），产物带坏表达式运行（该 label 永远空/错）。
+- 修：cli_build.py 增加守卫——正则抓 `N errors and no warning`，N>0 判
+  FLOW_ERRORS 并打印明细行； Renamed wifi_conn_ssid → conn_ssid（3 处）。
+- ★ 规矩：**"Build successfully finished" ≠ 0 错误**；CLI 封装必须同时检查
+  flow 检查错误计数。变量改名时用全局搜索（build_example.py + 表达式字符串）。
+
+## ★ 补充：字体 extraction failed 的正解 = 按 TTF cmap 过滤字符集
+
+- GUI 报 `doesn't have any characters included in range 0x30fb`：GB2312 符号区的
+  ・(U+30FB 间隔号)在 simhei.ttf 的 cmap 里不存在 → EEZ 提取遇"空 range"即报错。
+- **正解**：字符集生成后用 fontTools 读 TTF cmap 交集过滤
+  （`TTFont.getBestCmap()`，逐字比对，缺字打印并剔除）——build_example.py 的
+  `_filter_by_font_cmap()` 已落地（fontTools 缺失时跳过并大声警告，
+  跑生成器请用带 fontTools 的 Python——managed env 已装 4.67）。
+- 实测：7445 字 GB2312 集过滤后恰好只删 ・ 1 个字；lv_font_conv 侧本来就会
+  静默忽略缺字 symbols，所以该过滤只服务于 EEZ GUI 提取。
+- ★ 规矩：**自定义字符集 ∩ 字体 cmap 才能进 lvglRanges**——写死字符集换字体
+  必炸这条。
+
+## ★ 补充：假模式自动演示修复 + 截图自证闭环
+
+- 截图自证（lv_snapshot）实证：面板"记住密码: 否"/"输入密码" placeholder/
+  按钮中文/列表行 SSID+dBm 全部正常渲染——**零豆腐**（GB2312 字库 + cmap
+  过滤 + 条目含 ASCII 的组合生效）。
+- 修复 1：真模式补丁链误删了假模式的自动扫描块（多轮 replace 改同一段代码
+  的事故）→ 已恢复；教训：**多轮补丁改同一函数时，先整段读出再整段重写，
+  别叠碎片 replace**。
+- 修复 2：演示的"点连接按钮"坐标点击时序偶发抖动 → 改为直接调
+  action_wifi_connect（与按钮点击等价：动作只投递，密码取 textarea）。
+- 测试钩子定稿（真模式）：WIFI_AUTOSCAN=1（自动扫一次，仅验证）/
+  WIFI_AUTOEXIT=1（完成截图退出）；默认全手动。
