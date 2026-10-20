@@ -592,7 +592,9 @@ General、Position and size、Layout、Style（Use style）、Flags、States、E
 ### LVGL 对象映射 / json2eez 备注
 - 映射到 `lv_switch`（`lv_switch_create`、`lv_switch_on/off`、`lv_switch_get_state`）。
 - 开/关状态在 json2eez 中映射为 **Checked 状态**：`Checked`(EXPRESSION boolean) 为 true 即开；也可走 `lv_obj_add/remove_state(obj, LV_STATE_CHECKED)`。
-- 没有独立的 `Value`/`Data` 属性（与 Dashboard/EEZ-GUI 变体不同），需通过绑定 Checked 状态或事件（如 VALUE_CHANGED）读写。
+- 没有独立的 `Value`/`Data` 或 assignable 双向属性（与 Dashboard/EEZ-GUI 变体不同）。
+  `Checked` 表达式只负责回显；用户操作应由 VALUE_CHANGED/CLICKED 事件写业务变量，再由
+  Checked 表达式回灌控件状态（P-0162）。
 
 ---
 
@@ -760,6 +762,8 @@ Position and size（Resizing）、Layout、Style（Default）、Events（Event h
 ## W85. ToggleButton
 ### Description
 可在两种状态间切换的按钮：Default 与 Checked。
+**所属族**：**仅 EEZ-GUI**。它没有 LVGL codegen，不能放进 LVGL 工程；LVGL 中应使用
+带 `CHECKABLE` 的 Button，并用 Checked 状态与事件/flow 表达同类交互（P-0162）。
 ### Specific 属性
 | 名称 | 类型 | 含义 |
 |------|------|------|

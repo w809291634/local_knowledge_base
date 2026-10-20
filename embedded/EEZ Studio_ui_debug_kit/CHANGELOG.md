@@ -7,6 +7,38 @@
 
 ---
 
+## v0.9.24 — UI 经验库现行配方审计（第六轮）
+
+- 补足滚动 Container 的适用边界：它适用于固定/有上限行数；LVGL Flow 没有按数组长度创建
+  控件的 repeater。动态长度列表在 C 侧例外前必须完成 EEZ-first 四面对查并获得用户同意
+  （P-0165）；保留 P-0165 的新增取证内容不改。
+
+## v0.9.23 — UI 经验库现行配方审计（第五轮）
+
+- 勘误 LVGL Checkbox/Switch 的状态说明：`Checked` 是单向表达式状态，不是 assignable
+  双向绑定；需要事件写业务变量、再由表达式回显（P-0162）。
+
+## v0.9.22 — UI 经验库现行配方审计（第四轮）
+
+- 删除“EEZ Run 预览永远不产生 GESTURE”的现行绝对断言。P-0149/B13 后续实证表明，预览
+  可因 WASM + DOM 事件合并而触发；正确规则是预览结果不能代替 PC_SIM/真机验收。P-0141
+  保留原始取证，并追加版本边界更正。
+
+## v0.9.21 — UI 经验库现行配方审计（第三轮）
+
+- 删除 `reference/07` 中“CLI 会把 PNG 直接转换为完整 LVGL 像素 C 数组”的错误说明：CLI
+  仅产名表/声明，像素 `.c` 需 GUI Build 或在 CLI 后由工程生成器补齐（P-0151）。
+
+## v0.9.20 — UI 经验库现行配方审计（第二轮）
+
+- 勘误 AnimationImage 的 `Duration`：它是整轮动画时长，不是单帧时长；帧无独立 duration
+  （P-0151）。
+- 明确 W85 ToggleButton 仅属 EEZ-GUI、无 LVGL codegen；LVGL 使用 CHECKABLE Button。
+- 删除 W42 List(LVGL) 的 native 补 UI 建议及 JSON 速查中的同类绕行；List 为 WIP，应用列表
+  统一改用滚动 Container + 显式真实行控件（P-0152，EEZ-first）。
+- 为 `Flow.makeArrayValue` 补充运行时定长限制，避免将 ArrayValue 当成 `std::vector`
+  （P-0165）。
+
 ## v0.9.19 — UI 经验库现行配方审计
 
 - 删除 `skills.md` 手势配方中可被直接照抄的错误 `customInput.dataType` 写法，统一为

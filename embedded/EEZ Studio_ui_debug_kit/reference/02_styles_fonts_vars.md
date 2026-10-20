@@ -249,7 +249,8 @@
 - **Flow.isPageActive**：若在某 page 内执行，且当前该 page 为活动页则返回 true，否则 false。参数：None。返回：Boolean。
 - **Flow.pageTimelinePosition**：若在 page 或 custom widget 内执行，返回该 page / custom widget 动画时间线的当前位置。参数：None。返回：时间线位置，类型 Boolean（原文标注）。
 - **Flow.makeValue**：创建 Struct 类型的新值。参数：`structName`（String，结构体名）、`value`（JSON，结构体名/值）。返回：创建的 struct 值，类型 Struct。
-- **Flow.makeArrayValue**：创建 array 类型的新值。参数：`value`（JSON，数组值）。返回：创建的 array 值，类型 Array。
+- **Flow.makeArrayValue**：创建 array 类型的新值。参数：`value`（JSON，数组值）。返回：创建的 array 值，类型 Array。运行时 ArrayValue 是**定长**存储，不是 `std::vector`：不能
+  `push` / `clear` / `resize`；动态数据应预分配固定槽位或整体重建数组（P-0165）。
 - **Flow.languages**：获取多语言项目中定义的语言列表（字符串数组）。参数：None。返回：语言数组，类型 Array:string。
 - **Flow.translate**：翻译文本资源 ID，等同于 `T"textResourceID"`。参数：`textResourceID`（String）。返回：翻译后的字符串，类型 String。
 - **Flow.parseInteger**：将给定字符串解析为整数。参数：`str`（String）。返回：解析的整数，类型 Integer。

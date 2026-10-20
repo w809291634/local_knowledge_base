@@ -31,7 +31,7 @@
 | 属性 | 类型 | 默认 | 含义 |
 |---|---|---|---|
 | Images | Array | — | 组成动画的帧图像列表（每帧为一幅图像引用）。 |
-| Duration | Number | — | 单帧显示时长（毫秒）。 |
+| Duration | Number | — | **整轮动画总时长**（毫秒）；帧条目没有独立时长，时长由全部帧共同分摊。 |
 | Repeat infinite | Boolean | false | 是否无限循环播放；false 时按 Repeat count 播放指定次数。 |
 | Repeat count | Number | — | 循环播放次数（Repeat infinite 为 false 时生效）。 |
 
@@ -263,7 +263,10 @@
 **LVGL 特定说明（额外详细）**
 - **映射**：`lv_checkbox_create(parent)` → `lv_checkbox_set_text(obj, text)`。文字通过 `Text` 属性设置；当 `Text type = Expression` 时，Studio 在生成代码前对表达式求值得到最终字符串。
 - **坐标/尺寸**：由通用 `Left/Top/Width/Height`（px/%/content）控制；复选框尺寸通常随文字自动适应（Width/Height unit 取 `content` 较常见）。
-- **状态**：勾选态由 `States.Checked`（EXPRESSION boolean）驱动，点击触发 CLICKED 事件并自动切换 `Checked`；可与 `Checkable` Flag 配合。
+- **状态**：LVGL Checkbox 没有 `Value` / `Data` 这类 assignable 双向属性。
+  `States.Checked` 只是**单向**表达式显示；若要把用户点击持久化到业务状态，必须以
+  CLICKED/VALUE_CHANGED 事件写变量，再由表达式回显。单靠控件内部切换会在下一次
+  表达式刷新时被覆盖（P-0162）。
 - **对 `json2eez` / `center_in`**：JSON 中 `specific.text` / `specific.textType` 应翻译为 `lv_checkbox_set_text`；`center_in` 居中应使用通用坐标或 Align 元数据，文字不影响布局盒。
 
 ---
@@ -736,14 +739,21 @@
 > 注：原文编号为 W42（List LVGL）与 W43（Lottie）。此处按用户清单 W42 = List (LVGL)、W43 = Lottie。
 
 **W42 List (LVGL)**
-**Description**：LVGL 列表对象（`lv_list`）。**Work in progress**——Studio 会生成完整创建代码，但多于创建之外的功能需在自定义代码中实现（如 `ui_init()` 之后）。
+**Description**：LVGL 列表对象（`lv_list`）。**Work in progress**——当前 Studio 没有可用的
+项目内列表项/数据绑定模型；面向应用的可滚动列表不要选它，也不要用 native 代码补齐 UI。
+应改用普通 `LVGLContainerWidget` 作为滚动容器，并以真实子控件定义各列表项（P-0152）。
 
 **所属族**：**纯 LVGL 通用族**，无 Specific 属性（直接进 General / Position&Size / Layout(Tab title) / Use style / Flags / States / Events / Flow，见附录 A）。
 
 **LVGL 特定说明（额外详细）**
-- **与 W40/W41 的本质区别**：Dashboard/EEZ-GUI 的 List 通过 `Data` + `$index` **自动重复渲染子 widget**；而 **LVGL 变体的 List 没有 `Data` / `$index` / `Gap` 等专属属性**，不自动做子项乘法。列表项（lv_list_add_text / lv_list_add_btn）需由**后续自定义代码**添加。
-- **映射**：`lv_list_create(parent)` → `lv_list_add_text` / `lv_list_add_btn`。坐标/尺寸通用。
-- **对 `json2eez` / `center_in`**：`json2eez` 只能生成空 `lv_list` 容器；若期望自动列表，流水线须识别此限制并提示用户用自定义代码补全。`center_in` 仅针对列表容器几何盒居中。
+- **与 W40/W41 的本质区别**：Dashboard/EEZ-GUI 的 List 通过 `Data` + `$index` **自动重复渲染子 widget**；而 **LVGL 变体没有 `Data` / `$index` / `Gap` 等专属属性**，不能自动做子项乘法。
+- **应用列表替代方案**：普通 Container 保留纵向滚动 flags、`flagScrollDirection:'ver'`，按需设
+  `scrollSnapY`；每一行以 Container/Button 等真实控件显式生成。这样滚动、命中区、导航与 EEZ
+  flow 都留在工程模型中（P-0152）。这适用于**行数已知或有固定上限**的列表；LVGL Flow
+  没有按数组长度创建控件的 repeater。真正动态长度的数据列表若不能通过固定槽位表达，必须先
+  完成 EEZ-first 四面对查并取得用户同意，才能使用 C 侧创建行的例外路线（P-0165）。
+- **对 `json2eez` / `center_in`**：流水线遇到列表需求应生成上述滚动 Container，而不是空
+  `lv_list` 后再建议用户代码补项。
 
 ---
 

@@ -355,12 +355,13 @@
     构建成功，容易漏看（§12.5）。
 11. 图片控件 `image` 名与 bitmaps[].name 不一致 → 不报错、运行时图片空白
     （构建期不校验引用，§12.5）。
-12. **LVGLListWidget 不生成 objects 表条目**（lv_list_create 有、objects.X 无；
-    hiddenExpr 标记也无效）→ native 侧运行时用
-    `lv_obj_check_type(obj, &lv_list_class)` 递归查找（实测 2026-10-01）。
-13. **native 运行时灌入的文本没有字形**（字形只按静态文本收集）→
-    lv_list_add_btn 的中文变豆腐块。解法：DSL `glyphs_seed = {字体名: "字符串"}`
-    预烘字形（json2eez 汇入 TEXT_BY_FONT）。
+12. **LVGLListWidget 是 WIP，不适合应用列表**：它缺少稳定的对象句柄与列表项模型。
+    列表请用普通滚动 Container + 显式真实行控件；不要以 native 的 `lv_list_add_btn`
+    补 UI（P-0152）。该方案适合固定/有上限行数；Flow 不会按数组长度创建控件，真正
+    动态长度列表在走 C 侧例外前必须完成 EEZ-first 四面对查并获用户同意（P-0165）。
+13. **运行时可能出现的文本必须预烘字形**：字形只按静态文本收集。将动态文案登记到
+    DSL 的 `glyphs_seed = {字体名: "字符串"}`，由生成器汇入字符集；这条对 flow 写入的
+    Label 和任何经硬件桥回显的字符串同样适用。
 
 ## 12.5 位图与图片控件（LVGLImageWidget）✅（2026-10-01 唱片转动实测）
 
@@ -375,7 +376,10 @@
 - ⚠ **`bpp` 必填**——缺了 EEZ 位图生成器直接报
   `TypeError: Cannot read properties of undefined (reading 'toString')`，
   且该位图的 .c 不产出（其余文件照常构建，容易漏看）。
-- EEZ CLI build 据此重写 `src/ui/images.c`（PNG→LVGL C 数组，RGBA 带 alpha）。
+- EEZ **CLI** 只会重写 `images.c` 的名表/声明，**不会**调用图片提取 worker 生成像素
+  `.c`；直接链接会出现位图符号未定义。图片数据由 GUI Build 生成；自动化链路则必须在
+  CLI 之后调用工程侧图片生成器补齐（P-0151）。若启用 `separateFolderForImagesAndFonts`，
+  生成的图片 `.c` 位于 `src/ui/images/`。
 
 **图片控件**（TYPE_MAP `"image"` → `LVGLImageWidget`）：
 

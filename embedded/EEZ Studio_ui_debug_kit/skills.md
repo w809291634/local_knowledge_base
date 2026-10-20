@@ -2062,9 +2062,11 @@ f4  = (wlc >> 3) % 4            # 烘焙姿势帧选通（240ms/帧）
 6. customInput 的类型字段必须是 **`type`**（手册 A1.2.21；asar
    `CustomInput{name,type}`；编辑器“Convert to input”写 `type:"any"`）。工程 JSON
    的字段名必须先对照 asar classInfo 或手册；未知字段会被编辑器静默丢弃、零告警。
-7. 验证面分工（血泪）：手势**只能**在 PC_SIM/真机验收（沙箱夹具
-   `verify/gesturetest_main.c`：SDL 合成快扫 60px/拍 ×4 拍，逐断言 lv_screen_active()）；
-   Run 预览的 CLICKED 是合成派发、没有 indev 管线，滑动永远零反应——别拿它判手势死刑。
+7. 验证面分工：手势验收必须落在 **PC_SIM/真机**（沙箱夹具
+   `verify/gesturetest_main.c`：SDL 合成快扫 60px/拍 ×4 拍，逐断言 lv_screen_active()）。
+   Run 预览在不同运行时/窗口形态下**可能**触发 GESTURE：P-0149 实证其 LVGL WASM +
+   DOM 按帧合并的读点粒度可正常触发；P-0141 的零反应只是一轮特定环境现象。故预览
+   能触发或不能触发都不能单独裁决实现正确性，最终仍以 PC_SIM/真机为准。
 
 
 ### 11.42 ★ EEZ 表达式字符串格式化与 native 外部变量桥（watch §38，2026-10-18，P-0142）

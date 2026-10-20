@@ -118,3 +118,19 @@ assert not re.search(r"setGlobalVariable\(\s*\d", src)
 - 判断"运行时有没有启用"看**生成代码 + 二进制符号**，不看文档、不看 `flowSupport` 开关；
 - 判断容器语义看**结构体定义**，不看名字（`ArrayValue` 听起来像 vector，实际是柔性数组）；
 - 跨层传数据的类型能力看**枚举定义**（NativeVarType 只有 5 种标量），不看字段名 `void *`。
+
+## 追加核实：能不能"按数组长度生成 UI 行"（手册原文）
+
+**结论：EEZ-GUI（Dashboard）有，LVGL 没有。**
+
+| 手册章节 | 原文要点 | 适用项目 |
+|---|---|---|
+| **W40 List**（p.529） | "Use this Widget when you want to display the same Widget multiple times… the number of times it will be displayed depends on the **Data** property"；Data 为数组时"the number of elements in the list is equal to the number of elements in that array"；子控件用系统变量 **`$index`** 取数组项（例：`country_cities[$index].country`）；配合 `struct:$ScrollbarState` 可滚动 | **EEZ-GUI / Dashboard** |
+| **W42 List (LVGL)**（p.538） | "This widget is **work in progress**… Studio will generate all the code for its creation, but for anything more than that you should do it in your **custom code**, for example after `ui_init()`" | LVGL（本项目） |
+
+配套证据：`eez-flow.h` 里 `lv_obj_create/lv_label_create` 命中 0 次（Flow 运行时没有创建控件的 API）；
+asar 里 `repeater` 命中 0 次。
+
+→ LVGL 工程里，**数组长度不会驱动行数**；要做"数量不定 + 滚动"，只有两条路：
+① 容器 + C 侧 `lv_obj_create` 循环建行（本工程采用，上一代 88 行已验证）；
+② 整个工程切 EEZ-GUI 运行时（放弃 LVGL codegen，设备端换渲染器，字体/性能/移植全变）。
