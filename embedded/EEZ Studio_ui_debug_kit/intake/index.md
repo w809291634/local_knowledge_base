@@ -377,3 +377,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0166 | LVGL滚动列表三坑：hit_test必须CLICKABLE、add_text不是button、SDL时间挂钟 | verified |
 | P-0167 | EEZ结构体数组变量：native直接读写的C++容器（JSON写法+makeArrayRef三坑） | verified |
 | P-0168 | lv_list_add_button的label默认SCROLL_CIRCULAR跑马灯：新建时coords为0动画当场启动停不下来（修复=显式set_long_mode(CLIP)，DOTS只管垂直溢出） | fixed |
+| P-0169 | 字体提取 extraction failed（U+30FB）：fontTools 缺失→过滤静默降级→缺字形字符漏进 lvglRanges；根治=缺工具硬失败+装 fontTools | fixed |
