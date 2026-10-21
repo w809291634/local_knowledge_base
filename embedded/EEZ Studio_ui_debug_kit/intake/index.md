@@ -374,3 +374,6 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0163 | 2026-10-20 | WiFi 全流程 UI 的三个 EEZ 实现事实：隐藏表达式 JSON 键名是 hiddenFlag；Textarea 的 text 是 input 单向；字体条目 source 必须全量字体 | WiFi,hiddenFlag,hiddenFlagType,textarea,keyboard,native变量桥,动作,字体条目,lv_font_conv,居中,自动演示,假indev | fixed |
 | P-0164 | 2026-10-20 | EEZ+LVGL 应用级示例 15 连坑复盘（wifi 全流程）：每坑一个机器检查，防再犯 | 防再犯,自检清单,check_project,hiddenFlag,字体条目,cmap过滤,GB2312,flow检查错误,extern C,注释闭合,孤儿清理,exit守卫,textarea,mingw,wlanapi | fixed |
 | P-0165 | 2026-10-20 | 生成产物里 Flow 的真实形态：已启用、数组定长、native var 只能标量 | eez,flow,array,native-var,codegen,架构,makeArrayRef,refCounter | verified |
+| P-0166 | LVGL滚动列表三坑：hit_test必须CLICKABLE、add_text不是button、SDL时间挂钟 | verified |
+| P-0167 | EEZ结构体数组变量：native直接读写的C++容器（JSON写法+makeArrayRef三坑） | verified |
+| P-0168 | lv_list_add_button的label默认SCROLL_CIRCULAR跑马灯：新建时coords为0动画当场启动停不下来（修复=显式set_long_mode(CLIP)，DOTS只管垂直溢出） | fixed |
