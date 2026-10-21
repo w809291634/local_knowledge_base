@@ -378,3 +378,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0167 | EEZ结构体数组变量：native直接读写的C++容器（JSON写法+makeArrayRef三坑） | verified |
 | P-0168 | lv_list_add_button的label默认SCROLL_CIRCULAR跑马灯：新建时coords为0动画当场启动停不下来（修复=显式set_long_mode(CLIP)，DOTS只管垂直溢出） | fixed |
 | P-0169 | 字体提取 extraction failed（U+30FB）：fontTools 缺失→过滤静默降级→缺字形字符漏进 lvglRanges；根治=缺工具硬失败+装 fontTools | fixed |
+| P-0170 | 2026-10-21 | EEZ Flow 的收益与体积取舍：扫描示例几乎未用 Flow 仍链接完整引擎 | EEZ,Flow,资源消耗,选型,Flash,RAM,executionQueueSize,优化 | fixed |
