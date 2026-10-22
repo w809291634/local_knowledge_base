@@ -379,3 +379,9 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0168 | lv_list_add_button的label默认SCROLL_CIRCULAR跑马灯：新建时coords为0动画当场启动停不下来（修复=显式set_long_mode(CLIP)，DOTS只管垂直溢出） | fixed |
 | P-0169 | 字体提取 extraction failed（U+30FB）：fontTools 缺失→过滤静默降级→缺字形字符漏进 lvglRanges；根治=缺工具硬失败+装 fontTools | fixed |
 | P-0170 | 2026-10-21 | EEZ Flow 的收益与体积取舍：扫描示例几乎未用 Flow 仍链接完整引擎 | EEZ,Flow,资源消耗,选型,Flash,RAM,executionQueueSize,优化 | fixed |
+| P-0171 | 2026-10-22 | 上游件改动只在工程根台账里可见，翻到被改目录看不出它被改过什么（含存在式假门禁改正） | 移植,开源件,账单,就地可见,假门禁,正则全量比对 | fixed |
+| P-0172 | 2026-10-22 | 上游 .orig 与仓库文件 SHA256 对不上，看着像被人改过（CRLF 假失配 + 整仓对账 + 0 tag/0 release） | 移植,整仓对账,CRLF,行尾,SHA256,假失配,release,tag | fixed |
+| P-0173 | 2026-10-22 | 列表首尾行能停在正中、中心图标贴水平中线，观感不对（后口径反转为松手弹回第 n 个） | 样式,磁吸,落点,宏配置,闭环标定,拖动行程,判据设计 | fixed |
+| P-0174 | 2026-10-22 | EEZ 画布里是圆的，仿真器里是方的 | EEZ,circularDisplay,displayBorderRadius,clip_corner,radius,编辑器装饰,胶囊,LV_RADIUS_CIRCLE | fixed |
+| P-0175 | 2026-10-22 | 真手滑到最上面不弹回，但 11 条无头断言全绿（HIDDEN 吞掉行级手势回调） | 手势,HIDDEN,事件搜索,静默失效,indev,SDL注入,lv_sdl_mouse,夹具 | fixed |
+| P-0176 | 2026-10-22 | 字体覆盖门禁比的是声明值，字体被换掉时它会因为错的理由通过 | 字体,门禁,假判据,Opts,lv_font_conv,EEZ-GUI烘字体,声明vs产物 | fixed |
