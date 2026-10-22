@@ -57,8 +57,8 @@ ui_debug_kit/
 ├── INTAKE.md               ← ★ 记录规约：新问题怎么登记、提示词怎么留痕（给任何 AI 工具看）
 ├── EEZ_FIRST_WORKFLOW_FLOW.md     ← ★ 栈专属流程·flow 方式（2026-10-22 由 EEZ_FIRST_WORKFLOW.md 拆出）：
 │                              EEZ 为主、仿真为辅（验证优先级金字塔 / 框架分层 / 七步主链 / 应用侧实测注意）；仿真点名才跑
-├── EEZ_FIRST_WORKFLOW_NO_FLOW.md  ← ★ 栈专属流程·no flow 方式（与 FLOW 版成对）：另含设计冻结前置七步 §7 D①–D⑦
-│                              （用户 2026-10-22 澄清：前置七步属 no flow；D⑤ 设计核对阶段仿真默认跑）
+├── EEZ_FIRST_WORKFLOW_NO_FLOW.md  ← ★ 栈专属流程·no flow 方式（与 FLOW 版成对）：§2 七步主线为唯一流程
+│                              （设计图[独立脚本出，用户确认]→控件标注→框架确认→EEZ预生成→双核对[⑤仿真默认跑]→用户核对+真机→逐个补功能[内环=旧主链]）
 ├── EEZ-Studio-reference-guide.pdf ← ★ EEZ Studio 官方参考手册（用户 2026-10-19 存档，15.6MB；
 │                              查事件/动作组件/样式字段/工程 JSON schema 先翻它，
 │                              别凭记忆猜字段——编辑器对未知字段静默丢弃零告警）
