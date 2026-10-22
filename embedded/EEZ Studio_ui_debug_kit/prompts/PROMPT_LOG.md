@@ -2313,3 +2313,9 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 产出/结论：用户拍板4项：设计核对阶段仿真默认跑(对10-17点名铁律的例外)、flow/no-flow二选一确认、未标注控件=纯展示不接行为、落点=AGENTS.md+回灌kit。kit EEZ_FIRST_WORKFLOW.md 新增§7设计冻结前置流程+§0纪律5修订注；EEz_stidio_examples/AGENTS.md 重写为两阶段全流程
   - 关联：P-0131
 
+### PR-0294 · 2026-10-22 16:27 · Qoder
+  - 提示词：我刚刚说的 流程是针对 no flow 的
+  - 诉求：澄清设计冻结前置七步的归属方式
+  - 产出/结论：D①–D⑦（含D⑤仿真默认跑）整体定归 NO_FLOW §7；FLOW 移除§7只留迁出注记、恢复仿真点名铁律；NO_FLOW §0 增补 no flow 口径（功能逻辑进native由D③批准合法化）；同步 kit README/根 README/skills 引用/工作区 AGENTS.md 四处索引
+  - 关联：P-0131
+
