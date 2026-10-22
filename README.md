@@ -1811,6 +1811,7 @@ If you've learned something here, support my efforts writing daily TILs by
 - [栈专属流程 · no flow 方式（§2 七步主线：设计图→标注→框架确认→预生成→双核对[仿真默认跑]→真机核对→补功能）](embedded/EEZ Studio_ui_debug_kit/EEZ_FIRST_WORKFLOW_NO_FLOW.md)
 - [框图库 diagrams/ · no flow 按键→外部硬件（SVG，每跳带函数代码）](embedded/EEZ Studio_ui_debug_kit/diagrams/01_按键控制外部硬件.svg)
 - [框图库 diagrams/ · no flow 按键→切换页面（SVG，每跳带函数代码）](embedded/EEZ Studio_ui_debug_kit/diagrams/02_按键切换页面.svg)
+- [框图库 diagrams/ · 第②步控件标注树状总览参考图（SVG，节点=已标注缩略图，绿=UI切换/红=输出硬件手机）](embedded/EEZ Studio_ui_debug_kit/diagrams/03_控件标注树状总览_参考图.svg)
 - [案例库索引（七段式沉淀，B1~B10）](embedded/EEZ Studio_ui_debug_kit/cases/README.md)
 - [案例 B1 · 字体源分配错误（图标全空白 / 正文变方框）](embedded/EEZ Studio_ui_debug_kit/cases/B1_字体源分配错误.md)
 - [案例 B2 · 保存时重算坐标（元素跑出画布边缘）](embedded/EEZ Studio_ui_debug_kit/cases/B2_保存时重算坐标.md)

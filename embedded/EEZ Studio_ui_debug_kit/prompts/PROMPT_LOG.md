@@ -2390,3 +2390,95 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：新建手表UI工程并按NO_FLOW流程走
   - 产出/结论：AI临时回话/watch按§1.1建骨架(designer、design[design_source/design_view/build_watch_ui/cli_build/sim/compare/architecture]、src/ui、src/native、ui_debug_kit.config.json、README七步进度表)；口径=圆形466x466、no flow、设计图由AI从设计源渲染、固件基座参考EEz_stidio_examples；design_view.py管道已通(空设计源出占位图)；当前停在第①步待用户需求
   - 关联：P-0125
+### PR-0307 · 2026-10-22 18:40 · Qoder
+  - 提示词：我需要一个主页表盘，第二页是一个applist，有多少APP可以根据主流的来
+  - 诉求：第①步设计源内容=表盘主页+主流applist第2页
+  - 产出/结论：design_source.py填2页(表盘:10:09/AM/日期/60刻度/步数心率电量三宫格/翻页点；applist:15个主流APP单列可滑,圆底图标+名称)；design_view.py实现6类绘制器并逐页出图落designer/；目检翻案1处=applist页pager与列表重叠,删pager改裁切示意；待用户确认后进第②步标注
+  - 关联：P-0125
+### PR-0308 · 2026-10-22 19:05 · Qoder
+  - 提示词：applist 参考 示例中的效果 ／ applist 参考 C:\Users\yjt54\Desktop\EEz_stidio_examples\watch-app-list-rxroller
+  - 诉求：applist观感改参考rxroller纵向滚轮(先做了蜂窝穹顶版被换参考)
+  - 产出/结论：design_source.py删蜂窝改roller(参数逐字取自watch_list_config.h：center150%/edge59%/span3线性/CurveR700偶函数C形；ICON_PX按466屏收小60满足"中心档≤行距"几何门禁;center_idx=0首屏焦点=第一项)；design_view.py换roller绘制器(圆角方块+单字+名称随弧位移)；剖面90/78/65/53与config注释口径一致；待用户确认
+  - 关联：P-0125
+### PR-0309 · 2026-10-22 19:40 · Qoder
+  - 提示词：每个APP至少一个界面 ，输出所有的设计图
+  - 诉求：第①步扩面=15个APP各1功能页,出全部设计图
+  - 产出/结论：design_source.py扩到17页(_chrome返回钮+标题/_page/_txt助手;新增bars/progress/pill/segbar/legend/ring/grid/controls/disc/frame/shutter/rowlist/back/roundrect 13类绘制器)；roller焦点上移cy=195腾返回钮位；全量拼图目检翻案7处=applist提示字压第3行(删)/音乐◀▶豆腐(改polygon形状)/睡眠图例出安全区(缩gap+短文案)/指南针N撞标题(环下移r105)/找手机📱豆腐(改roundrect描边)/设置▾与闹钟＋豆腐(改>+ ASCII)；designer/_overview.png总览+控件清单表.md骨架(跳转候选已列,待②标注)
+  - 关联：P-0125
+### PR-0310 · 2026-10-22 20:05 · Qoder
+  - 提示词：这个 app list 要求有好看的图标 ／ 不要遥控相机
+  - 诉求：applist换真图标(非字母占位)；删遥控相机
+  - 产出/结论：APPS 15→14(删相机页app_camera.png连带删)；design_view.py新增GLYPHS 13个矢量绘制器(闪电/心/月牙/太阳/气泡/音符/铃/秒表/沙漏/计算器/罗盘/手机/齿轮)+血氧"97"文字标,白色画在圆角彩底上；放大目检翻案2处=心形上下反(重定两瓣+顶尖径)、月牙朝向(切圆移右上)；图标导出形态(位图vs LVGL symbol字体)留第②步定；16页全重渲染+overview更新
+  - 关联：P-0125
+### PR-0311 · 2026-10-22 20:20 · Qoder
+  - 提示词：可以的按照这一版本设计图进行下一步
+  - 诉求：第①步确认冻结,进第②步
+  - 产出/结论：README进度更新(①done②in-progress)；控件清单表.md填AI初稿=30项行为控件(切页手势/滚轮14行进页/返回钮×16/各页动作钮)+其余纯展示声明+页面关系口径(无tabview无bar,native切页)+待拍板4点(滑动手势范围/整行可点/闹钟编辑与设置子页是否独立页/图标位图vs symbol)
+  - 关联：P-0125
+### PR-0312 · 2026-10-22 20:45 · Qoder
+  - 提示词：（AskUserQuestion 拍板）表盘和applist可以使用tabview实现／整行可点／补子页设计／位图PNG
+  - 诉求：第②步四项口径定稿
+  - 产出/结论：回第①步追加7子页(alarm_editor+set_brightness/sound/facestyle/bt/dnd/about)→23页全渲染；design_view新增stepper/chips/switch/slider/facepick绘制器；目检翻案2处=▲▼豆腐(改polygon stepper)、stepper编辑吞facepick分支头(补回)；控件清单表定稿46项(tabview例外口径:表盘+applist同屏两标签,其余21独立屏native切页)；README①②③步打勾
+  - 关联：P-0125
+### PR-0313 · 2026-10-22 20:35 · Qoder
+  - 提示词：我更新了文件夹名称，请重新建立索引
+  - 诉求：工程目录 watch-app-list-rxroller 改名成 _no_flow 以后，把全库路径索引重建一遍
+  - 产出/结论：改名打断三处硬编码（.gitignore 两条静默失效⇒上游整仓克隆裸露进 git status、build_rel 缓存 6 处绝对路径 CMake 拒绝搬迁、根 README/CODE_WIKI 索引行）；工程文件跟着 git mv 改名；两个失效 build_rel 清掉后全量重建 562 目标通过、断言 19/19；新增门禁第 7 组「路径活性」+「索引引用的 FIXLOG 条目数」两条活门禁，反向测试当场抓出第一版豁免用 isdir 会被改名残留的**空壳目录**骗过（改成"同级里有 *.eez-project 才算合法"）；_2 经确认是"换图标"变体副本不是误留重复目录，已在根索引标注别删
+  - 关联：P-0177
+
+### PR-0314 · 2026-10-22 20:50 · Qoder
+  - 提示词：watch-app-list-rxroller_no_flow_2  这个是 需要将 图标换成我想要的，你可以输出设计图，按照 UI设计流程来
+  - 诉求：_2 变体走 no-flow 第①步——出设计图换掉"色块+汉字"占位图标
+  - 产出/结论：先定位到"我想要的"其实已确认过一版：kit PR-0310/0311 指向 Desktop\AI临时回话\watch（Design Watch），design_source.py::APPS 14 个（遥控相机按令已删）+ design_view.py::GLYPHS 13 个矢量绘制器；按用户拍板=换成那 14 个 / 保持 _2 现有 ICON_PX 76 行距 120 / 导出走位图 .c。新建 _2/design/design_source.py（唯一设计源，几何经 wconfig 从 watch_list_config.h 现读，不抄数字）+ design_view.py（独立出图脚本，GLYPHS 逐字沿用已确认版），出 mockups/applist.png 与 icons_14.png；出图脚本自带"文字被画布下沿裁掉"断言（第一版就抓到总览高度留少 22px）；确认前不动 apps.py/gen_assets.py/build_example.py
+  - 关联：P-0125
+### PR-0313 · 2026-10-22 21:10 · Qoder
+  - 提示词：以后，如果你知道哪些是控件的话，你可以输出另一个文件夹，这个文件夹包含了你标注的控件位置图，就在原设计图上标注 ／ 现在你要输出这个标注图
+  - 诉求：定规矩+当场交付控件位置标注图
+  - 产出/结论：规矩入用户记忆(qoder-feedback-annotated-control-position-images)；design_source.py新增CONTROLS注册表(22页46项,序号=清单表)+widget_bbox各类型外接框；design/design_annotate.py独立脚本=原图+红框+序号圆徽(防重叠避让)落designer_annotated/+图例.md；目检翻案3处=滚轮框出表圈(收进安全区)、徽标压标题/互叠(改右上角+避让)、"组"后缀(去)；表盘页无行为控件不出图(tabview口径在清单表)；README挂索引
+  - 关联：P-0125
+### PR-0314 · 2026-10-22 21:40 · Qoder
+  - 提示词：按钮跳转，滑动跳转，可以使用箭头直接在图中关联，我不想下面去看文件，然后序号前加1-表示按钮 2-表示swtich 依次类推
+  - 诉求：跳转关系图上箭头直连+徽标改分类序号
+  - 产出/结论：CONTROLS加类型字段(CATS 1按钮2开关3滑条4滚轮5步进6chips7按键网格,每类独立连续编号)；design_annotate.py重写箭头层：页级跳转推导(resolve_targets支持tab_main.tab0/14个app_*/set_*简写补前缀)、互跳对合并双箭头、虚线=滑动切换/换表盘、蓝半透明、同号只标一次(两轮目检翻案:14个4-1重复→去重键从(src,label)改label)；光栅与SVG共用badge_layout/page_arrows判据；清单表/README同步分类号口径注记
+  - 关联：P-0125
+### PR-0315 · 2026-10-22 21:12 · Qoder
+  - 提示词：所有的图使用 SVG 呈现
+  - 诉求：交付图（含 UI 设计图/mockup）一律出 SVG，不收 PNG
+  - 产出/结论：design_view.py 从 PIL 位图改成**直出 SVG** —— 给 PIL ImageDraw 写同名方法子集替身 SvgDraw（ellipse/polygon/line/rectangle/rounded_rectangle/arc/pieslice/text/textbbox），13 个 glyph 矢量绘制器**逐字不动**就能换格式；圆角屏裁切由位图 mask 改成 `<clipPath>`；删掉两张 PNG。自证走 cairosvg 光栅化到**工程外**(/tmp)再目检，这一步当场抓出第一版把页题写在裸坐标 (14,10) 被胶囊圆顶裁掉 —— 于是页题/状态行落点改成 import build_example 的 DIAL_BAND_X/DIAL_EDGE_DEPTH 真值（不再抄第二份），并加"四角必须 inside_dial"断言 + 中心±1 行内容不越出胶囊断言。口径已回灌记忆：一切交付图默认 SVG，UI 设计图也算
+  - 关联：P-0125
+### PR-0315 · 2026-10-22 22:05 · Qoder
+  - 提示词：输出到硬件的用序号用红色的，如果UI内部切换的部件，使用绿色的，然后设计图图标使用树状结构，方便看
+  - 诉求：徽标按输出去向红/绿分色+汇总图改树状
+  - 产出/结论：CONTROLS加第6字段去向(硬件=传感器/背光/蜂鸣/马达/BLE手机共10项:1-7测量/1-12播控/1-24响铃/3-1/2-2亮度/3-2/2-3声音/1-34断开/1-35检查更新,余=UI)；design_annotate.py重写：单页框+徽标红/绿、build_tree出_tree.svg(tab_main两tab→14APP→7子页,绿边=UI跳转,虚线=滑动/换表盘,节点下挂红"硬件:"号列表)，cairosvg光栅化到%TEMP%自证+工程内_tree.png，删网格_master两版；修笔误2处(badge_layout坏赋值行、subs键名alarm_editor→app_alarm)；README/清单表口径同步
+  - 关联：P-0125
+### PR-0316 · 2026-10-22 21:25 · Qoder
+  - 提示词：所有图标都要显示出来
+  - 诉求：设计图不能只露中心 ±2 行，14 个图标要逐个看得见
+  - 产出/结论：新增第三张图 mockups/applist_all14.svg —— 14 行按**同一套真实几何**（ARC 位移 + 按距离缩放）排开、画布自动撑到装得下、不做胶囊裁切，再用淡色轮廓标出 410×502 屏幕窗口（轮廓外的行屏上看不到，要靠滚）。applist.svg 保留为"屏内观感"口径，两张分工写进图内说明。两张用同一中心行（消息）免得对不上。cairosvg 光栅化自证又抓出一处：单行说明文字超出画布宽被切掉尾巴 ⇒ 改两行并加"说明行不得超宽"断言
+  - 关联：P-0125
+### PR-0316 · 2026-10-22 22:35 · Qoder
+  - 提示词：控件还是要在图中标注出来，树状图中应该使用哪个控件连线，内部交互控件绿色背景圆形图标，外部红色 ／ 设计图可以大一点 ／ 我都是按总预览图，总图要体现的全一点
+  - 诉求：树图节点=已标注缩略图+连线挂发起控件圆徽(绿UI/红硬件)+加大+全量
+  - 产出/结论：build_tree改node_img()优先嵌designer_annotated/标注图(框+徽标可见)；elbow加edge_badge(三次贝塞尔t取点,颜色按CONTROLS去向红/绿)；TH 150→260、slot→340；右侧加"外部·板级硬件/外部·手机App(BLE)"红框节点+7条红连线(1-7/3-1~2-2/3-2~2-3/1-12/1-24/1-34/1-35)；翻案3处=subs键名笔误、1-33徽标压set_sound标签(t=0.12→0.5)、W用了未定义的x_ext(上移)；cairosvg自证%TEMP%+工程内_tree.png(1800x5760)；README同步
+  - 关联：P-0125
+### PR-0317 · 2026-10-22 23:00 · Qoder
+  - 提示词：现在输出的图基本可以，将这种图的输出要求总结到本地经验，同步到工作流中
+  - 诉求：标注图口径沉淀入经验库并写进工作流
+  - 产出/结论：NO_FLOW新增§2.1"第②步AI侧交付物：控件标注图+树状总览"(单页图分类徽标/_tree.svg真值+cairosvg自证/节点≥260px已标注缩略图/连线挂发起控件圆徽绿UI红硬件/外部板级硬件+手机BLE红框节点/CONTROLS同源禁手P/光栅SVG同判据)；§2表②行与文件头挂§2.1引用；工作区AGENTS.md第2条同步摘要；用户记忆qoder-feedback-annotated-control-position-images已含全口径
+  - 关联：P-0125
+### PR-0318 · 2026-10-22 23:20 · Qoder
+  - 提示词：我之前跟你交互的提示词，重要的都要记录，然后补这张参考图
+  - 诉求：漏记的重要提示词补登+把树状总览图回灌经验库作参考图
+  - 产出/结论：补登漏记提示词"你知道哪些是控件吗"(2026-10-22 20:30 前后,触发AI枚举46项控件→催生标注图规矩PR-0313)；diagrams/新增03_控件标注树状总览_参考图.svg(源=watch/designer_annotated/_tree.svg)；NO_FLOW §2.1、kit README文件树、仓库根README UI Debug Kit节三处挂链
+  - 关联：P-0125
+### PR-0319 · 2026-10-22 23:30 · Qoder（补登，随 PR-0318 全量核对会话提示词时发现）
+  - 提示词：所有图放在一张大图里面 ，序号依次增加 ，同时存在跳转的，序号后面需要注明跳转到哪儿，可以箭头表示
+  - 诉求：标注图合并为一张总览+全局连续序号+跳转注明
+  - 产出/结论：当轮产出 _master.png 网格总览(23页+两栏图例,全局号1-45)；该形态后被 PR-0314/0315 的分类号+树状取代，_master 两版已删
+  - 关联：P-0125
+
+### PR-0320 · 2026-10-22 23:30 · Qoder（补登，同上）
+  - 提示词：可以使用SVG图吗
+  - 诉求：标注总览要 SVG 版
+  - 产出/结论：当轮 _master.svg 落地(底图base64内嵌+矢量框/徽标/图例,浏览器实测渲染正常)；与光栅共用badge_layout判据保证两版一致；印证已有记忆"一切交付图默认输出SVG"
+  - 关联：P-0125
