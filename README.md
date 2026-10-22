@@ -1805,6 +1805,7 @@ If you've learned something here, support my efforts writing daily TILs by
 - [EEZ Studio 示例工程库说明（经验获取途径 + 示例工程落库规范）](embedded/EEZ_Studio_examples/README.md)
 - [UI 调试与验收工具箱 · 总览与上手](embedded/EEZ Studio_ui_debug_kit/README.md)
 - [通用方法论 PLAYBOOK（三层图 / 差异四步法 / 六类体检 / 十条红线）](embedded/EEZ Studio_ui_debug_kit/PLAYBOOK.md)
+- [任意 AI 快速起步提示词卡 QUICKSTART_PROMPTS（规则不进提示词，五张卡）](embedded/EEZ Studio_ui_debug_kit/QUICKSTART_PROMPTS.md)
 - [操作手册 skills.md（自动设计 → 对照查验 → 仿真验证，含条例 D/G/R）](embedded/EEZ Studio_ui_debug_kit/skills.md)
 - [栈专属流程 · flow 方式（验证金字塔 / 框架分层 / 七步主链；仿真点名才跑）](embedded/EEZ Studio_ui_debug_kit/EEZ_FIRST_WORKFLOW_FLOW.md)
 - [栈专属流程 · no flow 方式（§2 七步主线：设计图→标注→框架确认→预生成→双核对[仿真默认跑]→真机核对→补功能）](embedded/EEZ Studio_ui_debug_kit/EEZ_FIRST_WORKFLOW_NO_FLOW.md)

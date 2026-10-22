@@ -55,6 +55,7 @@ ui_debug_kit/
 ├── skills.md               ← ★ 操作手册：A 自动设计 → B 对照查验 → C 仿真器真点击
 │                              （含一份实战工程的路径示例 + UI 测试条例 D/G/R）
 ├── INTAKE.md               ← ★ 记录规约：新问题怎么登记、提示词怎么留痕（给任何 AI 工具看）
+├── QUICKSTART_PROMPTS.md   ← ★ 任意 AI 快速起步提示词卡（A开场/B五元组/C七步短指令/D开关词/E观感专用）
 ├── EEZ_FIRST_WORKFLOW_FLOW.md     ← ★ 栈专属流程·flow 方式（2026-10-22 由 EEZ_FIRST_WORKFLOW.md 拆出）：
 │                              EEZ 为主、仿真为辅（验证优先级金字塔 / 框架分层 / 七步主链 / 应用侧实测注意）；仿真点名才跑
 ├── EEZ_FIRST_WORKFLOW_NO_FLOW.md  ← ★ 栈专属流程·no flow 方式（与 FLOW 版成对）：§2 七步主线为唯一流程
