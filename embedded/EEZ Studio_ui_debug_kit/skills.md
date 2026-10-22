@@ -370,8 +370,8 @@ CDP 鼠标事件、直接派发 PointerEvent、窗口置顶——三种注入方
 
 > ★ 2026-10-16 续注（重要，别把两个面搞混）：以上专指**编辑器画布**。
 > EEZ 自身还有 **Run 模式（F5）**——它是完整可交互的运行时（点击/拖拽/滚动实测全通，CDP 可驱动）。
-> 交互验收优先在 Run 模式做；"EEZ 为主、仿真为辅"的完整流程与框架见
-> `EEZ_FIRST_WORKFLOW_FLOW.md` / `EEZ_FIRST_WORKFLOW_NO_FLOW.md`（按 D③ 选型：flow / no flow）。
+> 交互验收优先在 Run 模式做；完整流程按**静动分界**判验收面（静态看 EEZ、动态看仿真），
+> 两份方式文件按 ③ 框架确认选型：`EEZ_FIRST_WORKFLOW_FLOW.md` / `EEZ_FIRST_WORKFLOW_NO_FLOW.md`。
 
 ### 7.2 「点了画面来回跳」的三类成因
 
@@ -2236,3 +2236,22 @@ f4  = (wlc >> 3) % 4            # 烘焙姿势帧选通（240ms/帧）
 **取证手法**：给疑点对象挂 `LV_EVENT_ALL` 回调 printf 事件码——"PRESSING 连发而
 0 次 SCROLL"= 输入链被掐；"SCROLL_BEGIN→SCROLL_END 秒切"= 吸附在拉回。再用纯 LVGL
 最小对照（同 build 同主循环）二分是"结构问题"还是"环境/EEZ 流问题"。
+
+### 11.49 ★ no flow 操作速查：按钮两条链的代码位点（2026-10-22，用户定稿 no flow 七步主线后的操作索引）
+
+> 本节只是**操作位点索引**；流程与纪律正文看 `EEZ_FIRST_WORKFLOW_NO_FLOW.md`（§0/§1.2/§2）。
+> 带函数代码的全链路框图：`diagrams/01_按键控制外部硬件.svg`、`diagrams/02_按键切换页面.svg`
+> （配色=归属：紫 EEZ 生成 / 绿 用户 native / 蓝 LVGL 内核 / 橙 硬件）。
+
+- **按钮→外部硬件**：Handler type=Action（native）→ screens.c 生成期直调
+  `action_x(e)`（无解释器；对照：flow 工程生成的是 `flowPropagateValueLVGLEvent`，实测 screens.c:221）
+  → native_actions.cpp 实现 → `app_set_output(命令)` 入队 → io_esp 主循环排空 → BSP 驱动。
+  命令值恒 1、UI 回调只入队不动硬件（§11.14 通道 A；PR-0049：命令别做成变量）。
+- **按钮→切页（native 三步）**：`create_screen_xxx()` → 持屏对象 →
+  `lv_scr_load_anim(scr, LV_SCR_LOAD_ANIM_NONE, 0, 0, false)`。与 flow 运行时
+  `replacePageHook` 实测三行等价（eez-flow.cpp:6733-6743）；`animated:false` 铁律同源（P-0029）。
+- **不用变量桥**：§11.14 四层里的 native_vars/get_var_/set_var_ 属 flow 方式；
+  no flow 下状态回显由 native 直接刷控件（`lv_label_set_text` 等，动态内容，七步主线第⑦步职责）。
+- ⚠ **首建核对**：关 flow 后生成物函数名/签名以**首次构建产物**为准（查 screens.c / actions.h），
+  本条代码骨架取自 flow-enabled 示例，语义一致、名字可能不同。
+
