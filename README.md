@@ -1806,6 +1806,8 @@ If you've learned something here, support my efforts writing daily TILs by
 - [UI 调试与验收工具箱 · 总览与上手](embedded/EEZ Studio_ui_debug_kit/README.md)
 - [通用方法论 PLAYBOOK（三层图 / 差异四步法 / 六类体检 / 十条红线）](embedded/EEZ Studio_ui_debug_kit/PLAYBOOK.md)
 - [操作手册 skills.md（自动设计 → 对照查验 → 仿真验证，含条例 D/G/R）](embedded/EEZ Studio_ui_debug_kit/skills.md)
+- [栈专属流程 · flow 方式（验证金字塔 / 框架分层 / 七步主链 / 设计冻结前置 D①–D⑦）](embedded/EEZ Studio_ui_debug_kit/EEZ_FIRST_WORKFLOW_FLOW.md)
+- [栈专属流程 · no flow 方式（与 flow 版成对，正文暂同文、差异章节待补）](embedded/EEZ Studio_ui_debug_kit/EEZ_FIRST_WORKFLOW_NO_FLOW.md)
 - [案例库索引（七段式沉淀，B1~B10）](embedded/EEZ Studio_ui_debug_kit/cases/README.md)
 - [案例 B1 · 字体源分配错误（图标全空白 / 正文变方框）](embedded/EEZ Studio_ui_debug_kit/cases/B1_字体源分配错误.md)
 - [案例 B2 · 保存时重算坐标（元素跑出画布边缘）](embedded/EEZ Studio_ui_debug_kit/cases/B2_保存时重算坐标.md)

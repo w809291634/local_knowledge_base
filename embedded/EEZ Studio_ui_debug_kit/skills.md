@@ -370,7 +370,8 @@ CDP 鼠标事件、直接派发 PointerEvent、窗口置顶——三种注入方
 
 > ★ 2026-10-16 续注（重要，别把两个面搞混）：以上专指**编辑器画布**。
 > EEZ 自身还有 **Run 模式（F5）**——它是完整可交互的运行时（点击/拖拽/滚动实测全通，CDP 可驱动）。
-> 交互验收优先在 Run 模式做；"EEZ 为主、仿真为辅"的完整流程与框架见 `EEZ_FIRST_WORKFLOW.md`。
+> 交互验收优先在 Run 模式做；"EEZ 为主、仿真为辅"的完整流程与框架见
+> `EEZ_FIRST_WORKFLOW_FLOW.md` / `EEZ_FIRST_WORKFLOW_NO_FLOW.md`（按 D③ 选型：flow / no flow）。
 
 ### 7.2 「点了画面来回跳」的三类成因
 
