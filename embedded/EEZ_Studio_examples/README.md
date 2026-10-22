@@ -14,7 +14,7 @@
 
 - `embedded/EEZ Studio_ui_debug_kit/PLAYBOOK.md` —— 通用方法论：三层图策略 / 差异量化四步法 / 组件树 8 个通用坑 / 十条红线
 - `embedded/EEZ Studio_ui_debug_kit/skills.md` —— 操作手册：自动设计 → 对照查验 → 仿真器真点击（含实战路径示例与 UI 测试条例 D/G/R）
-- `embedded/EEZ Studio_ui_debug_kit/EEZ_FIRST_WORKFLOW.md` —— EEZ 为主、仿真为辅的栈专属流程：验证优先级金字塔 / 框架分层 / 七步主链
+- `embedded/EEZ Studio_ui_debug_kit/EEZ_FIRST_WORKFLOW_FLOW.md` / `EEZ_FIRST_WORKFLOW_NO_FLOW.md` —— 栈专属流程（flow / no flow 两份；验证金字塔[静看 EEZ·动看仿真] / no flow 七步主线）
 - `embedded/EEZ Studio_ui_debug_kit/cases/`、`intake/`、`prompts/` —— 历史案例、问题登记、提示词留痕（按每条记录的「工程」字段区分）
 
 ### 2) 官方渠道
@@ -74,9 +74,23 @@ embedded/EEZ_Studio_examples/
 
 ## 3. 示例工程索引
 
-| 目录 | 演示什么 | 一句话 / 关键坑 |
-|---|---|---|
-| （暂无；新增示例后在此加行） | | |
+**参考实例大多在本地示例工程库**（机器路径，换机需重核）：`{UI示例工程库}` = `C:\Users\yjt54\Desktop\EEz_stidio_examples`
+——一个主题一个子目录，演示点/结构/版本/踩坑各见其 `README.md`。按用途速查：
+
+| 类别 | 目录（相对 `{UI示例工程库}`） |
+|---|---|
+| **最小模板（起步用这两个）** | `minimal-lvgl-project/`（flow）、`minimal-lvgl-project-no-flow/`（no flow） |
+| flow 机制入门 | `flow-examples/flow-variables-basics`、`flow-examples/flow-page-timeline-animation` |
+| 手表应用列表（主方向） | `watch-app-list-rxroller/`（纵向滚轮）、`watch-app-list-no-flow/` |
+| WiFi 全流程（双口径对照） | `app-wifi-scan-flow/`、`app-wifi-scan-flow-no-flow/`、`app-wifi-connect/`、`wifi_connect_2/` |
+| 手势/切页/吸附 | `gesture-page-switch/`、`one-way-gesture-switch/`、`tabview-swipe-switch/` |
+| 控件写法参照 | `widget-gallery/`、`two-state-styles/`、`w67-w3-w2-slider-arc-bar/`、`w23-w59-w73-w16-select-switch/`、`w14-w35-w62-chart-led-scale/`、`w1-animation-image/` |
+| 字体条目 | `font-entry-form/`、`font-test/` |
+| 性能对照 | `perf-tabview-native-vs-eez/` |
+| 仿真/内核/图 | `PC_SIM/`（仿真壳）、`apl_lvgl_v9_4/`（LVGL 9.4 源码）、`noflow_diagrams/`（no flow 两条链 SVG 框图） |
+
+> 本目录（经验库内 `embedded/EEZ_Studio_examples/`）保留**库内落库位**：新示例先在本地示例库做出来，
+> 沉淀完的通用经验进 kit 记录区；若某示例要随经验库分发给其它机器，再按第 2 节规范落进这里并加行索引。
 
 ---
 

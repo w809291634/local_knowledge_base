@@ -2379,3 +2379,14 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 产出/结论：kit根新建QUICKSTART_PROMPTS.md五张卡(A开场/B五元组/C七步短指令/D防跑偏开关词/E观感专用)；AGENTS.md与两处README挂索引；原则=规则不进提示词，AGENTS.md自动生效
   - 关联：P-0131
 
+### PR-0305 · 2026-10-22 18:13 · Qoder
+  - 提示词：本地经验库中，说明，很多参考实例，可以参考本目录。包括最小模版
+  - 诉求：把本机示例工程库(含最小模板)写进经验库说明并挂索引
+  - 产出/结论：EEZ_Studio_examples/README.md §3落位示例索引表(9类,minimal-lvgl-project[-no-flow]标[起步用这两个])+§1-3)主干引用改双文件；kit FLOW/NO_FLOW §5各加[本机示例工程库]条目；本工作区README陈旧主干引用修正
+  - 关联：P-0131
+
+### PR-0306 · 2026-10-22 · Qoder
+  - 提示词：创建一个文件夹，我准备开发Ui，要开发一个手表，使用eez no flow ，按照工作流程了
+  - 诉求：新建手表UI工程并按NO_FLOW流程走
+  - 产出/结论：AI临时回话/watch按§1.1建骨架(designer、design[design_source/design_view/build_watch_ui/cli_build/sim/compare/architecture]、src/ui、src/native、ui_debug_kit.config.json、README七步进度表)；口径=圆形466x466、no flow、设计图由AI从设计源渲染、固件基座参考EEz_stidio_examples；design_view.py管道已通(空设计源出占位图)；当前停在第①步待用户需求
+  - 关联：P-0125

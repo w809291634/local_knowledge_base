@@ -148,6 +148,9 @@
 - 官方手册：`<kit>/EEZ-Studio-reference-guide.pdf`（784 页，2026-10-19 存档；提炼版 `reference/01~07`、
   全量原始文本 `reference_guide_raw.txt`、工程 JSON 字段速查 `reference/07`——查事件/动作/字段先翻这里）
 - 本机 kit 位置：`C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_ui_debug_kit`
+- **本机示例工程库（写法的参考实例都在这里，换机重核）**：`C:\Users\yjt54\Desktop\EEz_stidio_examples`
+  ——起步用最小模板 `minimal-lvgl-project-no-flow/`（flow 版=`minimal-lvgl-project/`）；
+  滚轮/切页/WiFi/控件写法/字体/性能对照等分类索引见经验库 `embedded/EEZ_Studio_examples/README.md` §3
 - CDP 驱动小工具（本机留档）：`C:\Users\yjt54\sim_watch\cdp.js`（eval/key/mouse/mouse-drag/dblclick/shot/canvas-shot）、`watch_console.js`、`toast_watch.js`
 - 拖拽量化夹具：`<watch工程>\verify\dragtest_main.c`
 - 相关记录：P-0125 / P-0126 / PR-0210；watch 工程的 `verify/校验报告.md` §13（仿真器输入链）/ §14（EEZ 侧实测）
