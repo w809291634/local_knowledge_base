@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="1230" viewBox="0 0 980 1230" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#111"/></marker>
+    <style>
+      .b1{rx:8;stroke-width:1.6}.ez{fill:#f3e8ff;stroke:#7c3aed}.nv{fill:#e7f7ec;stroke:#16a34a}.hw{fill:#ffedd5;stroke:#ea580c}
+      .bd{fill:none;stroke-dasharray:6 4;stroke-width:1.2}
+      .h{font-size:14px;font-weight:bold}.t{font-size:12px;fill:#333}
+      .cd{font-size:12.5px;font-family:Consolas,monospace}.cm{fill:#666}
+      .tag{font-size:11px;font-weight:bold;fill:#fff}
+      .al{font-size:12px;fill:#444}
+    </style>
+  </defs>
+  <text class="h" x="20" y="26">no flow · 按键 → 外部硬件：六跳全链路（每跳带函数代码）</text>
+
+  <rect class="bd" x="20" y="44" width="940" height="316" stroke="#7c3aed"/>
+  <rect x="36" y="52" width="120" height="20" rx="4" fill="#7c3aed"/><text class="tag" x="96" y="66" text-anchor="middle">①② EEZ 生成</text>
+  <text class="t" x="170" y="66" fill="#7c3aed">src/ui/ —— 覆盖式产物，不可手改</text>
+
+  <rect class="b1 ez" x="50" y="82" width="880" height="120"/>
+  <text class="h" x="66" y="102">H1  screens.c  按钮控件 + 事件绑定（Handler 选 type=Action(native) 的生成形态）</text>
+  <text class="cd" x="66" y="126">static void _create_widgets_settings(lv_obj_t *parent_obj) {</text>
+  <text class="cd" x="80" y="146">    lv_obj_t *obj = lv_btn_create(parent_obj);          <tspan class="cm">// EEZ 按工程模型生成按钮</tspan></text>
+  <text class="cd" x="80" y="166">    lv_obj_add_event_cb(obj, action_led_toggle, LV_EVENT_CLICKED, NULL);</text>
+  <text class="cd" x="66" y="188">}<tspan class="cm">  ← 对照：flow 工程生成的是 …_event_handler_cb_* → flowPropagateValueLVGLEvent（实测 screens.c:221）</tspan></text>
+
+  <rect class="b1 ez" x="50" y="222" width="880" height="60"/>
+  <text class="h" x="66" y="242">H2  actions.h  只出声明，实现留给用户侧</text>
+  <text class="cd" x="66" y="266">void action_led_toggle(lv_event_t *e);</text>
+  <text class="al" x="560" y="266">漏实现 → 链接期 undefined reference（P-0020）</text>
+
+  <rect class="bd" x="20" y="380" width="940" height="530" stroke="#16a34a"/>
+  <rect x="36" y="388" width="130" height="20" rx="4" fill="#16a34a"/><text class="tag" x="101" y="402" text-anchor="middle">③④⑤ 用户代码</text>
+  <text class="t" x="180" y="402" fill="#16a34a">src/native/ —— 全手写；三层各司其职</text>
+
+  <rect class="b1 nv" x="50" y="418" width="880" height="130"/>
+  <text class="h" x="66" y="438">H3  native_actions.cpp  按钮按下后干什么，全在这</text>
+  <text class="cd" x="66" y="462">void action_led_toggle(lv_event_t *e) {</text>
+  <text class="cd" x="80" y="482">    lv_obj_t *btn = lv_event_get_target(e);   <tspan class="cm">// ①路线独有：拿得到事件上下文（谁按的）</tspan></text>
+  <text class="cd" x="80" y="502">    app_set_output(APP_OUT_LED_TOGGLE);       <tspan class="cm">// 不在 LVGL 事件里直接动硬件，只入队</tspan></text>
+  <text class="cd" x="66" y="522">}</text>
+
+  <rect class="b1 nv" x="50" y="568" width="880" height="150"/>
+  <text class="h" x="66" y="588">H4  app_model.h / .cpp  唯一被 UI 与固件两边 #include 的"合同"</text>
+  <text class="cd" x="66" y="612">enum app_out_cmd { APP_OUT_LED_TOGGLE = 1, APP_OUT_WIFI_SCAN, ... };  <tspan class="cm">// 命令值恒1：收到即执行/翻转</tspan></text>
+  <text class="cd" x="66" y="632">void app_set_output(int cmd) { ring_push(g_out_q, cmd); }   <tspan class="cm">// UI线程调用，无阻塞</tspan></text>
+  <text class="cd" x="66" y="652">int  app_pop_output(int *cmd) { return ring_pop(g_out_q, cmd); }</text>
+  <text class="cd" x="66" y="676">纪律：一次性命令走这里；会被回写的真状态才考虑变量通道（PR-0049 教训：命令做成变量=回声getter）</text>
+
+  <rect class="b1 nv" x="50" y="738" width="880" height="150"/>
+  <text class="h" x="66" y="758">H5  platform/io_esp.cpp  固件主循环：排空队列 → 调驱动（仿真换 io_pc.cpp，仅此文件不同）</text>
+  <text class="cd" x="66" y="782">void app_hw_task(void) {</text>
+  <text class="cd" x="80" y="802">    int cmd;</text>
+  <text class="cd" x="80" y="822">    while (app_pop_output(&amp;cmd)) {</text>
+  <text class="cd" x="94" y="842">        switch (cmd) { case APP_OUT_LED_TOGGLE: bsp_led_toggle(); break; }</text>
+  <text class="cd" x="66" y="862">    } }</text>
+
+  <rect class="bd" x="20" y="930" width="940" height="150" stroke="#ea580c"/>
+  <rect x="36" y="938" width="110" height="20" rx="4" fill="#ea580c"/><text class="tag" x="91" y="952" text-anchor="middle">⑥ 硬件</text>
+  <rect class="b1 hw" x="50" y="968" width="880" height="90"/>
+  <text class="h" x="66" y="988">H6  BSP / 驱动层</text>
+  <text class="cd" x="66" y="1012">esp_err_t bsp_led_toggle(void) { led_state ^= 1; return gpio_set_level(LED_GPIO, led_state); }</text>
+  <text class="cd" x="66" y="1036">　　↓ 电平出引脚 → LED 亮/灭</text>
+
+  <line x1="490" y1="202" x2="490" y2="218" stroke="#111" stroke-width="1.5" marker-end="url(#a1)"/>
+  <line x1="490" y1="282" x2="490" y2="414" stroke="#111" stroke-width="1.5" marker-end="url(#a1)"/>
+  <text class="al" x="505" y="350">CLICKED 触发，生成期直调 action_led_toggle(e)（不经过任何解释器）</text>
+  <line x1="490" y1="548" x2="490" y2="564" stroke="#111" stroke-width="1.5" marker-end="url(#a1)"/>
+  <line x1="490" y1="718" x2="490" y2="734" stroke="#111" stroke-width="1.5" marker-end="url(#a1)"/>
+  <text class="al" x="505" y="728">跨线程边界：UI 回调只入队，硬件动作在主循环里出队</text>
+  <line x1="490" y1="888" x2="490" y2="964" stroke="#111" stroke-width="1.5" marker-end="url(#a1)"/>
+
+  <text class="t" x="40" y="1110" fill="#666">状态回显（可选第六回跳）：native 直接刷新控件（动态内容，§2 第⑦步允许）——</text>
+  <text class="cd" x="60" y="1130" fill="#666">lv_label_set_text(ui_lbl_led_state, led_state ? "ON" : "OFF");   // 不走 set_var_/get_var_ 变量桥</text>
+  <text class="t" x="40" y="1170" fill="#666">配色：紫=EEZ生成(不可改) 绿=用户native(手写) 橙=硬件/驱动；虚线框=归属分区。</text>
+</svg>
