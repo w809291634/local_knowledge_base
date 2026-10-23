@@ -392,3 +392,6 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0181 | 2026-10-23 | 图标红蓝通道一直是反的；全仓库共用 main.exe 被并发构建覆盖，零条断言也报 rc=0 | ARGB8888,字节序,PIL,共享产物,身份核对,退出码,假通过 | fixed |
 - [P-0181](P-0181_EEZ生成器把滚轮降级成小窗与静态示例件且B1拍不到tabview第二页.md) — 设计源公式只喂画图=分叉；B1 拿父页画布对子页设计图＝没核；移植件三坑（ANIM_OFF 只向前/隐藏宿主假坐标/负数当失败）
 | P-0182 | 2026-10-23 | Tabview 横滑时 native 子项撕裂，首次进入 AppList 空白 | tabview,横滑,native子项,绝对坐标,撕裂,首次空白,rxroller | fixed |
+| P-0183 | 2026-10-23 | EEZ 出码里 set_pos/set_size 对 lv_keyboard、one-line lv_textarea 不是字面几何 | LVGL,EEZ出码,几何,仿真核对 | fixed |
+| P-0184 | 2026-10-23 | 字符集只按 EEZ 文案生成，native 的 snprintf 文案漏烘成豆腐；且 audit_chars 查不出 | 字体,字符集,门禁,gb2312,CP936 | fixed |
+| P-0185 | 2026-10-23 | native 动态文案静默扩展 EEZ 字体子集，功能正确却增加 Flash | 字体,字形子集,Flash,动态文案,EEZ,LVGL,内存预算 | fixed |
