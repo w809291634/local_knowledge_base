@@ -60,7 +60,10 @@
     ├── src/
     │   ├── ui/                  EEZ 生成代码（只读产物）
     │   └── native/              用户代码隔离层（手写）
-    └── build/                   本地产物（截图 / 报告；gitignore）
+    ├── build/                   本地产物（核对报告 / 定稿截图 / declared_manifest；gitignore）
+└── tmp/                     ★ 核对过程临时件（探针截图 / crop 目检图 / pid / 拼版草图；gitignore，随手可清）
+                              —— 用户 2026-10-23 令：过程件一律进 tmp/，交付件才进 designer/、
+                              designer_annotated/ 等正位；拿不准当临时件放 tmp/
 ```
 
 **三条铁律**（样板工程原话，照用）：

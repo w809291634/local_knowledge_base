@@ -425,6 +425,15 @@
 - **输入文本回读**：EEZ 变量无双向绑定，最简路径 = native 直读
   `lv_textarea_get_text(objects.m_xxx)`（普通控件有 objects 条目，与 List 不同）。
 
+## 12.6b localStyles 状态键放错层 = 假部件静默错渲染 ✅（2026-10-23 watch B1 画布实测）
+
+- `definition.PRESSED.DEFAULT`（把状态当部件）→ codegen 发 **`LV_PART_PRESSED`**（不存在的部件），
+  CLI 构建照样 **0 错 0 警**，但画布/真机把 PRESSED 色当默认态渲染 ⇒ 按钮变灰。
+- 正确形态 = 状态放部件之下：`definition.MAIN.PRESSED`（§3 口径）；codegen 发
+  `lv_obj_set_style_bg_color(obj, c, LV_PART_MAIN | LV_STATE_PRESSED)`。
+- 判据（进 A 层对账之外的渲染层原因）：生成后 grep `LV_PART_PRESSED|LV_PART_CHECKED`
+  必须为 0 命中；B1/B2 截图核对按钮底色与设计一致。
+
 ## 12.7 Arc 量程字段与颜色格式（GUI 校验实测，2026-10-22 watch 工程）✅
 
 - **arc 的量程字段是 `rangeMin`/`rangeMax`（+`*Type:"literal"`），不是 bar/slider 的

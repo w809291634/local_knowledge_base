@@ -2547,3 +2547,17 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：④站尾加用户确认门
   - 产出/结论：NO_FLOW §2④行"做什么"补"A+B1全绿后交用户确认EEZ界面效果(贴B1对照拼图或自开编辑器)，点头才进⑤"、判据同步；AGENTS.md第4条、QUICKSTART卡C④行同步；watch工程侧对应=B1跑完贴_b1_compare.png待你确认后才开⑤
   - 关联：P-0125
+### PR-0331 · 2026-10-23 · Qoder
+  - 提示词：同时记住，自己核对过程的临时文件，放在工程的tmp目录，git需要忽略该文件
+  - 诉求：定规矩——核对过程临时件归工程tmp/且gitignore
+  - 产出/结论：watch/.gitignore加tmp/；eez_b1_shots.py输出改tmp/b1(本轮在跑的仍写build/b1,完事把过程件挪tmp/、对照图拷交付位)；用户记忆新增qoder-feedback-verification-temp-files-in-project-tmp(过程件vs交付件判据+拿不准当临时件)
+  - 关联：P-0125
+### PR-0332 · 2026-10-23 · Qoder
+  - 提示词：现在流程基本OK，继续按照流程执行（④站B1执行中授权）
+  - 诉求：跑B1画布核对
+  - 产出/结论：B1首轮全页静默失败=CDP_PORT没传给cdp.js子进程(连错9222)+树点击需mousedown/up/click三事件，修好22页全出；墨量机检无空画布；真翻案1处=按钮灰底(PRESSED被写成definition.PRESSED.DEFAULT部件层→codegen发LV_PART_PRESSED假部件，CLI 0错但画布把PRESSED色当默认态)→styles()状态键归位MAIN之下,grep LV_PART_PRESSED=0进门禁,重烘重跑B1中；坑入reference/07 §12.6b；过程件按新规矩落tmp/b1
+  - 关联：P-0125
+### PR-0333 · 2026-10-23 · Qoder
+  - 提示词：核对过程临时文件放工程tmp目录、git忽略（重发，前轮只落了个人记忆未进共享经验库，按"条款先落经验库"补齐）
+  - 产出/结论：NO_FLOW §1.1 目录树拆 build/(报告定稿)与 tmp/(过程件随手可清)两行+判据"拿不准按临时件"；AGENTS.md 新增第5条"临时件归位"；watch README 目录约定补行；build/ 内 4 张目检 crop 挪 tmp/crops/；.gitignore 已含 tmp/（前轮）
+  - 关联：P-0125
