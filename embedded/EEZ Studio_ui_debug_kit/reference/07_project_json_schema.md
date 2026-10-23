@@ -391,6 +391,10 @@
   "zoom": 256, "angle": 0 }
 ```
 
+- ★ **`pivotX/pivotY/zoom/angle` 四字段必填**（2026-10-23 watch 镜像构建实测）：
+  缺了 codegen 照样发 `lv_image_set_pivot(obj, , )` **空参**，真编译器（gcc）当场
+  `expected expression before ',' token` 拒绝——EEZ CLI 构建不编译 C，这类错误只在
+  仿真/固件编译才暴露，属"构建 0 错≠能编译"家族。
 - 只有 image 能转：旋转走 `SET_PROPERTY targetType:"image" property:"angle"`
   （0.1° 单位，一圈 3600；LVGL 9.4 正式 API 为 `lv_image_set_rotation`，别超 int16
   可表达的范围。EEZ 生成的 flow 可能仍发 `lv_img_set_angle` 兼容别名，但新代码不应照抄）。
