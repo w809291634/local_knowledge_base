@@ -2588,3 +2588,60 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 提示词：（承接 PR-0336，无新指令，验收自查发现）
   - 产出/结论：搬迁后 `git status` 突现 `D src/ui/fonts/ui_font_cn76.c` + `D manifest.json`。排查：cn76 被 screens.c:98/788/7459 与 fonts.h 引用、工程 JSON 声明 3 处，不是合法剪枝；手工重烘后 11 档齐、与 HEAD 逐字节一致、无 D 项。根因定位到工具行为：`eez_font_bake.bake()` 每次先 rmtree 输出目录再重写，manifest 最后落盘 ⇒ 烘焙中途读目录必看到半成品（本轮即误报），烘焙本身死掉则真残缺。已给 sim.py 补"打印 OK 档位数 == 盘上 ui_font_*.c 数"门禁，打桩反向测试三组均符（11/11 放行、11/10 拦截、10/10 放行）；波浪式反向测试（放伪件）无效已记入。收尾复验：就地构建 Built target main、[NAV] PASS=44 FAIL=0、B2 23 张、fonts 12 件、git 无删除项
   - 关联：P-0179, P-0180
+### PR-0338 · 2026-10-23 11:05 · Qoder
+  - 提示词：（粘贴双击输出）这个提示跟标准示例不一样 / 到底是不是编译本项目
+  - 诉求：证明仿眜编译的确实是当前工程，且提示要向样板工程靠拢
+  - 产出/结论：**怀疑根源是我把 cmake 输出全部吞进日志**，窗口只剩两行中文，又携"镜像构建"旧字样——看不见编的是谁。两件事分开做：① 单变量实验定性——先在 watch_nav.cpp 加独有字符串（没进 exe，定位到链接器裁掉未引用全局变量，不是没重编：log 里 `Building CXX object .../D_/temp_d/.../watch_nav.cpp.obj` + obj 10:55 已证明重编），改用 `#error` 强制报错 → 错误行直接打印 `D:	emp_d\AI_Temporary_Reply\watch\src
+ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 —— sim.py 改**实时透传**每条 cmake 输出（同时抄进 tmp/sim_build.log）并打印 `[run_sim] target/build dir`；run_sim.bat 改成样板同款**自定位**（`%~dp0` 上推两级得工程根，不再硬编码绝对路径——搬迁必坏的根源消除），保留全部 pause。踩坑：cmd 里 `%PROJ_DIR\design\sim.py` 不展开（整段当变量名），必须 `%PROJ_DIR%\design\sim.py`。收尾复验：bat 输出含 `UI=D:/temp_d/.../src/ui`、`Built target main`、[NAV] 44/44、B2 23 张、fonts 12 件、git 无删除项
+  - 关联：P-0177, P-0180
+### PR-0339 · 2026-10-23 10:30 · Qoder
+  - 提示词：我给的图标是方形的，不行，还是要圆形的，还是你生成，注意图标图案居中
+  - 诉求：撤掉方形位图，14 行全部回到自绘正圆图标，并解决图案不居中
+  - 产出/结论：iOS7 那 3 张（计算器/指南针/找手机）确认弃用并从工程删除，`APPS` 去掉 `art` 字段、位图管线（art_data_uri / SvgDraw.image）整段删除不留死代码。居中最开始靠手调数字，改成**通用做法**：`_BBox` 把 glyph 画到坐标收集器上量出真实包围盒 → 中心搬到圆心 → 最远角超过半径×`BADGE_INSET`(0.74) 就等比缩小；`_Xform` 负责缩放平移转发，13 个绘制器一行没改。出图时打印每个 glyph **搬正前**的偏移做证据：天气 (-11.6,-10.5)、找手机 (+8.2,0)、睡眠 (+3.4,-2.1)、音乐 (+2.1,-2.7)、心率 (0,+3.0)，其余 ≤2px。三张 SVG 重出，cairosvg 光栅化目检通过。又踩一次 heredoc 掉转义（`
+` 变成真换行导致 SyntaxError），改用 Edit 工具修好
+  - 关联：P-0125
+### PR-0340 · 2026-10-23 11:55 · Qoder
+  - 提示词：可以的就按照这个版本来 ／ 进行适配
+  - 诉求：设计图冻结，把 14 行圆形苹果风图标真正接进固件生成链
+  - 产出/结论：设计源链打通 `design_source.py`（唯一事实源，几何经 wconfig 现读 watch_list_config.h）→ `apps.py` 转出口 → `build_example.py` 算字体子集 → `gen_assets.py` **复用 design_view.draw_icon** 出 14 个 .c → `decode_icons.py` 把 .c 反解回位图核对。删 11 行加 3 行，孤儿图标 .c 自动清掉；中心行/末行不再写死 10、21，改成 `(count-1)/2` 与 `count-1`；字体子集 155→134 码点。preflight 第 5 组新增 6 条门禁（表长、apps 不抄表、gen_assets 同源、R/B 换序、无孤儿、反解底色），全部做过反向测试。抓到三个真问题并记 FIXLOG FX-025/026/027：① **图标红蓝通道一直是反的**（LVGL ARGB8888 内存序 B,G,R,A vs PIL tobytes 的 R,G,B,A，注释还写着"已转换"），实测 #C2ED3C 会发成 #3CEDC2；② `bin/main.exe` 全仓库共用，并发构建把别人的 exe 盖过来，我差点把"跑了别人项目、一条断言没打"当通过 ⇒ 新增身份核对断言 + FAIL 反映到退出码；③ printf 参数个数不匹配时断言**照样 PASS**、只在消息里吐垃圾值，GCC 也没报警。另外把 `_no_flow` 后加的三组门禁（账单腐化/FIXLOG 条数/路径活性）回灌进本变体，回灌当场就抓出 `_2` 全套文件还在引用旧目录名 ⇒ 同步 + 工程文件 git mv 跟着改名。终态：preflight rc=0、20 条断言 0 FAIL、屏上证图 410×502 圆形图标已生效
+  - 关联：P-0181
+### PR-0339 · 2026-10-23 12:20 · Qoder
+  - 提示词：applist 界面完全不对，可以参考 watch-app-list-rxroller_no_flow 这个工程查找问题
+  - 诉求：查清 applist 为什么不对并修好；追问后拍板＝A 全量移植 Rxroller（含甩动吸附，⑦的该项提前做）+ 两条门禁都补
+  - 产出/结论：三条独立根因（①生成器把 roller 降级成 118,132 250×292 小窗+静态示例图标，弧形公式只喂 design_view；②B1 把 applist 剔出待拍页、拿 tab_main 画布凑对，而它停在 tab0 ⇒ 该屏从没核过；③B2 只机检空屏）。
+    移植落地：rxroller/{.orig,.h,.c,LICENSE}+watch_list_native.{c,h} 入库、`PORTLOG.md` 账单（上游 8928104、.orig SHA256 与参考工程逐字相同、补丁 #15 带符号行差、D1~D5 口径差异）；
+    参数唯一出处 `src/native/watch_list_config.h`，design_source 经 wconfig 读它（中心档 100%=位图原生 90px）；app_rows.c 由生成器 emit_app_rows() 从 APPS 派生；宿主改全屏、删静态件；sim.py 链路加 port_rxroller 重放。
+    移植中翻出上游三坑：ANIM_OFF 取模只向前（13→5 不动）、create 时宿主在隐藏 tab 里量到假坐标 x=980（真值 0）、标定把负坐标当测量失败 ⇒ 改读数前先 update_layout、失败判定用 bool、每拍幂等校验+瞬时定位同步校验；试过又撤一条未证实的 lv_anim_del 补丁。
+    验证：C 断言 44→47 全过（新增 14 行逐行可居中/中心行落点 176,195 vs 177,195/缩放剖面 256·221·186·151）、B2 加 6×6 分块墨量差判据 ≤0.055（全绿 max=0.0442，反向测试左移40=0.0935、左移120=0.1693、半屏空=0.0699、全空=0.1035 全报警）、就地构建 Built target main。
+    遗留：B1 的 tab1 变体截图已写（make_tab1_variant + 第二趟会话），但当前环境 EEZ Pages 树项点击全失败（同一工程 cli_build 正常），待排；已登记 P-0181
+  - 关联：P-0177, P-0178, P-0179, P-0180, P-0181
+### PR-0340 · 2026-10-23 12:40 · Qoder
+  - 提示词：你会自己核对吗？比如 applist，你可以接受 svg 长图来验证，如果可以，这个总结到步骤中
+  - 产出/结论：先自证再定规矩。新增 `watch/design/proof_sheet.py`：逐屏**全分辨率**左右对照长图（仿真|设计图+dev 值），PNG 与同源 SVG 双出，cairosvg 回光栅化实测平均像素差 0.000 ⇒ SVG 通路可用。
+    用它目检 applist 立刻翻出量化判据（dev=0.0326 判"过"）没报的真缺陷：**行名称字号 14px，设计图口径 26px**（design_view 公式 `26×s/ICON_PX`）；已改 `watch_list_config.h` 新增 `ROW_FONT_PX/ROW_FONT=ui_font_cn26` 作唯一出处、native 不再写死 cn14，重建后复看对照图字号已与设计图一致（dev 0.0318）。
+    另一条"缺左上标题"经回查**自我推翻**：设计图 (14,10) 那行是 design_view.py:408 给每页加的角标，不是 UI 元素。
+    规矩落 NO_FLOW 新增 §2.3（目检物=逐屏全分辨率长图；缩略网格不得当目检依据；量化判据是下限不替代读图；AI 必须逐屏写结论，只报"全绿"不算核对过）
+  - 关联：P-0181
+### PR-0341 · 2026-10-23 13:30 · Qoder
+  - 提示词：为什么无法从 applist 滑动返回主屏，并且滑动到 app list 时候图标会闪烁
+  - 产出/结论：① 手势被吃——行是 PRESS_LOCK 按压对象，LVGL 只把 GESTURE 发给它，行/轮根都没有 GESTURE_BUBBLE ⇒ tabview 收不到横滑；两处补标志，并加静态可查断言 `wheel 手势可冒泡到 tabview`（真手势无头注入不了，需用户实滑确认）。
+    ② 进页闪烁——切进 tab1 第一帧画的是 create 时（宿主在隐藏 tab 里量到假坐标）算错的 pad，60ms 定时器才校正 ⇒ 闪一下；改为 tabview VALUE_CHANGED 同步 `watch_list_realign()` + 建行后立即 cull 一次。
+    ③ 拖动抖动仍未定位：本轮两次"结论"都是拿**编译失败的旧 exe** 量的（第三次踩 JSON `
+` 转义毁 C 字面量），已撤回并改成"构建判据必须同时看 exe 时间戳"；现 48/48 全绿，抖动量测 21px 只作诊断不计分
+  - 关联：P-0181
+### PR-0342 · 2026-10-23 14:00 · Qoder
+  - 提示词：这么写是对的，后期也要求：EEZ 里生成的是底图=父类，额外加入的都属于子类；特殊情况要跟我交互说明并加进本地经验库
+  - 产出/结论：口径落 kit NO_FLOW 新增 §1.2b（父层=EEZ 生成、native 追加一律子对象、子对象不越父边界、例外须先交互并登记）。
+    同时自查出并**撤回两条错结论**：自制的虚拟指针夹具其实没按到东西（act_obj=NULL、单击不触发跳页），
+    因此"applist 右滑不回表盘已复现""手势冒泡是根因"都不成立，加 GESTURE_BUBBLE 属方向错误（LVGL 9 的 tabview 无手势处理，切页靠拖内部 scroller）。
+    待用户裁决的两个特殊情况：① 轮根用负 pad(−848) 把内容摆到父边界外（FX-004 的必然结果）；② 全屏宿主与父级 tabview 的横向拖动归属
+  - 关联：P-0181
+### PR-0343 · 2026-10-23 14:12 · Qoder
+  - 提示词：（引用会话 7b0eb9c9）我还原了，先按照这个里面解释的，避免两个工程的结果文件干扰
+  - 产出/结论：工作区已还原到 a5942cf（本轮 applist 移植/夹具/证据全没了）。按另一工程的修法给 watch 做隔离：
+    `design/sim.py` 重写为「补烘字体 → 就地 cmake（SIM_TARGET_PROJ_DIR=工程根）→ SIM_BIN_DIR=<build_rel>/bin」，
+    exe 固定落 `watch/design/sim_cmake/build_rel/bin/main.exe`；新增 `design/sim_cmake/run_sim.bat`（%~dp0 自定位、只跑本工程 exe、错误分支 pause）。
+    还原版本身编不过，补齐三处已知坑才通：① 生成器 image 控件补 pivotX/pivotY/zoom/angle（P-0179 空参）；② native 补 `#include "fonts.h"`；③ watch_nav.h 加 `extern "C"`（C/C++ 混编）。
+    另修 bat 已知坑 `%VAR\path` 不展开 → `%VAR%\path`。
+    证据：本工程 exe sha256 e8a9d1ad…（14:07 新生成）；共享 PC_SIMin\main.exe sha256 715eee29… 与 mtime 13:55 均未变 ⇒ 两工程不再互相覆盖。
+  - 关联：P-0177, P-0179
