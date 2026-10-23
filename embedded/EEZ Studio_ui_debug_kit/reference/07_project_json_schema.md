@@ -425,6 +425,18 @@
 - **输入文本回读**：EEZ 变量无双向绑定，最简路径 = native 直读
   `lv_textarea_get_text(objects.m_xxx)`（普通控件有 objects 条目，与 List 不同）。
 
+## 12.7 Arc 量程字段与颜色格式（GUI 校验实测，2026-10-22 watch 工程）✅
+
+- **arc 的量程字段是 `rangeMin`/`rangeMax`（+`*Type:"literal"`），不是 bar/slider 的
+  `min`/`max`**——写错字段 GUI 树面板报 `Range min must be an integer`，且**CLI 构建 0 错照样过**
+  （静默失败类）。合法 arc 必填：useAngle/mode/startAngle/endAngle/bgStartAngle/bgEndAngle/
+  rotation/rangeMin/rangeMax/value（各配 `*Type`）+ `preview*` 字符串组。
+- **样式颜色一律 `0xRRGGBB`**：`"#00000000"` 报 `invalid color`；透明用 `bg_opa:0` 表达。
+- 环宽/圆头 = `arc_width`/`arc_rounded`；轨道色放 **MAIN bg_color**、进度色放 **INDICATOR
+  bg_color**（`line_color`/`KERNEL` 写法不被识别）。
+- 判据：headless 构建 0 错 ≠ GUI 无错——**编辑器树面板的红角标/校验信息是第二道闸**，
+  生成器直出的工程要让用户开一次 GUI 看 Pages 树有无报错标记。
+
 ## 13. 画布布局（flow 组件摆位，2026-10-01 实测）✅
 
 flow 组件的 left/top 不影响构建，但决定编辑器画布可读性。防重叠三条铁律：

@@ -2482,3 +2482,33 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 诉求：标注总览要 SVG 版
   - 产出/结论：当轮 _master.svg 落地(底图base64内嵌+矢量框/徽标/图例,浏览器实测渲染正常)；与光栅共用badge_layout判据保证两版一致；印证已有记忆"一切交付图默认输出SVG"
   - 关联：P-0125
+### PR-0321 · 2026-10-22 22:10 · Qoder
+  - 提示词：图标可以使用圆形，完全使用苹果的图标 watch ／（附 watchOS 蜂窝主屏截图）相差太远了吧
+  - 诉求：图标改正圆底；照苹果实际图标画，别用自绘近似版
+  - 产出/结论：先认错——上一版 14 行里有 5 行与实物差得远（运动=橙底白闪电，苹果是亮黄绿底+**黑色**奔跑人形；消息=黄底带横线气泡，苹果是绿底**实心**白气泡；音乐=绿底，苹果红底；秒表=灰底，苹果橙底；天气=青底只有太阳，苹果蓝底+黄太阳压白云后）。改成**从参考图量**：截图入库 design/icon_refs/，probe.py 数彩色团块取饱和色众数得圆心/直径/主色，crop_sheet.py 裁 160px 放大对照表目检形状，结果与逐行状态写进 icon_refs/实测口径.md。6 行已按实测改色改形（运动/天气/消息/音乐/秒表/设置），APPS 加第 6 列"符号色"（锻炼是黑不是白），天气新增双色 glyph。剩下 8 行**那张图里根本没有**（心率/睡眠/血氧/闹钟/计时/指南针/找手机都是新系统或未上架；图里那格橙色地球是世界时钟、蓝底白箭头是 Maps 不是指南针），已在表里逐行标 [待核] 并说明缺哪张参考。顺带查证两条苹果规范：watchOS 图标本就圆形无文字（圆形是规范不是偏好）、避免黑底否则会融进表盘
+  - 关联：P-0125
+### PR-0321 · 2026-10-22 23:45 · Qoder
+  - 提示词：1-1 可以不要，使用tabview 滑动 ，可以进行下一步
+  - 诉求：删applist返回钮(回表盘纯靠滑动)+进第④步
+  - 产出/结论：design_source删applist back控件与CONTROLS(2,back)条目→44控件，分类号自动重排(同源脚本优势)；design_view/annotate全重跑(树图applist→表盘只剩虚线滑动边)；清单表②行与已拍板口径1改写；README进度④置in-progress
+  - 关联：P-0125
+### PR-0322 · 2026-10-22 22:40 · Qoder
+  - 提示词：这些图标 可以去 icon 的网站下载，你先搜索一下啊
+  - 诉求：先去图标站找那 8 个待核的苹果图标
+  - 产出/结论：搜了也试拉了，**图标站给不了苹果的原图标**。唯一可脚本直取的是 icons8（`img.icons8.com/ios/96/<name>.png`，6/8 命中、`drop`/`weather` 404），拉下来是**黑色线条符号**，与苹果"圆形彩底+白色符号"不是一类东西，下载件已清除不留在工程里；iconarchive 的 "iOS icons by Apple" 页面 404。⇒ 要拿真图只有三条路：①用户给较新 watchOS 应用屏截图（最快，我能量色描形）②macOS 上取 Apple Design Resources / 从 watchOS 运行时包提取（本机无 macOS）③接受"苹果风格自绘"，把设计源里 [待核] 改成 [自绘]。缺口与三条路已写进 icon_refs/实测口径.md
+  - 关联：P-0125
+### PR-0323 · 2026-10-22 22:35 · Qoder
+  - 提示词：E:\BaiduNetdiskDownload\苹果ios7扁平化系统图标大全PSD素材下载sucai_201311100924  这里有现成的
+  - 诉求：用本地这个 iOS7 图标包补那 8 个待核图标
+  - 产出/结论：包共 5 个 PACK / 约 282 个文件，PNG 全是 512×512。新建 icon_refs/sheet.py 把它们拼成**带文件名的对照表**再目检（包内文件名有拼写错误 menssages/multitaks/weater/respald，靠猜文件名会选错）。结果 8 个缺口里**只有 3 个能补**：计算器、指南针、找手机(find my iphone)；按 alarm|stop|timer|heart|sleep|oxygen|pulse|health|activ|sport|workout|step 全量匹配 = **零命中**，心率/睡眠/血氧/闹钟/计时这个包根本没有。3 张已入库 icon_refs/apple_ios7/ 并接进渲染：APPS 从 6 元组改成**按字段取字典**（加 art/src 两列，art 非空=直接用现成位图，src=逐行依据），design_view 把位图缩到目标尺寸、裁成正圆、base64 内嵌，SVG 仍单文件自包含；取不到文件会退回矢量 glyph 并打印告警。两条实测发现要用户拍板：① 风格打架——3 张 iOS7 渐变拟物 vs 11 张扁平矢量，一眼不是一套；② 裁圆会丢内容——原图是 squircle，裁成正圆后指南针外圈 N/W/S/E 字母已被切掉
+  - 关联：P-0125
+### PR-0322 · 2026-10-22 22:45 · Qoder
+  - 提示词：1-1 可以不要，使用tabview 滑动 ，可以进行下一步
+  - 诉求：删applist返回钮并进第④步EEZ预生成
+  - 产出/结论：build_watch_ui.py实现(壳=watch-app-list-no-flow模板改466圆屏;表盘+applist→tab_main两标签tabviewSize=0;21独立屏;identifier=<page>_<id>全局唯一;bar/arc/slider/switch/button/grid按实测JSON形态;图标14张90px PNG入bitmaps bpp32;字体11档P-0125原生形态302码位)；headless构建0错0警;★实证:CLI不烘字体(kit工具说明已载)→eez_font_bake官方引擎补烘11档全过;翻案3处=applist返回钮删、simhei缺U+2212数学减号(改ASCII -)、PIL getmask谎报◀▶覆盖而引擎拒烘(导航钮改< > >>，▲▼真有保留)；豁免时刻刻度/外环(纯装饰)；待决=字体源10MB是否归并字号档(flash预算)
+  - 关联：P-0125
+### PR-0323 · 2026-10-22 23:10 · Qoder
+  - 提示词：eez有错误（附 GUI 校验原文：app_spo2/app_timer/app_compass Arc invalid color / Range min max must be an integer）
+  - 诉求：修 EEZ 编辑器报错
+  - 产出/结论：根因=arc量程字段应为rangeMin/rangeMax(误用bar的min/max)+颜色"#00000000"非法(改bg_opa:0)+环色放MAIN/INDICATOR bg_color(废line_color/KERNEL写法)；★实证CLI构建0错≠GUI无错(静默失败类)，判据补"GUI树面板红角标为第二道闸"；坑入reference/07 §12.7；改生成器时曾把build_watch_ui.py用坏s.replace(old="")整文件逐字符污染(空串replace=处处插入)→删文件重写恢复；重出工程22页+构建0错0警+11字体重烘通过，全工程颜色扫描合法
+  - 关联：P-0125
