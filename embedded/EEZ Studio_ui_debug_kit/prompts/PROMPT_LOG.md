@@ -2645,3 +2645,48 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
     另修 bat 已知坑 `%VAR\path` 不展开 → `%VAR%\path`。
     证据：本工程 exe sha256 e8a9d1ad…（14:07 新生成）；共享 PC_SIMin\main.exe sha256 715eee29… 与 mtime 13:55 均未变 ⇒ 两工程不再互相覆盖。
   - 关联：P-0177, P-0179
+### PR-0344 · 2026-10-23 14:22 · Qoder
+  - 提示词：使用 D:	emp_d\AI_Temporary_Reply\PC_SIM 和 apl_lvgl_v9_4 这两个路径，按 Desktop\EEz_stidio_examples 的示例改编译脚本
+  - 产出/结论：仿真依赖改为**工程内副本**：`PC_SIM/lv_port_pc_vscode_v9.5/CMakeLists.txt` 的 APL_LVGL_DIR → `D:/temp_d/AI_Temporary_Reply/apl_lvgl_v9_4`；
+    `watch/design/sim_cmake/run_sim.bat` 的 PC_SIM_DIR → 工程内 PC_SIM。bat 同时做五件适配：① lv_conf.h 缺失从参考工程复制；② 字体缺失自动补烘；
+    ③ 生成码空参自查（P-0179）；④ 缓存守护（标记文件记住 PC_SIM 源目录，换了就清缓存重建）；⑤ `apl_lvgl_build\lib` 预建（干净构建 ar 会因缺目录失败）+ 全错误分支 pause + MinGW 固定生成器。
+    踩坑：`>/dev/null` 是 bash 语法、cmd 必须 `>nul`（两处）；`if (...)` 块内 echo 带 `)` 会截断解析，改 goto；`%VAR\path` 不展开必须 `%VAR%\path`。
+    另外还原版缺的三处源码修复又补了一遍：生成器 image 控件 pivotX/pivotY/zoom/angle、watch_nav.cpp include fonts.h、watch_nav.h 的 extern "C"。
+    证据：`Built target main`，exe=watch/design/sim_cmake/build_rel/bin/main.exe（14:21，4,797,985B）；工程内 PC_SIMin 与桌面共享 bin 的 main.exe 均为 13:55 未变。
+  - 关联：P-0177, P-0179
+### PR-0345 · 2026-10-23 14:35 · Qoder
+  - 提示词：为什么不是 ninja 编译，没有 cache
+  - 产出/结论：两条都是我上一版 bat 的问题。① 我为了避开生成器不匹配把 GENERATOR 写死成 MinGW Makefiles（示例本来是优先 Ninja）；
+    ② "没缓存"根因是缓存守护用的标记文件带 CR，`set /p` 读回后与 `%PC_SIM_DIR%` 比较永远不等 ⇒ **每次运行都 rmdir build_rel 整目录重建**。
+    改法：生成器恢复"优先 Ninja、无则回退 MinGW"并**前移到缓存守护之前**；缓存守护弃用标记文件，改为
+    「先按当前配置 configure，失败才清一次缓存重试一次」——成功时缓存保留，增量才有效。
+    验证：cmake 打印 `ccache found`；第二次运行 `ninja: no work to do.`（零编译）；CMakeCache 里 `CMAKE_GENERATOR:INTERNAL=Ninja`。
+  - 关联：P-0179
+### PR-0346 · 2026-10-23 14:45 · Qoder
+  - 提示词：我之前还原过一次代码，继续之前的步骤
+  - 产出/结论：在还原基线(904353b)上重做 applist 滚轮移植：搬 rxroller/{orig,h,LICENSE,README}+watch_list_native.{c,h}+port_rxroller/wconfig；
+    新增 watch_list_config.h(466/ICON 90/PITCH 92/CENTER 38%/42%/R700/端点 1-1) 与 app_rows.{h,c}（生成器 emit_app_rows 从 APPS 派生）；
+    生成器 roller 分支改为只出全屏宿主；native 补 D1 整行直跳、D3 row_obj 取口+extern "C"、D4 标定（先 update_layout/bool 判失败/去试探按实测斜率 0.5/拖动动画期跳过/每拍幂等/tab 切换同步 realign）；
+    port_rxroller 补 #15 带符号行差；sim.py 构建前重放补丁；lv_conf LV_MEM_SIZE 1MB→8MB（快照否则静默 NULL，P-0179）。
+    踩坑记录：heredoc 里写 C 的 
+ 会被 JSON/Python 二次转义成真空行（本轮又踩 3 次），凡插入含 printf 的 C 片段必须用 chr(92)+"n" 构造或用 Edit 工具。
+    验证：[NAV] PASS 44/FAIL 0；中心行落点 (176,195) vs 目标 (177,195)；截图穹顶排布、名称 26px；Ninja+ccache 构建，exe 私有。
+  - 关联：P-0179, P-0181
+### PR-0347 · 2026-10-23 15:05 · Qoder
+  - 提示词：参考 watch-app-list-rxroller_no_flow_2 这个示例；问"事件无法穿透吗，可以穿透给父类"
+  - 产出/结论：_2 是单页工程（Main，22 行 410×502，无 tabview/导航，封装=参考原版），对"滑回表盘"无参照，只能当对照组。按"穿透给父类"实现：watch_list_native 增加
+    parent_tabview()（沿宿主向上找 lv_tabview_class）+ 公共函数 watch_list_swipe_to(dx,dy)（|dx|>40 且 |dx|>2|dy| 时切上一/下一页），release 回调在判定点击/惯性之前先调用它。
+    夹具新增两条断言直接驱动该函数：右滑回表盘 PASS、左滑进 applist PASS；总断言 44→46 全过。
+    边界：断言覆盖的是"转交逻辑"，真实手指拖动→release 这段仍需用户在仿真窗口实滑确认（上次自制虚拟指针夹具不可靠，已废弃）。
+  - 关联：P-0181
+### PR-0348 · 2026-10-23 15:20 · Qoder
+  - 提示词：接着适配这个工程，带有扫描连接，按照本地经验，使用步骤进行 ／ 我要求你先出设计图，每个界面的设计图 ／ 我之前弄错了文件夹…先将名称修改 ／ 按照标准流程，开始执行
+  - 诉求：给 app-wifi-scan-conn-no-flow 做"扫描+连接"，走 no-flow 七步；先出每个界面的设计图
+  - 产出/结论：先做了目录/工程文件改名（`app-wifi-scan-flow-no-flow.eez-project` → `app-wifi-scan-conn-no-flow.eez-project`，4 个文件引用同步，grep 0 残留），并修了母工程带来的两个 GBK 崩溃（打印被字体丢弃的 `・`、打印检查名里的 `⊆` 都会 UnicodeEncodeError 直接打断生成/预检）——两处加 `sys.stdout.reconfigure(errors="replace")`。第①步设计图：在现有 `design/mockup_gen.py`（单一网格常量驱动）里补 5 个界面绘制器（连接半页/半页密码错误/已连接/长按菜单，并把连接中/失败两张改成带半页），几何直接取实现口径（sheet 0,96 480×224；ta 8,43 364×36；连接键 396,43 76×36；键盘 8,92 464×132），出 **11 张界面图 + 4 张解释图**。自证：cairosvg 在本机把中文画成方块，改用 headless Edge 截 HTML 拼图目检（15 张全部中文正常）；发现并修正一处自造错误——"连接成功"图里同一 SSID 同时出现在已连接/已保存两行。工程链 build_example→cli_build→gen_font→preflight 全绿。第②步控件标注图待做
+  - 关联：P-0125
+### PR-0349 · 2026-10-23 15:40 · Codex
+  - 提示词：总结到本地经验，你修复对了
+  - 诉求：将本次 AppList 横滑撕裂与首进空白的修复沉淀到本地经验库
+  - 产出/结论：登记 P-0182：子项按屏幕绝对坐标重标定会与 tabview 父级横滚不同步；改为相对宿主坐标并冻结横滚期更新，落稳后再校准。
+  - 关联：P-0182
+
