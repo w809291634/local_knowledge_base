@@ -1808,7 +1808,7 @@ If you've learned something here, support my efforts writing daily TILs by
 - [任意 AI 快速起步提示词卡 QUICKSTART_PROMPTS（规则不进提示词，五张卡）](embedded/EEZ Studio_ui_debug_kit/QUICKSTART_PROMPTS.md)
 - [操作手册 skills.md（自动设计 → 对照查验 → 仿真验证，含条例 D/G/R）](embedded/EEZ Studio_ui_debug_kit/skills.md)
 - [栈专属流程 · flow 方式（验证金字塔 / 框架分层 / 七步主链；仿真点名才跑）](embedded/EEZ Studio_ui_debug_kit/EEZ_FIRST_WORKFLOW_FLOW.md)
-- [栈专属流程 · no flow 方式（§2 七步主线：设计图→标注→框架确认→预生成→双核对[仿真默认跑]→真机核对→补功能）](embedded/EEZ Studio_ui_debug_kit/EEZ_FIRST_WORKFLOW_NO_FLOW.md)
+- [栈专属流程 · no flow 方式（§2 七步主线：设计图→标注→框架确认→预生成[含静态核对A/B1]→导航闭环核对[仿真C/B2]→真机核对→补功能；§2.2 四层两站](embedded/EEZ Studio_ui_debug_kit/EEZ_FIRST_WORKFLOW_NO_FLOW.md)
 - [框图库 diagrams/ · no flow 按键→外部硬件（SVG，每跳带函数代码）](embedded/EEZ Studio_ui_debug_kit/diagrams/01_按键控制外部硬件.svg)
 - [框图库 diagrams/ · no flow 按键→切换页面（SVG，每跳带函数代码）](embedded/EEZ Studio_ui_debug_kit/diagrams/02_按键切换页面.svg)
 - [框图库 diagrams/ · 第②步控件标注树状总览参考图（SVG，节点=已标注缩略图，绿=UI切换/红=输出硬件手机）](embedded/EEZ Studio_ui_debug_kit/diagrams/03_控件标注树状总览_参考图.svg)
