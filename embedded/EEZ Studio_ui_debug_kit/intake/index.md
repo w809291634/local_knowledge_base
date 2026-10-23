@@ -388,3 +388,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0177 | 2026-10-22 | 工程目录改名打断 gitignore/构建缓存/索引行，而门禁全绿 | 改名,gitignore,CMakeCache,路径活性,假门禁,空壳目录,索引漂移 | fixed |
 - [P-0178](P-0178_工程路径含中文mingw汇编器写不出obj仿真必须镜像到ASCII路径.md) — 中文路径毁 mingw obj；仿真镜像 ASCII 构建；tail 退出码假绿
 - [P-0179](P-0179_快照拍屏失败根因LV_MEM_SIZE静态池不足与C++链接mangle.md) — snapshot 静默 NULL=静态池不足；C/C++ 混编 extern "C"；sim 链路固化补烘
+- [P-0180](P-0180_工程迁到ASCII路径后撤销仿真镜像层改就地构建.md) — 工程搬到 ASCII 路径后镜像层撤销；就地构建 + 硬编码路径/CMakeCache 随迁打断（P-0177 同族）

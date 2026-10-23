@@ -2565,3 +2565,26 @@ src/ui：8 个 action、11 条 fonts.h 声明、清单含 11 个字体、screens
   - 提示词：下一步（④确认后进入⑤执行）
   - 产出/结论：⑤站全绿——C [NAV] PASS=44 FAIL=0(14行/返回/闹钟链/设置6子页/fs_apply落tab0)，B2 23屏截图无空画布；自主修复链=中文路径镜像(P-0178)→cmd引号拆参(do_build.bat)→image四字段空参(ref07§12.5)→fonts.h include+extern"C"+补烘入链(P-0179)→LV_MEM_SIZE 1MB→8MB(快照静默NULL根因)；applist滚轮C形弧排布差异挂⑦移植rxroller对齐；README⑤打勾
   - 关联：P-0178 P-0179
+### PR-0334 · 2026-10-23 10:10 · Qoder
+  - 提示词：现在已经有哪些图
+  - 诉求：问当前 14 行图标的实际到位情况
+  - 产出/结论：查出来的**不是**上一轮报的状态——`icon_refs/apple_ios7/` 里 3 张现成位图**已经不见了**（目录空，被外部清掉），而 `design_view.py` 当时只 print 一行告警就**退回矢量 glyph 继续出图**：图看着正常，`design_source` 那 3 行却仍标 `[现成]` = 拿假出处交图。已重新从 E 盘源包复制回去（大小 + md5 前 8 位记进 实测口径.md），并把缺文件改成**硬失败**；反向测试：移走 compass.png → rc=1 报出路径，放回 → rc=0。现状 6 实测 / 3 现成 / 5 待核，出图 rc=0。过程件 probe_sheet.png、sheet_pack1.png 挪进工程 tmp/ 并补 .gitignore
+  - 关联：P-0125
+### PR-0334 · 2026-10-23 · Qoder
+  - 提示词：run_sim.bat 这个脚本以后，出现错误，不要退出，使用暂停
+  - 诉求：bat 错误分支加 pause，且定为长期规矩
+  - 产出/结论：watch/design/sim_cmake/run_sim.bat 三处 pause(configure FAILED/build FAILED/simulator error)；规矩入用户记忆 qoder-feedback-bat-launchers-pause-on-error(双击脚本=错误必pause)；补丁过程再验"锚点三断言"教训——heredoc 内反斜杠锚点连败两次，改 chr(92) 构造后一次通过
+  - 关联：P-0125
+### PR-0335 · 2026-10-23 10:23 · Qoder
+  - 提示词：（粘贴 run_sim.bat 双击失败日志：mingw 无法在 AI临时回话 中文路径下创建 obj，build FAILED）修复这个错误
+  - 产出/结论：根因=老版 run_sim.bat 直连中文工程根跑 cmake，正是 P-0178；唯一解法是走 design/sim.py 的 ASCII 镜像链。已把 watch/design/sim_cmake/run_sim.bat 重写为薄壳：只调 sim.py build（烘字体→同步 C:\Users\yjt54\watch_sim→ASCII 目录 cmake，判据 Built target main），失败分支全 pause；顺带清掉重写时误带入的 bash 语法 `>/dev/null`→cmd `>nul`。实测 `run_sim.bat build` rc=0，日志 `Built target main`，main.exe 10:19 重新生成；用户 10:21/10:23 复贴的仍是老版输出（新版横幅不同），已确认全盘只有这一份 run_sim.bat
+  - 关联：P-0178
+### PR-0336 · 2026-10-23 10:45 · Qoder
+  - 提示词：从 a49f812e 会话复制上下文 / 我切换了目录，你重新确认
+  - 诉求：工程从 Desktop\AI临时回话 搬到 D:	emp_d\AI_Temporary_Reply\watch 后重新确认编译链；用户拍板：撤销镜像改就地构建 + 删旧 CMake 缓存
+  - 产出/结论：搬迁后唯一真坏的是 run_sim.bat 硬编码 PROJ_DIR（已重指 + 头注释改就地口径）。sim.py 删 MIRROR/sync，改 SIM_TARGET_PROJ_DIR=工程根就地 cmake，构建目录 design/sim_cmake/build_rel，do_build.bat 生成物进 tmp/；新增 check_ascii_path()、wipe_stale_cache() 两道守卫并做逆向测试（匹配缓存保留/失效缓存清除/中文根拦截/ASCII 根放行均符，测试目录清除、真实构建目录未动）。实测：就地构建 Built target main（exe 10:42）、[NAV] PASS=44 FAIL=0、B2 23 张无空屏、run_sim.bat build rc=0。删除工程内 6.1MB 失效 build_rel。NO_FLOW §1.3 仿真条改为默认就地、P-0180 入库 + 索引 + P-0178 指针。新工作区根无 AGENTS.md（旧根的未随工程搬迁），待用户决定是否重建
+  - 关联：P-0177, P-0178, P-0179
+### PR-0337 · 2026-10-23 10:55 · Qoder
+  - 提示词：（承接 PR-0336，无新指令，验收自查发现）
+  - 产出/结论：搬迁后 `git status` 突现 `D src/ui/fonts/ui_font_cn76.c` + `D manifest.json`。排查：cn76 被 screens.c:98/788/7459 与 fonts.h 引用、工程 JSON 声明 3 处，不是合法剪枝；手工重烘后 11 档齐、与 HEAD 逐字节一致、无 D 项。根因定位到工具行为：`eez_font_bake.bake()` 每次先 rmtree 输出目录再重写，manifest 最后落盘 ⇒ 烘焙中途读目录必看到半成品（本轮即误报），烘焙本身死掉则真残缺。已给 sim.py 补"打印 OK 档位数 == 盘上 ui_font_*.c 数"门禁，打桩反向测试三组均符（11/11 放行、11/10 拦截、10/10 放行）；波浪式反向测试（放伪件）无效已记入。收尾复验：就地构建 Built target main、[NAV] PASS=44 FAIL=0、B2 23 张、fonts 12 件、git 无删除项
+  - 关联：P-0179, P-0180

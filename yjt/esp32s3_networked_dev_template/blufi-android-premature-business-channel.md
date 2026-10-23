@@ -44,6 +44,31 @@ BLE_CONNECT
 
 对应头文件注释也要同步为“业务通道由 RDStart 打开”。该改动与 `potential_therapy_dev_dw2` 的行为一致。
 
+## 补充：用一个配网会话门控覆盖旧凭据重连与扫描
+
+手机收到 AP 列表后还要让用户选网、输密码；此时若后台 `wifi_reconnect_task` 立即重连保存的旧 SSID，会抢占 STA 状态机并让设备误报旧网络已连通。
+
+只保留 `components/apl_blufi/blufi_application.c` 中的
+`gl_blufi_provisioning` 门控，不再维护独立的扫描状态：
+
+```text
+GET_WIFI_LIST
+  -> provisioning = true
+  -> esp_wifi_scan_stop() 清理残留扫描后重新扫描
+  -> 扫描、回传 AP 列表；后台重连只记录 defer，不调用 esp_wifi_connect()
+
+REQ_CONNECT_TO_AP（SSID/密码已先写入 sta_config）
+  -> esp_wifi_scan_stop()，保证提前到达的连接请求不会与扫描并发
+  -> provisioning = false
+  -> 主动断开并连接新凭据；若失败，后台只会重试新凭据
+
+BLE_DISCONNECT（用户未提交新凭据退出）
+  -> provisioning = false
+  -> 恢复旧凭据的后台重连
+```
+
+**不能**把 `ble_is_connected` 当作这个门控：普通 BLE 业务连接期间，Wi-Fi 仍需要自动重连。`gl_blufi_provisioning` 只由 `GET_WIFI_LIST`、`REQ_CONNECT_TO_AP` 和 `BLE_DISCONNECT` 改变，语义更准确。
+
 ## 判据与复测
 
 修复后，Android 配网开始阶段的日志顺序应是：
@@ -56,6 +81,9 @@ set opmode / recv sta ssid / recv sta pwd / sta connect req
 ```
 
 在 `RDStart` 前，**不得**出现 `BLE App` 的 `d2uRealData`、`reg` 或其他产品业务 JSON。若仍有 `attribute value too long, to be truncated to 20`，需同时记录该报文类型、长度与 RDStart/MTU 事件先后关系。
+
+当 iOS 请求 Wi-Fi 列表后，在它下发新凭据前，预期看到
+`blufi provisioning, defer reconnect`，不得再看到旧 SSID 的 `reconnect ...`、`wifi:new` 或 `STA got IP`。收到 `sta connect req` 后，才允许出现新 SSID 的连接日志。
 
 ## 不要误判为工程配置差异
 
