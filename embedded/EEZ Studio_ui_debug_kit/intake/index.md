@@ -395,3 +395,5 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0183 | 2026-10-23 | EEZ 出码里 set_pos/set_size 对 lv_keyboard、one-line lv_textarea 不是字面几何 | LVGL,EEZ出码,几何,仿真核对 | fixed |
 | P-0184 | 2026-10-23 | 字符集只按 EEZ 文案生成，native 的 snprintf 文案漏烘成豆腐；且 audit_chars 查不出 | 字体,字符集,门禁,gb2312,CP936 | fixed |
 | P-0185 | 2026-10-23 | native 动态文案静默扩展 EEZ 字体子集，功能正确却增加 Flash | 字体,字形子集,Flash,动态文案,EEZ,LVGL,内存预算 | fixed |
+| P-0186 | 2026-10-23 | LVGL 长按抬手后仍补发 CLICKED，把刚打开的模态换成另一个 | LVGL,输入注入,无头夹具,事件语义 | fixed |
+| P-0187 | 2026-10-23 | 无头 SDL 鼠标注入的三个时序坑：早期事件被吞、EVENT 模式不喂读、长按要按帧数算 | LVGL,输入注入,无头夹具,事件语义 | fixed |
