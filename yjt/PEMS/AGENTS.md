@@ -46,8 +46,8 @@
 |---|---|
 | `template-doc-methodology.md` | 总纲：十条通用原则 |
 | `template-inheritance-in-place-replace.md` | 核心方法：就地替换 |
-| `template-baseline-rd026-2.0.md` | 2.0 版式基线档案（3 页／有目录／4 章自动编号／13×4 测试记录表；参考件含项目事实，不入库） |
-| `template-baseline-rd026-2.1.md` + `templates/2.1/*.docx` | 2.1 版式基线档案与空白基线件（2 页／无目录／无章节／6×3 确认小组表／红字转黑口径／`.doc` 通道选择／闸门判据） |
+| `template-baselines.md` | 公司模板版式基线族入口：九份文档的版号总表、零残留入库判定、跨程序页数口径、建档方法 |
+| `template-baseline-rdXXX-<版号>.md` + `templates/<版号>/*.docx` | 各文档各版号的独立基线档案与基线件；一份只描述一个版号，判据互不通用；不得按旧版骨架补回新版已删除的章节、目录或表格 |
 | `cover-pagination-and-sections.md` | 封面/分页/分节三大风险点 |
 | `consistency-gate.md` | 多文档一致性对账 + 说明书/代码/注意事项**三方收口** |
 | `iteration-and-versioning.md` | 迭代与版本管理 |
