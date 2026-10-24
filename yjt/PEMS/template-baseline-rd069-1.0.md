@@ -21,11 +21,11 @@
 
 - 封面大标题 p2「软件验证报告」宋体 36pt 加粗居中，`outlineLvl=0`，无 `numPr`。
 - 五个一级章 p30/p33/p37/p39/p47：`软件验证和确认过程的描述`／`测试的目的和范围`／`测试方法`／`测试记录`／`结论`，
-  14pt、`outlineLvl=0` + `numPr`；p30/p33/p39 西文 `Times New Roman`，p37/p47 宋体 → 同级西文字体不统一（与 068 同病）。
-- **目录条目 5 条全部用黑体 12pt**（068 的目录条目是 Times New Roman/默认）→ 姊妹文档目录字体不一致。
+  14pt、`outlineLvl=0` + `numPr`；p30/p33/p39 西文 `Times New Roman`，p37/p47 宋体 → 同级西文字体不统一（与 068 同病），**按字体基线统一**（模板字体视为模板错误），章名文字与字号不动。
+- **目录条目 5 条全部用黑体 12pt**（068 是 Times New Roman/默认）→ 属模板错误，按字体基线统一；姊妹文档不得各走一套。**条目文字本身照模板逐字**。
 - **p38「采用白盒测试方法」挂 `Figure` 样式**（`ind` 四项全 0）：正文段挂图形样式（`pitfalls.md` §67 同类）。
 - 正文 12pt；p48 结论段 `firstLineChars=200`+`firstLine=420`。
-- 样式集：`Default`、`Figure`、`Normal`、`toc 1`；字体 宋体 20｜黑体 14｜默认 9｜Times New Roman 3。
+- 样式集：`Default`、`Figure`、`Normal`、`toc 1`；字体 宋体 20｜黑体 14｜默认 9｜Times New Roman 3 → 非宋体 run 统一后计数必须为 0（私用区 run 除外）。
 
 ## 3. 表格逐格与残留（本份是"结论继承"最重的一份）
 

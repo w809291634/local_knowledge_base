@@ -3053,3 +3053,97 @@ def collapse_empty_runs(doc, keep=1, first_cell_text='文件编号'):
         if not did:
             break
     return n
+
+
+# ── 标题文字一致性与字体统一判据（注册人 2026-10-24 口径；规则见 ../template-baselines.md §2）──
+# 口径：章节标题的「文字」必须与模板逐字一致；导航树(outlineLvl)可脱离模板重建；
+#       字体按基线统一（模板自带混排视为模板错误），私用区字符 run 除外。
+
+_HEAD_PAT = re.compile(
+    r"^(第[一二三四五六七八九十百\d]+[章部分节]|[一二三四五六七八九十]+、|\d+(\.\d+){0,3}[\s、\.]|\d+(\.\d+){0,3}$)")
+
+
+def _ea_font_of(run):
+    rPr = run._element.find(qn('w:rPr'))
+    if rPr is None:
+        return None
+    rf = rPr.find(qn('w:rFonts'))
+    return rf.get(qn('w:eastAsia')) if rf is not None else None
+
+
+def _is_private_use(text):
+    return all((0xE000 <= ord(c) <= 0xF8FF) or c.isspace() for c in text)
+
+
+def _para_props(p):
+    pr = p._p.find(qn('w:pPr'))
+    if pr is None:
+        return None, False
+    e = pr.find(qn('w:outlineLvl'))
+    ol = e.get(qn('w:val')) if e is not None else None
+    return ol, pr.find(qn('w:numPr')) is not None
+
+
+def heading_text_sequence(doc):
+    """按文档顺序抽取标题序列 [(level, text)]。
+    级别来源：Heading N 样式 > outlineLvl > 纯文本编号形态（手写标题）。"""
+    out = []
+    for p in doc.paragraphs:
+        t = p.text.strip()
+        if not t:
+            continue
+        st = (p.style.name if p.style is not None else "") or ""
+        if st.lower().startswith("toc"):        # 目录条目不是标题，否则标题序列会被目录污染
+            continue
+        if "...." in t or "……" in t:   # 点线式静态目录条目（如 RD-052 的 1.1 产品标识……1）
+            continue
+        if "\n" in (p.text or ""):      # 段内含软回车的多句正文（如 RD-026 的四要素段）不是标题
+            continue
+        ol, _num = _para_props(p)
+        level = None
+        if st.startswith("Heading"):
+            try:
+                level = int(st.split()[-1])
+            except ValueError:
+                level = 1
+        elif ol not in (None, "9"):
+            level = int(ol) + 1
+        elif _HEAD_PAT.match(t):
+            level = 0
+        if level is not None:
+            out.append((level, t))
+    return out
+
+
+def check_heading_text_against_template(template_doc, out_doc):
+    """交付稿标题文字必须与模板逐字一致；不等只允许出现在注册人点名处。"""
+    a = [t for _l, t in heading_text_sequence(template_doc)]
+    b = [t for _l, t in heading_text_sequence(out_doc)]
+    kept = [x for x in a if x in b]
+    return {"template_only": [x for x in a if x not in b],
+            "output_only": [x for x in b if x not in a],
+            "order_preserved": kept == [x for x in b if x in a],
+            "template_count": len(a), "output_count": len(b)}
+
+
+def non_baseline_font_runs(doc, baseline=("宋体",), skip_private=True):
+    """非基线字体的 run 数（含表格内段落）。私用区字符 run 默认排除：改字体会变方块。"""
+    bad = []
+    parts = [doc.paragraphs]
+    for tb in doc.tables:
+        for row in tb.rows:
+            for cell in row.cells:
+                parts.append(cell.paragraphs)
+    for plist in parts:
+        for p in plist:
+            for r in p.runs:
+                t = r.text or ""
+                if not t.strip():
+                    continue
+                if skip_private and _is_private_use(t):
+                    continue
+                fonts = {r.font.name, _ea_font_of(r)}
+                fonts.discard(None)
+                if fonts and not (fonts & set(baseline)):
+                    bad.append((t[:20], sorted(fonts)))
+    return bad

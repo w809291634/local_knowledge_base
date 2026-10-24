@@ -59,7 +59,7 @@
 | `font-and-style-normalization.md` | 字体字号统一（正文/标题/表格/图题分区，样式默认值与配图字体一起改） |
 | `diagram-generation-and-figure-insertion.md` | 配图生成与插图替换（绘图三原则、插图五坑、自检与校验） |
 | `case-study-anonymized.md` | 落地实例（含项目数据） |
-| `tools/docx_ops.py` | 通用原语库（统一封装，跨项目复用） |
+| `tools/docx_ops.py` | 通用原语库（统一封装，跨项目复用；标题文字一致性 `heading_text_sequence` / `check_heading_text_against_template`、字体统一判据 `non_baseline_font_runs`（含表格内段落，私用区 run 除外）） |
 | `tools/fig_tools.py` | 配图绘制原语（框图/流程图；边界精确、箭头端点自动算） |
 | `tools/build_docs.py` / `config.example.json` | 配置驱动的生成入口 |
 | `tools/consistency_check.py` | 配置驱动的一致性检查 |
