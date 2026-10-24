@@ -47,6 +47,7 @@
 | `template-doc-methodology.md` | 总纲：十条通用原则 |
 | `template-inheritance-in-place-replace.md` | 核心方法：就地替换 |
 | `template-baselines.md` | 公司模板版式基线族入口：九份文档的版号总表、两档入库判定、跨程序页数口径、建档方法 |
+| `template-format-audit-2026-10.md` | 模板自身的格式符合性审计（哪些是模板缺陷要在生成时修、哪些是原样保留、哪些要注册人裁决） |
 | `templates/<版号>/<件名>_基线.md` | 与基线件同目录的变更清单：逐条列出删除/替换/改写/保留的原文、位置与复核判据；`template-baseline-deletions.md` 是这些清单的总表与指针 |
 | `template-baseline-rdXXX-<版号>.md` + `templates/<版号>/*.docx` | 各文档各版号的独立基线档案与基线件；一份只描述一个版号，判据互不通用；不得按旧版骨架补回新版已删除的章节、目录或表格 |
 | `cover-pagination-and-sections.md` | 封面/分页/分节三大风险点 |
