@@ -2754,3 +2754,15 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：删除运行时文本的额外字形清单，改用设计中已有中文与 ASCII 状态；重烘后 11 个字库文件均与基线逐字节一致，功能与导航回归 61 PASS/0 FAIL。
   - 关联：P-0185
 
+### PR-0358 · 2026-10-23 23:27 · Qoder
+  - 提示词：仿真器都没有连接到每个界面，怎么出现仿真效果图
+  - 诉求：（待补）
+  - 产出/结论：质疑证据强度，成立：4 张主屏态是真跑出来的（触发是钩子直接调 action_scan_start，半真）；2 张模态是翻 hiddenFlag 重出码拍的，只证明「长这样」不证明「进得去」。已如实分档说明，并核对还原（设计源 hiddenFlag=True 两处、screens.c 两个 root 都带 LV_OBJ_FLAG_HIDDEN）。
+  - 关联：P-0186、P-0187
+
+### PR-0359 · 2026-10-23 23:27 · Qoder
+  - 提示词：先做最小接线吧
+  - 诉求：（待补）
+  - 产出/结论：⑦-1 导航闭环落地：点带锁行→开半页、×/遮罩→关、长按已保存行→开忘记对话框、取消/忘记→关；打开走 native（行是 native 建的），关闭走 EEZ 已生成的 action→APP_OUT_*→user_io_tick 排空时 close，EEZ 工程的 hiddenFlag 不动。夹具：main.c 新增 WIFI_NAVTEST（真实 SDL 鼠标注入）+ WIFI_REACH（点击到达模态后截图），shot_states.py 不再翻 hiddenFlag。结果 [NAV] PASS 17 / FAIL 0、rc=0；反向测试（掐掉长按通路）rc=1 且点名两条 FAIL；滚动夹具回归 0→169 仍 PASS。过程中抓到一条 LVGL 事件语义坑（P-0186：长按抬手仍补发 CLICKED）与三条注入时序坑（P-0187）。
+  - 关联：P-0186、P-0187
+

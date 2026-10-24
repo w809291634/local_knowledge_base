@@ -30,6 +30,7 @@
 | 构建/烧写 | 本工程的编译·烧写·调试作业卡：把 PLAYBOOK 的 `{占位符}` 填成这台机器上的真实值 | `09_build_flash_debug_lvgl_demo_ai.md` |
 | ★ **硬件 ⇄ UI 分离** | **跨项目模板**。§0 先给**文件目录结构**（四角色目录树 + 每个目录怎么自证身份 + 依赖方向图 + 一条信号跨目录的流向 + 陌生工程 5 分钟认路），再讲四条不变式、四层归属、A/B/C 三通道判据、变量桥三条硬规矩、★平台分界三种机制的选择判据、线程模型配方、仿真镜像纪律、加信号清单、9 条反模式、机器检查清单 | `10_hw_ui_separation.md` |
 | ★ **最小 EEZ 工程脚手架** | 从零搭可编译的最小 EEZ 模板：四块目录职责、三条硬规矩（native 不 REQUIRES ui / GLOB 需 reconfigure / 不写死生成对象句柄）、三大链接机制（CMP0079、lvgl__lvgl 依赖 lv_mem_psram、--undefined=lv_thread_init）、A/B 宏测量法与实测账单、与 P-0154 的三层拆分口径 | `11_minimal_eez_project_scaffold.md` |
+| ★ **no-flow native 分层** | 设计源/生成 UI/native 的单向依赖、`app`/`platform`/`navigation`/`widgets`/`third_party` 文件夹职责、迁移纪律与验收判据 | `12_no_flow_native_module_layout.md` |
 
 ## 本项目（eez-test，LVGL 9.4 / 800×480 横屏 / BGR）最常用入口
 
