@@ -2766,3 +2766,9 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：⑦-1 导航闭环落地：点带锁行→开半页、×/遮罩→关、长按已保存行→开忘记对话框、取消/忘记→关；打开走 native（行是 native 建的），关闭走 EEZ 已生成的 action→APP_OUT_*→user_io_tick 排空时 close，EEZ 工程的 hiddenFlag 不动。夹具：main.c 新增 WIFI_NAVTEST（真实 SDL 鼠标注入）+ WIFI_REACH（点击到达模态后截图），shot_states.py 不再翻 hiddenFlag。结果 [NAV] PASS 17 / FAIL 0、rc=0；反向测试（掐掉长按通路）rc=1 且点名两条 FAIL；滚动夹具回归 0→169 仍 PASS。过程中抓到一条 LVGL 事件语义坑（P-0186：长按抬手仍补发 CLICKED）与三条注入时序坑（P-0187）。
   - 关联：P-0186、P-0187
 
+### PR-0360 · 2026-10-24 09:18 · Qoder
+  - 提示词：按照最新的经验中，UI设计流程中，已经添加了框架结构，你需要进行适配
+  - 诉求：把工程按 reference/12 的 native 分层树落地
+  - 产出/结论：两步走：S1 纯搬迁+改名（app/model·app/features·app/view·navigation·widgets/wifi_list·platform/platform_api.h·platform/pc），S2 把 wifi_view.cpp 拆成 view 投影 / navigation 模态显隐 / widgets 建行与手势。行为不变的自证：六屏仿真图 SHA256 与搬迁前逐字节相同 + [NAV] 17 PASS/0 FAIL。preflight 新增 [分层] 门禁（目录齐全 + 四条依赖方向），四条规则各自反向测试；并把 --with-sim 扩成「编译 + 跑导航断言」，FAIL 直接让门禁红。
+  - 关联：P-0188、P-0189
+
