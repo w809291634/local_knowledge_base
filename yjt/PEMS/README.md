@@ -10,6 +10,8 @@
 | `AGENTS.md` | **规则入口**（工具无关，AI 工具先读这个） |
 | `template-doc-methodology.md` | 总纲：十条通用原则 + 适用边界 |
 | `template-inheritance-in-place-replace.md` | 核心方法：以参考文档「就地替换」 |
+| `template-baseline-rd026-2.1.md` | 公司模板 2.1 版式基线档案（RD-026 逐段版式、与 2.0 的差异、红字口径、`.doc` 通道、闸门判据）；基线件在 `templates/` |
+| `templates/RD-026_软件确认计划_2.1_基线.docx` | 2.1 空白基线模板件（只读，版式参考用，非项目事实来源） |
 | `cover-pagination-and-sections.md` | 封面/分页/分节高风险点（含"目录后垫片空段""各节页宽不一致"；§8 空白页与段前冒点的「定位—修复—复验」五步流程） |
 | `docx-fields-and-toc-repair.md` | 域（Field）与目录修复：TOC 坏的三形态、诊断、补壳、"更新目录"会拍平域壳的教训 |
 | `consistency-gate.md` | 多文档同数据一致性对账 + 说明书/代码/注意事项三方收口 |

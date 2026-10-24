@@ -16,17 +16,25 @@
 
 ## 1. 打不开的 `.doc`
 
+WPS 写的 `.doc` 常被 Word 判「检测到问题」拒开，`OpenAndRepair` 同样失败。先 Word、失败退 WPS：
+
 ```python
 import win32com.client as w
 for prog in ('Word.Application', 'KWPS.Application'):   # 先 Word，失败退 WPS
     try:
-        app = w.Dispatch(prog); app.Visible = False; app.DisplayAlerts = 0
-        d = app.Documents.Open(src, ReadOnly=True)
-        d.SaveAs2(dst, FileFormat=16)   # 16 = .docx
+        app = w.DispatchEx(prog)                        # 独立实例，见 §44
+        app.Visible = False; app.DisplayAlerts = 0
+        d = app.Documents.Open(src, False, True)        # 只读打开原件
+        d.SaveAs2(dst, FileFormat=16)                   # 16 = .docx
         d.Close(False); app.Quit(); break
     except Exception:
         continue
 ```
+
+- 通道要选一个当主、另一个只做交叉核对，别混用：LibreOffice 与 WPS 转出的渲染逐页一致，但 XML 不等价
+  —— LibreOffice 会给封面大标题多挂 `numPr`、把 `w:jc` 写成 `start`、丢掉 `.doc` 的左缩进。
+- 判"能不能用"以 Word 只读打开为准：转出稿必须能开、页数对得上，否则这份模板不能进生成链。
+- 模板件本身要登记哈希与版式判据，见 `template-baseline-rd026-2.1.md`。
 
 ## 2. LibreOffice 转 PDF
 

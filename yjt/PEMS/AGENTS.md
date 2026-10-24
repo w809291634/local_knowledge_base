@@ -44,6 +44,7 @@
 |---|---|
 | `template-doc-methodology.md` | 总纲：十条通用原则 |
 | `template-inheritance-in-place-replace.md` | 核心方法：就地替换 |
+| `template-baseline-rd026-2.1.md` + `templates/*.docx` | 公司模板版式基线档案与基线件：模板改版时旧版基线不动，新版逐份建档（结构普查→版式登记→通道选择→闸门判据）；不得按旧版骨架补回新版已删除的章节、目录或表格 |
 | `cover-pagination-and-sections.md` | 封面/分页/分节三大风险点 |
 | `consistency-gate.md` | 多文档一致性对账 + 说明书/代码/注意事项**三方收口** |
 | `iteration-and-versioning.md` | 迭代与版本管理 |

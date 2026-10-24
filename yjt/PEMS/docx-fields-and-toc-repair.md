@@ -18,6 +18,7 @@
 | **A 未闭合** | 有 `begin`+`instrText`+`separate`，但**缺 `end`** | `begin - end > 0` | 在**目录末条目段落末尾**补 `end`（个数 = 差值） |
 | **B 域壳被拍平** | 指令在 `instrText` 里但**前面没有 `begin`**（也没有 `separate`）；或指令直接落在 `w:t` | `toc_has_begin == False` 或 `text_has_toc == True` | 补 `begin`；若指令是 `w:t` 则改名为 `w:instrText`；再补 `separate` 与 `end` |
 | **C 目录无域** | 目录条目是纯文本 + 硬编码页码，全文没有 TOC 指令 | `toc_instr == False` 且 `entry_has_field == False` | **只能在 Word/WPS 里重建目录**，脚本别硬造（见第 5 节） |
+| **D 无目录** | 全文既无 TOC 指令也无目录条目 | `toc_instr == False` 且目录样式段落数为 0 | 按模板口径**不补目录**；先查版式基线档案确认是模板有意删除，再决定是否新建 |
 
 实测三态（同一批文档三种都占齐了）：
 
@@ -27,6 +28,10 @@
 | RD-026（V4 原状） | 11/11/11 | True | True | **健康**（结构完整） |
 | RD-026（经 Word 更新域+保存后） | 被拍平 | **False** | True | **B：域壳被拍平，指令变可见文字** |
 | RD-032 | 0/0/0 | False | **False** | **C：纯文本目录，无超链接** |
+| RD-026（2.1 模板） | 0/0/0 | False | False | **D：模板本身无目录**（见 `template-baseline-rd026-2.1.md`） |
+
+> ⚠️ 一份文档可能有多个 TOC 域。全局 `begin/separate/end` 计数会把"某条链断了、另一条链多一个 end"
+> 抵成 `balance == 0` 的假健康。多目录文档要**按域链分组**分别核 balance。
 
 > ⚠️ `begin == end` **不代表正常**：形态 B 可能是平衡的（每个 `PAGEREF`/`HYPERLINK` 自带 begin/end，
 > 而外层 TOC 连 `begin` 都没有）。**必须再查 `toc_has_begin` / `text_has_toc`。**
