@@ -77,6 +77,26 @@ PC 仿真不定义 `WATCH_PLATFORM_DEVICE`，所以只编译出 `platform/pc/` �
 真机工程定义该宏后，PC 文件不产生符号，必须由 `platform/device/` 提供同名实现。这样
 `app/` 永远只包含 `watch_platform.h`，不会有 `#ifdef PC` 分支，也不会重复链接符号。
 
+### 独立 screen 与 TabView 的导航选择
+
+若产品要求“主屏按钮打开 AppList”，不要仅隐藏 TabView 标签栏；应让 `watchface` 与
+`applist` 成为两个独立 screen。切换时必须同时完成以下五项：
+
+1. `design_source.py` 增加主屏入口按钮和 AppList 返回按钮；生成器不再创建
+   `LVGLTabviewWidget` / `tab_main`。
+2. `navigation/watch_nav.*` 用 `lv_screen_load_anim()` 实现“表盘 → AppList”和
+   “AppList → 表盘”，所有 App 页 back 目标改为 `objects.applist`。
+3. `widgets/applist/` 移除 `SCROLL_CHAIN_HOR`、祖先 TabView 检测和横滑切页接口；
+   保留纵向滚轮、惯性、首尾磁吸和返回后居中。
+4. PC 自动回归改为断言“主屏按钮进入列表 / 列表返回主屏”，删除 TabView API 断言。
+5. 重新生成 EEZ `src/ui`、重新烘焙字体，并确认 `screens.h` 中不再有 `tv_main`、
+   `tab_main` 等生成对象。
+
+判据：在**设计源和手写 native**（不含 `src/ui` 生成物）中搜索不到
+`LVGLTabviewWidget`、`tv_main`、旧横滑入口或 AppList 宿主的 `SCROLL_CHAIN_HOR`；
+EEZ 生成的 `screens.c` 可能包含“移除默认 `LV_OBJ_FLAG_SCROLL_CHAIN_HOR`”的通用代码，
+这不表示仍在使用横滑导航。AppList 的首尾吸附及全部 App 返回链仍须通过回归。
+
 ## 文件层函数职责
 
 | 层 | 函数形态 | 示例 | 不应承担的工作 |
