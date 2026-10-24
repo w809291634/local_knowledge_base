@@ -2844,3 +2844,14 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：真根因是我们自己写坏的 profile——`WlanSetProfile` 的 XML 只给 `<name>` 时，Windows 按 GBK 存 SSID 字节，与空口 UTF-8 字节不一致，于是永远"无可见接入点"。证据是导出 XML 的 `<hex>594A542D31 BAC5C2A5B0ECB9AB 2032</hex>` vs 空口 `…31 e58fb7 e6a5bc e58a9e e585ac`。修法：XML 里用 `<hex>` 填空口原始字节。另修 profile 名≠SSID（Windows 重名存成「SSID 2」）——改用 WlanGetProfileList + 各 profile XML 建对照表，`saved`/连接/忘记都用真实 profile 名。真机验证：8001 成功、AES-CCMP、app 点击 4.2 秒连上、netsh 回读 SSID/通道正确。附带修：通知 SSID 是 ANSI、夹具 getenv 中文乱码（env_u8 via GetEnvironmentVariableW）。[NAV] 47/0、preflight 全绿。
   - 关联：P-0200、P-0202
 
+### PR-0373 · 2026-10-24 21:10 · Qoder
+  - 提示词：现在对了总结一下原因
+  - 诉求：把根因讲清楚。
+  - 产出/结论：给出根因链：`WlanSetProfile` 只写 `<name>` → Windows 按 GBK 存 SSID 字节 → 与空口 UTF-8 不一致 → 永远「无可见接入点」；第二条是 profile 名≠SSID（存成「SSID 2」）。并解释为什么三个独立工具（app / netsh / 重建 profile）同错会误导成环境问题。
+
+### PR-0374 · 2026-10-24 21:25 · Qoder
+  - 提示词：总结到本地经验库，并检查一下代码是否有问题
+  - 诉求：沉淀到 kit，并做一次代码体检。
+  - 产出/结论：① 案例库新增 B18（7 段式，含"曾经的误判"与跨栈通用化）+ 索引；② 代码体检：`g++ -Wall -Wextra` 全量过一遍，只修掉一处 `%u` 格式告警；人工复查发现**真缺陷**——开放网络（无 profile、无密码）直接连会拿不存在的 profile 名去 `WlanConnect`，设计里的"开放网络免密直连"在真机走不通。已补：无 profile 时先建 profile（`open/none` 或 `WPA2PSK/AES`，两者都带 `<hex>`），并回归验证已保存网络仍能连（5.0s 成功）。门禁 47/0 + PREFLIGHT PASS。
+  - 关联：P-0202
+
