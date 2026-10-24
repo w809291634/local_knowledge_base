@@ -211,8 +211,9 @@ body_format_sig = 生效版式指纹（用于闸门逐段核对）
 1. **先删后写**：`pStyle / ind / spacing / jc / autoSpaceDE / autoSpaceDN / adjustRightInd /
    snapToGrid / textAlignment / contextualSpacing / widowControl` 全删，再按基线写，
    元素顺序须符合 `CT_PPr` 的 schema（pStyle → 开关 → ind → spacing → jc）。
-2. **排除项与版式比对共用同一函数**（标题/目录/图题/编号段/含域/含图形/文本框/封面区），
-   否则会出现"闸门说统一、其实漏了三类段"。
+2. **排除项与版式比对共用同一函数**（标题/目录/图题/编号段/含域/含图形/文本框/封面区/
+   Symbol 与 Wingdings 私用区字符 run），否则会出现"闸门说统一、其实漏了三类段"。
+   行首是 `\uf07a` 一类私用区字符的项目符号段被改成宋体后会直接显示成方块，这类 run 必须排除。
 3. **标题判据要含纯文本形态**：只按"整段加粗"会漏掉"编号 run 加粗、文字 run 不加粗"的小标题，
    它们会被加上正文缩进（见 `pitfalls.md` §21）。
 4. **封面区＝分节符之前且非成段正文**：前言可能在封面节里。

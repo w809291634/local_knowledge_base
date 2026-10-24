@@ -2772,3 +2772,9 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：两步走：S1 纯搬迁+改名（app/model·app/features·app/view·navigation·widgets/wifi_list·platform/platform_api.h·platform/pc），S2 把 wifi_view.cpp 拆成 view 投影 / navigation 模态显隐 / widgets 建行与手势。行为不变的自证：六屏仿真图 SHA256 与搬迁前逐字节相同 + [NAV] 17 PASS/0 FAIL。preflight 新增 [分层] 门禁（目录齐全 + 四条依赖方向），四条规则各自反向测试；并把 --with-sim 扩成「编译 + 跑导航断言」，FAIL 直接让门禁红。
   - 关联：P-0188、P-0189
 
+### PR-0361 · 2026-10-24 10:18 · Qoder
+  - 提示词：我还原了， 本地经验库的架构 又更新了，重新适配
+  - 诉求：（待补）
+  - 产出/结论：先读 reference/12 的更新 diff 再动手：新版把「推荐树（最终目标）」改成「默认轻量版」——app/ 平铺 model/view/events/logic 四组、**明确禁止 features/<name>/ 这类功能子目录**，platform/ 要 pc/ 与 device/ 两份实现靠宏二选一，文件内部用区块注释代替目录嵌套。上一版我建的 app/model·app/features·app/view 正好是被否决的形态，用户还原是对的。重做后：六屏仿真图与搬迁前逐字节一致、[NAV] 17/0、[分层] 门禁四条规则各自反向测试。
+  - 关联：P-0190、P-0191、P-0192
+
