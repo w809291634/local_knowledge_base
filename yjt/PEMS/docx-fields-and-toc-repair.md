@@ -25,8 +25,8 @@
 | 文档 | begin/separate/end | toc_has_begin | entry_has_field | 判定 |
 |---|---|---|---|---|
 | RD-068（修前） | 7/7/**6** | True | True | **A：缺 1 个 `end`** |
-| RD-026（V4 原状） | 11/11/11 | True | True | **健康**（结构完整） |
-| RD-026（经 Word 更新域+保存后） | 被拍平 | **False** | True | **B：域壳被拍平，指令变可见文字** |
+| RD-026（模板 2.0 口径，V4 稿原状） | 11/11/11 | True | True | **健康**（结构完整） |
+| RD-026（模板 2.0 口径，V4 稿经 Word 更新域+保存后） | 被拍平 | **False** | True | **B：域壳被拍平，指令变可见文字** |
 | RD-032 | 0/0/0 | False | **False** | **C：纯文本目录，无超链接** |
 | RD-026（2.1 模板） | 0/0/0 | False | False | **D：模板本身无目录**（见 `template-baseline-rd026-2.1.md`） |
 
@@ -89,7 +89,7 @@ r.addprevious(_fld('begin')); r.addprevious(instr_run); r.addprevious(_fld('sepa
 
 ## 4. ★ 教训：「更新目录」会重写域壳，修完必须回读复诊
 
-**实测（RD-026）**：V4 的 TOC 域**本来是健康的**（`begin + instrText + separate` + 嵌套 `HYPERLINK`，
+**实测（RD-026，模板 2.0 口径的 V4 稿）**：该稿的 TOC 域**本来是健康的**（`begin + instrText + separate` + 嵌套 `HYPERLINK`，
 `begin/end` 配平）。我用 Word 执行「更新目录 → 更新域 → 保存」后：
 
 - 外层 `begin` / `separate` 与嵌套的 `HYPERLINK` 域**一起消失**；

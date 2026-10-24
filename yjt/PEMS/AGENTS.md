@@ -20,6 +20,8 @@
 5. **相同代码只写一份**：公共处理封装在 `tools/docx_ops.py`，项目只提供配置。
 6. **三方收口**：每轮输出文档后，必须核对 **说明书 / 代码 / 注意事项** 三者一致性，
    冲突未清零不得发布（规则见 `consistency-gate.md` 第 5 节）。
+7. **模板版号是独立的一条轴**：模板改版时旧版基线件与判据原样保留，新版单独建档；生成前先定 `template_version`，
+   只取该版判据，两版判据与产物目录都不得互用。见 `iteration-and-versioning.md` §7。
 
 ## 每次交付前必做（6 步）
 
@@ -44,7 +46,8 @@
 |---|---|
 | `template-doc-methodology.md` | 总纲：十条通用原则 |
 | `template-inheritance-in-place-replace.md` | 核心方法：就地替换 |
-| `template-baseline-rd026-2.1.md` + `templates/*.docx` | 公司模板版式基线档案与基线件：模板改版时旧版基线不动，新版逐份建档（结构普查→版式登记→通道选择→闸门判据）；不得按旧版骨架补回新版已删除的章节、目录或表格 |
+| `template-baseline-rd026-2.0.md` | 2.0 版式基线档案（3 页／有目录／4 章自动编号／13×4 测试记录表；参考件含项目事实，不入库） |
+| `template-baseline-rd026-2.1.md` + `templates/2.1/*.docx` | 2.1 版式基线档案与空白基线件（2 页／无目录／无章节／6×3 确认小组表／红字转黑口径／`.doc` 通道选择／闸门判据） |
 | `cover-pagination-and-sections.md` | 封面/分页/分节三大风险点 |
 | `consistency-gate.md` | 多文档一致性对账 + 说明书/代码/注意事项**三方收口** |
 | `iteration-and-versioning.md` | 迭代与版本管理 |
