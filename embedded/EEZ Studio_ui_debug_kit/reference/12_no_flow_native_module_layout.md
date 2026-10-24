@@ -97,6 +97,37 @@ PC 仿真不定义 `WATCH_PLATFORM_DEVICE`，所以只编译出 `platform/pc/` �
 EEZ 生成的 `screens.c` 可能包含“移除默认 `LV_OBJ_FLAG_SCROLL_CHAIN_HOR`”的通用代码，
 这不表示仍在使用横滑导航。AppList 的首尾吸附及全部 App 返回链仍须通过回归。
 
+### 左滑快捷页映射与右滑快捷窗
+
+当产品同时需要“完整 AppList”与“少量常用功能直达”时，采用两条独立路径：
+
+```text
+表盘应用按钮 → 完整 AppList
+表盘左滑 → [已添加功能页...] → 全屏 + → 表盘
+表盘右滑 → 左侧 2/3 宽、全高的半透明快捷窗
+```
+
+- 映射只保存既有 App 的稳定 ID，不复制/新建功能页；空映射时主屏左滑直接到全屏 `+`。
+- `+` 打开独立的普通纵向选择列表；点击行将 ID 加入映射，拒绝重复；真机阶段再把 ID 数组存 NVS。
+- 左滑/右滑方向和快捷窗几何必须由 `design_source.py` 定义；生成器导出
+  `generated/quick_nav_config.*`，native 禁止维护第二份坐标。
+- 右滑窗是 EEZ 主屏的 native 子对象，方形面板从顶部铺到底部；圆屏根自动裁掉边角。
+  普通透明效果仅设置半透明背景，不额外叠“玻璃”高光/边框。
+- EEZ 生成代码可能移除 `LV_OBJ_FLAG_GESTURE_BUBBLE`。若手势只绑定到 screen 根对象，
+  从标签、统计或按钮区域起滑会丢失事件；native 初始化时应递归为该 screen 子树恢复
+  `GESTURE_BUBBLE`，并只在根对象登记一次 `LV_EVENT_GESTURE` 回调，避免冒泡后重复切页。
+- 动态选择行加入可滚动宿主后，测试滚动前先 `lv_obj_update_layout()`；LVGL 向下滚动的
+  `lv_obj_get_scroll_y()` 可能为负数，断言应比较绝对位移。
+- 图片源尺寸大于显示位时，`lv_obj_set_size()` 会裁图；使用 `lv_image_set_scale()` 缩放，
+  并按未缩放对象的变换中心计算定位。
+
+### B1 画布截图不得假绿
+
+EEZ Pages 树的 DOM 选择器会随 Studio 版本变化而失效。B1 脚本必须维护
+`captured == len(pages)` 的硬判据；任何页树项点击失败或 canvas-shot 缺失，都应以
+`B1 INCOMPLETE` 退出，**不得**仍生成空的 `_b1_compare.png` 并报告成功。修复选择器前，
+将 B1 标为未完成，改由用户手工画布核对或继续修脚本。
+
 ## 文件层函数职责
 
 | 层 | 函数形态 | 示例 | 不应承担的工作 |

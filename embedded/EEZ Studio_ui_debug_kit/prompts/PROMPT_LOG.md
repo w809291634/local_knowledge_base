@@ -2814,3 +2814,33 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：先复现再动手——真接口下换网本来就成功（netsh 回读 SSID 从 YJT-1号楼办公 变到 1号楼6层WiFi），两条症状的真凶是①用户那次跑的是假世界（当时默认假，靠 WIFI_PC_REAL 才走真）②后端同步改状态 + logic 立刻关窗，中间态不存在。按用户选定口径改：双击默认走真接口（假世界改成 WIFI_PC_FAKE=1，门禁改成主动设并打印）、新增 APP_IN_CONN_STATE 三态契约、半页连接中保持前台成功才关、失败只改标题栏文案（不补 ④ 没生成的红字控件）。[NAV] 30→40 PASS/0 FAIL，两条反向测试各自 rc=1；真机跑出不存在密码的 yjt_dev_2.4G → 「正在连接…」15s → 「连接失败」，并记录副作用 WlanConnect 先断后连、失败会掉原网（测后已 netsh 恢复）。
   - 关联：P-0196、P-0197
 
+### PR-0368 · 2026-10-24 14:20 · Qoder
+  - 提示词：为什么总是连接失败，点击连接后，这个输入密码的窗口应该隐藏，然后应该弹出一个连接中的 圆圈动画，期间不可操作（附截图：标题「连接失败 YJT-1号楼办公」+ 第一行没有名字）
+  - 诉求：① 查清为什么老连接失败；② 连接中交互改成"收半页 + 全屏转圈 + 锁住操作"。
+  - 产出/结论：① 定性为环境不是代码——`Get-WinEvent Microsoft-Windows-WLAN-AutoConfig` 给 `Id 8002 失败原因: 特定的网络不可用，RSSI: 255`，脱离仿真器用 `netsh wlan connect name="YJT-1号楼办公"` 单连得到同一错误，而 `show profile key=clear` 证明密钥存在；期间 `1号楼6层WiFi`、`yjt_dev` 两条 profile 已被删（"已保存"与系统状态不一致）。② 新控件 `widgets/wifi_busy/`：整屏 CLICKABLE 遮罩 + `lv_spinner`，锁操作不靠逐个禁用；logic 发命令即收半页并盖圈，收到 CONN_STATE 2/3 收圈；真接口回查提速到 0.5s/10s。③ 顺手修掉截图里的空白行：隐藏网络的 `dot11Ssid` 是全零字节，显示名为空就不列（真扫描 8→7 条）。④ 新加的"期间不可操作"断言当场抓出一个真 bug：`lv_obj_remove_style_all()` 把 local 的 width/height 一起清了，遮罩实际 0×0、点击全穿透（P-0198，反向测试 rc=1 抓到 8 条）。[NAV] 40→44 PASS/0 FAIL，六屏既有图逐字节一致，连接中一屏出图 build/sim_shots/busy.png。设计图 mockup_06 与新交互已不一致，等用户点名才重画。
+  - 关联：P-0196、P-0197、P-0198
+
+### PR-0369 · 2026-10-24 15:20 · Qoder
+  - 提示词：总是失败连接（截图：标题「连接失败 YJT-1号楼办公」）
+  - 诉求：为什么一直连不上。
+  - 产出/结论：先做单变量裁决——**应用全关**时 `netsh wlan connect` 同样 2 秒失败（事件 `Microsoft-Windows-WLAN-AutoConfig` Id 8002「特定的网络不可用，RSSI 255」，关联请求标 AES-GCMP 而空口报 CCMP）；目标 AP 的 4 个 BSS 里当前最强的 2.4G 也只有 -74~-85 dBm，另有 9% 的 5G BSS。尝试过的旁证：filters 为空、wlansvc 运行中、无线打开、profile XML 干净（WPA2PSK/AES + key），手动加 `<PMF>disabled</PMF>` 被系统判"配置文件损坏"（已放弃并保留原 profile 备份在 tmp/）。结论：这次失败是环境（AP 弱/不可用），本层只负责如实下发。**但顺带查出一个真 bug**：saved 用 `WLAN_AVAILABLE_NETWORK_HAS_PROFILE` 判，真机漏报 → 已保存的网络被当成没密码弹半页 → 用户输错就把好 profile 覆盖（很可能就是"越连越失败"的来源）。改成 `WlanGetProfileList` 判 saved，并加 `WIFI_WIN_DUMP=1` 排查开关。门禁 44/0 全绿。
+  - 关联：P-0196、P-0199
+
+### PR-0370 · 2026-10-24 18:05 · Qoder
+  - 提示词：可以的 / 选择2（在"自动重试"与"把失败原因显示在界面上"之间选了后者）
+  - 诉求：连接失败时把 Windows 的真实原因显示出来。
+  - 产出/结论：`WlanRegisterNotification(ACM)` + `WlanReasonCodeToString`，标题栏变成「连接失败 X（特定的网络不可用）」，翻不出文案时退化「错误码 N」；服务判失败时立刻收圈（10s 超时不再白等）。过程中踩两坑：① `sizeof(WLAN_CONNECTION_NOTIFICATION_DATA)` 大于实际 payload（尾部变长数组），把全部通知过滤掉了，改用 offsetof；② 通知里的 dot11Ssid 是 ANSI 码页（13 字节），空口是 UTF-8（17 字节），改按 profile 名认领。真机验证 4.6s 出结论、出图 real_fail_reason.png；门禁 44/0 全绿。假世界无失败分支，这条文案的自动化覆盖边界已写进文档。
+  - 关联：P-0199、P-0200
+
+### PR-0371 · 2026-10-24 18:40 · Qoder
+  - 提示词：连接时候密码不能空
+  - 诉求：半页空密码不许发起连接。
+  - 产出/结论：守卫放在命令消费端（`wifi_logic`）：`wifi_nav_sheet_open() && 密码无可见字符` → 不发起、不转圈、不关窗，标题「请输入密码」；直连路径不受影响。纯空格也算空。[NAV] 44→47 PASS/0 FAIL，三条新断言（半页不收/不转圈/有提示）各自反向测试 rc=1；preflight 全绿。口径表 §5.7 加一行。
+  - 关联：P-0201
+
+### PR-0372 · 2026-10-24 20:45 · Qoder
+  - 提示词：我建议你查找原因 / 连接失败 X（特定的网络不可用 还是有 / 有什么解决方法
+  - 诉求：别停在"环境问题"，把根因找出来。
+  - 产出/结论：真根因是我们自己写坏的 profile——`WlanSetProfile` 的 XML 只给 `<name>` 时，Windows 按 GBK 存 SSID 字节，与空口 UTF-8 字节不一致，于是永远"无可见接入点"。证据是导出 XML 的 `<hex>594A542D31 BAC5C2A5B0ECB9AB 2032</hex>` vs 空口 `…31 e58fb7 e6a5bc e58a9e e585ac`。修法：XML 里用 `<hex>` 填空口原始字节。另修 profile 名≠SSID（Windows 重名存成「SSID 2」）——改用 WlanGetProfileList + 各 profile XML 建对照表，`saved`/连接/忘记都用真实 profile 名。真机验证：8001 成功、AES-CCMP、app 点击 4.2 秒连上、netsh 回读 SSID/通道正确。附带修：通知 SSID 是 ANSI、夹具 getenv 中文乱码（env_u8 via GetEnvironmentVariableW）。[NAV] 47/0、preflight 全绿。
+  - 关联：P-0200、P-0202
+
