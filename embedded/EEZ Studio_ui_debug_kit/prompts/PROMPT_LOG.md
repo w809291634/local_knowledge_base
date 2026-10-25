@@ -2909,3 +2909,9 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：查清 `lv_spinner` 是"弧长伸缩 + 旋转"（end/start 两条曲线不同步），angle=120° 时弧长在 120~210° 抻，像在变形；线宽还吃主题默认（约 10px）。给 3 版静态图让用户选动法，用户定"保留伸缩但幅度小"→ angle=30°；再定线宽 6px。最终 1000ms/30°/6px/64px，出图 busy.png，[NAV] 60/0、PREFLIGHT PASS。三版对比截图按新收尾规则删除，只留交付图。
   - 关联：P-0209
 
+### PR-0384 · 2026-10-25 08:10 · Qoder
+  - 提示词：加一个眼睛，可以点击不放时候，显示密码，松开时候还是 **
+  - 诉求：密码框加"按住看密码"。
+  - 产出/结论：原生 `widgets/wifi_eye/`（重生成不丢）：26×26 贴输入框右端 6px、输入框 pad_right=36；PRESSED→明文+闭眼图标，RELEASED/PRESS_LOST→星号+睁眼图标；图标用 LV_SYMBOL_EYE_OPEN/CLOSE + Montserrat（cn14 无此字形）。定位踩坑：align_to 在 remove_style_all 控件上不落地且初始化时布局未算（eye 停在 0,0 / 偏左 38px），改成先 update_layout 再按输入框矩形 set_pos（P-0210）。[NAV] 60→64 PASS/0 FAIL（4 条眼睛断言），PREFLIGHT PASS；设计图里还没有这颗眼睛，待确认是否补图。
+  - 关联：P-0210
+
