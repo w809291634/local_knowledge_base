@@ -414,3 +414,6 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0202 | 2026-10-24 | WlanSetProfile 只写 name 会把中文 SSID 存成 GBK，之后永远"网络不可用" | wlanapi,profile,SSID,编码,中文,连接失败 | fixed |
 | P-0203 | 2026-10-24 | 入场动画用 translate 不动布局但会动命中测试，无头夹具必须等动画结束 | LVGL,动画,translate,命中测试,无头夹具 | fixed |
 | P-0204 | 2026-10-24 | 退场动画要把"逻辑已关闭"和"视觉已隐藏"分开，隐藏放 ready 回调 | LVGL,动画,状态语义,模态 | fixed |
+| P-0205 | 2026-10-25 | 生成链把用户在 EEZ 里手改的工程覆盖了："出码≠设计源"要先分清是谁过期 | 生成链,覆盖,EEZ手改,门禁判据,备份 | fixed |
+| P-0206 | 2026-10-25 | WlanDisconnect 断的是整个接口，不认 SSID | wlanapi,WlanDisconnect,语义,误伤 | fixed |
+| P-0207 | 2026-10-25 | 连接前先扫描会让四次握手超时，看起来像「点了没反应」 | wlanapi,扫描,WlanConnect,握手超时,时序 | fixed |
