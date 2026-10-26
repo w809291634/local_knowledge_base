@@ -2915,3 +2915,27 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：原生 `widgets/wifi_eye/`（重生成不丢）：26×26 贴输入框右端 6px、输入框 pad_right=36；PRESSED→明文+闭眼图标，RELEASED/PRESS_LOST→星号+睁眼图标；图标用 LV_SYMBOL_EYE_OPEN/CLOSE + Montserrat（cn14 无此字形）。定位踩坑：align_to 在 remove_style_all 控件上不落地且初始化时布局未算（eye 停在 0,0 / 偏左 38px），改成先 update_layout 再按输入框矩形 set_pos（P-0210）。[NAV] 60→64 PASS/0 FAIL（4 条眼睛断言），PREFLIGHT PASS；设计图里还没有这颗眼睛，待确认是否补图。
   - 关联：P-0210
 
+### PR-0385 · 2026-10-25 08:40 · Qoder
+  - 提示词：你按照步骤全部执行
+  - 诉求：把上一轮列的 5 条优化全部做掉。
+  - 产出/结论：① `design/port_check.py`（11 对象/6 动作/9 接口/4 lv_conf，已进门禁，反向测试点名缺项）+ `PORTING.md` 五步；② `app/wifi_text.h` 收口状态文案；③ `widgets/wifi_skin.h` 收口行高/配色/遮罩/转圈/眼睛；④ 真接口 profile 缓存（5s TTL + 写/删后作废，真连日志从约 24 行 profile 读取降到 5 行）；⑤ 夹具原语抽到 `design/sim_cmake/harness.h`（单头 static inline——PC_SIM 只编 main.c，不能加第二个 .c），main.c 用别名保持 64 条断言未改。门禁：PREFLIGHT PASS（含 PORT CHECK）、[NAV] 64/0；真连 3.1s。
+  - 关联：P-0215
+
+### PR-0386 · 2026-10-25 09:05 · Qoder
+  - 提示词：我还原了，感觉会很浪费内存
+  - 诉求：担心上面那批优化吃内存，要求回到轻的版本。
+  - 产出/结论：核对后确认还原点在"眼睛"提交（`b02c82e`），重编 `[NAV] 64/0` 正常。逐项算账：文案/皮肤是纯宏 0 字节、port_check 只在构建期、profile 缓存 ≈8.5KB（且只在 PC 真接口那份，设备不编）、夹具拆分只影响仿真。用户定：**只保留零开销的三件**（port_check+PORTING、wifi_text.h、wifi_skin.h），缓存与 harness 拆分不做，`harness.h` 已删。顺带指出真正的大头是字库 4.8MB（gb2312 全集），但不能简单子集化——列表会出现任意 SSID。
+  - 关联：P-0215
+
+### PR-0387 · 2026-10-25 09:20 · Qoder
+  - 提示词：这个字体应该在 移植文档中说明，字体可以不移植，只需要适配宿主机
+  - 诉求：移植文档里讲清楚字库不随模块走，新工程用宿主机/目标板字库即可。
+  - 产出/结论：PORTING.md 新增 §5b：字库属 EEZ 生成物、不在模块边界内；本仓库 4.8MB 是"GB2312 全集 7445 字形"的取舍不是移植必需；新工程只要求覆盖 ① 固定文案（audit_chars 会打出实际 105 个非 ASCII 字）② 动态 SSID（覆盖不到要降级，否则方块）；判据用 audit_chars + 真机看几条中文 SSID，别靠肉眼。
+  - 关联：无
+
+
+### PR-0388 · 2026-10-25 19:20 · Qoder
+  - 提示词：适配一下 ，要求  已连接 放在第一个 ，已保存的 紧随其后，可以使用分隔符与未连接分开
+  - 诉求：列表按连接状态分档，前两档与其余网络之间加分隔符。
+  - 产出/结论：io 层比较器改三档（0 已连接 / 1 已保存未连接 / 2 其余，档内仍 RSSI 降序+SSID 升序），假/真后端同口径；`wifi_list_rebuild()` 在前两档结束处插一条不可点分隔线（100%×1px、C_ROW_EDGE、user_data=-1，SEP_H/SEP_GAP 进 wifi_skin.h）。夹具不能再按子对象序号取行：改按 user_data 反查 + `lv_obj_has_class(&lv_button_class)`（行是 lv_list_button_class 子类）。[NAV] 64→69 PASS/0，PREFLIGHT PASS；反向测试两次变红（去分隔线 3 FAIL、比较器退回两档 3 FAIL）。顺带修 port_check 打印 ↔ 在 GBK 控制台崩（改 `<->`）。
+  - 关联：无
