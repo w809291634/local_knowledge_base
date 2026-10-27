@@ -1,7 +1,7 @@
 # yjt/ — 按芯片/项目归档的经验库索引
 
 > 与 `embedded/` 的分工：**这里放"换一颗芯片就不成立"的经验**，跨项目可复用的方法论与工具进 `embedded/`。
-> 判据和落库规矩见仓库根 `AGENTS.md` 与本文件末尾第 7 节。最后更新：2026-10-23。
+> 判据和落库规矩见仓库根 `AGENTS.md` 与本文件末尾第 7 节。最后更新：2026-10-27。
 
 ## 1. `PEMS/` — 模板化 Word 文档族方法论（体量最大，单独有入口）
 
@@ -40,12 +40,13 @@
 ISP 硬件选项、4 线自动下载原理、浮点的 ROM 代价）以及**沁恒 CH57x/CH58x/CH32V** 全部在
 `embedded/mcu-chip-families/stc-c51-and-ch32-wch.md`。判据：**语言/工具链层面的坑留这里，芯片寄存器层面的事进 embedded。**
 
-## 3. `ch571/` — 沁恒 CH573/CH57x BLE（2 篇）
+## 3. `ch571/` — 沁恒 CH573/CH57x BLE（3 篇）
 
 | 文件 | 一句话 |
 |---|---|
 | `ble-device-id-rollcode-nv.md` | BLE 设备 ID 的滚码 NV 格式、控制台/BLE 写法与校验（SimpleProfile 0xFFF0/0xFFF6） |
 | `port-rollcode-device-id-to-new-project.md` | 把"滚码设备 ID"移植进新 CH571 工程的实战（MounRiver 2.5.0 + letter-shell） |
+| `easyflash-porting-evaluation.md` | **EasyFlash 移植评估清单**：分区/断言、容量公式（47B/条、4KB≈45、8KB≈93）、端口层四要点、与 BLE/蜂鸣/TM1652 的实时性冲突、验收用例与踩坑 |
 
 ## 4. `MultiParam/` — 参数标定与查表（1 篇）
 
