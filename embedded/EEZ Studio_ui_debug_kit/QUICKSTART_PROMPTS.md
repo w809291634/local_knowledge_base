@@ -27,7 +27,7 @@ C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_ui_debug_kit\EEZ
 
 | 步 | 直接这样说 |
 | --- | --- |
-| ① | "出 XX 页设计图：先写设计源，design_view.py 渲染落 designer/，停下等我确认" |
+| ① | "出 XX 页设计图：先写设计源，design_view.py 渲染落 designer/，**给我看的是 `designer/_overview.svg` 总蓝图**（§2.0；有动效就内嵌 GIF，浏览器打开会动），停下等我确认" |
 | ② | "图上序号已标（附标注图/清单）：整理控件清单表；未标注的按纯展示处理" |
 | ③ | "框架确认：no flow，写进工程文档" |
 | ④ | "用 EEZ 预生成所有界面并做静态验收：A 声明层对账差异=0 → B1 画布逐屏截图对照 designer/；发现不对按④站自主修复条款自己修到达标；完成后贴对照图给我确认 EEZ 界面效果，我点头才进⑤；放不下的大图列出来问我要不要 TF 卡" |
