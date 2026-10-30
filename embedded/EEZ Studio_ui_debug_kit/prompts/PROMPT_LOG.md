@@ -3054,3 +3054,24 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：PC 仿真新增无头截图：SIM_SHOT 默认内存 display、不建 SDL 窗口；SIM_SHOT=all 一个进程批量出 25 页；run_sim.bat shots 一键跑；SIM_WINDOW=1 才开窗。无头 25 页与旧 SDL 截图逐页 max 差 0.0。落 P-0219，NO_FLOW/FLOW §1.3 加截图默认无窗口条款，README 补命令。
   - 关联：P-0219
 
+### PR-0404 · 2026-10-30 16:29 · Qoder
+  - 提示词：进行下一步
+  - 诉求：继续第⑤步导航闭环。
+  - 产出/结论：新增 design/gen_nav_map.py 与 sim_cmake/nav_map.h：从 CONTROLS 生成 333 条 UI 跳转边；main.c 的 nav_init 按页+几何绑定点击回调，nav_test 无头逐边发点击并断言落点。EEZ 构建/仿真通过；run_sim.bat nav 输出 bind edges=333 miss=0、RESULT edges=333 pass=333 fail=0。期间修 P-0220（lv_event_send 内部 API 导致段错误，改用 lv_obj_send_event；且先 update_layout）。README 增加⑤节与下一阶段说明。EEZ Run 不执行 C 回调，导航在 PC 仿真核。
+  - 关联：P-0220
+
+
+
+### PR-0391 · 2026-10-30 17:10 · Qoder
+  - 提示词：这次查找的动态效果可以，我觉得很理想，你记录一下怎么查找到的，并且记录到本地经验库中，后期会用到，记录从哪里网站中能够找到这些动图，并且一步步让用户搜索到合适的
+  - 诉求：把"给界面找动效"的方法固化成经验库文档（渠道 + 步骤 + 判据 + 授权），以后不用重新试错。
+  - 产出/结论：新增 `ANIMATION_ASSETS.md`——
+    ① 渠道分三档：能直接抓（lottiefiles 免费区 HTML 里的 `assets-v2…gif`、OpenGameArt content 页、
+    Wikimedia Commons `filemime:image/gif` API）；抓不到但可让用户自己下（icons8/iconscout 走 Cloudflare 盾、
+    lordicon 要登录）；不能进产品（Giphy/Tenor、国内素材站）。
+    ② 8 步流程（抓 → 抠底 → 量化 → 染色 → 200px 格 SVG 全览 → 用户点选 → 核授权 → PORTLOG）。
+    ③ 实测判据：线条风 ink<0.10/色≤8/细度>0.30（样本 001.gif ink0.04、6 色，用户选中）；单色实心细度<0.25；
+    扁平插画 20~70 色。④ 三个坑：站内标题与卡片错位、假透明棋盘格、GIF 丢重复帧不补时长（P-0216）。
+    ⑤ LottieFiles slug 只认单词（多词返回通用页 0 卡片）。
+    索引同步：kit README 目录树、仓库根 README、CHANGELOG v0.9.35、NO_FLOW §2.0 指向。
+  - 关联：P-0216

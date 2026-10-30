@@ -7,6 +7,21 @@
 
 ---
 
+## v0.9.35 — 新增 ANIMATION_ASSETS：动效素材从哪找、怎么筛
+
+- 新文件 `ANIMATION_ASSETS.md`：把"给界面找动效"写成可复用的流程。三条能直接抓的渠道
+  （lottiefiles 免费区 / OpenGameArt / Wikimedia Commons API）、三家抓不到但能让用户自己下的
+  （icons8、iconscout 走 Cloudflare 盾，lordicon 要登录）、两家不能进产品的（Giphy/Tenor、国内素材站）。
+- 含可脚本化的 8 步：抓预览 GIF → 抠底（四角同色才键） → 量化风格（ink / 颜色数 / 细度）
+  → 染色成单色 → 出统一 200px 格的 SVG 全览（浏览器打开即循环） → 用户按编号点选
+  → 回详情页核授权 → 写 PORTLOG（URL/授权/作者/日期/SHA256）。
+- 钉死实测判据：线条风 ink<0.10、色≤8、细度>0.30（样本 001.gif：ink 0.04 / 6 色，选中）；
+  单色实心细度<0.25；扁平插画 20~70 色。三个坑：站内标题与卡片错位、假透明棋盘格、GIF 丢重复帧不补时长（见 P-0216）。
+- LottieFiles 的 slug 只认单词：`running/jogging/workout/fitness/sprint` 有卡片，多词 slug 返回通用页 0 卡片。
+- 授权口径按 CC0 < CC-BY < CC-BY-SA 分档，LottieFiles 免费区仍需逐个确认 Free/Premium；医疗/对外产品一律留凭证。
+- `README.md` 目录树与仓库根 `README.md` 索引同步；`EEZ_FIRST_WORKFLOW_NO_FLOW.md` §2.0 挂指向。
+
+
 ## v0.9.34 — 交付形态定死：设计图/效果图一律交 SVG 总蓝图（含动效 GIF）
 
 - `EEZ_FIRST_WORKFLOW_NO_FLOW.md` 新增 **§2.0**（并把七步表 ① 行判据指过去）：给用户看的

@@ -1806,6 +1806,7 @@ If you've learned something here, support my efforts writing daily TILs by
 - [UI 调试与验收工具箱 · 总览与上手](embedded/EEZ Studio_ui_debug_kit/README.md)
 - [通用方法论 PLAYBOOK（三层图 / 差异四步法 / 六类体检 / 十条红线）](embedded/EEZ Studio_ui_debug_kit/PLAYBOOK.md)
 - [任意 AI 快速起步提示词卡 QUICKSTART_PROMPTS（规则不进提示词，五张卡）](embedded/EEZ Studio_ui_debug_kit/QUICKSTART_PROMPTS.md)
+- [动效素材渠道与筛选流程 ANIMATION_ASSETS（LottieFiles/OGA/Commons 怎么抓、线条/扁平/实心怎么量化筛、授权口径）](embedded/EEZ Studio_ui_debug_kit/ANIMATION_ASSETS.md)
 - [操作手册 skills.md（自动设计 → 对照查验 → 仿真验证，含条例 D/G/R）](embedded/EEZ Studio_ui_debug_kit/skills.md)
 - [栈专属流程 · flow 方式（验证金字塔 / 框架分层 / 七步主链；仿真点名才跑）](embedded/EEZ Studio_ui_debug_kit/EEZ_FIRST_WORKFLOW_FLOW.md)
 - [栈专属流程 · no flow 方式（§2 七步主线：设计图→标注→框架确认→预生成[含静态核对A/B1]→导航闭环核对[仿真C/B2]→真机核对→补功能；§2.0 交付形态＝SVG 总蓝图（动效内嵌 GIF）；§2.2 四层两站](embedded/EEZ Studio_ui_debug_kit/EEZ_FIRST_WORKFLOW_NO_FLOW.md)
