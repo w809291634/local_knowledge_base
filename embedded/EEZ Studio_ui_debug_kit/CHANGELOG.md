@@ -7,6 +7,11 @@
 
 ---
 
+## v0.9.40 — §2 步骤7 加 JSON-LD 授权对账法（免人眼对卡片）
+
+- free-animations 页内嵌 JSON-LD：预览 gif 与**紧随其后**的 name/isPartOf.url/creditText 同属一条记录；
+  按 contentUrl 定位→取详情页→`<title>` 以 Free 开头即 Free 款。watch2 用心跳红心+跑步小人两件实测核准。
+
 ## v0.9.39 — §7 补硬条款：每个动图需求都跑满全量流程，宁多勿少
 
 - 用户重申（原话「搜索每一个动图都要使用这个步骤，尽可能搜索多一些」）：广度是硬要求——
