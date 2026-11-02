@@ -7,6 +7,12 @@
 
 ---
 
+## v0.9.41 — §7 补执行入口：脚本三件套 + 复制改 GROUPS 即起跑
+
+- 用户问"下次是否照此方法"：把可执行入口写进 §7——`anim_search.py` 公共函数 + `anim_*_full.py`
+  整页普查主线 + `anim_heart_shape.py` 形状筛；新需求复制只改 GROUPS/目录/前缀。
+- 附实测规模（消息 830→614 格、睡眠 1300+），选定后串 §2-7 授权 + §6 门禁 + PORTLOG。
+
 ## v0.9.40 — §2 步骤7 加 JSON-LD 授权对账法（免人眼对卡片）
 
 - free-animations 页内嵌 JSON-LD：预览 gif 与**紧随其后**的 name/isPartOf.url/creditText 同属一条记录；
