@@ -6,7 +6,11 @@
 
 用法（先干跑，确认后再落盘）：
   python stats_to_timesheet.py --stats {统计表.xlsx} --template {上月工时表.xlsx} \\
-      --month 10 --out {新工时表.xlsx} [--plan {项目计划表.xlsx}] [--apply]
+      --month 10 --out {新工时表.xlsx} [--plan {项目计划表.xlsx}] [--overtime 加班.json] [--apply]
+
+加班 JSON：[{"person":"汪浩","date":"10.9","hours":1.5,"code":"04KF006R2507",
+            "task":"查找对应源码位置，开始整理PEMS文档","log":"26.10.9 …"}]
+不给 --overtime 时脚本会提醒确认加班，不会默认当成没有。
 
 --stats / --template / --plan 都是 B 类机器路径，脚本不设默认值。
 不加 --apply 只打印摘要与落点，不改任何文件；加 --apply 才写出 --out（先写临时文件再替换）。
@@ -18,6 +22,7 @@ import os
 import re
 import sys
 from copy import copy
+from decimal import Decimal, ROUND_HALF_UP
 
 import openpyxl
 
@@ -83,6 +88,13 @@ def num(v):
         return float(s)
     except ValueError:
         return None
+
+
+def r1(v):
+    """实际工时保留 1 位小数（四舍五入，非银行家舍入）。"""
+    if v is None:
+        return None
+    return float(Decimal(str(v)).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP))
 
 
 def progress(v):
@@ -259,7 +271,7 @@ def fuzzy(names, text, key):
 
 # ------------------------------ 行组装 ------------------------------
 
-def build_row(t, exact, names, cur_plan, nxt_plan):
+def build_row(t, exact, names, cur_plan, nxt_plan, do_round=True):
     code, name, plain = t['code'], t['name'], norm(t['name'])
     keys = ([code] if code else []) + [plain]
 
@@ -317,13 +329,24 @@ def build_row(t, exact, names, cur_plan, nxt_plan):
     delayed = bool((month_day(t['result']) and month_day(t['demand'])
                     and month_day(t['result']) > month_day(t['demand']))
                    or (t['prog'] is not None and t['prog'] < 1))
+    # 有延期就必须有备注：源表没写原因，就按日期/进度写事实（不编原因）
+    reason = t['note']
+    if delayed and not reason:
+        parts = []
+        if t['prog'] is not None and t['prog'] < 1:
+            parts.append(f"进度{t['prog'] * 100:.0f}%")
+        if t['demand'] and t['result']:
+            parts.append(f"实际{t['result']}完成，计划{t['demand']}")
+        elif t['demand']:
+            parts.append(f"截至月末未完成，计划{t['demand']}")
+        reason = '延期：' + '，'.join(parts) if parts else '延期（源表未填原因）'
 
     return {
         'B': '', 'C': pm, 'D': '软件', 'E': t['person'], 'F': dept, 'G': ptype,
         'H': code, 'I': name, 'J': t['task'], 'K': t['done'], 'L': t['prog'],
         'M': t['est'] if t['est'] is not None else t['ext'],
-        'N': t['real'], 'P': '有' if delayed else '无',
-        'Q': t['note'] if delayed and t['note'] else '',
+        'N': r1(t['real']) if do_round else t['real'], 'P': '有' if delayed else '无',
+        'Q': reason if delayed else '',
     }
 
 
@@ -386,6 +409,40 @@ def write_timesheet(template_path, out_path, month, rows, person_order, apply=Fa
     return plan, wb, ws
 
 
+def load_overtime(path):
+    if not path:
+        return []
+    import json
+    with open(path, encoding='utf-8') as f:
+        data = json.load(f)
+    for x in data:
+        for k in ('person', 'date', 'hours', 'code'):
+            assert k in x, f'加班条目缺字段 {k}: {x}'
+    return data
+
+
+def merge_overtime(rows, items, only=None):
+    """加班单独一行，插在同一项目的行之后；小时÷8 记实际工时，原始小时进备注。"""
+    if not items:
+        return rows, 0
+    out, used = [], 0
+    for x in rows:
+        out.append(x)
+        for it in items:
+            if x['E'] != it['person'] or clean_code(x['H']) != clean_code(it['code']):
+                continue
+            out.append({
+                'B': '', 'C': x['C'], 'D': x['D'], 'E': x['E'], 'F': x['F'], 'G': x['G'],
+                'H': x['H'], 'I': x['I'],
+                'J': '加班：' + (it.get('task') or it.get('log') or '加班'),
+                'K': it.get('log', ''), 'L': x.get('L'), 'M': None,
+                'N': r1(float(it['hours']) / 8) if only in (None, it['person']) else round(float(it['hours']) / 8, 2), 'P': '无', 'Q': '',
+                'R': f"加班{float(it['hours']):g}小时（{it['date']}）",
+            })
+            used += 1
+    return out, used
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument('--stats', required=True)
@@ -393,6 +450,9 @@ def main(argv=None):
     ap.add_argument('--plan', help='项目计划表（可选，用于补项目经理/部门/类型）')
     ap.add_argument('--month', type=int, required=True)
     ap.add_argument('--out', help='输出文件；不给则只干跑')
+    ap.add_argument('--overtime', help='加班条目 JSON（不给则末尾提醒确认）')
+    ap.add_argument('--month-days', type=float, help='当月标准工时（天），用于对账每人合计')
+    ap.add_argument('--only', help='只改这个人的块（含四舍五入与合计对齐）；其他人保持原表')
     ap.add_argument('--apply', action='store_true', help='真正写出 --out')
     ap.add_argument('--stats-sheet', default='软件组789月交付数据')
     a = ap.parse_args(argv)
@@ -415,7 +475,13 @@ def main(argv=None):
 
     prev = [f'{a.month - 1}月', f'{a.month - 1:02d}月', f'{a.month - 2}月', f'{a.month - 2:02d}月']
     exact, names = hist_maps(twb, a.month, prev)
-    rows = [build_row(t, exact, names, cur_plan, nxt_plan) for t in tasks]
+    rows = [build_row(t, exact, names, cur_plan, nxt_plan,
+                      do_round=(a.only is None or t['person'] == a.only)) for t in tasks]
+    rows, ot_used = merge_overtime(rows, load_overtime(a.overtime), a.only)
+    if a.overtime:
+        print(f'加班行：{ot_used} 条' + ('' if ot_used else '（提供了文件但没匹配上项目，检查 code/person）'))
+    else:
+        print('⚠ 未提供 --overtime：本次不含加班工时。补录前请先确认本月有没有加班。')
     plan, wb, ws = write_timesheet(a.template, a.out or '', a.month, rows, person_order,
                                    apply=bool(a.apply and a.out))
     print(f'{a.month} 月：{len(rows)} 行，{len(plan)} 个人员块')
@@ -426,6 +492,18 @@ def main(argv=None):
     print('未填项目经理 %d 行、未填部门 %d 行、未填类型 %d 行' % (
         sum(1 for r in rows if not r['C']), sum(1 for r in rows if not r['F']),
         sum(1 for r in rows if not r['G'])))
+    if a.month_days:
+        import collections
+        per = collections.defaultdict(float)
+        for r in rows:
+            if isinstance(r['N'], (int, float)):
+                per[r['E']] += r['N']
+        print(f'每人实际工时 vs 标准 {a.month_days:g} 天（差额需用户确认后才能调）：')
+        for p, v in per.items():
+            if a.only and p != a.only:
+                continue
+            gap = a.month_days - v
+            print(f'  {p:<4} {v:>6.2f}  差额 {gap:+.2f}' + ('  ← 需调整' if abs(gap) > 0.01 else '  OK'))
     if a.apply and a.out:
         print('已写出:', a.out)
     return 0
