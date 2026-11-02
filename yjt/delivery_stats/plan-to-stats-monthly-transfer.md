@@ -103,3 +103,5 @@ E/F 硬件与需求版本、J 开始时间、K 结果时间、L 实计工时、M
 
 机器路径参数（`--plan` / `--stats`）是 B 类真值，每轮由用户提供；脚本**没有默认路径**，不给参数就不跑。
 `write` 默认只预演落点，加 `--apply` 才落盘，落盘前自动备份到统计表同目录 `tmp/`。
+
+下一步把统计表转成工时表，见 `yjt/delivery_stats/stats-to-timesheet-monthly-fill.md`。

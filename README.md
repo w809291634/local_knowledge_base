@@ -2295,6 +2295,7 @@ If you've learned something here, support my efforts writing daily TILs by
 - [★ 语音关总中断 3.2ms × UART 只取一字节：尾字节跨帧残留 → 血压串口永久错帧（严重）](yjt/MultiParam/wifi-duocan-bh67f2265-uart-fifo-voice-emi-case.md)
 - [AC695N 项目自写驱动：RF315 / DMX512 / 断码屏 SEG / 引脚冲突表](yjt/ac695n_soundbox/user_apps-custom-drivers.md)
 - [月度项目计划表 → 软件交付数据统计：按人补录的方法（列映射 / 去重 / 写入对账）](yjt/delivery_stats/plan-to-stats-monthly-transfer.md)
+- [软件交付数据统计 → 月度工时统计表：按人转工时报账（取数边界 / 项目类型 / 工时口径）](yjt/delivery_stats/stats-to-timesheet-monthly-fill.md)
 
 ### Zed
 

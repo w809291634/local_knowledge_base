@@ -70,14 +70,16 @@ ISP 硬件选项、4 线自动下载原理、浮点的 ROM 代价）以及**沁�
 |---|---|
 | `blufi-android-premature-business-channel.md` | ★ Android BluFi 配网阶段不能因 BLE 已连就发送业务 JSON；必须等待 `RDStart` 打开业务通道，否则会触发 20 字节截断并中断配网。 |
 
-## 7. `delivery_stats/` — 研发计划表 → 软件交付统计（1 篇 + 1 脚本）
+## 7. `delivery_stats/` — 研发月度报表链（2 篇 + 2 脚本）
 
-公司月度报表口径：把《N月项目计划定版》按工程师转成《软件交付数据统计（月度统计）》里"一行一个软件节点"的条目。
+公司月度报表口径，两步走：计划表 → 交付数据统计 → 工时统计表。
 
 | 文件 | 一句话 |
 |---|---|
-| `plan-to-stats-monthly-transfer.md` | 列映射口径、不代填的 8 列、去重与归属四条、源表数据卫生、写入五步与四条对账门禁 |
-| `tools/delivery_stats_ops.py` | `find/preview/write/audit` 四个子命令；默认只读预演，`--apply` 才落盘，落盘前自动备份 |
+| `plan-to-stats-monthly-transfer.md` | 第一步：按人把《N月项目计划》补进交付统计的标记行之下（列映射、去重、写入对账） |
+| `stats-to-timesheet-monthly-fill.md` | 第二步：把交付统计的月报按人转成工时表（取数边界、项目类型推导、计划/实际工时、单位标准数量、门禁） |
+| `tools/delivery_stats_ops.py` | 第一步脚本：`find/preview/write/audit` |
+| `tools/stats_to_timesheet.py` | 第二步脚本：`--stats/--template/--plan/--month/--out`，默认干跑，`--apply` 才落盘 |
 
 ## 8. 落库规矩（与 `embedded/README.md` 第 4 节配套）
 
