@@ -30,6 +30,7 @@
 | `embedded/mcu-peripherals/` | **7 主题篇 + 5 代码配方 + ERRATA 档 + COVERAGE 档**：UART/485/CAN/MODBUS、I2C/SPI 与器件驱动、SD/DCMI/FSMC、I2S/WAV、定时器/ADC/DMA、时钟/GPIO/NVIC/EXTI、**UART 读尽 FIFO × 关中断临界区** | 单片机**外设原理与用法**（跨芯片通用为主） | 配任何外设前；**引用那份 docx 前先查 ERRATA**；**想知道库里有没有某条内容先查 COVERAGE**；**串口偶发不响应/持续校验失败查 FIFO 篇** |
 | `embedded/mcu-chip-families/` | 7 篇：各家与 STM32 差异总表、GD32、AT32、PY32/Holtek、STC+沁恒 CH、CC2530/2538/2640、Z-Stack OSAL | **换芯片/换家时的"哪一点会咬人"清单**；Holtek 篇 §4 已补 **BH67F2472/BH67F2265 的 UART 与中断寄存器级事实**（直读官方手册带页码） | 移植到 GD32/AT32/PY32/STC/CH/TI 时；用 Holtek 8 位机 BH67F 系时 |
 | `embedded/mcu-toolchain-boot-flash/` | `README.md` | 启动链与堆栈、Keil/MicroLIB/scatter/map、BOOT 模式与串口 ISP 烧录、Flash 扇区与选项字节、IAP 跳转 | 改时钟、加烧录、做 IAP、看 map |
+| `embedded/path-handling/` | `windows-path-literal-underscores.md` | Windows 路径的下划线与反斜杠：精确字面验证、歧义路径停下确认、写入前 Resolve-Path 门禁 | 复制脚本、整理工具包、部署输出或写入用户指定 Windows 路径前 |
 | `embedded/EEZ_Studio_examples/` | `README.md` | EEZ Studio 示例工程库说明：经验获取四途径 + 示例工程落库规范（一个工程一个子目录） | 找 EEZ Studio 用法示例 / 要新建示例工程落库时 |
 | `embedded/rt-thread/` | `rt-thread-pitfalls.md` | RT-Thread hard fault 定位、线程栈溢出的统一根因、定时器回调上下文限制 | RT-Thread 上 assertion failed / 随机死机 |
 | `embedded/stm32/` | `stm32-hal-pitfalls.md` | STM32/HAL 经典坑：时钟先使能、printf 重定向三件套、JTAG 引脚复用前必须释放 | 配置看不出问题但外设就是不工作 |

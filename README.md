@@ -322,6 +322,7 @@ If you've learned something here, support my efforts writing daily TILs by
 - [AT32 手册表格唯一副本：ZW↔SRAM 分配、EOPB 系统选项、闪存结构、IOMUX MUX 表、DMA1MUX/DMAMUX 1~128](embedded/mcu-chip-families/at32-flash-zw-dmamux-tables.md)
 - [ZigBee / Z-Stack 的 OSAL 运行机制与工程实践](embedded/mcu-chip-families/zigbee-zstack-osal.md)
 - [工具链、启动模式、Flash 与烧录（Keil/MicroLIB/scatter/IAP）](embedded/mcu-toolchain-boot-flash/README.md)
+- [Windows 路径字面验证：下划线与反斜杠不混淆](embedded/path-handling/windows-path-literal-underscores.md)
 - [死机与异常取证（HardFault / 栈溢出 / 内存越界）](embedded/debug-methodology/hardfault-crash-forensics.md)
 - [UART 接收中断必须读尽 FIFO：关总中断临界区与小深度缓冲的组合失效](embedded/mcu-peripherals/uart-rx-fifo-drain-vs-interrupt-off.md)
 - [概率性故障的自动压测与单变量矩阵（造现场 / 判据帧 / 留现场 / 证据分级）](embedded/debug-methodology/probabilistic-fault-auto-stress-harness.md)
