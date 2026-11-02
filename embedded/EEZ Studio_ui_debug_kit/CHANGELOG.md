@@ -7,6 +7,17 @@
 
 ---
 
+## v0.9.44 — 总则加"求解顺序"：先查经验库，命中照做
+
+- 用户明令（2026-11-02）：查找问题解决方法时**优先从本地经验库获取**。
+- 落点：仓库根 `AGENTS.md` 标题下置顶一条 + 本文件 §0 总则首行；未命中才联网/试验，事后回写。
+
+## v0.9.43 — 精灵动图进 EEZ：AnimationImage（lv_animimg）接入口径
+
+- `ANIMATION_ASSETS.md` §6 补"进 EEZ"：`LVGLAnimationImageWidget`（images/duration/repeatInfinite）+
+  帧位图按显示尺寸 bpp32 内嵌；样板 w1-animation-image；CLI 构建后核对 images/fonts 产物。
+- watch2 实测 12 个 animimg、383 帧、④-A 321/321、仿真链接通过；记 Flash 预算与 bpp16 压缩方向。
+
 ## v0.9.42 — 动图普查提速 8~10 倍：合并解码 + numpy 打分 + 全局 CDN/分数缓存
 
 - `anim_fast.py`：`analyze()` 单次采样出节拍+风格（旧版两遍解码），8 帧×96px、numpy 向量化 ink/色数/细度；

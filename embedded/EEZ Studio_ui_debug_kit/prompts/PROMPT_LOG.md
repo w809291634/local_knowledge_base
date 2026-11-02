@@ -3159,3 +3159,15 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：新增 anim_fast.py（analyze 合并解码+numpy 向量化+全局 CDN/分数缓存+并行抓取与打分+不重编码 GIF）；
     实测 700 件整页冷跑 277s、全缓存 127s（旧 ~20min），打分 1.6s→284ms/件；§7 执行入口改为优先 sweep_fast，CHANGELOG v0.9.42。
   - 关联：PR-0408、PR-0409
+### PR-0411 · 2026-11-02 17:05 · Qoder
+  - 提示词：动图是否可以放在eez里面，如果可以就执行 / eez里面的 动态图片的控件 / 本地经验库也有使用方法
+  - 诉求：把逐帧精灵用 EEZ 的 AnimationImage 控件放进工程并跑通。
+  - 产出/结论：按 w1-animation-image 样板与经验库口径接入——生成器新增 sprite_anim() 出 LVGLAnimationImageWidget
+    （images/duration/repeatInfinite，帧按显示尺寸 bpp32 内嵌）；watch2 12 个 animimg、383 帧、④-A 321/321 差异=0、
+    PC 仿真链接通过；PORTLOG §13 记账，kit §6 补"进 EEZ"段。
+  - 关联：P-0222、PR-0408
+### PR-0412 · 2026-11-02 17:20 · Qoder
+  - 提示词：所以在查找问题解决方法时，优先从经验库中获取方法
+  - 诉求：把"先查经验库"立为总则，不再凭记忆重造方法。
+  - 产出/结论：AGENTS.md 置顶 + NO_FLOW §0 首行；未命中才联网/试验，事后回写（intake+索引）；CHANGELOG v0.9.44。
+  - 关联：PR-0411

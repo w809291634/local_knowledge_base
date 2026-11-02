@@ -88,6 +88,12 @@ watch2 运动页跑步小人：LottieFiles 线描款，染色成 `#FF6B35`/纯�
 
 落地：watch2 `design/design_sprite.py page_with`、`design/design_view.py _check_sprite_overlap`；见 P-0222。
 
+**进 EEZ：用 AnimationImage 控件（不是静态 Image）**。EEZ `LVGLAnimationImageWidget` 映射 LVGL `lv_animimg`，
+属性三件套 `images`（帧位图名数组）/ `duration`（整轮 ms）/ `repeatInfinite`；帧位图按显示尺寸内嵌 bpp32（保透明）。
+样板＝`EEz_stidio_examples/w1-animation-image`（build_example.py 生成 JSON；CLI 构建后确认 `ui_image_*` 与字体已产出）。
+watch2 实测：12 个 animimg + 383 帧，④-A 321/321 差异=0、PC 仿真链接通过；Flash ≈ 383×48×48×4≈3.5MB（可再压 bpp16）。
+编辑器画布只显示首帧，播放看 Run/仿真/固件。
+
 ## 7. 全量单页总览（2026-11-01 用户定，替代"一次只做一种风格"）
 
 用户给一句需求 ⇒ AI 把词表扩全：同义词+动作词+器械/场景词+形状词（40+ 词起步，`?page=N` 翻页翻到空为止），
