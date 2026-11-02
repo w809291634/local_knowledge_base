@@ -24,11 +24,11 @@
 
 | 文件夹 | 内容 | 一句话 | 什么时候查 |
 |---|---|---|---|
-| `embedded/debug-methodology/` | `debug-methodology.md`、`hardfault-crash-forensics.md` | 四种通用排查打法 + **死机/异常取证**（callstack、栈溢出判据、memset 越界、断言两种行为、寄存器读法） | **没头绪时先读前者**；崩了就查后者 |
+| `embedded/debug-methodology/` | `debug-methodology.md`、`hardfault-crash-forensics.md`、`probabilistic-fault-auto-stress-harness.md` | 四种通用排查打法 + **死机/异常取证**（callstack、栈溢出判据、memset 越界、断言两种行为、寄存器读法） + **概率性故障的自动压测与单变量矩阵** | **没头绪时先读前者**；崩了就查后者；**偶发不响应/需断电恢复**查压测篇 |
 | `embedded/debugger/` | `debugger-jlink-stlink-wchlink.md`、`stlink-jlink-remote-oscilloscope.md` | 调试器固件与驱动救砖 + **ST-Link 自制固件版本、J-Link 远程调试、示波器操作、SWD 引脚占用** | 调试器连不上 / 要远程调 / 要量波形 |
 | `embedded/ide/` | `iar-keil-ide-issues.md` | IAR、Keil MDK、RT-Thread Studio 的 IDE 层坑 | 编译能过但调试行为诡异 |
-| `embedded/mcu-peripherals/` | **6 主题篇 + 5 代码配方 + ERRATA 档 + COVERAGE 档**：UART/485/CAN/MODBUS、I2C/SPI 与器件驱动、SD/DCMI/FSMC、I2S/WAV、定时器/ADC/DMA、时钟/GPIO/NVIC/EXTI | 单片机**外设原理与用法**（跨芯片通用为主） | 配任何外设前；**引用那份 docx 前先查 ERRATA**；**想知道库里有没有某条内容先查 COVERAGE** |
-| `embedded/mcu-chip-families/` | 7 篇：各家与 STM32 差异总表、GD32、AT32、PY32/Holtek、STC+沁恒 CH、CC2530/2538/2640、Z-Stack OSAL | **换芯片/换家时的"哪一点会咬人"清单** | 移植到 GD32/AT32/PY32/STC/CH/TI 时 |
+| `embedded/mcu-peripherals/` | **7 主题篇 + 5 代码配方 + ERRATA 档 + COVERAGE 档**：UART/485/CAN/MODBUS、I2C/SPI 与器件驱动、SD/DCMI/FSMC、I2S/WAV、定时器/ADC/DMA、时钟/GPIO/NVIC/EXTI、**UART 读尽 FIFO × 关中断临界区** | 单片机**外设原理与用法**（跨芯片通用为主） | 配任何外设前；**引用那份 docx 前先查 ERRATA**；**想知道库里有没有某条内容先查 COVERAGE**；**串口偶发不响应/持续校验失败查 FIFO 篇** |
+| `embedded/mcu-chip-families/` | 7 篇：各家与 STM32 差异总表、GD32、AT32、PY32/Holtek、STC+沁恒 CH、CC2530/2538/2640、Z-Stack OSAL | **换芯片/换家时的"哪一点会咬人"清单**；Holtek 篇 §4 已补 **BH67F2472/BH67F2265 的 UART 与中断寄存器级事实**（直读官方手册带页码） | 移植到 GD32/AT32/PY32/STC/CH/TI 时；用 Holtek 8 位机 BH67F 系时 |
 | `embedded/mcu-toolchain-boot-flash/` | `README.md` | 启动链与堆栈、Keil/MicroLIB/scatter/map、BOOT 模式与串口 ISP 烧录、Flash 扇区与选项字节、IAP 跳转 | 改时钟、加烧录、做 IAP、看 map |
 | `embedded/EEZ_Studio_examples/` | `README.md` | EEZ Studio 示例工程库说明：经验获取四途径 + 示例工程落库规范（一个工程一个子目录） | 找 EEZ Studio 用法示例 / 要新建示例工程落库时 |
 | `embedded/rt-thread/` | `rt-thread-pitfalls.md` | RT-Thread hard fault 定位、线程栈溢出的统一根因、定时器回调上下文限制 | RT-Thread 上 assertion failed / 随机死机 |
@@ -50,7 +50,7 @@ C51 相关经验今后统一进 `yjt/STC8H_8G/`。
 
 ## 4. 新笔记落在哪：`embedded/` 还是 `yjt/`
 
-- **只在一款芯片 / 一个工程上成立** → `yjt/<芯片或项目名>/`（现有：`ch571/`、`STC8H_8G/`、`MultiParam/`、`PEMS/`，索引见 `yjt/README.md`）。
+- **只在一款芯片 / 一个工程上成立** → `yjt/<芯片或项目名>/`（现有：`ch571/`、`STC8H_8G/`、`MultiParam/`、`PEMS/`、`delivery_stats/`，索引见 `yjt/README.md`）。
 - **跨项目、跨芯片可复用的方法论与工具** → `embedded/<主题>/`，一个主题一个文件夹。
 - 判据模糊时问一句"换一颗芯片这条还成立吗"：成立进 `embedded/`，不成立进 `yjt/`。
 - 已知灰色地带：RT-Thread 与 STM32 两篇都带平台属性，但结论主要是该 RTOS/该 HAL 的通用坑，故留 `embedded/`。

@@ -1,7 +1,7 @@
 # yjt/ — 按芯片/项目归档的经验库索引
 
 > 与 `embedded/` 的分工：**这里放"换一颗芯片就不成立"的经验**，跨项目可复用的方法论与工具进 `embedded/`。
-> 判据和落库规矩见仓库根 `AGENTS.md` 与本文件末尾第 7 节。最后更新：2026-10-27。
+> 判据和落库规矩见仓库根 `AGENTS.md` 与本文件末尾第 8 节。最后更新：2026-11-02。
 
 ## 1. `PEMS/` — 模板化 Word 文档族方法论（体量最大，单独有入口）
 
@@ -48,11 +48,12 @@ ISP 硬件选项、4 线自动下载原理、浮点的 ROM 代价）以及**沁�
 | `port-rollcode-device-id-to-new-project.md` | 把"滚码设备 ID"移植进新 CH571 工程的实战（MounRiver 2.5.0 + letter-shell） |
 | `easyflash-porting-evaluation.md` | **EasyFlash 移植评估清单**：分区/断言、容量公式（47B/条、4KB≈45、8KB≈93）、端口层四要点、与 BLE/蜂鸣/TM1652 的实时性冲突、验收用例与踩坑 |
 
-## 4. `MultiParam/` — 参数标定与查表（1 篇）
+## 4. `MultiParam/` — 多参血压计项目（2 篇）
 
 | 文件 | 一句话 |
 |---|---|
 | `glu-range-lookup-off-by-one-lo.md` | ★ 分段线性查表循环少算一轮 ⇒ 插值全 0 ⇒ 除零 ⇒ 高浓度全部误报 LO（严重） |
+| `wifi-duocan-bh67f2265-uart-fifo-voice-emi-case.md` | ★ 语音关总中断 3.2ms × UART 中断只取一字节 ⇒ 尾字节跨帧残留 ⇒ 血压串口永久错帧（产线 7/400；九项验证矩阵 + 四方案取舍 + 压测三步） |
 
 ## 5. `ac695n_soundbox/` — 杰理 AC695N 项目自写代码（1 篇）
 
@@ -69,7 +70,16 @@ ISP 硬件选项、4 线自动下载原理、浮点的 ROM 代价）以及**沁�
 |---|---|
 | `blufi-android-premature-business-channel.md` | ★ Android BluFi 配网阶段不能因 BLE 已连就发送业务 JSON；必须等待 `RDStart` 打开业务通道，否则会触发 20 字节截断并中断配网。 |
 
-## 7. 落库规矩（与 `embedded/README.md` 第 4 节配套）
+## 7. `delivery_stats/` — 研发计划表 → 软件交付统计（1 篇 + 1 脚本）
+
+公司月度报表口径：把《N月项目计划定版》按工程师转成《软件交付数据统计（月度统计）》里"一行一个软件节点"的条目。
+
+| 文件 | 一句话 |
+|---|---|
+| `plan-to-stats-monthly-transfer.md` | 列映射口径、不代填的 8 列、去重与归属四条、源表数据卫生、写入五步与四条对账门禁 |
+| `tools/delivery_stats_ops.py` | `find/preview/write/audit` 四个子命令；默认只读预演，`--apply` 才落盘，落盘前自动备份 |
+
+## 8. 落库规矩（与 `embedded/README.md` 第 4 节配套）
 
 - 换一颗芯片这条还成立吗？**不成立 → 放这里**（按 `<芯片或项目名>/` 建目录）；成立 → 放 `embedded/<主题>/`。
 - 一个主题一个文件夹，文件夹内按"文件名即结论关键词"命名，严重坑在标题里加 ★。

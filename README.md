@@ -323,6 +323,8 @@ If you've learned something here, support my efforts writing daily TILs by
 - [ZigBee / Z-Stack 的 OSAL 运行机制与工程实践](embedded/mcu-chip-families/zigbee-zstack-osal.md)
 - [工具链、启动模式、Flash 与烧录（Keil/MicroLIB/scatter/IAP）](embedded/mcu-toolchain-boot-flash/README.md)
 - [死机与异常取证（HardFault / 栈溢出 / 内存越界）](embedded/debug-methodology/hardfault-crash-forensics.md)
+- [UART 接收中断必须读尽 FIFO：关总中断临界区与小深度缓冲的组合失效](embedded/mcu-peripherals/uart-rx-fifo-drain-vs-interrupt-off.md)
+- [概率性故障的自动压测与单变量矩阵（造现场 / 判据帧 / 留现场 / 证据分级）](embedded/debug-methodology/probabilistic-fault-auto-stress-harness.md)
 
 ### Elixir
 
@@ -2289,7 +2291,9 @@ If you've learned something here, support my efforts writing daily TILs by
 - [NTC 测温与控温：比率式 / 采样窗口 / 热耦合三类坑](yjt/STC8H_8G/ntc-temperature-measurement-pitfalls.md)
 - [STC8H 输出脚上电闪烁与 SFR 不可间接访问](yjt/STC8H_8G/stc8h-gpio-power-on-latch-and-sfr-access.md)
 - [分段线性查表少算一轮 → 除零 → 高浓度误报 LO（严重）](yjt/MultiParam/glu-range-lookup-off-by-one-lo.md)
+- [★ 语音关总中断 3.2ms × UART 只取一字节：尾字节跨帧残留 → 血压串口永久错帧（严重）](yjt/MultiParam/wifi-duocan-bh67f2265-uart-fifo-voice-emi-case.md)
 - [AC695N 项目自写驱动：RF315 / DMX512 / 断码屏 SEG / 引脚冲突表](yjt/ac695n_soundbox/user_apps-custom-drivers.md)
+- [月度项目计划表 → 软件交付数据统计：按人补录的方法（列映射 / 去重 / 写入对账）](yjt/delivery_stats/plan-to-stats-monthly-transfer.md)
 
 ### Zed
 
