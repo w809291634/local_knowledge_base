@@ -106,3 +106,9 @@ ratio+峰值数，专捞"缩放跳动"类）③ 形状（参数轮廓模板 IoU�
 翻页到空 → 下载 → 分层打标签 → 单页 SVG 前缀编号）、`design/anim_heart_shape.py`（参数轮廓 IoU 形状筛）。
 新需求＝复制 `anim_*_full.py`，只改 GROUPS / 输出目录 / 编号前缀；watch2 实测：消息页 40 词 → 830 下载 → 614 格单页，
 睡眠页 44 词 → 1300+ 下载。选定编号后走 §2 步骤 7（JSON-LD 核授权）+ §6 合成门禁 + PORTLOG 记账。
+
+**提速版（2026-11-02，默认用它）**：`design/anim_fast.py::sweep_fast(page, prefix, groups, budget)`——
+① `analyze()` 一次采样同时出节拍+风格（旧版两函数各解码一遍），8 帧×96px + numpy 向量化：打分 1.6s → 284ms/件，
+6 线程有效 ~73ms/件；② 全局 CDN 缓存 `_cdn/<md5(url)>.gif` + 全局分数库 `_scores.json`，跨页/重跑直接命中；
+③ 抓页 4 线程、下载 6 线程；④ 扫页**不重编码 GIF**（SVG 直接引用原始 gif），只对最终入选件抽帧/染色。
+实测 700 件整页：冷跑 277s、全缓存 127s（旧流程约 20 分钟）。旧账本 `catalog.json` 可硬链接灌 CDN（一次 6000+ 件）。
