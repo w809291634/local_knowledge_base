@@ -7,6 +7,14 @@
 
 ---
 
+## v0.9.46 — 新增 B23：UI 占用实测（P4 模板部署 + ui_size_report）
+
+- 案例：把 UI 拷进 P4 模板（备份原 ui/main.c、补回 CMakeLists、关 demo）→ 用自写 bat 设
+  IDF_PATH/IDF_TOOLS_PATH/工具链 PATH 编（export.bat 在 Git Bash 不可用）→ `ui_size_report.py` 出最终链接占用。
+- 判读：图片在 flash 是未压缩原始像素（ARGB8888=w×h×4）；`.eez-project` 的 PNG base64 不算占用；
+  附 ARGB8565/8bit/4bit/Lottie 压缩对照与 watch2 实测（UI 6.00MB，帧 5.65MB）。
+- 前提：模板不在本机时先请用户提供示例工程，不拿源码求和冒充固件占用。
+
 ## v0.9.45 — §6 补"精灵清晰度四条"
 
 - 用户报"动图有压缩"后定：帧按显示尺寸 LANCZOS 内嵌（bpp32 不量化）；上屏取安全余量上限（60px）；
