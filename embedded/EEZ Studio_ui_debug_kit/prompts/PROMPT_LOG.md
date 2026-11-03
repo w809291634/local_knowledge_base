@@ -3274,3 +3274,24 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：main.c 在 WATCH_AUTOTEST 下自动 SDL_VIDEODRIVER=dummy 并在 nav_walk 后 exit(0)；
     dummy 帧节奏偏快→手势 settle frames 提至 120/150；实测无头 167/0、60~114s、零窗口；B20/CHANGELOG v0.9.50 留痕。
   - 关联：B20、B22
+
+### PR-0423 · 2026-11-03 17:40 · Qoder
+  - 提示词：使用 H5 来呈现跳转效果，很不错，可以记录到本地经验中，方便我 核验跳转逻辑是否正确，可以将当前输出结果的方法整理到工作流和经验库，可以设定为 输出设计图 版本v2
+  - 诉求：把"H5 呈现跳转"定为输出设计图 v2，并写进工作流与经验库。
+  - 产出/结论：
+    1) NO_FLOW 新增 §2.0c「设计图 v2：SVG 总览 + H5 可点原型」，§2 表①行同步；FLOW 加指针（成对文件）。
+    2) 新增 reference/13_design_v2_h5_prototype.md：交付物三件、单一真值拆分、H5 结构、五条门禁、实测证据、五个踩坑、边界。
+    3) 索引同步：kit README（§2.0c）、reference/README 工程实践表加一行；CHANGELOG v0.9.51。
+    4) 口径：H5 只验跳转与页面内容，像素/动效仍以 EEZ + 仿真为准；不重画界面，热区与设计源共用控件框。
+  - 关联：PR-0422
+
+### PR-0424 · 2026-11-03 · Qoder
+  - 提示词：同时记住当前所有的动图原件，放在单独一个文件夹中，原来多余的可以删除掉
+  - 诉求：动图原件要有单一归集目录并写进经验库；被换掉的停用帧表可以删。
+  - 产出/结论：
+    1) ANIMATION_ASSETS.md §2 加第 9 步"收口必做"，新增 §8「原件归集与留档」：一个工程一个原件目录、MANIFEST.md+manifest.json、已存在不重下、三层校验（SHA/目检首帧/去重帧数与整轮时长）、停用帧表直接删且台账同步改写。
+    2) 工程侧落地：watch2 `design/assets/_originals/`（14 原件 + 清单）、`design/collect_originals.py`；删 8 个停用/候选帧表（约 3.3MB）；PORTLOG §10–12 旧行改写、新增 §12 黑胶 P-3 与 §20 归集账单。
+    3) 校验证据：sport_run/mus_vinyl 等 5 件 SHA 与入库记录一致；9 件站内重渲染致 SHA 变化，已目检首帧同源；wx_cloud_sun、tmr_dial 整轮时长差异已在清单单列。
+    4) 索引同步：kit README 的 ANIMATION_ASSETS 行加 §8；CHANGELOG v0.9.52。
+  - 关联：PR-0423
+
