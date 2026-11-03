@@ -7,6 +7,11 @@
 
 ---
 
+## v0.9.49 — 定稿默认配置：20 帧/页 + 只播当前页（生成器产出）
+
+- 用户定：每页 20 帧（I4 464KB、app 1.49MB）；"非当前页不动画"为默认配置。
+- `emit_watch_anim()` 随生成器每次产出 watch_anim.c（14 精灵/25 屏，SCREEN_LOADED start/delete）。
+
 ## v0.9.48 — 精灵性能两条：只播当前页动画；帧名用原始下标
 
 - §6 补：切屏时 `lv_animimg_start` 当前屏、其余 `lv_animimg_delete`（watch2 14 条定时器不再空跑，+2KB）。

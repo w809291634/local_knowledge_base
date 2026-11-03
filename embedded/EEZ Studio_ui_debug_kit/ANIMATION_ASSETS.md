@@ -94,8 +94,10 @@ watch2 运动页跑步小人：LottieFiles 线描款，染色成 `#FF6B35`/纯�
 watch2 实测：12 个 animimg + 383 帧，④-A 321/321 差异=0、PC 仿真链接通过；Flash ≈ 383×48×48×4≈3.5MB（可再压 bpp16）。
 编辑器画布只显示首帧，播放看 Run/仿真/固件。
 
-**性能：只播当前页**。lv_animimg 在隐藏屏上仍走定时器；多页精灵时在切屏事件里
-对当前屏 `lv_animimg_start`、其余 `lv_animimg_delete`（watch2 实测 14 条定时器不再空跑，+2KB Flash）。
+**性能：只播当前页（默认配置，2026-11-03 用户定）**。lv_animimg 在隐藏屏上仍走定时器；
+切屏事件里对当前屏 `lv_animimg_start`、其余 `lv_animimg_delete`（watch2 实测 14 条定时器不再空跑，+2KB Flash）。
+该模块由生成器默认产出（`emit_watch_anim()` → `src/native/navigation/watch_anim.c`），**不是手工补丁**；
+帧数默认 **每页 20 帧、单帧间隔 ≤100ms**（I4 → 精灵帧 464KB、P4 app 1.49MB）。
 顺带：帧名必须与生成器一致——用**原始帧下标**（f00/f02/…），别按抽取序号重命名，否则引用的还是旧帧。
 
 **清晰度四条（2026-11-02 watch2 实测，用户报"图像被压缩"后定）**：
