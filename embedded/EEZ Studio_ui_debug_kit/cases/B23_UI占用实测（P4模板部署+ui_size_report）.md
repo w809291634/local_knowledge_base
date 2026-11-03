@@ -57,3 +57,19 @@
 2. 换 ui 目录必须带 `CMakeLists.txt`（GLOB 在 configure 期求值，新增文件后要重新 configure）。
 3. 466 圆表 UI 跑在 4.3" 横屏上只用于**量体积**，位置/裁切不代表真机观感。
 4. 恢复：把 `ui_template_backup` 换回 `ui`、`main.c.bak` 还原即可。
+
+## 精灵帧压缩实测（2026-11-03，watch2）
+
+| 步 | 做法 | 精灵帧 | EEZ UI | app.bin |
+| --- | --- | --- | --- | --- |
+| 基线 | ARGB8888 / 421 帧 | 5.65MB | 6.00MB | 6.69MB |
+| ① bpp16 | `RGB565A8` 10.8KB/帧 | 4.24MB | — | — |
+| ② bpp8 | `I8` 调色板（256 色）4.6KB/帧 | 2.26MB* | 2.17MB | 2.86MB |
+| ③ 自烘 **I4** | palette 64B + 4bit 索引 = 1.86KB/帧；CLI 后覆写 `ui_image_sp_*.c` | — | — | — |
+| ④ 抽帧 ≤20 | 生成器与烘焙器共用 `sample_indices` | **0.45MB** | **1.03MB** | **1.72MB** |
+
+- EEZ 位图 bpp 实测对应：32=ARGB8888 / 16=RGB565A8 / 8=I8 / 4=A8（只留透明度、丢颜色）。
+- I4 布局：data 开头 `lv_color32_t` 调色板（B,G,R,A），随后 4bit 索引（高 nibble=偶数像素，LVGL bin_decoder 口径）；
+  透明像素=索引 0；调色板用「帧合成到页面底色后取 15 色」，AA 边缘按深底预混避免暗边。
+- 管线：`build_watch_ui → cli_build → eez_font_bake → bake_sprite_i4`（I4 必须最后跑，否则被 CLI 覆盖）。
+- 代价：每页 20 帧比 33~45 帧顿一点；色彩限于 16 色/帧（本套素材以纯色/线描为主，肉眼几乎无差）。

@@ -3183,3 +3183,16 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：新增 cases/B23（步骤/bat/判读口径/压缩对照/watch2 6.00MB 实测/4 个坑）+ cases 索引行，
     CHANGELOG v0.9.46；记忆条目同步。
   - 关联：B21、PR-0413
+### PR-0415 · 2026-11-03 16:40 · Qoder
+  - 提示词：接着想办法缩小空间 / 我说的是精灵帧可以降低到 500kb 以下
+  - 诉求：把精灵帧压到 <500KB。
+  - 产出/结论：EEZ bpp 32/16/8/4 → ARGB8888/RGB565A8/I8/A8；自写 I4 烘焙器（palette+4bit，1.86KB/帧）
+    并抽帧 ≤20/页 → 精灵帧 5.65MB→**0.45MB**，EEZ UI 6.00→1.03MB，P4 app.bin 6.69→**1.72MB**；
+    仿真 167/0、I4 渲染同色。管线：build_watch_ui→cli_build→font_bake→bake_sprite_i4。
+  - 关联：B23、PR-0414
+### PR-0416 · 2026-11-03 17:00 · Qoder
+  - 提示词：2（选"只播当前页"方案）/ 刚刚有点卡的原因是如上吗
+  - 诉求：去掉后台动画开销，并确认卡顿原因。
+  - 产出/结论：新增 watch_anim.c（SCREEN_LOADED 时 start 当前屏/delete 其余）；P4+仿真接入；app.bin 1.49MB；
+    仿真 167/0。并修 I4 帧命名坑（原始下标）。§6/CHANGELOG v0.9.48/PORTLOG §18 留痕。
+  - 关联：PR-0415、B23

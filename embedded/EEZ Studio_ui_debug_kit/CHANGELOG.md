@@ -7,6 +7,16 @@
 
 ---
 
+## v0.9.48 — 精灵性能两条：只播当前页动画；帧名用原始下标
+
+- §6 补：切屏时 `lv_animimg_start` 当前屏、其余 `lv_animimg_delete`（watch2 14 条定时器不再空跑，+2KB）。
+- 坑：自烘帧按抽取序号重命名会与生成器引用错位（引用的仍是旧 I8 帧），必须用原始帧下标。
+
+## v0.9.47 — B23 补"精灵帧压缩实测"：I4 + 抽帧 5.65MB→0.45MB
+
+- EEZ bpp 对应表（32/16/8/4 → ARGB8888/RGB565A8/I8/A8）；自烘 I4 布局与管线顺序
+  （build_watch_ui → cli_build → font_bake → bake_sprite_i4）；watch2 实测 app.bin 6.69→1.72MB。
+
 ## v0.9.46 — 新增 B23：UI 占用实测（P4 模板部署 + ui_size_report）
 
 - 案例：把 UI 拷进 P4 模板（备份原 ui/main.c、补回 CMakeLists、关 demo）→ 用自写 bat 设
