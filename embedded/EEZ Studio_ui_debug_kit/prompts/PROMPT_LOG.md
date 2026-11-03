@@ -3233,3 +3233,13 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
     数据 import 自 global_overview.ROOMS，未手抄。新增 check() 门禁：分类漏接 / 控件层截断 / 行为层截断 / 返回边缺失。
     反向测试三条均触发：客厅 6!=7、toggle 5>4、下发硬件 7>6；正向 [GATE] 跳转边 8 设备方格 18。
   - 关联：PR-0418
+
+### PR-0420 · 2026-11-02 16:10 · Qoder
+  - 提示词：看得不够清晰，我需要预览图，包含原始的设计图
+  - 诉求：预览图必须包含真实设计帧，不能只有抽象方框。
+  - 产出/结论：新增 design/preview_pages.py → designer_simple/01_preview_pages.svg/.png（1188x1810）：
+    每屏一段 = 真实设计帧（0.55 缩放）+ 屏内彩色序号框 + 右侧控件表（序/控件/分类/点击后/行为层）+ 左侧进入/返回双总线；5 屏 8 条跳转边。
+    顺带把 4 个房间的设备方格、房间卡/场景条/设备格/返回按钮几何、分类色收进 simple_control 单一真值
+    （ROOM_TILES / ROOM_GRID / TILE_GRID / BACK_BOX / CAT_COLORS），global_overview 改为派生不再抄数据；重构后 _control_concept.svg SHA1 不变。
+    修设计源缺陷：toggle() 关态滑块写成 `x + 22 if on else 2`，关态滑块画到页面最左边（预览图上表现为游离白点）。
+  - 关联：PR-0419
