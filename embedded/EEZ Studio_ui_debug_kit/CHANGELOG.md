@@ -17,6 +17,45 @@
 
 ---
 
+## v0.9.98 — 流程入口挂上问题索引（PR-0503）
+
+- 用户问"工作流程里有没有问题索引"：此前只有 `intake/index.md` 和 README 提到 intake，流程正文没挂入口。
+- NO_FLOW §0「求解顺序」改为先查 `intake/index.md`（一行一个 P-####，按现象/标签检索），并补「新问题修完
+  用 `tools/log_entry.py problem` 登记、自动追索引」；FLOW §0 同步一句。
+- AGENTS 铁律 4（留痕）补「追 `intake/index.md`，查问题先看这张索引」。
+
+## v0.9.97 — 仿真窗口关不掉：自轮询 SDL 要自己处理 QUIT/CLOSE（PR-0502）
+
+- 根因：主循环把 `SDL_PollEvent` 的每个事件都喂 `lv_sdl_mouse_handler`，
+  `SDL_QUIT`/`WINDOWEVENT_CLOSE` 在 LVGL 的 SDL 驱动看到之前就被吞了（`LV_SDL_DIRECT_EXIT` 形同虚设）。
+- 修复：轮询时先判 `SDL_QUIT` 与 `SDL_WINDOWEVENT_CLOSE` → `SDL_Quit()` + 退出；其余仍走鼠标 handler。
+- 自证：新增 `run_sim.bat quittest`（`W78_QUIT_TEST=1` 预压一个 `SDL_QUIT`），退出码 0；导航回归 69/69。
+- 顺带：构建目录改到工程 `tmp/sim_build`（原先落在 `design/tmp`，不符合过程件纪律）。
+
+## v0.9.96 — ⑤ 导航闭环：绑定表 + 仿真真点击 69/69；生成器第⑨条（PR-0501）
+
+- w78 实做：`design/nav_bind_gen.py` 从 nav_map 生成 `src/native/nav_bind_table.h`（62 静态 + 7 返回），
+  native 统一挂 `LV_EVENT_CLICKED`；`design/sim_cmake` 起 PC_SIM（800×480），
+  `run_sim.bat test` 无头注入真实 SDL 鼠标事件，逐边断言落点屏，**69/69 PASS**。
+- 新硬口径（生成器第⑨条）：纯展示/装饰容器必须去掉 `CLICKABLE`（widgetFlags + clickableFlag），
+  否则透明底板盖住按钮、画布正常但仿真/真机点不动。
+- 自证坑：返回边测试必须先 `loadScreen(源屏)` 再点（否则点在非活动屏上）；indev 采样周期
+  要留够（一次点击 ≈ 上下沿各 60–80ms），否则「有时 PASS 有时 FAIL」。
+- 落点：NO_FLOW §2.2 生成器九条 + C 层判据改为真实鼠标事件；AGENTS 铁律 8 同步。
+- 结果：D1–D4/D6–D8 PASS；D5 23 页平均 98.50%，仍待用户 `--b1-ok`。
+
+## v0.9.95 — 分类码命名落地 + A9 对账；Edge 收尾按根 PID 杀树（PR-0499）
+
+- 用户令：按 v1 名称改 EEZ 变量，查漏并核错。
+- 生成器：identifier 改为 `{页ID}_{类别码}{页内该类序号}`（码表在 `pages.IO_CODE`，判定用 `overview_pro.io_of`）；
+  按钮子标签 `<id>_lb`，静态文字 `_stNN`，装饰仍 `_decoNN`。
+- 门禁：`eez_check` A2/A3 的控件识别改为类别码正则；新增 **A9**（码 ↔ io 类一致、按类连续、无未分类命名）。
+- 控件清单加「代号」列，可直接与 identifier、H5 分类三处互查。
+- 实测：878 个 identifier 全唯一且全部符合命名式；171 个控件 = 期望 171，
+  分类计数 `go 67 / hr 25 / hw 53 / r 3 / w 23`；D1–D4/D6–D8 PASS；主控 D5 仍 97.52%。
+- 工具修复：`h5_edge.sh --kill` 先 `taskkill /T` 启动时记录的根 PID，再按 profile 扫；
+  修前根进程一死子进程被重挂，留下 9 个锁 profile 的 msedge（实测 16 个整树杀净，残留 0）。
+
 ## v0.9.94 — 控件 identifier 按 H5 分类码命名（v1，后续迭代）（PR-0497/0498）
 
 - 用户口径：H5 已给控件分六类，创建的控件名也要带分类码；`w`=写、`hw`=硬件、`r`=读，固定显示用专门前缀。

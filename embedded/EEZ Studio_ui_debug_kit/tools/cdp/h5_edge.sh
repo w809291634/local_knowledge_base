@@ -43,6 +43,12 @@ EDGE="/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
 TAG="$(basename "$(cd "$(dirname "$PROF")" 2>/dev/null && pwd -W 2>/dev/null || echo "$PROF")")/$(basename "$PROF")"
 
 kill_tree() {
+  # 先按启动时记下的根 PID 杀整棵树：子进程（GPU/renderer）命令行里没有 profile，
+  # 根进程先死会被重挂，靠下面的 profile 匹配就抓不到（实测留 9 个锁住 profile）
+  if [ -f "$PROF/.edge.pid" ]; then
+    taskkill //F //T //PID "$(cat "$PROF/.edge.pid")" >/dev/null 2>&1
+    rm -f "$PROF/.edge.pid"
+  fi
   cat > "$PROF/.kill.ps1" <<PS1
 \$root = Get-CimInstance Win32_Process -Filter "Name='msedge.exe'" |
          Where-Object { \$_.CommandLine -match [regex]::Escape('$TAG') } |
@@ -73,6 +79,7 @@ mkdir -p "$PROF"
   --user-data-dir="$(pwd -W)/$PROF" \
   --window-size="$SIZE" \
   "${URL:-about:blank}" >/dev/null 2>&1 &
+echo $! > "$PROF/.edge.pid"
 
 for i in $(seq 1 15); do
   if curl -s --max-time 1 "http://127.0.0.1:$PORT/json/version" >/dev/null 2>&1; then

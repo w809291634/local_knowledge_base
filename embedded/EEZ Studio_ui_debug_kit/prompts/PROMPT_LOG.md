@@ -4245,3 +4245,33 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：NO_FLOW §2.2「生成器七条」扩成「八条」，新增 identifier 类别码；reference/07 写入码表、最长匹配、按类编号、deco 例外与「码 ↔ io_of()」门禁；reference/14 补同源说明；CHANGELOG v0.9.94 标注 v1、生成器改造与 _wNN 迁移留待后续迭代；AGENTS 铁律 8 同步为八条。
   - 关联：PR-0498
 
+### PR-0499 · 2026-11-04 23:15 · Qoder
+  - 提示词：按照这个名称重新修改eez变量，看看有没有漏的，同时检查是否修改错误
+  - 诉求：把 v1 分类码命名落到 EEZ 工程，查漏并核错
+  - 产出/结论：① 生成器 identifier 改为 {页ID}_{码}{页内该类序号}，按钮子标签 _lb、静态文字 _st、装饰 _deco；② eez_check A2/A3 改类别码识别，新增 A9（码=io 类、连续编号、无未分类）；③ 控件清单加「代号」列；④ 实测 878 个 identifier 全唯一且合式，171 控件期望=实际（go67/hr25/hw53/r3/w23），D1–D4/D6–D8 PASS，主控 D5 仍 97.52%；⑤ 顺带修 h5_edge.sh --kill 的子进程残留（先 taskkill /T 根 PID）。
+  - 关联：PR-0499
+
+### PR-0500 · 2026-11-04 23:16 · Qoder
+  - 提示词：清理项目无用文件
+  - 诉求：删掉工程里过期/无用的产物，保留交付件
+  - 产出/结论：删除：design/__pycache__、prototype/（被 H5 跳转演练取代）、过期可选 SVG（00_page_map / 01_preview_pages 的 png+svg）、单页旧对照图 d5_主控_设计vs画布.png、d5/ 下 10 张修复前旧图、EEZ 编辑器状态 sidecar。保留：H5 评审页、控件清单、d5_相似度.txt 与最新 主控并排图、EEZ 工程/src/ui/fonts/design 脚本。清理后门禁 D1–D4、D6–D8 仍 PASS。
+  - 关联：PR-0500
+
+### PR-0501 · 2026-11-05 06:26 · Qoder
+  - 提示词：直接全部进行
+  - 诉求：按上一条计划把修跳转洞、D5 收口、⑤ 导航仿真一次做完
+  - 产出/结论：① 取消/完成 改 go→全部设备，NAV_AUDIT PASS；② D5 已确认（23 页 98.50%，记录用户令），D1–D8 全 PASS；③ 新建 nav_bind_gen + src/native/nav_bind.c/h + design/sim_cmake（800×480 PC_SIM），run_sim.bat test 注入真实 SDL 鼠标事件，69/69 边 PASS；④ 生成器加第⑨条：装饰容器去 CLICKABLE（否则吞点击）；⑤ 经验库 NO_FLOW/AGENTS/CHANGELOG v0.9.96 同步，证据落 designer_annotated/导航仿真.txt。
+  - 关联：PR-0501
+
+### PR-0502 · 2026-11-05 06:44 · Qoder
+  - 提示词：为什么仿真器的窗口无法关闭
+  - 诉求：查清 PC 仿真窗口关不掉的原因并修掉
+  - 产出/结论：根因：主循环自己 SDL_PollEvent 后把每个事件都喂 lv_sdl_mouse_handler，SDL_QUIT/WINDOWEVENT_CLOSE 被吞，LVGL 的 LV_SDL_DIRECT_EXIT 收不到。修复：轮询时先判 SDL_QUIT 与 WINDOWEVENT_CLOSE → SDL_Quit 退出；新增 run_sim.bat quittest（预压 SDL_QUIT）验证退出码 0，导航回归 69/69；构建目录改到工程 tmp/sim_build。
+  - 关联：PR-0502
+
+### PR-0503 · 2026-11-05 07:02 · Qoder
+  - 提示词：工作流程中是否添加了问题索引
+  - 诉求：确认流程正文有没有挂问题索引入口，没有就补上
+  - 产出/结论：此前流程正文没挂；已补：NO_FLOW §0 求解顺序先查 intake/index.md（一行一个 P-####，按现象/标签检索）+ 新问题用 log_entry problem 自动追索引；FLOW §0 同步一句；AGENTS 铁律 4 补「追 intake/index.md」。CHANGELOG v0.9.98。
+  - 关联：PR-0503
+
