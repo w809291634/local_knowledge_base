@@ -93,28 +93,32 @@ async function main() {
   }
   // 选择器 → 现量中心坐标 → 真实鼠标事件
   async function centerOf(sel) {
-    // 中心点落在视口外就先滚进来（人也是这么干的），否则真鼠标会点到空处
-    const expr = '(()=>{const e=document.querySelector(' + JSON.stringify(sel) + ');' +
-      'if(!e)return null;const b=e.getBoundingClientRect();' +
-      'const cx=Math.round(b.left+b.width/2),cy=Math.round(b.top+b.height/2);' +
-      'if(cx<0||cy<0||cx>innerWidth||cy>innerHeight||!document.elementFromPoint(cx,cy))' +
-      '{e.scrollIntoView({block:"center",inline:"center"});return "scroll";}' +
-      'return JSON.stringify([cx,cy]);})()';
-    let o = await send('Runtime.evaluate', { expression: expr, returnByValue: true });
-    if (o.result && o.result.result.value === 'scroll') {
-      await new Promise(r => setTimeout(r, Number(arg('settle', 400))));
-      o = await send('Runtime.evaluate', {
-        expression: '(()=>{const e=document.querySelector(' + JSON.stringify(sel) + ');' +
-          'if(!e)return null;const b=e.getBoundingClientRect();' +
-          'const cx=Math.round(b.left+b.width/2),cy=Math.round(b.top+b.height/2);' +
-          'const t=document.elementFromPoint(cx,cy);' +
-          'return JSON.stringify({xy:[cx,cy],top:t?t.tagName:"-",inView:cx>=0&&cy>=0&&cx<=innerWidth&&cy<=innerHeight});})()',
-        returnByValue: true });
-      const v = JSON.parse(o.result.result.value);
-      if (!v.inView || v.top === '-') { console.error('!! 滚过仍在视口外或被遮挡: ' + sel); return null; }
-      return v.xy;
+    // 现量 + 自证命中：中心点被别的元素挡住就换采样点；元素在视口外先滚进来。
+    const probe = '(()=>{const e=document.querySelector(' + JSON.stringify(sel) + ');' +
+      'if(!e)return JSON.stringify({miss:"selector"});' +
+      'const b=e.getBoundingClientRect();' +
+      'if(b.width===0||b.height===0)return JSON.stringify({miss:"zero-size"});' +
+      'const pts=[[0.5,0.5],[0.3,0.5],[0.7,0.5],[0.5,0.3],[0.5,0.7]];' +
+      'for(const [fx,fy] of pts){const x=Math.round(b.left+b.width*fx),y=Math.round(b.top+b.height*fy);' +
+      'const t=document.elementFromPoint(x,y);' +
+      'if(t && (t===e || e.contains(t))) return JSON.stringify({xy:[x,y]});}' +
+      'const inView=b.bottom>0&&b.top<innerHeight&&b.right>0&&b.left<innerWidth;' +
+      'const t=document.elementFromPoint(Math.round(b.left+b.width/2),Math.round(b.top+b.height/2));' +
+      'return JSON.stringify({blocked:true,inView,' +
+      'hit:t?t.tagName+"."+(t.getAttribute("class")||""):null});})()';
+    const run = async () => (await send('Runtime.evaluate', { expression: probe, returnByValue: true })).result.result.value;
+    let v = JSON.parse(await run());
+    if (v.miss) { console.error('!! 选择器问题(' + v.miss + '): ' + sel); return null; }
+    if (v.blocked) {
+      if (!v.inView) {
+        await send('Runtime.evaluate', {
+          expression: 'document.querySelector(' + JSON.stringify(sel) + ').scrollIntoView({block:"center",inline:"center"})' });
+        await new Promise(r => setTimeout(r, Number(arg('settle', 400))));
+        v = JSON.parse(await run());
+      }
+      if (!v.xy) { console.error('!! 目标被遮挡，点不到: ' + sel + ' (命中 ' + (v.hit || '-') + ')'); return null; }
     }
-    return o.result && o.result.result.value ? JSON.parse(o.result.result.value) : null;
+    return v.xy;
   }
   for (const sel of HOVERSEL) {
     const c = await centerOf(sel);
