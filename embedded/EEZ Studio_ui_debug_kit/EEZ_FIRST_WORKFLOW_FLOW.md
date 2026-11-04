@@ -77,8 +77,8 @@
 **三条铁律**（样板工程原话，照用）：
 
 1. `designer/` 是给人看的效果图、`design/` 是给机器用的设计源；两者不一致时，改设计源。
-   **交付形态＝一张 `designer/_overview.svg` 总蓝图**（两种框架方式通用，细则见
-   `EEZ_FIRST_WORKFLOW_NO_FLOW.md` §2.0；有动效就内嵌 `anim/<页>.gif`，浏览器打开会循环播放），
+   **交付形态＝H5 评审页的「高清设计图」页签**（两种框架方式通用，细则见
+   `EEZ_FIRST_WORKFLOW_NO_FLOW.md` §2.0；SVG 总览可另导作留档，不强制），
    散页 PNG 只作过程件与核对物。
 2. `src/ui` 由 EEZ 导出（覆盖式重写），**不要手改**；逻辑一律进 `src/native`。
 3. **界面只在设计源里定义一次**（build_ui.py 或其等价物）；效果图、EEZ 工程、C 代码、仿真全部由它派生。
@@ -120,7 +120,7 @@
 | ⑥ 门禁 | 断言集 | `python tools/run_gate.py` | 全绿才提交 | 缺屏/超阈值会非 0 退出 |
 | ⑦ 真机 | 烧录终验 | `idf.py flash monitor`（R 段条例） | 物理 / 性能 / 手感 | ①②证通路不证真值；`#if ESP_PLATFORM` 代码仿真编不到 |
 
-**设计图交付形态**：沿用 no flow 文件 §2.0（SVG 总蓝图，先出先确认）与其 **②b 独立核验步**（§2.0c：SVG 确认 + 控件标注到位后再做 `prototype/index.html`；标注改设计源、H5 重生成，不手改 HTML）；做法与坑见 `reference/13_design_v2_h5_prototype.md`；
+**设计图交付形态**：按 no flow 文件 §2.0（**H5 评审页为主，SVG 可选留档**）与其 **②b 独立核验步**（§2.0c：高清设计图确认 + 控件标注到位后再出页面连接；标注改设计源、H5 重生成，不手改 HTML）；做法与坑见 `reference/13_design_v2_h5_prototype.md`；
 「清单/分类/层级/跳转一次看全」的评审页形态（分层总览 + 跳转演练 + 停靠放大栏）见
 `reference/14_h5_review_overview.md`，模板 `tools/h5_overview_template.py`；
 交付给用户的形态＝工程内 HTML 的绝对路径（浏览器自开），不做对话内嵌预览、不单独出设计图查看器页；
