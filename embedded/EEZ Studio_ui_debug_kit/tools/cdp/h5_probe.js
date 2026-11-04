@@ -74,8 +74,14 @@ async function main() {
 
   if (!STAY) {
     if (!URLV) throw new Error('首次运行要带 --url（或用 --stay 复用当前页面）');
-    // 加时间戳防缓存；注意同 URL 不带时间戳时只是文档内跳转，页面状态不会清零
-    const bust = URLV.includes('?') ? URLV : URLV + '?v=' + Date.now();
+    // 加时间戳防缓存。查询串必须拼在 #fragment 之前——拼到后面 hash 就变成
+    // "#jump?v=1730…"，页面按 hash 选视图的白名单匹配不上，会静默停在默认视图。
+    let bust = URLV;
+    if (!bust.includes('?')) {
+      const h = bust.indexOf('#');
+      bust = h < 0 ? bust + '?v=' + Date.now()
+                   : bust.slice(0, h) + '?v=' + Date.now() + bust.slice(h);
+    }
     await send('Page.navigate', { url: bust });
     await new Promise(r => setTimeout(r, Number(arg('wait', 1700))));
   }
