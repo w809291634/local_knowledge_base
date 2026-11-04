@@ -17,6 +17,24 @@
 
 ---
 
+## v0.9.85 — 每次生成 EEZ 都输出"差异系数"（用户令，PR-0486）
+
+- 新增 `design/d5_compare.py`：一条命令完成「设计 SVG 栅格化 → 无头起 EEZ → 点开页节点挂载画布 →
+  抓画布 → 逐像素比对」，打印差异系数并存 `designer_annotated/d5_系数.txt` + 并排图。
+- 首跑：主控 差异系数 **2.18%**（阈值 30/255，差异集中在文字反锯齿与字重）。
+- 顺带修两个顺序/超时坑：`wait_cdp` 把 45 当成绝对时间（永远超时）；构建会清空 `src/ui/fonts`，
+  门禁必须先构建、再烘字体、最后统计（F5 已补这条）。
+- 条款：NO_FLOW §2.2 的 D5 判据改为"打印差异系数并留证"；AGENTS 铁律 11 同步。
+
+## v0.9.84 — 真编 C：EEZ 生成 ≠ 编译；克隆模板要清表达式属性（PR-0485）
+
+- 用户问"发现编译错误没"——此前 D4 只跑 EEZ 代码生成（12 个文件），从未真编 C。
+- 真编后抓到：`screens.c` 调 `get_var_pick_ssid______()` 未声明。根因是所有克隆来的控件模板
+  都带 `hiddenFlag: "pick_ssid == ''"`（别的工程的表达式），EEZ 据此生成了变量读取。
+- 修：`fresh()` 克隆后把 `hiddenFlagType/checkedStateType/disabledStateType/clickableFlagType`
+  复位成 literal；D4 判据加 `gcc -fsyntax-only`（含 9 个字体 .c，共 13 个文件）。
+- 复验：`[DELIVERY] D4 PASS ｜ 构建 12 行 built ｜ C 编译 13 个文件 全过`。
+
 ## v0.9.83 — 经验库瘦身：铁律一行一条，细节只留一处（用户令，PR-0482）
 
 - 用户令：往经验库加内容时保留重要位置的关键事实，其余简化。

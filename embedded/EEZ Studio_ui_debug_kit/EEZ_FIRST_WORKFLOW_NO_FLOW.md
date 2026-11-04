@@ -212,6 +212,8 @@ watch2 三轮返工（骑表圈 → 坐标漂移 → 底图幽灵）每一项都
 采样不到的冷门类型，就在临时工程里新建一个该控件、看它的默认字段再抄（EEZ 里建完即可删）。
 生成器只能"克隆默认 → 改几何/identifier/文本"，不许自己拼字段；字段对照见 `reference/07`。
 必配门禁：按钮恰一子标签、子标签文本非空、按钮自身无 `text`、字体覆盖所有字符。
+**克隆后要复位"表达式型"属性**（`hiddenFlag` 等）：采来的模板会带别的工程的表达式，
+不清就会生成 `get_var_xxx()` 这种未声明调用，C 编译直接报错（w78 实测）。
 
 核对分四层，按 A→B1（④站内）→C→B2（⑤站内）做：
 
@@ -223,8 +225,8 @@ watch2 三轮返工（骑表圈 → 坐标漂移 → 底图幽灵）每一项都
 | D1 结构对账 | 工程 JSON ↔ 设计源 | 页尺寸/控件数/框/文本/字体引用/ID 唯一全过 |
 | D2 文本覆盖 | 设计帧的文字逐条 | 未覆盖 0（含 `‹›−▶◀` 替换表） |
 | D3 字体 F1–F6 | §3.2 的六条 | 条目数==字号数、`ui_font_*.c` 数==字号数 |
-| D4 编译 | `design/cli_build.py` | 12 行 `File built` + `Build successfully finished` |
-| D5 画布比对 | EEZ 画布 vs 设计图 | 逐屏一致或入豁免清单；人工确认后 `--b1-ok "日期 已核对"` 打标记 |
+| D4 编译 | `design/cli_build.py` + `gcc -fsyntax-only` | 12 行 `File built` + 成功标记 + **生成的 C 全部语法编译通过**（EEZ 生成 ≠ C 编译） |
+| D5 画布比对 | EEZ 画布 vs 设计图 | 跑 `design/d5_compare.py` → 打印**差异系数**并存 `designer_annotated/d5_系数.txt`；人工确认后 `--b1-ok` 打标 |
 | D6 跳转闭环 | `design/nav_audit.py` | 入口/回边/BFS 可达/三处计数/跳转表对账全过 |
 | D7 过程件清理 | 工程 `tmp/` | 空（`__pycache__` 仅提示） |
 | D8 留痕 | kit `PROMPT_LOG.md` | 本轮提示词已逐字追加 |
@@ -282,7 +284,7 @@ AI 自己核对时必须在报告里逐屏写结论（看了哪几屏、差异�
 | **F2** | 条目形态必须是 EEZ 原生：`renderingEngine:"LVGL"` + `lvglGlyphs:{encodings,symbols}` + `lvglRanges` + `glyphs:[]` | 只写 `lvglRanges` → 官方引擎 `-Infinity`；画布豆腐/点 Fonts 崩 |
 | **F3** | 字形覆盖先核源字库 `cmap`；`‹ › − ▶ ◀` 这类黑体没有的先替换，再把替换后的字符集写进 `encodings` | 界面豆腐块 |
 | **F4** | 多字号 = 多个条目共用同一个 TTF，只改 `source.size` | 全屏一个字号，版式错 |
-| **F5** | headless build **不烘字体**：必须单独 `tools/eez_font_bake.py`，每字号一个 `ui_font_*.c` | 构建"成功"但字体文件为 0 |
+| **F5** | headless build **不烘字体**，且构建会**清空 `src/ui/fonts`**：必须"先构建、后烘字体"，每字号一个 `ui_font_*.c` | 构建"成功"但字体文件为 0 |
 | **F6** | 验收三连：单烘成功 + 文本覆盖对账（设计帧每条字都能在工程里找到）+ `src/ui/fonts/ui_font_*.c` 数量 == 字号数 | 靠目测猜"应该好了" |
 
 补充事实（P-0125 实测）：字体**文件**与豆腐无关（全量 simhei 与子集一样正常）；形态对 ≈2 分钟内正常渲染，形态不对永远豆腐。
