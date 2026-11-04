@@ -17,7 +17,19 @@
 
 ---
 
-## v0.9.92 — 设计图主载体改为 H5；SVG 降为可选留档（PR-0493）
+## v0.9.93 — H5 模板与当前源码同步；SVG 强制步骤清残（PR-0495/0496）
+
+- 用户问"是否还留存 SVG 相关步骤""是否参考了本次 H5 源码与效果"。
+- 模板：`tools/h5_overview_template.py` 从 w78 `design/overview_pro.py`（22:50 版）整体同步——
+  右侧停靠栏、单一 `trail` 栈 + `pushTrail`、直接换页不做动画、`hotBack`、`crumbText`、
+  确认门与 `node --check`；旧版的滑动过渡与 `swapBig(dir)` 删除。
+- 文档：`reference/14` 抬头/三视图交互/换页动画条目同步；新增 D5 抓画布三条坑
+  （多棵树选含根页那棵、点「行∩树视口」交集、差异 >20% 判抓错页）；门禁示例计数更新为 23/171。
+- SVG：`reference/README` 改为"H5 为主、SVG 可选"；NO_FLOW §2.1 标注交付改为控件清单 + H5 停靠栏为主，
+  单页标注图/树状总览降为可选；§2.0c 删除 `prototype/index.html` 第二载体说法。
+- 保留的 SVG：框图（diagrams/01–03）、动效素材单页总览（ANIMATION_ASSETS §7）—— 非设计图步骤。
+
+
 
 - 用户口径："现在设计图还是以 H5 为主吗，SVG 可以为辅，或者不生成"；旧"一律交 SVG 总蓝图"条款删除。
 - 改动：NO_FLOW §2 表①行、§2.0 整节改写；§2.0c 删掉"SVG 先确认、H5 不替代 SVG"；
