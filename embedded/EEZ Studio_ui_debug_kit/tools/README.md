@@ -328,6 +328,17 @@ bash tools/cdp/h5_edge.sh tmp/edgeprof --kill                           # 杀整
 而 `element.dispatchEvent` 绕过命中测试，会造出「点了能跳」的**假通过**——`--click` 走 CDP
 `Input.dispatchMouseEvent`，是真坐标真命中。`--out` 顺带报网络失败请求数（评审页应恒为 0）。
 
+### `eez_defaults.py` —— EEZ 默认控件结构采集器 ★
+
+```bash
+python tools/eez_defaults.py --scan <示例库根> --out <工程>/design/eez_defaults.json
+python tools/eez_defaults.py a.eez-project b.eez-project --out defaults.json
+```
+
+按控件类型从**能正常打开**的工程里采默认字段结构（objID→`__OID__`，几何/文本/identifier 归零，
+eventHandlers 清空），并单独采「父+子」组合（如 `LVGLButtonWidget+LVGLLabelWidget`）。
+生成新工程时只克隆这些模板、改几何与文字；凭印象拼字段会静默出错（按钮没有 text 字段，写错整屏无字）。
+
 ### `h5_overview_template.py` —— H5 评审页生成器模板 ★
 
 单文件三视图（分层总览 / 跳转演练 / 高清设计图）+ 6 类数据流向标注，2026-11-04 用户认可 w78 版为模板。

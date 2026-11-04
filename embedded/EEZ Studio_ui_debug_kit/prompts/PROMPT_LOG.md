@@ -3964,3 +3964,84 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
         CHANGELOG v0.9.73。本条补的是 §0 的判据归属，让「不做动画」有静动分界作依据，而不是单点约定。
   - 关联：（待补）
 
+### PR-0470 · 2026-11-04 17:39 · Qoder
+  - 提示词：选 A，先跑通主控屏的脚本生成
+  - 诉求：选 A：先跑通主控屏的脚本生成。
+  - 产出/结论：新增 design/eez_gen.py，产出 w78-smart-home.eez-project（35.9 KB）。
+        做法：照抄同库可打开工程 app-wifi-scan-flow-no-flow.eez-project 的字段级结构——
+        顶层 13 个键一致（themesVersion/objID/settings/variables/actions/userPages/userWidgets/
+        lvglStyles/lvglGroups/fonts/bitmaps/colors/themes）；页面走 userPages[].components 树，
+        每个控件带 style/localStyles（内边距/圆角/底色）；LVGL 9.4.0、800x480、16bpp BGR、flowSupport=false。
+        主控 16 个控件全部来自 pages._main_rows()（真值）：3 个标签 + 13 个按钮，
+        坐标直接用设计源 box，不手抄。objID 52 个唯一（门禁 assert）。
+        本阶段刻意不含：自定义字体（中文先用默认字体，④-2 再烘 307 字子集）、action（no flow 跳转由 native 接）。
+        [GATE] 页 1 ｜ 控件 16（按钮 13 / 标签 3）。
+        待证：EEZ Studio 能否无错打开——本机 kit 没配 config，launch.sh 用不了，需用户开一次确认。
+  - 关联：（待补）
+
+### PR-0471 · 2026-11-04 20:04 · Qoder
+  - 提示词：有问题，没有字体显示，你按照 本地经验库的核对方法，检查eez，很大问题
+  - 诉求：打开脚本生成的工程没有字，问题很大，要用经验库的核对方法查。
+  - 产出/结论：按经验库查法（④-A 层对账）补了 design/eez_check.py（七查），一跑就定位到根因：
+        字体三件套缺两件——fonts[] 条目没有、fonts/cn14.ttf 不存在，控件也没写 text_font。
+        修：fontTools 按设计源全量文本裁子集（435 字形 / 87 KB）；字体条目照同库可打开工程抄
+        （name/source.filePath/size 14/bpp 4/threshold 128/glyphs []/lvglRanges 码点串）；16 个控件统一 text_font=cn14。
+        检查器另外抓到两条真问题：
+        ① 源字库（simhei）cmap 没有 ‹ › − ▶ ◀ 这 6 个码点 ⇒ 会显示豆腐块；已加替换表
+           ‹›→<>、−→-、▶◀→><，并在生成字体前按源 cmap 过滤，保证「声明的码点 ⊆ TTF 实际 cmap」。
+        ② 我最初把表头文字（lbl_*）也当设计控件去对框，导致误报；改成只对账 w_* 设计控件。
+        现在 [EEZ_CHECK] PASS：工程页 1 ｜ 控件 17 ｜ 字体 1（覆盖 435 字符）。
+        待用户重开工程确认中文正常显示。
+  - 关联：（待补）
+
+### PR-0472 · 2026-11-04 20:08 · Qoder
+  - 提示词：还是不行 、
+  - 诉求：改完还是一样，字体还是不出来。
+  - 产出/结论：用官方引擎做单变量裁决，定位到真根因：
+        ① 范围串不是问题——换成 32-126 仍报同样错；
+        ② 子集 TTF 也不是——换成原版 simhei.ttf 仍报错；
+        ③ 拿同库能打开的工程做对照：烘成功 → 逐字段 diff 我方字体条目，发现缺 lvglGlyphs.encodings
+           （结构化 [{from,to}]）、lvglSymbols、lvglAdditionalSources 三个字段。
+        补齐后官方引擎烘焙成功：435 字形 → ui_font_cn14.c 248 KB，cmap 2 段。
+        注：EEZ Studio 不热重载外部改动的 .eez-project，必须关掉工程重开才看得到新字体。
+        经验库：reference/07 补「字体条目字段表 + 用 eez_font_bake 单烘做排查」；CHANGELOG v0.9.75。
+  - 关联：（待补）
+
+### PR-0473 · 2026-11-04 20:12 · Qoder
+  - 提示词：按钮都没有文字，为什么会发生这种低级错误，我要求你每一个控件严格按照 UI 默认配置，然后再进行修改
+  - 诉求：按钮都没有文字，为什么会有这种低级错误；要求每个控件严格按 UI 默认配置，然后再改。
+  - 产出/结论：认了：这是没按默认结构来。EEZ 的 LVGLButtonWidget 根本没有 text 字段，文字是它内部唯一的子
+        LVGLLabelWidget（localStyles.MAIN.DEFAULT.align=CENTER）；我把 text 写在按钮上 ⇒ 按钮显示、文字全无、还不报错。
+        按用户要求改成默认优先：新增 design/eez_defaults.json（screen/button/button_child/label 逐字段取自可打开工程，
+        objID 换成 __OID__ 占位），生成器全部走 fresh(默认克隆) → 只改几何/identifier/文本。
+        门禁加三条：按钮必须恰好一个子 LVGLLabelWidget、子标签文本非空、按钮自身不得有 text；
+        eez_check.py 的 A4 也从按钮文本改成子标签文本。
+        复验：官方引擎烘焙成功；[EEZ_CHECK] PASS（页 1 ｜ 控件 30 ｜ 字体覆盖 429 字符）。
+        经验库：reference/07 新增「控件结构：先克隆默认再改」表 + 静默不显示的后果；CHANGELOG v0.9.76。
+  - 关联：（待补）
+
+### PR-0474 · 2026-11-04 20:12 · Qoder
+  - 提示词：以后按照 eez 默认的 控件结构来修改，记录到本地经验库，记录到流程中 ，避免遗忘、
+  - 诉求：把「以后按 EEZ 默认控件结构来改」记进经验库和流程，避免遗忘。
+  - 产出/结论：落四个面 + 一处记账（都是短句条款，不留修订注）：
+        NO_FLOW §2.2 开头加「生成方式」三条：控件一律克隆 EEZ 默认结构再改几何与文字；不许凭印象拼字段
+        （按钮没有 text，文字在子标签里，写错不报错只整屏无字）；字段级对照见 reference/07，生成器要配门禁。
+        FLOW 第④行加同向指针（成对文件）；AGENTS.md 铁律 8（每会话自动加载）。
+        已有细节（reference/07 的「控件结构：先克隆默认再改」表）保持为字段级真值。
+        判据四条不变：按钮恰一子标签 / 子标签文本非空 / 按钮自身无 text / 字体覆盖所有字符。
+        CHANGELOG v0.9.77。
+  - 关联：（待补）
+
+### PR-0475 · 2026-11-04 20:17 · Qoder
+  - 提示词：不仅仅是 button，所有的控件，默认都是使用 原生的 eez 控件字段来进行调整修改 ，如果不知道原生是怎么样的，可以自己创建一个临时空间，新建一个控件就知道默认的 字段格式了
+  - 诉求：不只 button，所有控件都要用 EEZ 原生默认字段来改；不知道默认格式就临时建工程新增一个控件看一眼。
+  - 产出/结论：把「默认结构」从按钮扩展到所有控件，并给出两种取默认的办法：
+        ① 新增 tools/eez_defaults.py：扫全库 48 个 .eez-project，按类型采默认字段（objID→__OID__、几何/文本/identifier 归零、
+           eventHandlers 清空），并单独采「父+子」组合（如 LVGLButtonWidget+LVGLLabelWidget）；一次采到 53 种结构。
+           采样时踩过一个坑：子控件按父类型命名会撞车（按钮的标签被采成容器），改成按「父+子」命名。
+        ② 采样不到的冷门类型 → 临时建工程新增一个该控件，看默认字段再抄（用户给的办法，已写进条款）。
+        生成器改为类型模板克隆；主控卡片改用 Container+居中子标签，顶部入口/安防仍用 Button。
+        复验：官方引擎烘焙成功；[EEZ_CHECK] PASS（控件 30 / 字体覆盖 429 字）。
+        条款：NO_FLOW §2.2 与 AGENTS 铁律 8 改成所有控件，并写明两种取默认方式；tools/README 登记采集器；CHANGELOG v0.9.78。
+  - 关联：（待补）
+

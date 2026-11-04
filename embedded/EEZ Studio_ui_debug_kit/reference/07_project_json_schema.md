@@ -519,3 +519,38 @@ flow 组件的 left/top 不影响构建，但决定编辑器画布可读性。�
   → **正 pad 会把圆点撑出轨道**（实测 pad 3：23px 轨道配 29px 大白球，圆点溢出）；
   **负 pad 才是内嵌**（pad -3 → 直径 23-6 = 17px，四周留 3px，与设计稿一致）。
 - 设计稿「开关 = 蓝药丸 + 内嵌白圆」的正确写法：KNOB pad 全 -3、radius 100。
+
+## 字体条目（2026-11-04 实测，PR-0472）
+
+脚本生成的 `.eez-project` 里，**`fonts[]` 只写 `lvglRanges` 字符串是不够的**——EEZ 的烘焙按
+`lvglGlyphs.encodings`（结构化 `[{from,to},…]`）算范围；缺它时官方引擎直接报
+`value is out of range … Received -Infinity`。
+
+一个可用的字体条目至少要这几项：
+
+| 字段 | 含义 |
+|---|---|
+| `name` | 控件 `localStyles.*.text_font` 引用的名字 |
+| `source.filePath` / `source.size` | TTF 路径（**相对工程文件所在目录**）+ 字号 px |
+| `bpp` / `threshold` | 1/2/4/8 与二值化阈值（中文常用 bpp 4 / 128） |
+| `lvglGlyphs.encodings` | **实际字形范围**，连续码点合并成段；这是烘焙的真输入 |
+| `lvglRanges` | 同一批范围的字符串形式（编辑器显示用，需与 encodings 一致） |
+| `lvglSymbols` / `lvglAdditionalSources` | 离散字符 / 附加字体，没有就给 `""` 和 `[]` |
+
+排查口径：`python tools/eez_font_bake.py <工程> <输出目录> <字体名>` 能用官方引擎单独烘一遍，
+成功会产出 `ui_font_*.c`；失败的那行 FAIL 就是根因，别在界面里猜。
+
+## 控件结构：先克隆默认，再改（2026-11-04 实测，PR-0473）
+
+**不要凭印象拼控件字段**。正确做法是从一个能正常打开的工程里取出该类型的默认组件 JSON，
+整体克隆（objID 全部换新），只覆盖 geometry / `identifier` / 文本。
+
+| 控件 | 文字放在哪 | 关键默认字段 |
+|---|---|---|
+| `LVGLLabelWidget` | 它自己的 `text` | `textType: literal`、`useStaticText: true`、`longMode: WRAP` |
+| `LVGLButtonWidget` | **没有 text 字段**；文字是内部唯一的子 `LVGLLabelWidget` | 子标签 `localStyles.MAIN.DEFAULT.align: CENTER` + `text_font` |
+| `LVGLScreenWidget` | — | 根节点，`children` 装所有控件 |
+
+给按钮写 `text` 的后果：按钮能显示、**一个字都没有**，而且不报错——这类"静默不显示"
+只能靠生成器门禁挡：按钮必须恰好一个子标签且其 `text` 非空、按钮自身不得有 `text`。
+模板文件：`design/eez_defaults.json`（`objID` 已换成 `__OID__` 占位，克隆时递归换新）。

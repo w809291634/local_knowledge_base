@@ -113,6 +113,8 @@
 | ② 生成 | 生成器 → EEZ 工程 | `python design/build_ui.py` → 生成器 / json2eez | 工程 JSON 合法、页面/字体条目齐全 | 字体条目字段形态（§3.2） |
 | ③ EEZ 构建 | 工程 → src/ui | GUI Check/Build **或** headless（`eez_build.py`） | 构建完成、连接检查无报错 | GUI 会重写 src/ui；CLI 不烘字体需单独烘 |
 | ④ **EEZ 里看效果（主验收）** | — | 打开工程：画布核视觉；**Run（F5）核交互** | 观感 → 画布；点击/滑动 → Run 实测 | 画布无输入；见 §3 |
+
+> 生成工程时：**控件一律克隆 EEZ 默认结构再改**（按钮文字在子标签，见 `reference/07`；PR-0473/0474）。
 | ⑤ 仿真辅助 | 编译 + 出图 / 交互 | `python design/sim.py`；脚本化拖拽 | 出图齐全、与基线/对照一致 | tick 源、输入设备等（§3.4） |
 | ⑥ 门禁 | 断言集 | `python tools/run_gate.py` | 全绿才提交 | 缺屏/超阈值会非 0 退出 |
 | ⑦ 真机 | 烧录终验 | `idf.py flash monitor`（R 段条例） | 物理 / 性能 / 手感 | ①②证通路不证真值；`#if ESP_PLATFORM` 代码仿真编不到 |
