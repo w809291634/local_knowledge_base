@@ -421,26 +421,49 @@ def load_overtime(path):
     return data
 
 
+def merge_same_code(rows, only):
+    """同一人同一项目编号合并成一行：计划/实际工时相加，备注拼接。只对 only 指定的人做。"""
+    if not only:
+        return rows
+    out = []
+    for x in rows:
+        if x['E'] != only or not x['H']:
+            out.append(x)
+            continue
+        key = clean_code(x['H'])
+        tgt = next((y for y in out if y['E'] == only and y['H'] and clean_code(y['H']) == key), None)
+        if tgt is None:
+            out.append(x)
+            continue
+        for k in ('M', 'N'):
+            if isinstance(tgt.get(k), (int, float)) or isinstance(x.get(k), (int, float)):
+                tgt[k] = round((tgt.get(k) or 0) + (x.get(k) or 0), 2)
+        if x.get('R'):
+            tgt['R'] = (tgt['R'] + '；' + x['R']) if tgt.get('R') else x['R']
+        for k in ('K', 'Q'):
+            if not tgt.get(k) and x.get(k):
+                tgt[k] = x[k]
+        if x.get('P') == '有':
+            tgt['P'] = '有'
+    return out
+
+
 def merge_overtime(rows, items, only=None):
-    """加班单独一行，插在同一项目的行之后；小时÷8 记实际工时，原始小时进备注。"""
+    """加班并入同一项目编号那一行的备注（不再单独占行），小时÷8 加到实际工时。"""
     if not items:
         return rows, 0
-    out, used = [], 0
-    for x in rows:
-        out.append(x)
-        for it in items:
+    used = 0
+    for it in items:
+        for x in rows:
             if x['E'] != it['person'] or clean_code(x['H']) != clean_code(it['code']):
                 continue
-            out.append({
-                'B': '', 'C': x['C'], 'D': x['D'], 'E': x['E'], 'F': x['F'], 'G': x['G'],
-                'H': x['H'], 'I': x['I'],
-                'J': '加班：' + (it.get('task') or it.get('log') or '加班'),
-                'K': it.get('log', ''), 'L': x.get('L'), 'M': None,
-                'N': r1(float(it['hours']) / 8) if only in (None, it['person']) else round(float(it['hours']) / 8, 2), 'P': '无', 'Q': '',
-                'R': f"加班{float(it['hours']):g}小时（{it['date']}）",
-            })
+            add = r1(float(it['hours']) / 8) if only in (None, it['person']) else round(float(it['hours']) / 8, 2)
+            x['N'] = round((x.get('N') or 0) + add, 2) if isinstance(x.get('N'), (int, float)) else add
+            note = f"加班{float(it['hours']):g}小时（{it['date']}）"
+            x['R'] = (x['R'] + '；' + note) if x.get('R') else note
             used += 1
-    return out, used
+            break
+    return rows, used
 
 
 def main(argv=None):
@@ -478,6 +501,11 @@ def main(argv=None):
     rows = [build_row(t, exact, names, cur_plan, nxt_plan,
                       do_round=(a.only is None or t['person'] == a.only)) for t in tasks]
     rows, ot_used = merge_overtime(rows, load_overtime(a.overtime), a.only)
+    rows = merge_same_code(rows, a.only)
+    if a.only:
+        for r in rows:
+            if r['E'] == a.only:
+                r['N'] = r1(r['N'])
     if a.overtime:
         print(f'加班行：{ot_used} 条' + ('' if ot_used else '（提供了文件但没匹配上项目，检查 code/person）'))
     else:
