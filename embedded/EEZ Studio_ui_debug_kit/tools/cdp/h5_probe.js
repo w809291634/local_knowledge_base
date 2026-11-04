@@ -3,7 +3,10 @@
 // 用法：
 //   bash tools/cdp/h5_edge.sh tmp/prof file:///path/page.html      # 先起无头浏览器
 //   node tools/cdp/h5_probe.js --body tmp/check.js --out tmp/shot.png
-//   node tools/cdp/h5_probe.js --stay --click 273,580 --body tmp/after.js
+//   node tools/cdp/h5_probe.js --stay --clicksel ".pcard[data-sel=客厅] .cap" --body tmp/after.js
+//
+// --click/--hover 给的是视口坐标；--clicksel/--hoversel 给 CSS 选择器，
+// 运行时先量元素中心再打真事件——布局会随交互变（开停靠栏就变窄），坐标别复用上一轮的。
 //
 // --body 文件里写一个 async 箭头函数，返回值 JSON 打印到 stdout：
 //   async () => { await new Promise(r=>setTimeout(r,300)); return JSON.stringify({w:innerWidth}); }
@@ -36,6 +39,8 @@ const OUT = arg('out', null);
 const STAY = process.argv.includes('--stay');
 const HOVERS = all('hover');
 const CLICKS = all('click');
+const HOVERSEL = all('hoversel');
+const CLICKSEL = all('clicksel');
 
 async function pickTarget() {
   const list = await (await fetch(`http://127.0.0.1:${PORT}/json/list`)).json();
@@ -79,6 +84,46 @@ async function main() {
     const p = { type, x, y };
     if (type !== 'mouseMoved') { p.button = 'left'; p.clickCount = 1; p.buttons = type === 'mousePressed' ? 1 : 0; }
     await send('Input.dispatchMouseEvent', p);
+  }
+  // 选择器 → 现量中心坐标 → 真实鼠标事件
+  async function centerOf(sel) {
+    // 中心点落在视口外就先滚进来（人也是这么干的），否则真鼠标会点到空处
+    const expr = '(()=>{const e=document.querySelector(' + JSON.stringify(sel) + ');' +
+      'if(!e)return null;const b=e.getBoundingClientRect();' +
+      'const cx=Math.round(b.left+b.width/2),cy=Math.round(b.top+b.height/2);' +
+      'if(cx<0||cy<0||cx>innerWidth||cy>innerHeight||!document.elementFromPoint(cx,cy))' +
+      '{e.scrollIntoView({block:"center",inline:"center"});return "scroll";}' +
+      'return JSON.stringify([cx,cy]);})()';
+    let o = await send('Runtime.evaluate', { expression: expr, returnByValue: true });
+    if (o.result && o.result.result.value === 'scroll') {
+      await new Promise(r => setTimeout(r, Number(arg('settle', 400))));
+      o = await send('Runtime.evaluate', {
+        expression: '(()=>{const e=document.querySelector(' + JSON.stringify(sel) + ');' +
+          'if(!e)return null;const b=e.getBoundingClientRect();' +
+          'const cx=Math.round(b.left+b.width/2),cy=Math.round(b.top+b.height/2);' +
+          'const t=document.elementFromPoint(cx,cy);' +
+          'return JSON.stringify({xy:[cx,cy],top:t?t.tagName:"-",inView:cx>=0&&cy>=0&&cx<=innerWidth&&cy<=innerHeight});})()',
+        returnByValue: true });
+      const v = JSON.parse(o.result.result.value);
+      if (!v.inView || v.top === '-') { console.error('!! 滚过仍在视口外或被遮挡: ' + sel); return null; }
+      return v.xy;
+    }
+    return o.result && o.result.result.value ? JSON.parse(o.result.result.value) : null;
+  }
+  for (const sel of HOVERSEL) {
+    const c = await centerOf(sel);
+    if (c) await mouse('mouseMoved', c[0], c[1]);
+    else console.error('!! 选择器没找到元素: ' + sel);
+    await new Promise(r => setTimeout(r, 200));
+  }
+  for (const sel of CLICKSEL) {
+    const c = await centerOf(sel);
+    if (!c) { console.error('!! 选择器没找到元素: ' + sel); continue; }
+    await mouse('mouseMoved', c[0], c[1]);
+    await mouse('mousePressed', c[0], c[1]);
+    await new Promise(r => setTimeout(r, 80));
+    await mouse('mouseReleased', c[0], c[1]);
+    await new Promise(r => setTimeout(r, Number(arg('after-click', 700))));
   }
   for (const c of HOVERS) {
     const [x, y] = c.split(',').map(Number);

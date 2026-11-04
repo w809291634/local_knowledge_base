@@ -3713,3 +3713,53 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
         _control_concept）删还是改名留档，仍在等你一句话。
   - 关联：（待补）
 
+### PR-0452 · 2026-11-04 15:00 · Qoder
+  - 提示词：那么从第一步开始，交付我看看效果
+  - 诉求：按流程从第①步重新正式交付，用户在浏览器里看效果并核对。
+  - 产出/结论：四个生成器全部按当前真值重跑（preview_pages / export_ui / overview_pro / control_table），交付路径已给：
+        主载体 designer_simple/overview_pro.html#design（高清设计图，22 卡、层分布 1/10/9/1/1、
+        每卡帧宽>500px、无标注残留、网络失败 0）；留档 01_preview_pages.svg（1150x7216，屏22 控件行168）、
+        00_page_map.svg（1600x1142，屏22）；出口产物 designer_annotated/控件清单.md（189 行）。
+        核对时发现一处口径分叉，交用户裁决（未擅自改）：
+        export_ui 的 [GATE] 跳转控件 82 ＝ behav 换页 64 ＋ 「非换页却带 target」18 条
+        （客厅主灯/落地灯/窗帘/空调/温湿度/摄像头…设备卡片，target 指向各自详情页）；
+        而 overview_pro 按 behav 判类，把这 18 条算作外写/外读并从显示里丢掉 target ⇒ H5 里点卡片本体不跳。
+        两种收口：A 卡片本体=跳详情、卡内开关/滑块=下发硬件（双热区，需把这 18 条在 H5 与清单里补成可点）；
+        B 只有「详情」按钮跳（则清掉设计源里这 18 个残留 target，82 回到 64）。
+  - 关联：（待补）
+
+### PR-0453 · 2026-11-04 15:15 · Qoder
+  - 提示词：并删除多余的过程文件
+  - 诉求：第①步交付后顺手清掉多余的过程文件。
+  - 产出/结论：w78 工程 103,241,514 → 2,344,503 字节（删 37 项，回收约 100.8MB），逐条带判定依据：
+        - design/sim_cmake 93,351,831 —— 只有 91M build_rel 构建树，无 main.c/CMakeLists 源（同库其它工程 sim_cmake 都带源）；
+          ⑤ 要用仿真时按兄弟工程模板重建，比留个残缺树更省。
+        - build 3,407,425 —— batch1_bg/batch1_shots/batch2_shots 历史截图 + 旧 font_chars.txt（字集须按当前 22 屏重导）。
+        - designer_simple/overview 1,809,420 + design/overview_variants.py —— 10 种对比变体探索页，全工程 0 引用，
+          入口链接上一轮已判死删除。
+        - 废弃 12 页方案：design/simple_concept.py / simple_home.py + _concept.{svg,png} / 01_home.{svg,png}（0 引用）。
+        - 半旧图与生成器：design/jump_layers.py / global_overview.py + 00_jump_layers / _global_overview /
+          _control_concept 各 {svg,png}（内容级仅 5/22、7/22，不吃 pages.py/nav_map.py）。
+        - haven-home.eez-project-ui-state 35,395 —— 工程本体已不存在，编辑器状态孤儿。
+        - tmp/ 9 张证据 PNG + design/__pycache__ —— 收尾即清；PR-0442~0452 里已写明实测数字，证据链不依赖图。
+        自曝一处脚本洞：清理脚本的 TARGETS 混了目录与 .py，循环只走 isdir 分支 ⇒ 五个生成器第一次没删掉，
+        补做并先反查 import（唯一命中是 jump_layers→global_overview，同批删除）。
+        终态自证：preview_pages / export_ui / overview_pro / control_table 从干净树重跑全绿
+        （屏 22 控件行 168；跳转控件 82；页 22 层 5 类齐全；清单 189 行）。
+        遗留：export_ui 82 与 overview_pro 63 的 18 条双热区口径分叉，仍等用户选 A/B。
+  - 关联：（待补）
+
+### PR-0454 · 2026-11-04 15:30 · Qoder
+  - 提示词：H5的分层总览中，点击方式后，点击其他空白位置，可以还原回去，不会刻意点关闭
+  - 诉求：分层总览里点开停靠栏后，点其他空白位置就能还原，不该逼用户专门去找关闭按钮。
+  - 产出/结论：行为改一条 + 提示语同步：click 处理器在 [data-dock] 分支后补
+        「if(dockOn && !e.target.closest('#dock')) closeDock()」——点页面任意空白即收起，点停靠栏内部不误收。
+        停靠栏副标题与图例提示语同步改成「再点卡片、点空白处或按 Esc 收起」。
+        真实鼠标六步实测（Edge headless 1676x958，--clicksel 现量元素中心再打事件）：
+        基线关 → 点卡片 开(客厅页 L2) → 点空白表头 关 → 点卡片开后再点栏内图 仍开 →
+        开着栏点「→ 灯详情」标签：滑动且停靠栏跟随换成灯详情 → 再点空白 关。
+        工具顺带修一个真缺陷：h5_probe.js 的 --clicksel 原先对着屏幕外坐标打事件（客厅卡中心 y=1083 > 视口 958），
+        点了个空却看不出来；现改成中心不在视口/被遮挡就先 scrollIntoView 再量，仍失败才报 !!。
+        口径已写进 reference/14 §4「点开的面板要点空白处就能收起」。
+  - 关联：（待补）
+
