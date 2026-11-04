@@ -522,6 +522,8 @@ flow 组件的 left/top 不影响构建，但决定编辑器画布可读性。�
 
 ## 字体条目（2026-11-04 实测，PR-0472）
 
+> 流程侧的编号清单见 NO_FLOW §3.2（F1–F6）；本节是字段级细节，两处分工：编号管"要不要做"，本节管"怎么写"。
+
 脚本生成的 `.eez-project` 里，**`fonts[]` 只写 `lvglRanges` 字符串是不够的**——EEZ 的烘焙按
 `lvglGlyphs.encodings`（结构化 `[{from,to},…]`）算范围；缺它时官方引擎直接报
 `value is out of range … Received -Infinity`。
