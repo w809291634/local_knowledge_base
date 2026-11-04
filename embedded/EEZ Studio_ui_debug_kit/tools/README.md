@@ -33,6 +33,14 @@ walk_tree / load_pages / declared_fonts / is_builtin_font / require_pil`
 ### `log_entry.py` —— 记录写入器（新问题 / 提示词留痕）
 
 ```bash
+python tools/log_entry.py prompt --json tmp/pr.json     # ← 含中文时用这条
+python tools/log_entry.py problem --json tmp/p.json
+```
+
+JSON 里放 `text/ask/out/tool/time/link`（problem 用 `title/symptom/root/fix/...`）。
+**中文不进命令行**：参数里出现英文双引号会截断 `--out`，报 `unrecognized arguments`（踩过两次）。
+
+```bash
 python tools/log_entry.py prompt  "用户的原始提示词" --tool <AI名> --ask 诉求 --out 产出 --link P-0001
 python tools/log_entry.py problem --title "<标题>" --symptom .. --repro .. --root .. --fix .. --evidence .. --sink .. [--status open|fixed|wontfix]
 python tools/log_entry.py list [problem|prompt|all]

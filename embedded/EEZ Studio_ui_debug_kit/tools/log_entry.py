@@ -196,15 +196,18 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     pp = sub.add_parser("prompt", help="追加一条提示词")
-    pp.add_argument("text", help="用户原始提示词（逐字抄，不要改写）")
+    pp.add_argument("text", nargs="?", default=None,
+                    help="用户原始提示词（逐字抄，不要改写）；含中文时建议改用 --json")
     pp.add_argument("--tool", default=None, help="AI 工具名，如 WorkBuddy / Cursor / ChatGPT")
     pp.add_argument("--ask", default=None, help="用户想达成什么")
     pp.add_argument("--out", default=None, help="本轮产出/结论")
     pp.add_argument("--link", default=None, help="关联问题编号，如 P-0002")
     pp.add_argument("--time", default=None, help="时间，默认当前（补录用 '2026-09-23（补录）'）")
+    pp.add_argument("--json", default=None,
+                    help="从 UTF-8 JSON 文件读字段（text/ask/out/tool/link/time），中文不进命令行")
 
     pr = sub.add_parser("problem", help="登记一个新问题")
-    pr.add_argument("--title", required=True)
+    pr.add_argument("--title", default=None)
     pr.add_argument("--project", default=None)
     pr.add_argument("--tool", default=None)
     pr.add_argument("--tags", default=None, help="逗号分隔")
@@ -216,6 +219,8 @@ def main():
     pr.add_argument("--evidence", default=None)
     pr.add_argument("--sink", default=None, help="沉淀：新增断言/案例/文档")
     pr.add_argument("--link", default=None, help="关联提示词，如 PR-0007")
+    pr.add_argument("--json", default=None,
+                    help="从 UTF-8 JSON 文件读字段，中文不进命令行")
 
     ls = sub.add_parser("list", help="列出已有登记")
     ls.add_argument("what", nargs="?", choices=["problem", "prompt", "all"], default="all")
@@ -226,9 +231,24 @@ def main():
     args = ap.parse_args()
 
     if args.cmd == "prompt":
+        if args.json:
+            import json as _json
+            d = _json.load(io.open(args.json, encoding="utf-8"))
+            for k in ("text", "tool", "ask", "out", "link", "time"):
+                if getattr(args, k, None) in (None, ""):
+                    setattr(args, k, d.get(k))
+        assert args.text, "缺少提示词：位置参数 text 或 --json 里的 text"
         pid = append_prompt(args.text, args.tool, args.ask, args.out, args.link, args.time)
         print("%s 已追加到 prompts/PROMPT_LOG.md" % pid)
     elif args.cmd == "problem":
+        if args.json:
+            import json as _json
+            d = _json.load(io.open(args.json, encoding="utf-8"))
+            for k in ("title", "project", "tool", "tags", "status", "symptom",
+                      "repro", "root", "fix", "evidence", "sink", "link"):
+                if getattr(args, k, None) in (None, ""):
+                    setattr(args, k, d.get(k))
+        assert args.title, "缺少标题：--title 或 --json 里的 title"
         pid, path = create_problem(args.title, args.project, args.tool, args.tags,
                                    args.status, args.symptom, args.repro, args.root,
                                    args.fix, args.evidence, args.sink, args.link)
