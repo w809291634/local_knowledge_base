@@ -228,7 +228,7 @@ watch2 三轮返工（骑表圈 → 坐标漂移 → 底图幽灵）每一项都
 | D2 文本覆盖 | 设计帧的文字逐条 | 未覆盖 0（含 `‹›−▶◀` 替换表） |
 | D3 字体 F1–F6 | §3.2 的六条 | 条目数==字号数、`ui_font_*.c` 数==字号数 |
 | D4 编译 | `design/cli_build.py` + `gcc -fsyntax-only` | 12 行 `File built` + 成功标记 + **生成的 C 全部语法编译通过**（EEZ 生成 ≠ C 编译） |
-| D5 画布比对 | EEZ 画布 vs 设计图 | 跑 `design/d5_compare.py` → 打印**差异系数**并存 `designer_annotated/d5_系数.txt`；人工确认后 `--b1-ok` 打标 |
+| D5 画布比对 | EEZ 画布 vs 设计图 | 跑 `design/d5_pages.py` → 打印**相似度百分比**（相似度 = 100 − 逐像素差异率）并存 `designer_annotated/d5_系数.txt`（文件内记相似度）；人工确认后 `--b1-ok` 打标 |
 | D6 跳转闭环 | `design/nav_audit.py` | 入口/回边/BFS 可达/三处计数/跳转表对账全过 |
 | D7 过程件清理 | 工程 `tmp/` | 空（`__pycache__` 仅提示） |
 | D8 留痕 | kit `PROMPT_LOG.md` | 本轮提示词已逐字追加 |
