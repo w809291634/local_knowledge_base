@@ -44,6 +44,8 @@ design/overview_pro.py     ← 模板 tools/h5_overview_template.py 的工程实
 `内部读 / 外部读 / 内部写 / 外部写 / 跳转按钮 / 跳动手势`，一类一色。
 判据来自控件语义表的 `行为层`，个别控件按语义用 `OVERRIDES` 显式覆盖，不靠通用规则猜。
 颜色只在设计源与生成器里定义一次（`IO_COLORS`），帧上描边、序号点、卡片标签、图例全部取同一处。
+EEZ 控件的 identifier 也带同一套类别码（`r/hr/w/hw/go/sw`，固定显示用 `st`），
+命名细则与门禁见 `reference/07`；H5 分类与工程 identifier 必须能互相反查。
 
 ## 4. 排版与交互硬规则（用户口味，逐条来自改判）
 
