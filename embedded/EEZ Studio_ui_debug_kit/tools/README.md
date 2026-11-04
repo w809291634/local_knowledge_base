@@ -315,6 +315,24 @@ node tools/cdp/grab.js --text                            # 只 dump 界面文本
 内置三个必需行为：**合成事件点开视图**（`bubbles+view`）、**等像素变化**（防旧帧）、
 **过滤空白帧**（防单色图）。
 
+### `cdp/h5_edge.sh` + `cdp/h5_probe.js` —— 纯 HTML 评审页的无头验证通道 ★
+
+```bash
+bash tools/cdp/h5_edge.sh tmp/edgeprof "file:///<工程>/xxx.html#jump"   # 起无头 Edge（真实视口）
+node tools/cdp/h5_probe.js --url "file:///<工程>/xxx.html" --body tmp/check.js
+node tools/cdp/h5_probe.js --stay --click 273,580 --body tmp/after.js --out tmp/shot.png
+bash tools/cdp/h5_edge.sh tmp/edgeprof --kill                           # 杀整棵 msedge 进程树 + 删 profile
+```
+
+存在的理由：Desktop 内嵌 Browser 没有可见窗口时视口是 `0x0`，几何量出来全是假值；
+而 `element.dispatchEvent` 绕过命中测试，会造出「点了能跳」的**假通过**——`--click` 走 CDP
+`Input.dispatchMouseEvent`，是真坐标真命中。`--out` 顺带报网络失败请求数（评审页应恒为 0）。
+
+### `h5_overview_template.py` —— H5 评审页生成器模板 ★
+
+单文件三视图（分层总览 / 跳转演练 / 高清设计图）+ 6 类数据流向标注，2026-11-04 用户认可 w78 版为模板。
+文件头列了「换工程只改这五处」；做法、硬规则与门禁见 `reference/14_h5_review_overview.md`。
+
 ---
 
 ## 四、栈专属工具放哪里

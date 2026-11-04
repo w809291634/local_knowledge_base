@@ -7,6 +7,29 @@
 
 ---
 
+## v0.9.62 — H5 评审页顺带出「可内联片段」，对话里直接点（PR-0445）
+
+- 生成器一次出两份同源产物：整页（本地双击核对）+ 片段（`present_visualization` 内联预览）；
+  片段由 `fragment()` 从整页剥壳生成，不手搓第二版。
+- bootstrap 改 `readyState` 兜底：内嵌时 `DOMContentLoaded` 已过去，不兜底就白屏。
+- 实测（无头 Edge 跑片段）：22 卡 / 6 图例 / 停靠栏 745px / 行内滑动 4→163→3214 落定 / 网络失败 0。
+- 模板与工程实例正文重新比对仍逐字节一致。
+
+## v0.9.61 — H5 评审页方法定稿：模板 + 无头真实鼠标通道（用户定，PR-0444）
+
+> 版本号更正：本条与上一条先前误编为 v0.9.57 / 未编号；本 CHANGELOG 有两条并行序列，最高已到 v0.9.60，故顺延为 v0.9.61 / v0.9.62。PR-0444 里写的「v0.9.57」指本条。
+
+- 新增 `reference/14_h5_review_overview.md`：分层总览 / 跳转演练 / 停靠放大栏三视图口径、
+  6 类数据流向标注、排版与交互硬规则（逐条来自本轮改判）、门禁、八个踩坑、边界。
+- 新增模板 `tools/h5_overview_template.py`（w78 `design/overview_pro.py` 的实例，用户认可为模板），
+  文件头写清「换工程只改这五处」。
+- 新增通道 `tools/cdp/h5_edge.sh` + `tools/cdp/h5_probe.js`：无头 Edge 真实视口 +
+  CDP `Input.dispatchMouseEvent` 真实鼠标 + 截图 + 网络失败计数 + 按 profile 杀整棵进程树。
+- 立此存照的反面教材：`element.dispatchEvent` 绕过命中测试 ⇒「点了能跳」是假通过；
+  Desktop 内嵌 Browser 无可见窗口时视口 `0x0` ⇒ 几何断言全量歪。
+- 索引同步：`reference/README.md`、`tools/README.md`、顶层 `README.md` 目录树、
+  NO_FLOW §2.0c 与 FLOW 同段指针（成对文件）。
+
 ## v0.9.56 — 更正 v0.9.55：观感词要先出四案对照，用户终选纯黑（A 案）
 
 - v0.9.55 把"再浅一点的黑"推论成"提亮盘身 + 加外缘环 + 同心纹"并落地（C 案）；用户看对照图后选 **A：盘身 (56,56,72)、无边缘、无纹路**。

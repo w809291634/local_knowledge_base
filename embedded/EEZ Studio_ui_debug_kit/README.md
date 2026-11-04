@@ -93,10 +93,13 @@ ui_debug_kit/
     ├── diff_report.py      图像差异量化（直方图 + 热点聚类 + 差异标红图 + 目录批量）
     ├── ink_check.py        墨迹检测（包围盒 / 触边 / 与声明框对比算偏移）
     ├── text_measure.py     文本真实宽度与字形度量
+    ├── h5_overview_template.py  ★ H5 评审页生成器模板（分层总览/跳转演练/停靠放大栏）
     ├── README.md           工具索引（每个工具一句话 + 参数速查）
     └── cdp/                抓"原生渲染图"（Chromium / Electron 系通用）
         ├── launch.sh           按配置启动并等 CDP 端口就绪
-        └── grab.js             通用抓图器（canvas / 整窗 / 界面文本）
+        ├── grab.js             通用抓图器（canvas / 整窗 / 界面文本）
+        ├── h5_edge.sh          起/停无头 Edge（纯 HTML 评审页的真实视口通道）
+        └── h5_probe.js         CDP 探针：跑断言 + 真实鼠标点击 + 截图 + 网络失败计数
 ```
 
 > 栈专属的工具与脚本请放在**你的工程里**（例如 `design/` 或 `tools/`），不要放进本目录 ——
