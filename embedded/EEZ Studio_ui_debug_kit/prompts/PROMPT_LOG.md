@@ -4431,3 +4431,8 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：保留编译过程文件，避免下次全量重编耗时
   - 产出/结论：esp32_estimate 与 mem_report 的 PC 统计改为持久 .o 缓存 tmp/compile_cache/{esp32,pc}/，按单文件内容+头文件+参数签名失效（改一个屏不重编字库）；首次约 7s、命中约 0.3s（13 个 .o，约 3.9MB）；D7 白名单只允许 sim_build/compile_cache；AGENTS 5、NO_FLOW 目录树/D7/收尾条款、run_sim.bat 注释同步；CHANGELOG v0.9.125。
   - 关联：PR-0531
+### PR-0532 · 2026-11-05 14:05 · Qoder
+  - 提示词：最好每个工程的build 单独命名，避免多个工程编译build冲突，我说的是  pc仿真的build冲突
+  - 诉求：PC 仿真 build 目录按工程单独命名
+  - 产出/结论：run_sim.bat 改为 <project>\tmp\sim_build_<project name>（从 SIM_TARGET_PROJ_DIR 取工程名），SIM_BIN_DIR 随之私有；已有 build 改名复用，删 CMakeCache 重配一次后增量 1s；mem_report 按新名找 exe/lib（兼容旧名）；D7 白名单 sim_build_*/compile_cache；AGENTS 5、NO_FLOW 目录树/D7/收尾同步；CHANGELOG v0.9.126。
+  - 关联：PR-0532

@@ -17,6 +17,16 @@
 
 ---
 
+## v0.9.126 — PC 仿真 build 目录按工程名命名（PR-0532）
+
+- 用户令：每个工程的 PC 仿真 build 单独命名，避免多工程冲突。
+- `run_sim.bat` 改为 `<project>\tmp\sim_build_<project name>`（由 `SIM_TARGET_PROJ_DIR` 取工程名），
+  `SIM_BIN_DIR` 随之为工程私有；已有缓存目录改名复用，删 `CMakeCache.txt` 重配一次后
+  增量构建约 1s。
+- `mem_report.py` 按 `sim_build_<工程名>` 找 exe/库（兼容旧 `sim_build`）；
+  D7 白名单改为 `sim_build_*/`、`compile_cache/`。
+- AGENTS 5、NO_FLOW 目录树/D7/收尾条款同步。
+
 ## v0.9.125 — 编译缓存保留，不再每次全量重编（PR-0531）
 
 - 用户令：编译过程文件不要删，避免下次编译耗时。
