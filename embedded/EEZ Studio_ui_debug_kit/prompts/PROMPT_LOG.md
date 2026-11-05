@@ -4281,3 +4281,15 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：改为整轮只启动一次 EEZ、逐页切页签；修两条导致旧画布的判据：目标页签自身 selected 才算激活；grab.js 新增 --visible 只取视口内画布。26 页平均相似度 98.46%、最低 97.52%，Wi-Fi 三屏 97.89/97.57/99.10%；导航 82/82；D1–D4/D6–D8 PASS，D5 待人工确认。沉淀 P-0224 + reference/14 §7 + CHANGELOG v0.9.99。
   - 关联：PR-0504
 
+### PR-0505 · 2026-11-05 08:20 · Qoder
+  - 提示词：继续
+  - 诉求：收口 D5 并继续下一步
+  - 产出/结论：① D5 已确认（26 页 98.46%，记录用户令），D1–D8 全 PASS；② ⑦-1 启动：从 app-wifi-scan-conn-no-flow 移植 wifi_model/wifi_platform（Windows wlanapi）到 w78 src/native，sim 增加 W78_WIFI_TEST 与 run_sim.bat wifitest；实测真网卡扫描出 9 个 AP（含已保存/频段/RSSI/加密），排序正确。下一步：把平台快照接到 Wi-Fi 列表行、密码页输入与连接状态机。
+  - 关联：PR-0505
+
+### PR-0506 · 2026-11-05 08:36 · Qoder
+  - 提示词：下一步
+  - 诉求：继续 ⑦-2：把 Wi-Fi 平台快照接到 UI
+  - 产出/结论：① wifi_ui.cpp：5 行动态名称/加密·RSSI·频段/锁/状态、扫描与断开命令、行点击选网、密码页 textarea+keyboard、连接三态与页间跳转；② 真 wlanapi 扫描 12 AP 写入列表，截图 designer_annotated/wifi_ui.png；③ 修动态中文豆腐：cn12f/cn24f 运行时 GB2312 字库档 + LV_FONT_FMT_TXT_LARGE + D3 门禁改按条目核；④ 导航 82/82、D1–D8 全 PASS。
+  - 关联：PR-0506
+

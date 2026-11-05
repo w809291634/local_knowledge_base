@@ -153,6 +153,11 @@
 - **hidden 三形态**：`hiddenFlagType:"literal"` + `hiddenFlag:true`；表达式绑定用
   `"hiddenFlagType":"expression"` + `hiddenFlag:"<表达式>"`（codegen 在
   tick_screen 里逐帧 evalBooleanProperty 并 diff HIDDEN flag）。
+- **运行时中文要单独字库档（2026-11-05 实测）**：设计期子集只含设计帧里出现的字符，
+  Wi-Fi SSID 这类运行时数据会缺字。做法：同一 TTF 再烘 `cn12f`/`cn24f` 两档，
+  `lvglRanges` 取 GB2312 A1–D7 区 + ASCII + U+00B7，并在设计里引用一次让 EEZ 导出 `.c`；
+  新建控件用 `lv_obj_set_style_text_font(...,&ui_font_cn12f,0)`。24px 全字库会超
+  `LV_FONT_FMT_TXT_LARGE=0` 的索引上限，lv_conf 必须置 1。
 - **LVGL Label 动态文本（Studio 1.22）**：不要在 widget 定义级把 `textType` 设为
   `expression`；该路径的 codegen 会生成空字符串且不报警（P-0143）。保留字面占位文本，
   用 flow 的 `labelSetText` 动作写入表达式；表达式字符仍须以 `glyphs` 补种。

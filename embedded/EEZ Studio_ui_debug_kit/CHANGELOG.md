@@ -17,6 +17,16 @@
 
 ---
 
+## v0.9.100 — Wi-Fi 列表接真扫描 + 运行时中文字库档（PR-0506）
+
+- w78 ⑦-2：`src/native/wifi_ui.cpp` 把平台快照写进 Wi-Fi 三屏——列表 5 行（名称/加密·RSSI·频段/锁/状态）、
+  扫描/断开命令、行点击选网、密码页运行时 textarea+keyboard、连接三态（连接中/成功/失败）与页间跳转。
+  实测真 wlanapi 扫描 12 个 AP，列表与徽标正常；导航回归 82/82。
+- 新坑：设计期字体子集覆盖不到运行时中文（SSID），新建控件又默认 Montserrat → 全豆腐。
+  修法：同 TTF 再烘 `cn12f`/`cn24f`（GB2312 A1–D7 + ASCII + U+00B7），设计里引用让 EEZ 导出，
+  lv_conf 开 `LV_FONT_FMT_TXT_LARGE`；D3 门禁改为「每个字体条目都有 .c」。
+- 落点：NO_FLOW §3.2 F7；reference/07 字体节；intake P-0225；证据 `designer_annotated/wifi_ui.png`。
+
 ## v0.9.99 — D5 单实例跑完 26 页；页签激活 + 可见画布（PR-0504）
 
 - 用户要求 D5 不要反复开关 EEZ 窗口：改为整轮只启动一次，逐页双击树节点 + 激活页签。
