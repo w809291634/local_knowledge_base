@@ -4511,3 +4511,18 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：把当前 H5 版本沉淀成可复用模板与生成步骤
   - 产出/结论：tools/h5_overview_template.py 整体同步 v2（三视图、全量标注、读数/整卡 glyph/弹层、右键清单/标签批注、效果图 pin、localStorage、导出 JSON）；reference/14 新增 §10 复用步骤+数据契约+必保交互+验证；QUICKSTART 增加 H5 短指令；tools/README 更新；P-0241；CHANGELOG v0.9.141。
   - 关联：PR-0547
+### PR-0548 · 2026-11-05 18:55 · Qoder
+  - 提示词：我已经改了部分，可以修改设计图 / 所有的同步改 开合 70%
+  - 诉求：应用 H5 批注（客厅两条改静态文本），所有 开合70% 同步
+  - 产出/结论：values.py 增加 SKIP/SKIP_SUB——客厅 1080P·已加密、窗帘详情 70% 排除；所有含“开合 70%”的读数（客厅/主卧/窗帘详情/全部设备）改为静态文本，不进控件表/H5/EEZ；H5 ANN_KEY 升 v2；重生成后控件 280→276，A1–A12 PASS，PC 构建通过；P-0242；CHANGELOG v0.9.142。
+  - 关联：PR-0548
+### PR-0549 · 2026-11-05 19:05 · Qoder
+  - 提示词：那么这样改错了，开合应该还是会随着进度条变化，那么就属于 UI自己控制
+  - 诉求：开合值改为 UI 内部读（in_read），不能当静态文本
+  - 产出/结论：values.py 增加 uivalue（UI_READ/UI_READ_SUB），io_of→in_read，widget_kind→label，control_table 增“UI 读数”；恢复 5 条（客厅/主卧/窗帘详情×2/全部设备），1080P 保持静态；控件 276→281，A1–A12 PASS、PC 构建通过；NO_FLOW §2.1、AGENTS 8 补口径；P-0243；CHANGELOG v0.9.143。滑条→标签联动留⑦。
+  - 关联：PR-0549
+### PR-0550 · 2026-11-05 19:20 · Qoder
+  - 提示词：以后注意，明显属于 进度条 和 数值显示的组合，应该直接标注为内部读 / 同时总结到本地经验库
+  - 诉求：滑条/进度条+数值显示自动归 in_read，并沉淀规则
+  - 产出/结论：values.py 增加 _near_slider（±20/±10、%/K）+ UI_READ（窗帘70%/设置60秒/配网70%）；uivalue→in_read。w78 命中 9 条 UI 读数，控件 281，A1–A12 PASS、PC 构建通过。NO_FLOW §2.1、AGENTS 8、reference/07 写入规则；P-0244；CHANGELOG v0.9.144。
+  - 关联：PR-0550
