@@ -4421,3 +4421,13 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：默认优化等级固定 -O2（IDF 当前）
   - 产出/结论：design/esp32_toolchain.json 增加 default_opt=-O2；esp32_estimate 默认用该等级覆盖编译命令中的 -O；mem_report 标题/汇总显示“优化 -O2，默认”，D9 带 -O2；对比表保留 -O0/-O1/-O2/-O3/-Os 且 -O2 标当前。NO_FLOW ⑤/D9/§2.5、AGENTS 13、QUICKSTART ⑤、reference/07、B23、P-0229 同步；CHANGELOG v0.9.123。
   - 关联：PR-0529
+### PR-0530 · 2026-11-05 13:40 · Qoder
+  - 提示词：screens.c 239.7KB / RAM 3.8KB   当前UI占用这么多资源吗
+  - 诉求：确认 screens.c 的数字是否就是当前真实占用
+  - 产出/结论：239.7KB 是 -O2 只编译对象；最终链接 screens.c 176.0KB（gc -26%）。24 屏对象合计 239.8KB（living 19.3/master 18.2/main 16.6KB 最大），非屏代码 9.3KB（objects_t bss 3.7KB 占多数）；全 UI 估算 476.0 → 精确 404.9KB，最大项是 cn12 220.6KB。mem_report 逐文件追加“精确 X”标注；CHANGELOG v0.9.124。
+  - 关联：PR-0530
+### PR-0531 · 2026-11-05 13:55 · Qoder
+  - 提示词：这个编译过程文件，可以不删除，避免导致我下次编译很耗时
+  - 诉求：保留编译过程文件，避免下次全量重编耗时
+  - 产出/结论：esp32_estimate 与 mem_report 的 PC 统计改为持久 .o 缓存 tmp/compile_cache/{esp32,pc}/，按单文件内容+头文件+参数签名失效（改一个屏不重编字库）；首次约 7s、命中约 0.3s（13 个 .o，约 3.9MB）；D7 白名单只允许 sim_build/compile_cache；AGENTS 5、NO_FLOW 目录树/D7/收尾条款、run_sim.bat 注释同步；CHANGELOG v0.9.125。
+  - 关联：PR-0531
