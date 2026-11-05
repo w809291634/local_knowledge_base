@@ -148,6 +148,10 @@
   - **门禁**：identifier 的类别码必须等于 `io_of()` 判出的六类（同页同序号可反查），
     对不上即 FAIL——防止 H5 分类、控件清单、EEZ 工程三处漂移。
   - 类别码只在"设计源→生成器"的**一处映射表**里定义，迭代时改那里，不在脚本里散写。
+- **控件 JSON 只能来自 EEZ 拖拽样板（硬规矩）**：新增任何控件类型，都要先在 EEZ 画布里拖一个到画布、
+  保存工程，再用 `tools/eez_defaults.py` 采样；生成器只克隆样板、改 `identifier/left/top/width/height/
+  text/localStyles 值`，**不得手写或新增字段**（样板里没有的键一律不写）。`eez_check` 的 A10 会逐控件
+  比对字段集，出现样板外字段即 FAIL。2026-11-05 实测就抓到人为加的 `pad_all`。
 - **坐标相对父对象**（Studio 保存时会把绝对坐标换算掉）；`*Unit: "content"` 用于
   label 自适应尺寸。
 - **hidden 三形态**：`hiddenFlagType:"literal"` + `hiddenFlag:true`；表达式绑定用

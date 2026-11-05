@@ -17,6 +17,15 @@
 
 ---
 
+## v0.9.112 — PC 仿真编译/测试自动打印资源树（PR-0517）
+
+- 用户令：仿真阶段每次编译完成、每次跑测试，都要反馈当前资源占用（UI 层/字库/PC 仿真接口），树状展示。
+- `design/mem_report.py` 增加资源树：镜像 UI（逐字体大小 + screens/styles/images + 合计/预算）、
+  字库（镜像 12 汉字 + 24/32 ASCII、SD 卡未启用）、PC 仿真接口（main.exe、liblvgl.a、native 源码、
+  LV_MEM、帧缓冲 800×480×32bpp≈1.46MB、snapshot 1.5MB 按需）。
+- `design/sim_cmake/run_sim.bat`：构建成功后打印完整树；`test` 模式在 AUTOTEST PASS 后再打一行摘要。
+- NO_FLOW D9 行同步。
+
 ## v0.9.111 — 镜像字库：≤3 档、仅 1 档带汉字并已落地（PR-0516）
 
 - 用户口径：镜像内字号不超过 3 种；**只有 1 个字号允许常用/完整汉字**，且尽量小；其余字号只放
