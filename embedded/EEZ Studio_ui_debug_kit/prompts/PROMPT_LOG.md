@@ -4329,3 +4329,9 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：NO_FLOW §2.5 重写：先确认档位（200K/500K/1M/2M/4M 或实际值），给出各档字体/图片/动图的参考配置；分配顺序可读性优先（字体→静态图→动图），压缩后目检+D5；D9 按 mem_budget.json 档位核账。AGENTS 规则 13 与 reference/07 同步；mem_budget.json 加 tier。CHANGELOG v0.9.106。
   - 关联：PR-0512
 
+### PR-0513 · 2026-11-05 10:32 · Qoder
+  - 提示词：在前期设计阶段，也应该 确认这些参数，询问用户，这样更好一些，写在工作流中
+  - 诉求：把 UI 内存预算确认前置到设计阶段，并要求询问用户
+  - 产出/结论：NO_FLOW §2 表①行与 §2.5 加：①先问 UI 预算档位（200K/500K/1M/2M/4M 或实际值）并落 design/mem_budget.json，未确认不进④预生成；AGENTS 规则 13、FLOW 总则、QUICKSTART 卡①同步；CHANGELOG v0.9.107。
+  - 关联：PR-0513
+
