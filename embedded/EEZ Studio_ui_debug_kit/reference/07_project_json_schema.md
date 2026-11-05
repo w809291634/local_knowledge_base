@@ -158,6 +158,8 @@
   `lvglRanges` 取 GB2312 A1–D7 区 + ASCII + U+00B7，并在设计里引用一次让 EEZ 导出 `.c`；
   新建控件用 `lv_obj_set_style_text_font(...,&ui_font_cn12f,0)`。24px 全字库会超
   `LV_FONT_FMT_TXT_LARGE=0` 的索引上限，lv_conf 必须置 1。
+  内存按项目预算档位定：预算紧张时运行时时档 12/18 + `bpp:2`、大字号降 bpp；
+  预算宽裕可加档/提高 bpp。产物用 `design/mem_report.py` 对 `design/mem_budget.json` 核账。
 - **LVGL Label 动态文本（Studio 1.22）**：不要在 widget 定义级把 `textType` 设为
   `expression`；该路径的 codegen 会生成空字符串且不报警（P-0143）。保留字面占位文本，
   用 flow 的 `labelSetText` 动作写入表达式；表达式字符仍须以 `glyphs` 补种。
