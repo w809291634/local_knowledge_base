@@ -35,6 +35,7 @@ function args(name) {
 const PORT = arg("port", process.env.CDP_PORT || 9222);
 const OUT = arg("out", "grab.png");
 const USE_CANVAS = !!arg("canvas", null);
+const VISIBLE = !!arg("visible", null);   // 多标签编辑器：只取视口内那一个画布
 const TEXT_ONLY = !!arg("text", null);
 const CLICKS = args("click");
 const WAIT_MS = parseInt(arg("wait", "600"), 10);
@@ -58,7 +59,10 @@ const JS_CLICK = (name) => `(() => {
 
 const JS_CANVASES = `(() => {
   const cs = [...document.querySelectorAll('canvas')];
-  return JSON.stringify(cs.map((c, i) => ({ i, w: c.width, h: c.height, d: c.toDataURL('image/png') })));
+  return JSON.stringify(cs.map((c, i) => {
+    const b = c.getBoundingClientRect();
+    return { i, w: c.width, h: c.height, v: b.width > 0 && b.height > 0, d: c.toDataURL('image/png') };
+  }));
 })()`;
 
 const JS_TEXT = `(() => {
@@ -102,8 +106,10 @@ async function grabCanvas(send, outFile, prev) {
     if (!v) continue;
     const arr = JSON.parse(v);
     if (!arr.length) continue;
-    arr.sort((a, b) => b.w * b.h - a.w * a.h);   // 主渲染面通常是最大的画布
-    const c = arr[0];
+    const vis = VISIBLE ? arr.filter((x) => x.v) : arr;
+    if (!vis.length) continue;
+    vis.sort((a, b) => b.w * b.h - a.w * a.h);   // 主渲染面通常是最大的画布
+    const c = vis[0];
     const data = c.d || "";
     if (!data || data === prev) continue;          // 与上一帧相同 → 还是旧帧，继续等
     const m = /^data:image\/png;base64,(.*)$/.exec(data);

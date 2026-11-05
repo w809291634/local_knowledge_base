@@ -4275,3 +4275,9 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：此前流程正文没挂；已补：NO_FLOW §0 求解顺序先查 intake/index.md（一行一个 P-####，按现象/标签检索）+ 新问题用 log_entry problem 自动追索引；FLOW §0 同步一句；AGENTS 铁律 4 补「追 intake/index.md」。CHANGELOG v0.9.98。
   - 关联：PR-0503
 
+### PR-0504 · 2026-11-05 08:16 · Qoder
+  - 提示词：能不能处理eez时候不要不断的打开和关闭窗口
+  - 诉求：D5 比对时不要每页重启 EEZ 窗口
+  - 产出/结论：改为整轮只启动一次 EEZ、逐页切页签；修两条导致旧画布的判据：目标页签自身 selected 才算激活；grab.js 新增 --visible 只取视口内画布。26 页平均相似度 98.46%、最低 97.52%，Wi-Fi 三屏 97.89/97.57/99.10%；导航 82/82；D1–D4/D6–D8 PASS，D5 待人工确认。沉淀 P-0224 + reference/14 §7 + CHANGELOG v0.9.99。
+  - 关联：PR-0504
+
