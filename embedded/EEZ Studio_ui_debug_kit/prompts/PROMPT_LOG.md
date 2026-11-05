@@ -4359,3 +4359,65 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：mem_report.py 增加树状资源账：镜像 UI（逐字体+screens/styles/images+合计/预算）、字库（12 汉字/24/32 ASCII/SD 未启用）、PC 仿真接口（exe/liblvgl.a/native 源码/LV_MEM/帧缓冲 1.46MB/snapshot 1.5MB 按需）；run_sim.bat 构建成功后打印全树，test 模式 PASS 后再打摘要；NO_FLOW D9、AGENTS 13、CHANGELOG v0.9.112 同步。
   - 关联：PR-0517
 
+### PR-0518 · 2026-11-05 11:16 · Qoder
+  - 提示词：另外eez所有的控件添加，不得自己随意写代码，应该按照 eez ui软件中，拖动到画布中生成的 json 语法为基础调整，不得随意捏造 对象格式，容易产生错误，这个一个要严格执行，体现在工作流中
+  - 诉求：EEZ 控件只能以拖拽生成的 JSON 为样板，禁止捏造字段，并写进工作流严格执行
+  - 产出/结论：AGENTS 8 改为「只克隆拖拽样板」；NO_FLOW 生成器十条（新增⑩ 控件 JSON 禁止捏造）；reference/07 写取样流程与允许字段；eez_check 新增 A10 逐控件字段集校验。实测 A10 抓到生成器自加的 pad_all，已删；全工程 A10 PASS。CHANGELOG v0.9.113。
+  - 关联：PR-0518
+
+### PR-0519 · 2026-11-05 11:16 · Qoder
+  - 提示词：如果是 字库在 镜像中，我说的是 使用的字号不超过3种，但是只有一个字体大小的 字号 允许 使用常用汉字或者完整 字库，，并且字号尽可能小，占用内存小，如果字库保存在SD卡，那么可以不限制字库内存 ，写在 经验库中，并且当前也按照这个执行，这个在工作流中也是严格执行的
+  - 诉求：镜像字库≤3档、仅1档汉字且尽量小；SD卡不限；工作流严格执行
+  - 产出/结论：新增 design/font_storage.json + eez_check A11 硬门禁：镜像 ≤3 档、恰好 1 档带汉字且该档最小；SD 模式镜像留 1 档兜底；A11 四例反向测试全按预期 FAIL；NO_FLOW D9/reference07/CHANGELOG v0.9.114 同步；当前 w78 3 档（12汉字/24/32 ASCII）A11 PASS。
+  - 关联：PR-0519
+
+### PR-0520 · 2026-11-05 11:32 · Qoder
+  - 提示词：screens.c 1.22MB   这个占用这么多吗
+  - 诉求：确认 1.22MB 源码是否真占镜像空间
+  - 产出/结论：源码≠占用。screens.c 编译后 text 293,664+data 544≈287KB Flash、bss 7,456≈7KB RAM；字体 1.52MB 源码→237KB（cn12 221/cn24 9/cn32 8）；UI 合计 2.74MB 源码→525KB Flash+7KB RAM。mem_report 改编译后统计+树状「源码→Flash」，D9 解析 [MEM-BIN] 按编译值核预算（tier=1m，字体 0.5/UI 1.0MB）；NO_FLOW D9/§2.5 补判据；CHANGELOG v0.9.115。
+  - 关联：PR-0520
+### PR-0521 · 2026-11-05 11:45 · Qoder
+  - 提示词：我只需要编译占用结果，不是 源码有多大 ，这里不要弄错了
+  - 诉求：资源账只报编译后占用，不显示源码体积
+  - 产出/结论：mem_report.py 删掉所有源码 MB 数（字体行、screens/styles/images、合计、native 源码行），树只留编译后 Flash / bss / RAM；PC 仿真接口只留 main.exe、liblvgl.a、LV_MEM/帧缓冲；NO_FLOW D9/§2.5 改为「只报编译后占用：Flash（text+data）+ bss，源码体积不进账」；CHANGELOG v0.9.116。
+  - 关联：PR-0521
+### PR-0522 · 2026-11-05 12:05 · Qoder
+  - 提示词：最好体现 esp32 编译后占用大小，如果有编译环境的情况下，也保留PC段编译占用大小，要求数据详细准确
+  - 诉求：资源账加入 ESP32 编译占用（有环境时），PC 占用并列保留，数据详细准确
+  - 产出/结论：新增 design/esp32_size.py（P4 模板换 UI→idf.py build→esp_idf_size 读 map→还原，写 design/esp32_size.json 含逐文件字节+ui_hash）；mem_report 先显 ESP32 最终链接、PC 标“未链接上限”；[MEM-BIN] 带 target，D9 以目标值为准、缓存过期回退 PC；w78 实测 UI 404.9KB/3.7KB（字体 228.9；cn32 未引用→0）、app.bin 1.09MB/8MB、整机内部 RAM 187.1KB，PC 525KB/7KB；P-0229 记录备份目录被当组件、mtime 导致 ninja 不重编；CHANGELOG v0.9.117。
+  - 关联：PR-0522
+### PR-0523 · 2026-11-05 12:20 · Qoder
+  - 提示词：体现在工作流中，最好体现 esp32 编译后占用大小，如果有编译环境的情况下，也保留PC段编译占用大小，要求数据详细准确，这句话要求体现在工作流
+  - 诉求：把「ESP32 编译占用 + PC 编译占用并列、数据详细准确」写入工作流
+  - 产出/结论：NO_FLOW ⑤ 步骤与判据补“每次编译/测试打资源树：目标最终链接逐文件字节 + app.bin/分区 + 整机内部 RAM，PC 上限并列，ui_hash 过期=未测”；§2.5 新增「展示（每次编译/测试都打）」两层口径与无 IDF 标注要求；QUICKSTART 卡⑤、AGENTS 13 同步；CHANGELOG v0.9.118。
+  - 关联：PR-0523
+### PR-0524 · 2026-11-05 12:35 · Qoder
+  - 提示词：pc端编译占用和 esp32端编译占用是不是一大 ，如果不一样，是否可以使用  工具链  编译测试就知道大小了，不需要放在 esp32idf 中编译
+  - 诉求：确认两端占用是否一致；能否只用工具链编译得到大小，不必进 IDF
+  - 产出/结论：实测同源 UI——PC 525KB / 目标工具链只编译 475.9KB / IDF 最终链接 404.9KB；只编译比链接多 17.5%（未 gc），RAM 3.9KB vs 3.8KB；工具链只编译可当快速估算，不能作 D9/交付判据；精确值只需链接一次，可复用测量模板临时换 UI，不必并进 IDF 工程。NO_FLOW §2.5 补口径；P-0229 增实测表；CHANGELOG v0.9.119。
+  - 关联：PR-0524
+### PR-0525 · 2026-11-05 12:42 · Qoder
+  - 提示词：如果使用 idf 编译链直接估算可以吗，是否和idf一样
+  - 诉求：换 IDF 编译器只编译，能否等同于 IDF 构建结果
+  - 产出/结论：不能。只编译仍是 475.9KB，IDF 最终链接 404.9KB——差在 `--gc-sections`、链接脚本与库顺序；要用同一套链接参数链接一次才与 IDF 一致。精确值可复用测量模板链接，不必把 UI 并进 IDF 工程；只编译只作估算。NO_FLOW §2.5 补全；CHANGELOG v0.9.120。
+  - 关联：PR-0525
+### PR-0526 · 2026-11-05 12:48 · Qoder
+  - 提示词：使用同一个编译优化参数呢
+  - 诉求：同优化参数下只编译能否等于 IDF 构建
+  - 产出/结论：已经用的就是 IDF compile_commands 原命令（含 -Os 等全部编译参数），结果仍为 475.9KB vs 最终链接 404.9KB；差异在链接期 --gc-sections/链接脚本/库顺序，不是 -O 等级。同参数不改变结论，精确值仍需链接一次。CHANGELOG v0.9.120 补记；NO_FLOW §2.5 补「同优化参数也 +17%」。
+  - 关联：PR-0526
+### PR-0527 · 2026-11-05 13:00 · Qoder
+  - 提示词：那就默认使用 IDF 工具链只编译 ，看看需要多少空间 ，流程中也默认这么写，除非我要求使用idf 工程编译
+  - 诉求：默认资源口径改为 IDF 工具链只编译估算，IDF 工程链接仅在点名时做
+  - 产出/结论：新增 design/esp32_estimate.py（取模板 compile_commands 原参数、riscv 工具链只编译、逐文件字节、每次实时）；mem_report 默认显示估算 + PC 上限，[MEM-BIN] 带 source=toolchain-estimate，D9 按估算核预算；esp32_size.py 降为按需精确复核；当前估算 UI 476KB（字体 236）+ RAM 4KB，精确缓存 405KB/3.7KB；NO_FLOW ⑤/D9/§2.5、AGENTS 13、QUICKSTART ⑤、reference/07、B23、P-0229 同步；CHANGELOG v0.9.121。
+  - 关联：PR-0527
+### PR-0528 · 2026-11-05 13:15 · Qoder
+  - 提示词：同时要说明优化等级是多少，不同优化等级，占用分别多少资源
+  - 诉求：资源树写明优化等级，并给出不同等级的占用对比
+  - 产出/结论：esp32_estimate 自动识别 IDF 编译命令等级（-O2），新增 measure_levels 对 -O0/-O1/-O2/-O3/-Os 各编译；对比表按 ui_hash 缓存；mem_report 标题标注等级并打印表，[MEM-BIN] 带 opt=，D9 文案带等级。w78 只编译：528.0/474.5/476.0/476.0/475.2KB，RAM 均 3.8KB，字库 236KB 不变；NO_FLOW ⑤/D9/§2.5、AGENTS 13、QUICKSTART ⑤、reference/07、B23、P-0229 同步；CHANGELOG v0.9.122。
+  - 关联：PR-0528
+### PR-0529 · 2026-11-05 13:25 · Qoder
+  - 提示词：那就默认 -O2（IDF 当前） 参数
+  - 诉求：默认优化等级固定 -O2（IDF 当前）
+  - 产出/结论：design/esp32_toolchain.json 增加 default_opt=-O2；esp32_estimate 默认用该等级覆盖编译命令中的 -O；mem_report 标题/汇总显示“优化 -O2，默认”，D9 带 -O2；对比表保留 -O0/-O1/-O2/-O3/-Os 且 -O2 标当前。NO_FLOW ⑤/D9/§2.5、AGENTS 13、QUICKSTART ⑤、reference/07、B23、P-0229 同步；CHANGELOG v0.9.123。
+  - 关联：PR-0529

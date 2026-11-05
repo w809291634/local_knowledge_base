@@ -17,6 +17,103 @@
 
 ---
 
+## v0.9.123 — 默认优化等级固定 -O2（PR-0529）
+
+- 用户令：默认就用 `-O2`（IDF 当前）参数。
+- `design/esp32_toolchain.json` 增加 `default_opt: "-O2"`；`esp32_estimate.py` 默认用该等级
+  覆盖编译命令中的优化参数（不再随模板变化），标题/汇总/D9 均显示「优化 -O2，默认」。
+- 等级对比表保留 `-O0/-O1/-O2/-O3/-Os`，`-O2` 行标「当前」。
+- NO_FLOW ⑤/D9/§2.5、AGENTS 13、QUICKSTART ⑤、reference/07、B23、P-0229 同步。
+
+## v0.9.122 — 资源树标注优化等级 + 等级对比（PR-0528）
+
+- 用户令：说明优化等级是多少，不同等级分别占多少资源。
+- `esp32_estimate.py` 从 IDF 编译命令自动识别等级（本模板 `-O2`），新增 `measure_levels()`，
+  对 `-O0/-O1/-O2/-O3/-Os` 各编译一遍；对比表按 `ui_hash` 缓存（UI 变了才重算）。
+- `mem_report.py` 在 ESP32 标题标注等级、打印对比表，`[MEM-BIN]` 带 `opt=`；D9 文案带等级。
+- w78 实测（只编译，字库 236KB 不随等级变）：`-O0` 528.0 / `-O1` 474.5 / `-O2` 476.0 /
+  `-O3` 476.0 / `-Os` 475.2KB；RAM 均为 3.8KB。
+- NO_FLOW ⑤/D9/§2.5、AGENTS 13、QUICKSTART ⑤、reference/07、B23、P-0229 同步。
+
+## v0.9.121 — 资源账默认改为 IDF 工具链只编译估算（PR-0527）
+
+- 用户令：默认用 IDF 工具链只编译看占用，流程也默认这么写；只有点名才做 IDF 工程编译。
+- 新增 `design/esp32_estimate.py`：从测量模板 `compile_commands.json` 取 IDF 原参数，
+  用 riscv 工具链编译 UI（不链接），每次实时出逐文件字节；`mem_report.py` 默认展示它，
+  PC 编译上限并列；`[MEM-BIN]` 带 `source=toolchain-estimate`，D9 按此核预算。
+- 精确最终链接保留为按需：`design/esp32_size.py`，`ui_hash` 缓存，点名才跑。
+- NO_FLOW ⑤/D9/§2.5、AGENTS 13、QUICKSTART ⑤、reference/07、B23、P-0229 同步。
+
+## v0.9.120 — 换 IDF 编译器只编译仍不等于 IDF 构建（PR-0525）
+
+- 用户问：用 IDF 编译链直接估算是否与 IDF 一样。
+- 结论：只编译仍差 17%（缺 `--gc-sections`、链接脚本、库顺序）；必须用同一套链接参数链接一次才一致。
+- NO_FLOW §2.5 措辞补全：换 IDF 编译器也不改变「只编译=估算」的结论；
+  同优化参数实测仍 +17%，差异在链接期（gc/脚本/库顺序），不是 -O 等级。
+
+## v0.9.119 — 工具链只编译只能估算，精度实测（PR-0524）
+
+- 用户问：PC 与 ESP32 占用是否一样；能否只用工具链编译、不进 IDF。
+- 实测同一份 UI：PC 525KB / 目标工具链只编译 475.9KB / IDF 最终链接 404.9KB；
+  只编译比链接高 17.5%（未做 gc），RAM 误差 +2.5%。
+- 结论：工具链只编译可当快速估算，不能作 D9/交付判据；精确值链接一次即可，
+  仍可复用测量模板临时换 UI，不必把 UI 并进 IDF 工程。
+- NO_FLOW §2.5 补这条；P-0229 增加实测表。
+
+## v0.9.118 — 资源占用要求写进工作流步骤（PR-0523）
+
+- 用户令：ESP32 编译占用（有环境时）+ PC 编译占用并列、数据详细准确，必须体现在工作流。
+- NO_FLOW ⑤ 步骤与判据补：每次编译/测试打资源树，目标最终链接逐文件字节 + app.bin/分区 +
+  整机内部 RAM，PC 上限并列，缓存过期=未测。
+- §2.5 新增「展示（每次编译/测试都打）」：两层口径与无 IDF 时的标注要求。
+- QUICKSTART 卡⑤、AGENTS 13 同步。
+
+## v0.9.117 — 资源账增加 ESP32 最终链接（PR-0522）
+
+- 用户令：有编译环境时体现 ESP32 编译后占用，同时保留 PC 段，数据要详细准确。
+- 新增 `design/esp32_size.py`：本机 P4 模板换 UI → `idf.py build` → `esp_idf_size` 读 map
+  → 还原模板；写 `design/esp32_size.json`（逐文件字节 + `ui_hash` + 时间）。
+- `mem_report.py` 优先显示 ESP32 最终链接，PC 编译标注为「未链接上限」；`[MEM-BIN]` 带 target，
+  D9 以目标值为预算基准，缓存过期自动回退 PC。
+- w78 实测：UI 404.9KB/3.7KB（字体 228.9KB；cn32 未被引用 → 0），app.bin 1.09MB/8MB；
+  PC 同源 525KB/7KB。
+- 踩坑（P-0229）：备份目录放 `eez-test/src` 下会被当组件；拷贝 mtime 旧导致 ninja 不重编。
+- NO_FLOW D9/§2.5、AGENTS 13、reference/07、B23 同步。
+
+## v0.9.116 — 资源账只报编译后占用（PR-0521）
+
+- 用户令：只要编译占用结果，不要源码体积，别弄错。
+- `mem_report.py` 去掉全部源码 MB 数（字体、screens/styles/images 合计、native 源码行），
+  树里只留编译后 Flash / bss / RAM；PC 仿真接口只留 exe、liblvgl.a 与运行期缓冲。
+- NO_FLOW D9/§2.5 改为「只报编译后占用：Flash（text+data）+ bss，源码体积不进账」。
+
+## v0.9.115 — 内存账改按编译后 Flash（PR-0520）
+
+- 用户质疑：`screens.c` 源码 1.22MB 是否真占这么多。
+- 实测：screens.c 编译后 text 293,664 + data 544 ≈ **287KB Flash**、bss 7,456 ≈ **7KB RAM**；
+  字体源码 1.52MB → **237KB Flash**（cn12 221KB / cn24 9KB / cn32 8KB）；
+  UI 合计源码 2.74MB → **525KB Flash + 7KB RAM**。
+- `mem_report.py` 改为 gcc 编译产物 + `size` 取 text+data/bss，树里写「源码 x → Flash y」；
+  输出 ASCII 汇总行 `[MEM-BIN]`；D9 改解析该行并按编译后值对预算。
+- 预算改档位制 `mem_budget.json`：tier=1m，fonts 0.5MB / UI 1.0MB。
+- NO_FLOW D9/§2.5 补「只认编译后 Flash（text+data）与 bss，源码体积不作判据」。
+
+## v0.9.114 — 字库存储策略 A11 硬门禁（PR-0519）
+
+- 用户令：镜像字号 ≤3 种、只有 1 档可含常用/完整汉字且尽量小；SD 卡不限；严格执行。
+- 新增 `design/font_storage.json`（storage=image/sd）；`eez_check` 新增 **A11**：
+  镜像 ≤3 档、恰好 1 档带汉字、该汉字档必须是最小字号；SD 模式镜像仍须有 1 档汉字兜底。
+- 反向测试四例（4 档 / 两档汉字 / 汉字非最小 / SD 无兜底）均正确 FAIL。
+- 当前 w78：3 档（12 汉字 / 24/32 ASCII），A11 PASS。
+
+## v0.9.113 — 控件 JSON 只许来自 EEZ 拖拽样板；新增 A10 字段门禁（PR-0518）
+
+- 用户令：所有控件添加不得随意写代码/捏造对象格式，必须以 EEZ 画布拖入生成的 JSON 为基础调整，严格执行。
+- 规则：AGENTS 8 改写为「只克隆拖拽样板」；NO_FLOW 生成器九条 → **十条**，新增⑩；
+  reference/07 写明取样流程（拖控件→保存→`eez_defaults.py` 采样→克隆）与允许修改的字段。
+- 门禁：`eez_check` 新增 **A10**——逐控件比对字段集与 `eez_defaults` 并集，出现样板外字段即 FAIL。
+- 实测：A10 立刻抓到生成器里人为加的 `pad_all`（列表样式），已删除；A10 全工程 PASS。
+
 ## v0.9.112 — PC 仿真编译/测试自动打印资源树（PR-0517）
 
 - 用户令：仿真阶段每次编译完成、每次跑测试，都要反馈当前资源占用（UI 层/字库/PC 仿真接口），树状展示。

@@ -57,6 +57,18 @@
 2. 换 ui 目录必须带 `CMakeLists.txt`（GLOB 在 configure 期求值，新增文件后要重新 configure）。
 3. 466 圆表 UI 跑在 4.3" 横屏上只用于**量体积**，位置/裁切不代表真机观感。
 4. 恢复：把 `ui_template_backup` 换回 `ui`、`main.c.bak` 还原即可。
+5. 自动化换 UI 时，备份目录**不能放在 `eez-test/src/` 下**——该目录是 `EXTRA_COMPONENT_DIRS`，
+   `ui.__backup__`/`native.__backup__` 会被当成两个组件，CMake 报
+   `both added as "project_extra_components"`。放到 `eez-test/` 外层。
+6. `copytree` 保留 mtime；拷入的源码若比模板上次 `.obj` 旧，ninja 不重编、只重链接，
+   报的是旧 UI 的未定义符号。拷入和还原后都要 touch `*.c/*.h` 再 `reconfigure build`。
+7. 最终链接口径：`python -m esp_idf_size --files --format json build/<name>.map`，
+   按 `libui.a:` 前缀汇总即 UI 的真实 Flash/RAM（含 `--gc-sections` 后丢弃项）。
+   `w78` 实测 UI 404.9KB/3.7KB，`ui_font_cn32.c` 未被引用 → 0；同源 PC 编译 525KB 只是上限。
+8. **日常默认不用最终链接**：`design/esp32_estimate.py` 用 IDF 工具链同参数只编译（目标架构），
+   每次实时给逐文件字节，Flash 偏高约 17%；**默认优化 `-O2`（IDF 当前）**，报告给
+   `-O0/-O1/-O2/-O3/-Os` 对比（w78：528.0 / 474.5 / 476.0 / 476.0 / 475.2KB）。
+   只有用户点名“用 IDF 工程编译”时才跑最终链接复核。
 
 ## 精灵帧压缩实测（2026-11-03，watch2）
 
