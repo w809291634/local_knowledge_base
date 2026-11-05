@@ -155,6 +155,9 @@
 - **标注控件必须物化为真实类型（A12）**：设计标注 toggle/slider/动作按钮/输入/进度/图表，
   工程里必须分别是 Switch/Slider/Button/Textarea/Bar/Chart；整卡交互区用「容器 + 卡内真控件」，
   卡内子控件坐标**相对父对象**。`eez_check` A12 逐行核对，透明容器冒充即 FAIL。
+- **设备读数也是控件（value 类）**：温度/湿度/百分比/功率/电量/在线状态/日期时间等从设备读来的值，
+  作为 `value` 控件行（`out_read`，`hr` 码）生成真实 Label；标题/说明/按钮文案不算。
+  已在开关/滑条小框、按钮、输入框里的文字不重复标注；宽卡片/房间格/只读卡里的读数照标。
 - **坐标相对父对象**（Studio 保存时会把绝对坐标换算掉）；`*Unit: "content"` 用于
   label 自适应尺寸。
 - **hidden 三形态**：`hiddenFlagType:"literal"` + `hiddenFlag:true`；表达式绑定用
