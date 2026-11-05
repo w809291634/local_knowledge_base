@@ -336,16 +336,20 @@ bash tools/cdp/h5_edge.sh tmp/edgeprof --kill                           # 杀整
 而 `element.dispatchEvent` 绕过命中测试，会造出「点了能跳」的**假通过**——`--click` 走 CDP
 `Input.dispatchMouseEvent`，是真坐标真命中。`--out` 顺带报网络失败请求数（评审页应恒为 0）。
 
-### `eez_defaults.py` —— EEZ 默认控件结构采集器 ★
+### `eez_defaults.py` —— 已有工程样板采集器（非新建控件来源）★
+
+> 新建控件统一从 `eez-widget-templates/templates/` 克隆（值按 `defaults.json` 标准复位）；
+> 本工具只用于从已有工程采自定义样板、做字段/样式对照。
 
 ```bash
 python tools/eez_defaults.py --scan <示例库根> --out <工程>/design/eez_defaults.json
 python tools/eez_defaults.py a.eez-project b.eez-project --out defaults.json
 ```
 
-按控件类型从**能正常打开**的工程里采默认字段结构（objID→`__OID__`，几何/文本/identifier 归零，
+按控件类型从**能正常打开**的工程里采字段结构（objID→`__OID__`，几何/文本/identifier 归零，
 eventHandlers 清空），并单独采「父+子」组合（如 `LVGLButtonWidget+LVGLLabelWidget`）。
-生成新工程时只克隆这些模板、改几何与文字；凭印象拼字段会静默出错（按钮没有 text 字段，写错整屏无字）。
+它不负责标准值复位；新建控件仍以模板库 + `defaults.json` 为准。
+凭印象拼字段会静默出错（按钮没有 text 字段，写错整屏无字）。
 
 ### `h5_overview_template.py` —— H5 评审页生成器模板 ★
 

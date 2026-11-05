@@ -234,8 +234,10 @@ watch2 三轮返工（骑表圈 → 坐标漂移 → 底图幽灵）每一项都
 第⑤步本体＝**把各界面连接起来**（native 导航接线：跳转/切换/每屏可达可回），
 页面细节功能留第⑦步。EEZ 画布无输入、no-flow Run 不执行 native 绑定 ⇒ **跳转只能在仿真器核对**。
 **生成方式（2026-11-04 用户定，PR-0473~0475）：所有控件都按 EEZ 原生默认结构改，不是只按钮。**
-取默认结构的办法：`tools/eez_defaults.py --scan <示例库> --out defaults.json` 从真实工程采样；
-采样不到的冷门类型，就在临时工程里新建一个该控件、看它的默认字段再抄（EEZ 里建完即可删）。
+新建控件一律从 `eez-widget-templates/templates/` 克隆；模板值已按 `defaults.json`
+（EEZ `classInfo.defaultValue/defaultFlags`）复位，`validate_templates.py` 逐项核对。
+`tools/eez_defaults.py` 只用于从**已有工程**采自定义样板/做对照，不再作为新建控件来源；
+冷门类型先补进模板工程（`SOURCES` + `defaults.json`）再克隆。
 生成器只能"克隆默认 → 改几何/identifier/文本"，不许自己拼字段；字段对照见 `reference/07`。
 必配门禁：按钮恰一子标签、子标签文本非空、按钮自身无 `text`、字体覆盖所有字符。
 **克隆后要复位"表达式型"属性**（`hiddenFlag` 等）：采来的模板会带别的工程的表达式，

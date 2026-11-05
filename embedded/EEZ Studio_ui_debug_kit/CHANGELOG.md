@@ -17,6 +17,17 @@
 
 ---
 
+## v0.9.151 — 模板双副本核对 + 旧采样引用清理（PR-0557）
+
+- 用户要求同时核对经验库和示例工程的模板；两处 19 个模板、defaults、manifest 逐字节一致，
+  两边 `[TPL_CHECK] PASS（19 个模板）`。
+- 示例工程 gallery 18 页与模板 0 不符；生成代码 18 种创建函数、尺寸/文本/选项/值/颜色 0 不符；
+  Switch 50×25 且无 `remove_flag(CHECKABLE)`；构建成功。
+- 清理旧“临时工程新建 / `eez_defaults.py` 采样”引用（AGENTS 8、NO_FLOW §2.2、reference/07、
+  tools/README、reference/README、根 README/CODE_WIKI、语法库 README）；P-0249 加更正提示。
+- `validate_templates.py` 支持 `--templates/--defaults`，可校验任一副本；补嵌套事件/时间线检查。
+- P-0251。
+
 ## v0.9.150 — 控件模板复位为标准新建值（PR-0556）
 
 - 用户追问模板是否“新建控件的标准模板”；核对发现字段集真实，但值带源工程定制

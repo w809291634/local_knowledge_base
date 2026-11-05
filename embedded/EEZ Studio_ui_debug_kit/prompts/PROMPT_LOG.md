@@ -4556,3 +4556,8 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：确认模板是不是新建控件的标准模板
   - 产出/结论：核对为“真实拖拽字段集 + 源工程改过的值”，不是标准新建值（Switch 60×30+iOS配色、Button 84×30 蓝底 cn14 刷新、Label 448×26 Two-State Styles 等）。从 EEZ app.asar classInfo 取 19 类 defaultValue/defaultFlags 落 `defaults.json`；生成器全量复位，validate 逐项核对；`[TPL_CHECK] PASS`、`[BUILD] OK`，生成代码无源工程样式。AGENTS 8、NO_FLOW ⑩、reference/07、两份 README 同步；P-0250；CHANGELOG v0.9.150。
   - 关联：PR-0556
+### PR-0557 · 2026-11-05 21:50 · Qoder
+  - 提示词：你确认一下本地经验库中的 控件模板 是对的，同时也检查一下  示例程序中的 模板 是对的
+  - 诉求：同时核对经验库模板与示例工程模板是否正确、一致
+  - 产出/结论：经验库 vs 工程 19 个模板 + defaults/manifest 逐字节一致，两处各 `[TPL_CHECK] PASS`；gallery 18 页与模板 0 不符，生成代码 18 种创建函数/尺寸/文本/选项/值/颜色 0 不符，Switch 50×25 无 remove CHECKABLE，构建 OK；manifest 19 条溯源有效。清理 AGENTS/NO_FLOW/reference07/tools/README/reference README/根索引/语法库 README 的旧“临时工程新建 + eez_defaults 采样”引用；validator 支持 --templates/--defaults；P-0251；CHANGELOG v0.9.151。
+  - 关联：PR-0557

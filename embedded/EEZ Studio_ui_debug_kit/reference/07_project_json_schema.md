@@ -148,13 +148,13 @@
   - **门禁**：identifier 的类别码必须等于 `io_of()` 判出的六类（同页同序号可反查），
     对不上即 FAIL——防止 H5 分类、控件清单、EEZ 工程三处漂移。
   - 类别码只在"设计源→生成器"的**一处映射表**里定义，迭代时改那里，不在脚本里散写。
-- **控件 JSON 只能来自 EEZ 拖拽样板（硬规矩）**：新增任何控件类型，都要先在 EEZ 画布里拖一个到画布、
-  保存工程，再用 `tools/eez_defaults.py` 采样；生成器只克隆样板、改 `identifier/left/top/width/height/
-  text/localStyles 值`，**不得手写或新增字段**（样板里没有的键一律不写）。`eez_check` 的 A10 会逐控件
-  比对字段集，出现样板外字段即 FAIL。2026-11-05 实测就抓到人为加的 `pad_all`。
+- **控件 JSON 只能来自 EEZ 拖拽样板（硬规矩）**：生成器只克隆样板、改 `identifier/left/top/width/
+  height/text/localStyles 值`，**不得手写或新增字段**（样板里没有的键一律不写）。`eez_check` 的 A10
+  会逐控件比对字段集，出现样板外字段即 FAIL。2026-11-05 实测就抓到人为加的 `pad_all`。
   **唯一来源**：根目录 `eez-widget-templates/templates/`（kit `reference/eez_widget_syntax`），
   字段集来自真实拖拽工程并经构建验证；属性值必须等于 EEZ classInfo 标准默认值（`defaults.json`），
   `validate_templates.py` 逐项核对，不得带源工程配色/字体/尺寸；不要临时去别的工程抓样板。
+  `tools/eez_defaults.py` 只用于已有工程的自定义样板采样/对照；冷门类型先补进模板工程再克隆。
 - **标注控件必须物化为真实类型（A12）**：设计标注 toggle/slider/动作按钮/输入/进度/图表，
   工程里必须分别是 Switch/Slider/Button/Textarea/Bar/Chart；整卡交互区用「容器 + 卡内真控件」，
   卡内子控件坐标**相对父对象**。`eez_check` A12 逐行核对，透明容器冒充即 FAIL。
@@ -604,4 +604,5 @@ flow 组件的 left/top 不影响构建，但决定编辑器画布可读性。�
 
 给按钮写 `text` 的后果：按钮能显示、**一个字都没有**，而且不报错——这类"静默不显示"
 只能靠生成器门禁挡：按钮必须恰好一个子标签且其 `text` 非空、按钮自身不得有 `text`。
-模板文件：`design/eez_defaults.json`（`objID` 已换成 `__OID__` 占位，克隆时递归换新）。
+模板文件：`eez-widget-templates/templates/<Type>.json`（`objID` 已换成占位符，克隆时递归换新），
+标准值见同目录 `defaults.json`；旧工程的 `design/eez_defaults.json` 只作历史样板。
