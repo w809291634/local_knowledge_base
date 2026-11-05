@@ -256,7 +256,8 @@ watch2 三轮返工（骑表圈 → 坐标漂移 → 底图幽灵）每一项都
 ⑪ **标注控件必须物化为真实类型**：toggle→`LVGLSwitchWidget`、slider→`LVGLSliderWidget`、
    动作/跳转→`LVGLButtonWidget`、输入→`LVGLTextareaWidget`、进度→`LVGLBarWidget`、
    图表→`LVGLChartWidget`；整卡交互区用「容器 + 卡内真控件」（子控件坐标相对父对象）。
-   **A12 硬门禁**逐行核对，透明容器冒充即 FAIL。
+   **A12 硬门禁**逐行核对，透明容器冒充即 FAIL。**Switch 样板必须带 `CHECKABLE`（A13）**，
+   否则点击不切换；验证发 `PRESSED → RELEASED`，只发 `CLICKED` 无效。
 ⑫ **设备读数单独成控件**：温度/湿度/百分比/功率/电量/在线状态等按 `value` 类追加控件行，
    生成真实 Label（`hr` 码）并进入控件表/H5 标注；标题、说明、按钮文案不误判为读数。
    w78 实测自动补 57 条读数，总控件 239。

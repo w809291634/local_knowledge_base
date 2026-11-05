@@ -4526,3 +4526,23 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：滑条/进度条+数值显示自动归 in_read，并沉淀规则
   - 产出/结论：values.py 增加 _near_slider（±20/±10、%/K）+ UI_READ（窗帘70%/设置60秒/配网70%）；uivalue→in_read。w78 命中 9 条 UI 读数，控件 281，A1–A12 PASS、PC 构建通过。NO_FLOW §2.1、AGENTS 8、reference/07 写入规则；P-0244；CHANGELOG v0.9.144。
   - 关联：PR-0550
+### PR-0551 · 2026-11-05 19:40 · Qoder
+  - 提示词：控件数量是否和设计图一致，类型是否一致，可以的话进行下一步
+  - 诉求：核对设计/EEZ/H5 控件数量与类型，通过则继续
+  - 产出/结论：审计设计 281 行 = EEZ 281 标注控件 = H5 281 行，逐页数量一致、类型 0 错配，A1–A12 PASS。继续⑦：新增 value_bind.c/h，亮度/开合/自动锁屏滑条→in_read 标签联动，无头自证 55%/开合42%/33%|33%；色温值域留后。D5 全量单实例 98.03%（最低灯详情 96.07%）待确认。P-0245；CHANGELOG v0.9.145。
+  - 关联：PR-0551
+### PR-0552 · 2026-11-05 19:55 · Qoder
+  - 提示词：下一步（用户选择“确认 D5 并冻结设计”）
+  - 诉求：确认 D5、冻结设计、跑完整门禁
+  - 产出/结论：发现 D4 重建刷新 mtime 导致 D5 确认永久失效；b1 标记改存设计源哈希（pages/values/simple_control/eez_gen），旧标记兼容；重确认后 D1–D9 PASS（D5 24页98.03%，最低96.07%；D9 442KB）；flow_state 记录 design_frozen=2026-11-05 19:50。P-0246；CHANGELOG v0.9.146。
+  - 关联：PR-0552
+### PR-0553 · 2026-11-05 20:10 · Qoder
+  - 提示词：你核对的控件数吗，我发现UI很多控件都没有实现，你查查哪个步骤有问题
+  - 诉求：核查控件是否真实现，定位问题步骤
+  - 产出/结论：281=281 只覆盖存在/类型（A2/A12），不覆盖行为；新增 behavior_audit：已接导航72/Wi-Fi10/滑条数值5，未接交互件69（开关28/动作场景38/滑条3）；问题在⑦，不是②/④/⑤。P-0247(open)；CHANGELOG v0.9.147。
+  - 关联：PR-0553
+### PR-0554 · 2026-11-05 20:35 · Qoder
+  - 提示词：不是吧，EEZ 默认的 开关是有切换的，你是不是 创建EEZ 时候，没有严格按照 软件中拖动新建一个 开关代码执行的
+  - 诉求：核查开关不切换是否样板问题
+  - 产出/结论：属实——eez_defaults 的 Switch 采样自 watch 工程，widgetFlags 缺 CHECKABLE；生成代码 remove_flag，点击不切换。改用 two-state-styles 真实样板（带 CHECKABLE），checkedState=false/states=''；新增 A13 门禁；删除 native 临时补丁。自证 PRESSED→RELEASED：on 1→0、off 0→1；A1–A13 PASS。AGENTS 8、NO_FLOW ⑪、reference/07；P-0248；CHANGELOG v0.9.148。
+  - 关联：PR-0554

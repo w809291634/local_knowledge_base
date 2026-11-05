@@ -17,6 +17,40 @@
 
 ---
 
+## v0.9.148 — Switch 样板缺 CHECKABLE 导致开关不切换（PR-0554）
+
+- 用户指出开关点不动，并判断是样板未按拖拽生成；核对属实。
+- `eez_defaults.json` 的 Switch 样板采样自 watch 工程，缺 `CHECKABLE`，生成代码移除该标志；
+  LVGL 在 `RELEASED` 时靠它切换。改用 `two-state-styles` 真实拖拽样板（带 CHECKABLE）。
+- `eez_check` 新增 **A13**：所有 Switch 必须含 CHECKABLE；临时 native 补丁已删除。
+- 自证：`PRESSED → RELEASED` 后 on 1→0、off 0→1；A1–A13 PASS，D5 确认哈希仍有效。
+- AGENTS 8、NO_FLOW 生成器⑪、reference/07；P-0248。
+
+## v0.9.147 — 行为覆盖审计：69 个交互件未接（PR-0553）
+
+- 用户发现 UI 很多控件没实现，质疑控件数核对。
+- 结论：281=281 只证明存在/类型（A2/A12），不证明行为；问题在 ⑦。
+- 新增 `design/behavior_audit.py`：已接导航 72、Wi-Fi 10、滑条数值 5；
+  未接交互件 69（开关 28、动作/场景 38、滑条 3）；`--strict` 可供后续门禁。
+- P-0247（open）；后续按批次补开关/动作/滑条/硬件与 Wi-Fi 连接。
+
+## v0.9.146 — D5 确认标记改设计源哈希；设计冻结（PR-0552）
+
+- 用户确认 D5 后，D1–D9 里 D5 仍 FAIL：D4 重建刷新 screens.c/.eez-project mtime，被误判过期。
+- `proj_sig()` 改哈希设计源（pages/values/simple_control/eez_gen），标记写入 `sig:`；
+  旧标记无 sig 时退回 mtime 兼容；修正 sig 前缀切片。
+- 结果：D1–D9 PASS（D5 24 页 98.03%，最低 96.07%；D9 442KB）；
+  `design/flow_state.json` 记录 design_frozen（2026-11-05 19:50）。
+- 后续改设计须回 ① 并重跑 D5；P-0246。
+
+## v0.9.145 — 滑条→数值联动 + 控件一致性审计（PR-0551）
+
+- ⑦ 接线：新增 `src/native/value_bind.c/.h`，亮度/开合/自动锁屏滑条变化时更新对应 in_read 标签；
+  色温等需值域映射的留后。无头自证：55% / 开合 42% / 33% | 33%。
+- 一致性审计：设计 281 行 = EEZ 281 个标注控件 = H5 281 行，逐页数量一致，类型 0 错配；A1–A12 PASS。
+- D5 全量重跑（单实例）：平均 98.03%，最低 96.07%（灯详情），待用户确认。
+- 测试脚手架 `W78_VALUE_TEST` 已删，终态只留 value_bind；P-0245。
+
 ## v0.9.144 — 沉淀：滑条/进度条旁的数值=内部读（PR-0550）
 
 - 用户令：明显属于进度条/滑条 + 数值显示的组合，直接标内部读，不用逐条说。
