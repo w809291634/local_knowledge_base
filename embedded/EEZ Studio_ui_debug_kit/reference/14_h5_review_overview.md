@@ -153,8 +153,44 @@ bash <kit>/tools/cdp/h5_edge.sh tmp/edgeprof --kill                      # 收�
 19. **D5 整轮只起一次 EEZ**：逐页双击树节点 + 激活页签即可；只在某页连续抓不到时单页重启兜底。
    每页开关窗口既慢又打断用户，不是正确性要求。
 
-## 8. 边界
+## 8. H5 批注模式（规格，2026-11-05 用户定；同日已实现，P-0237）
+
+H5 只采集修改指令，**不能直接改 `.eez-project` / `src/ui` / 设计源**。
+
+- 顶栏：`导出批注`。
+- **右键右侧控件清单行/底部控件标签** → 菜单：标记删除 / 修改说明 / 在控件上加提示标签 / 清除；
+  **右键效果图空白** → 在光标位置加提示标签（viewBox 坐标）；右键已有 pin → 修改/删除提示。
+- 删除只在 H5 本地隐藏/标灰预览；批注存 `localStorage`，导出 `annotations.json`。
+- 有未导出修改时底部提示「N 条批注 · 导出并返回 ④」；AI 按 JSON 改设计源后重生成。
+- 坐标一律用 viewBox（0–800/0–480），卡片缩放不影响；弹层态用各自展开帧坐标。
+- 不手改生成的 HTML；设计源仍是唯一真值。
+
+```json
+{"page":"客厅","type":"control","n":2,"name":"主灯","action":"delete","note":""}
+{"page":"客厅","type":"control","n":3,"name":"主灯·详情","action":"modify","note":"改成点击整卡进详情"}
+{"page":"客厅","type":"pin","x":420,"y":260,"note":"这里增加一个温度读数"}
+```
+
+## 9. 边界
 
 - H5 只验「清单/分类/层级/跳转关系 + 交互闭环」，像素级字号、配色、动效仍以 EEZ 画布与仿真截图为准。
 - H5 里的切换动画是设计口径演示，真机节奏要到第⑥步烧录后由用户核。
 - **H5 通过不等于 ④⑤ 免做**。
+
+## 10. 复用：生成同类 H5 评审页（2026-11-05 模板 v2）
+
+模板：`tools/h5_overview_template.py`（从 w78 当前实现整体同步；含三视图、读数、整卡 glyph、弹层态、右键批注）。
+
+1. 复制到目标工程 `design/overview_pro.py`。
+2. 改顶部 import：`simple_control / pages / export_ui / nav_map` 换成本工程模块。
+3. 改 `IO_COLORS / IO_NAME / IO_DESC / OVERRIDES` 与 `gestures()`。
+4. 改 `build()`：分层规则、`PAGE_IDS`、可选弹层展开态（如 `wifi_sheet_frame`）。
+5. 改 `OUT`、品牌字串、`localStorage` key（`w78_annotations_v1` → 本工程）。
+6. 产物放在 `designer_simple/overview_pro.html`；给用户绝对路径，不内嵌。
+
+数据契约：`pages.PAGES` 的 rows `(name,cat,act,behav,box)` 是唯一真值；H5 只补 `io/n/target/dyn/markBox`，
+不另画界面。整卡开关/滑条必须给 `markBox`（卡内 glyph）；弹层控件放独立“展开态”数据项，别画在基础页。
+
+生成后必须保留并自测：标注全局开关、高清默认带号、右键清单/底部标签控件菜单、效果图右键页面 pin、
+localStorage 保存、导出 `annotations.json`、删除仅本地预览。验证：`node --check` + Edge headless CDP
+（右键菜单标题、删除后 opacity、pin 保存）。改完本实现要回灌模板；回灌时只换文件头说明，不保留工程专有数据。

@@ -1,31 +1,38 @@
-"""H5 评审页生成器模板（2026-11-04 22:50 从 w78 当前实现同步，PR-0495）。
+"""H5 评审页生成器模板（2026-11-05 从 w78 当前实现同步，PR-0547）。
 
-做法与踩坑：`reference/14_h5_review_overview.md`；验证通道：`tools/cdp/h5_edge.sh` + `tools/cdp/h5_probe.js`。
-一次生成两份、同源不漂移：`overview_pro.html`（整页，双击本地看）+ `overview_pro.fragment.html`（片段，内联进对话）。
+同源生成两份：overview_pro.html（整页）+ overview_pro.fragment.html（可内联片段）。
+方法/踩坑见 reference/14_h5_review_overview.md；验证用 tools/cdp/h5_edge.sh + h5_probe.js。
 
-换工程只改这五处，其余结构照抄：
-  1. 顶部 import：换成你工程的三个设计源模块（基元/页面语义表/跳转表）。
+换工程只改这几处（其余照抄）：
+  1. 顶部 import：换成本工程的 基元 / 页面语义表 / 跳转表 / H5 页数据模块。
   2. IO_COLORS / IO_NAME / IO_DESC / OVERRIDES：6 类口径与逐控件覆盖。
-  3. gestures()：哪些页之间有滑动手势、目标是谁。
-  4. build() 里的分层规则与 AI 预估控件图开关。
-  5. OUT 与 HTML 里的品牌字串（标题/页签名）。
+  3. gestures()：页间滑动手势与目标。
+  4. build()：分层规则、可选“弹层展开态”卡（wifi_sheet_frame 等）、PAGE 数据来源。
+  5. OUT/品牌字串、localStorage key（w78_annotations_v1 改成工程自己的）。
 
-当前交互（与 w78 源码一致，勿回退）：
-  - 放大图钉在右侧停靠栏；点空白/遮罩/Esc/再点同卡收起，点停靠栏内部不误收。
-  - 跳转演练直接换页，**不做过渡动画**；整块 innerHTML 替换，不叠页面层。
-  - 全站只有一套来路栈 `trail`，`pushTrail()` 唯一入口；面包屑写「当前页 ← 返回目标」。
-  - 返回 = 收起面板 + `selectCard(来路)`，不压栈、不打开面板。
-  - 高清设计图（marks:false）也要渲染返回热区 `hotBack`。
-  - `overview_confirmed` 未置真时不建热区；生成器收尾 `node --check` 校验内联 JS。
-  - 分类覆盖不得吃掉 `behav=换页` 的跳转：build() 末尾有 assert。
+数据契约（pages.PAGES 的 rows）：
+  (name, cat, act, behav, box) 是设计源真值；
+  H5 build() 再补 io/n/cat/target/dyn/markBox。`box` 用页面绝对坐标（0–800/0–480）；
+  整卡开关/滑条用 markBox = 卡内 glyph 坐标；弹层控件放进单独的“展开态”数据项。
 
-铁律：H5 只内嵌设计源渲染出的帧 + 叠标注/热区，绝不重画界面；
-      要改呈现就改设计源再重跑本脚本，不手改产出的 HTML。
+必须保留的交互（用户定，勿回退）：
+  - 三视图：分层总览 / 跳转演练 / 高清设计图；换页不做过渡动画。
+  - 高清设计图默认叠加全部控件标注（marksOn=true），顶栏「标注」全局开关。
+  - 标注范围：可操作件 + 设备读数（温度/湿度/功率/电量/状态/数量/日期时间/版本）
+    + 整卡交互区（卡+glyph）+ 隐藏弹层展开态；标题/说明/按钮文案不标。
+  - 右键右侧控件清单行/底部控件标签 → 控件菜单（删/改/加提示/清除）；
+    右键效果图空白 → 页面 pin；右键 pin → 修改/删除。
+  - 批注存 localStorage、导出 annotations.json；删除仅本地隐藏预览；
+    H5 不改工程，AI 按 JSON 改设计源后重生成。
+  - 点空白收右侧停靠栏；全站单一来路栈；高清设计图仍可点返回热区。
+
+铁律：H5 只内嵌设计源渲染的帧 + 叠标注/热区，绝不重画界面；
+      改呈现＝改设计源再重跑本脚本，不手改产出的 HTML。
 """
-
 import io
 import json
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -95,7 +102,40 @@ def io_of(page, row):
         return "nav"
     if row["behav"] == "下发硬件":
         return "out_write"
-    return "out_read" if row["cat"] == "read" else "in_write"
+    if row["cat"] in ("read", "value"):
+        return "out_read"
+    return "in_write"
+
+
+def _rects(svg):
+    out = []
+    for m in re.finditer(r'<rect([^>]*?)/?>', svg or ""):
+        a = m.group(1)
+
+        def g(n):
+            mm = re.search(n + r'="([^"]*)"', a)
+            return mm.group(1) if mm else None
+        try:
+            out.append((float(g("x") or 0), float(g("y") or 0),
+                        float(g("width") or 0), float(g("height") or 0)))
+        except ValueError:
+            pass
+    return out
+
+
+def _glyph_box(svg, cat, box):
+    """整卡开关/滑条：从设计帧里找出卡内实际 glyph，供 H5 把序号标在控件本体上。"""
+    rs = [r for r in _rects(svg)
+          if r[0] >= box[0] and r[1] >= box[1] and
+          r[0] + r[2] <= box[0] + box[2] and r[1] + r[3] <= box[1] + box[3]]
+    if cat == "toggle":
+        cand = [r for r in rs if 40 <= r[2] <= 50 and 22 <= r[3] <= 26]
+        return cand[0] if cand else None
+    cand = [r for r in rs if r[3] <= 8 and r[2] >= 80]
+    if cand:
+        b = max(cand, key=lambda x: x[2])
+        return (b[0], b[1] - 7, b[2], 20)
+    return None
 
 
 def build():
@@ -121,20 +161,49 @@ def build():
         depth[q] = 1            # 状态页不单独成层：按它服务的页面归层
 
     ges = gestures()
+    WIFI_SHEET = {"弹层·密码框", "弹层·连接", "弹层·关闭", "弹层·键盘"}
+    WIFI_DLG = {"对话框·忘记", "对话框·断开", "对话框·取消"}
     out = {}
     for p in order:
         d = data[p]
         rows = []
         for r in d["rows"]:
+            if p == "Wi-Fi 设置" and (r["name"] in WIFI_SHEET or r["name"] in WIFI_DLG):
+                continue                     # 弹层控件在单独的“展开态”卡里标，别画在基础页上
             io_k = io_of(p, r)
+            mb = None
+            if r["cat"] in ("toggle", "slider") and (r["box"][2] > 120 or r["box"][3] > 60):
+                gb = _glyph_box(d["svg"], r["cat"], r["box"])
+                mb = list(gb) if gb else None
             rows.append({"n": r["n"], "name": r["name"], "io": io_k,
-                         "act": r["act"], "box": r["box"],
+                         "cat": r["cat"], "act": r["act"], "box": r["box"],
+                         "markBox": mb,
                          "target": r["target"] if io_k == "nav" else "",
                          "dyn": r["behav"] == "返回"})
         out[p] = {"svg": d["svg"], "rows": rows, "layer": depth[p] + 1,
                   "status": p in status,
                   "entry": d["entry"], "exit": d["exit"],
                   "gesture": ges.get(p, [])}
+
+    # 弹层展开态（设计预览帧，不是 EEZ 页）：让密码半页/忘记框的控件也有正确位置与序号
+    b = sc.WIFI_BOXES
+    sheet_rows = [
+        {"n": 1, "name": "密码框", "io": "out_read", "cat": "read", "act": "", "box": list(b["pwd_ta"]), "target": "", "dyn": False},
+        {"n": 2, "name": "连接", "io": "out_write", "cat": "scene", "act": "", "box": list(b["connect"]), "target": "", "dyn": False},
+        {"n": 3, "name": "关闭", "io": "out_write", "cat": "scene", "act": "", "box": list(b["pwd_close"]), "target": "", "dyn": False},
+        {"n": 4, "name": "键盘", "io": "out_read", "cat": "read", "act": "", "box": list(b["keyboard"]), "target": "", "dyn": False},
+    ]
+    dlg_rows = [
+        {"n": 1, "name": "忘记", "io": "out_write", "cat": "scene", "act": "", "box": list(b["dlg_forget"]), "target": "", "dyn": False},
+        {"n": 2, "name": "断开", "io": "out_write", "cat": "scene", "act": "", "box": list(b["dlg_disconnect"]), "target": "", "dyn": False},
+        {"n": 3, "name": "取消", "io": "out_write", "cat": "scene", "act": "", "box": list(b["dlg_cancel"]), "target": "", "dyn": False},
+    ]
+    out["Wi-Fi 密码半页"] = {"svg": sc.wifi_sheet_frame(), "rows": sheet_rows, "layer": 5,
+                           "status": False, "entry": "Wi-Fi 设置·弹层", "exit": "Wi-Fi 设置",
+                           "gesture": []}
+    out["忘记网络"] = {"svg": sc.wifi_dialog_frame(), "rows": dlg_rows, "layer": 5,
+                     "status": False, "entry": "Wi-Fi 设置·对话框", "exit": "Wi-Fi 设置",
+                     "gesture": []}
     lost = [(p, r["n"], r["name"]) for p in order for r in out[p]["rows"]
             if any(q["name"] == r["name"] and q["behav"] == "换页" for q in data[p]["rows"])
             and r["io"] != "nav"]
@@ -271,12 +340,133 @@ border-bottom:1px solid #101823}
 .gesline{display:flex;align-items:center;gap:8px;font-size:12px;color:#ff8fb8;
 border:1px dashed #ff8fb8;border-radius:999px;padding:4px 12px;margin-top:8px}
 @media (max-width:1250px){.stage{grid-template-columns:1fr}.side{position:static}}
+/* 批注模式 */
+#annpanel{position:fixed;right:22px;bottom:22px;width:310px;z-index:60;background:#0e1520;
+  border:1px solid #ff5d5d;border-radius:14px;padding:12px;color:#e8eef7;font-size:12px;
+  box-shadow:0 18px 40px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:8px}
+#annpanel[hidden]{display:none}
+#annpanel .ah{display:flex;align-items:center;gap:8px}
+#annpanel .ah b{font-size:13px;color:#ffb3b3;flex:1}
+#annpanel textarea{width:100%;min-height:70px;resize:vertical;background:#05080f;color:#e8eef7;
+  border:1px solid #27313f;border-radius:8px;padding:8px;font:12px/1.5 inherit}
+#annpanel label{display:flex;align-items:center;gap:6px;color:#ffb3b3}
+#annpanel .af{display:flex;gap:8px;justify-content:flex-end}
+#annbar{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:58;
+  display:none;align-items:center;gap:10px;background:#2a1414;border:1px solid #ff5d5d;
+  color:#ffd7d7;border-radius:999px;padding:7px 14px;font-size:12px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+#annbar.on{display:flex}
+.annmark{pointer-events:none}
+#ctxmenu{position:fixed;z-index:70;min-width:190px;background:#0e1520;border:1px solid #f2b45c;
+  border-radius:10px;padding:6px;color:#e8eef7;font-size:12px;box-shadow:0 14px 34px rgba(0,0,0,.55)}
+#ctxmenu[hidden]{display:none}
+#ctxmenu .ct{color:#f2b45c;font-size:11px;padding:4px 8px 6px;border-bottom:1px solid #27313f;margin-bottom:4px}
+#ctxmenu button{display:block;width:100%;text-align:left;background:none;border:0;color:#e8eef7;
+  padding:7px 8px;border-radius:6px;font:12px inherit;cursor:pointer}
+#ctxmenu button:hover{background:#1c2430}
 """
 
 JS = r"""
 const D = JSON.parse(document.getElementById('data').textContent);
 const IO = D.io;
 let view = 'layers', cur = D.order[0];
+let marksOn = true;              // 高清设计图默认显示全部控件标注（开关/滑条等）
+
+/* ---- 批注模式：只采集修改指令，不改工程文件 ---- */
+const ANN_KEY = 'w78_annotations_v1';
+let anns = {};
+try { anns = JSON.parse(localStorage.getItem(ANN_KEY) || '{}') || {}; } catch (e) { anns = {}; }
+let annDraft = null, ctxTarget = null;
+function annsOf(p){ return anns[p] || (anns[p] = []); }
+function annTotal(){ return Object.keys(anns).reduce((n,p)=>n+anns[p].length,0); }
+function annFor(p,n){ return annsOf(p).find(a=>a.type==='control' && a.n===n); }
+function saveAnns(){ localStorage.setItem(ANN_KEY, JSON.stringify(anns)); }
+function annMarks(page){
+  const list = anns[page] || [];
+  if(!list.length) return '';
+  let s = '<g class="annmark">';
+  list.forEach((a,ix)=>{
+    if(a.type==='control'){
+      const r = D.pages[page] && D.pages[page].rows.find(x=>x.n===a.n);
+      if(!r) return;
+      const b = r.markBox || r.box, tag = a.action==='delete' ? '删' : '改';
+      s += '<rect x="'+b[0]+'" y="'+b[1]+'" width="'+b[2]+'" height="'+b[3]+
+           '" rx="8" fill="none" stroke="#ff5d5d" stroke-width="2.2" stroke-dasharray="6 4"/>'+
+           '<circle cx="'+(b[0]+b[2])+'" cy="'+b[1]+'" r="9" fill="#ff5d5d"/>'+
+           '<text x="'+(b[0]+b[2])+'" y="'+(b[1]+4)+'" font-size="9.5" font-weight="700" '+
+           'fill="#fff" text-anchor="middle" font-family="sans-serif">'+tag+'</text>';
+    } else {
+      s += '<g data-pin="'+a.id+'" style="pointer-events:all">'+
+           '<circle cx="'+a.x+'" cy="'+a.y+'" r="7" fill="#ff5d5d" stroke="#fff" stroke-width="2"/>'+
+           '<text x="'+a.x+'" y="'+(a.y+3.5)+'" font-size="8" font-weight="700" fill="#fff" '+
+           'text-anchor="middle" font-family="sans-serif">'+(ix+1)+'</text></g>';
+    }
+  });
+  return s + '</g>';
+}
+function annUI(){
+  const n = annTotal(), bar = document.getElementById('annbar');
+  const c = document.getElementById('anncount');
+  if(c) c.textContent = n + ' 条批注';
+  if(bar) bar.classList.toggle('on', n > 0);
+  const ex = document.getElementById('anexport');
+  if(ex) ex.textContent = n ? ('导出批注 ('+n+')') : '导出批注';
+}
+function annClose(){
+  annDraft = null;
+  const p = document.getElementById('annpanel');
+  if(p) p.hidden = true;
+}
+function annOpen(a){
+  annDraft = a;
+  const p = document.getElementById('annpanel');
+  document.getElementById('anntitle').textContent = a.type==='control'
+    ? (a.page+' · #'+a.n+' '+(a.name||'')) : (a.page+' · ('+a.x+','+a.y+')');
+  document.getElementById('annnote').value = a.note || '';
+  const del = document.getElementById('anndel');
+  del.checked = a.action === 'delete';
+  document.getElementById('anndelrow').style.display = a.type==='control' ? 'flex' : 'none';
+  p.hidden = false;
+  document.getElementById('annnote').focus();
+}
+function annSave(){
+  if(!annDraft) return;
+  const d = annDraft, note = document.getElementById('annnote').value.trim();
+  const del = document.getElementById('anndel').checked && d.type==='control';
+  const list = annsOf(d.page);
+  const idx = list.findIndex(x=> d.type==='control'
+    ? (x.type==='control' && x.n===d.n) : (x.type==='pin' && x.id===d.id));
+  if(!note && !del){
+    if(idx>=0) list.splice(idx,1);
+  } else {
+    const rec = {type:d.type, page:d.page, note:note};
+    if(d.type==='control'){
+      rec.n = d.n; rec.name = d.name || ''; rec.box = d.box || null;
+      rec.action = del ? 'delete' : 'modify';
+    } else {
+      rec.id = d.id; rec.x = d.x; rec.y = d.y;
+    }
+    if(idx>=0) list[idx] = rec; else list.push(rec);
+  }
+  saveAnns(); annClose(); render(); annUI();
+}
+function annExport(){
+  const items = [];
+  Object.keys(anns).forEach(p=>anns[p].forEach(a=>items.push(Object.assign({page:p}, a))));
+  const blob = new Blob([JSON.stringify({project:'w78-smart-home', generated:new Date().toISOString(), items:items}, null, 2)],
+                        {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'w78_annotations.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+function annLoc(svg, ev){
+  const pt = svg.createSVGPoint();
+  pt.x = ev.clientX; pt.y = ev.clientY;
+  const loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+  return [Math.round(loc.x), Math.round(loc.y)];
+}
+
 const hist = [];                      // {view, cur, y, rows}
 function pushState(){
   hist.push({view:view, cur:cur, y:window.scrollY,
@@ -316,12 +506,15 @@ function mark(page, opts){
     + '</defs>';
   if (o.marks !== false){
     p.rows.filter(showIo).forEach(r=>{
-      const b=r.box, col=IO.color[r.io];
+      const b=r.box, mb=r.markBox || b, comp=!!r.markBox, col=IO.color[r.io];
       const hot = o.hot ? (r.io==='nav' && (r.target || r.dyn)) : (o.hotBack && r.dyn);
       const attrs = !hot ? '' : (r.dyn ? ' class="hot" data-back="1"'
                                        : ' class="hot" data-go="'+r.target+'" data-dir="1"');
-      s += '<g id="'+(o.pid||'x')+'-'+r.n+'"'+attrs+'>'
-         + '<rect x="'+(b[0]-1.5)+'" y="'+(b[1]-1.5)+'" width="'+(b[2]+3)+'" height="'+(b[3]+3)+
+      const del = (anns[page]||[]).some(a=>a.type==='control' && a.n===r.n && a.action==='delete');
+      s += '<g id="'+(o.pid||'x')+'-'+r.n+'" data-rn="'+r.n+'"'+(del?' opacity=".18"':'')+attrs+'>';
+      if (comp) s += '<rect x="'+(b[0])+'" y="'+(b[1])+'" width="'+b[2]+'" height="'+b[3]+
+        '" fill="none" stroke="'+col+'" stroke-width="1" rx="10" opacity=".28"/>';
+      s += '<rect x="'+(mb[0]-1.5)+'" y="'+(mb[1]-1.5)+'" width="'+(mb[2]+3)+'" height="'+(mb[3]+3)+
            '" fill="none" stroke="'+col+'" stroke-width="'+(o.slim?1.8:2.4)+'" rx="8" opacity="'+
            (o.slim?0.9:1)+'"/>';
       if (hot) s += '<rect class="hit" x="'+b[0]+'" y="'+b[1]+'" width="'+b[2]+'" height="'+b[3]+
@@ -330,8 +523,12 @@ function mark(page, opts){
         s += '<path d="M'+(b[0]+b[2]+2)+','+(b[1]+b[3]/2)+' h14" stroke="#f2b45c"'+
              ' stroke-width="2.4" marker-end="url(#ar)"/>';
       }
-      s += '<circle cx="'+(b[0]+1)+'" cy="'+(b[1]+1)+'" r="'+(o.slim?8:11)+'" fill="'+col+'"/>'+
-           '<text x="'+(b[0]+1)+'" y="'+(b[1]+(o.slim?3.6:5))+'" font-size="'+(o.slim?8.5:11)+
+      const isVal = r.cat === 'value';
+      const bcx = isVal ? (mb[0] - 16 >= 0 ? mb[0] - 16 : mb[0] + mb[2] + 16)
+                        : (comp ? (mb[0] - 14 >= 0 ? mb[0] - 14 : mb[0] + mb[2] + 14) : mb[0] + 1);
+      const bcy = (isVal || comp) ? mb[1] + mb[3] / 2 : mb[1] + 1;
+      s += '<circle cx="'+bcx+'" cy="'+bcy+'" r="'+(o.slim?8:11)+'" fill="'+col+'"/>'+
+           '<text x="'+bcx+'" y="'+(bcy+(o.slim?3.6:5))+'" font-size="'+(o.slim?8.5:11)+
            '" font-weight="700" fill="#05080f" text-anchor="middle" font-family="sans-serif">'+
            r.n+'</text></g>';
       if (r.io==='nav' && r.target && !o.slim && !lane){
@@ -380,19 +577,20 @@ function mark(page, opts){
            b[2]+'" height="'+b[3]+'" rx="8" pointer-events="all"/></g>';
     });
   }
-  return s + '</svg>';
+  return s + annMarks(page) + '</svg>';
 }
 
-function pill(r){
-  if (!r.target) return '<button class="pill back" data-back="1" data-hi="'+r.n+'"'+
+function pill(r,page){
+  const dp=' data-page="'+page+'" data-rn="'+r.n+'"';
+  if (!r.target) return '<button class="pill back" data-back="1" data-hi="'+r.n+'"'+dp+
     ' title="目标=来路（运行时决定）；在总览里点它 = 回到上一次浏览的页">'+
     '<i style="background:#f2b45c"></i>'+r.n+'. '+r.name+' <b>‹</b> 来路</button>';
-  return '<button class="pill nav" data-go="'+r.target+'" data-hi="'+r.n+'">'+r.n+'. '+r.name+
+  return '<button class="pill nav" data-go="'+r.target+'" data-hi="'+r.n+'"'+dp+'>'+r.n+'. '+r.name+
          ' <b>→</b> '+r.target+'</button>';
 }
-function tagIo(r){
-  return '<span class="pill static" data-hi="'+r.n+'" title="'+r.act+'"><i style="background:'+
-         IO.color[r.io]+'"></i>'+r.n+'. '+r.name+'</span>';
+function tagIo(r,page){
+  return '<span class="pill static" data-hi="'+r.n+'" data-page="'+page+'" data-rn="'+r.n+
+         '" title="'+r.act+'"><i style="background:'+IO.color[r.io]+'"></i>'+r.n+'. '+r.name+'</span>';
 }
 function tally(d){
   return d.rows.length + ' 控件';
@@ -404,7 +602,7 @@ function tagLine(k, items){
   return '<div class="tg"><span class="tl" style="color:' + IO.color[k] + ';border-color:' +
     IO.color[k] + '">' + IO.name[k] + '<em>' + items.length + '</em></span>' + items.join('') + '</div>';
 }
-function tags(d){
+function tags(d,page){
   const lines = [];
   IO_ORDER.forEach(k=>{
     if (!ioOn.has(k)) return;
@@ -416,7 +614,7 @@ function tags(d){
     }
     const rs = d.rows.filter(r=>r.io===k);
     if (!rs.length) return;
-    lines.push(tagLine(k, rs.map(r=>(k==='nav')?pill(r):tagIo(r))));
+    lines.push(tagLine(k, rs.map(r=>(k==='nav')?pill(r,page):tagIo(r,page))));
   });
   return lines.join('') || '<div class="tg"><span class="m">当前筛选下无控件</span></div>';
 }
@@ -432,9 +630,9 @@ function vLayers(){
       const d=D.pages[p];
       return '<div class="pcard'+(p===cur?' sel':'')+'" data-sel="'+p+'" data-dock="'+p+'" title="点开右侧放大图">'+
           (d.status?'<div class="stt">状态页</div>':'')+
-        mark(p,{slim:true,marks:true,pid:p,hotBack:true}).replace('<svg ','<svg class="mini" ')+
+        mark(p,{slim:true,marks:marksOn,pid:p,hotBack:true}).replace('<svg ','<svg class="mini" ')+
         '<div class="cap">'+p+'<span class="c">'+tally(d)+'</span></div>'+
-        '<div class="tags">'+tags(d)+'</div></div>';
+        '<div class="tags">'+tags(d,p)+'</div></div>';
     }).join('')+'</div>').join('');
 }
 
@@ -449,7 +647,8 @@ function sideHtml(p){
       ? d.gesture.map(g=>'<div class="item"><span class="k">✋</span><span>'+g.label+
                          '</span><span class="go" style="color:#ff8fb8" data-go="'+g.go+
                          '" data-dir="'+(g.label.indexOf('←')===0?-1:1)+'">'+g.to+'</span></div>')
-      : d.rows.filter(r=>r.io===k).map(r=>'<div class="item"><span class="k">'+r.n+'</span>'+
+      : d.rows.filter(r=>r.io===k).map(r=>'<div class="item" data-page="'+p+'" data-rn="'+r.n+
+        '" title="右键：删除 / 修改 / 加提示"><span class="k">'+r.n+'</span>'+
         '<span>'+r.name+'</span>'+(r.target?'<span class="go" data-go="'+r.target+'" data-dir="1">→ '+r.target+
         '</span>':'<span class="go" style="color:var(--t3);cursor:default">'+r.act+'</span>')+'</div>');
     if(!items.length) return '';
@@ -474,14 +673,14 @@ function vJump(){
   const d=D.pages[cur];
   return '<div class="stage"><div>'+
     '<div class="trailbar">'+trailHtml()+'</div>'+
-    '<div class="big" id="bigbox"><div class="pg">'+mark(cur,{hot:true})+'</div></div>'+
+    '<div class="big" id="bigbox"><div class="pg">'+mark(cur,{hot:true,marks:marksOn})+'</div></div>'+
     (d.gesture.length?'<div class="gesline">✋ 本页手势：'+
       d.gesture.map(g=>g.label+' → '+g.to).join('；')+'</div>':'')+
     '</div><div class="side" id="side">'+sideHtml(cur)+'</div></div>';
 }
 function swapBig(p){
   const host=document.getElementById('bigbox'); if(!host) return;
-  host.innerHTML = '<div class="pg">' + mark(p,{hot:true}) + '</div>';   // 直接换页，不做滑动
+  host.innerHTML = '<div class="pg">' + mark(p,{hot:true,marks:marksOn}) + '</div>';   // 直接换页，不做滑动
 }
 function crumbText(){
   return trail.length ? cur + '  ← ' + trail[trail.length-1] : cur + '（无来路）';
@@ -507,7 +706,18 @@ function navBack(){
   cur=trail.pop(); swapBig(cur,-1); refreshJump(); return true;
 }
 
-/* 视图 3：高清设计图（每层横向、原尺寸、无标注） */
+function stateCards(){
+  const ks=['Wi-Fi 密码半页','忘记网络'].filter(k=>D.pages[k]);
+  if(!ks.length) return '';
+  return '<h2 class="sec">Wi-Fi 弹层状态（默认隐藏；编号为本状态内序号）</h2>'+
+    '<div class="layerrow">'+ks.map(k=>
+      '<div class="pcard" data-sel="'+k+'" data-dock="'+k+'" title="点开右侧放大图" style="width:660px">'+
+      mark(k,{marks:marksOn,lane:false,hotBack:false}).replace('<svg ','<svg class="mini" ')+
+      '<div class="cap">'+k+'<span class="c">800×480 · 原尺寸</span></div></div>').join('')+
+    '</div>';
+}
+
+/* 视图 3：高清设计图（每层横向、原尺寸；控件标注可开关，默认开） */
 function vDesign(){
   const by={};
   D.order.forEach(p=>{const l=D.pages[p].layer;(by[l]=by[l]||[]).push(p);});
@@ -515,9 +725,9 @@ function vDesign(){
     '<h2 class="sec"><span class="badge">L'+l+'</span>'+D.layerNote[l]+'</h2>'+
     '<div class="layerrow">'+by[l].map(p=>
       '<div class="pcard'+(p===cur?' sel':'')+'" data-sel="'+p+'" data-dock="'+p+'" title="点开右侧放大图" style="width:660px">'+
-      mark(p,{marks:false,lane:false,hotBack:true}).replace('<svg ','<svg class="mini" ')+
+      mark(p,{marks:marksOn,lane:false,hotBack:true}).replace('<svg ','<svg class="mini" ')+
       '<div class="cap">'+p+'<span class="c">800×480 · 原尺寸</span></div></div>').join('')+
-    '</div>').join('');
+    '</div>').join('') + stateCards();
 }
 
 function legend(){
@@ -535,6 +745,9 @@ function render(){
   document.getElementById('body').innerHTML =
     view==='layers'?vLayers():view==='jump'?vJump():vDesign();
   document.getElementById('crumb').textContent = cur;
+  const mt=document.getElementById('mtoggle');
+  if(mt) mt.textContent = '标注：' + (marksOn?'开':'关');
+  annUI();
   document.querySelectorAll('.tabs .btn').forEach(b=>
     b.classList.toggle('on', b.getAttribute('data-v')===view));
 }
@@ -578,7 +791,7 @@ function openDock(p, keepPos, fromBack){
     '<h3>'+p+'页 <span class="badge">L'+d.layer+'</span>'+
     '<button class="btn" id="dockx" style="margin-left:auto">✕ 收起</button></h3>'+
     '<p class="dh">'+d.rows.length+' 控件 · 原 800×480 · 再点卡片、点空白处或按 Esc 收起</p>'+
-    mark(p,{marks:true,lane:false,hotBack:true}).replace('<svg ', '<svg class="dsvg" ');
+    mark(p,{marks:marksOn,lane:false,hotBack:true}).replace('<svg ', '<svg class="dsvg" ');
   document.getElementById('wrap').classList.add('docked');
   document.body.classList.add('docked');
   document.getElementById('dockx').onclick = closeDock;
@@ -636,9 +849,111 @@ document.addEventListener('mouseout', e=>{
   const card=t.closest('.pcard'); if(!card) return;
   const g=card.querySelector('g.hi'); if(g) g.classList.remove('hi');
 });
+function esc(s){
+  return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+function putControl(page, row, patch){
+  const list = annsOf(page);
+  const i = list.findIndex(x=>x.type==='control' && x.n===row.n);
+  const rec = Object.assign({type:'control', page:page, n:row.n, name:row.name,
+    box:row.box, action:'modify', note:''}, i>=0?list[i]:{}, patch);
+  if(i>=0) list[i] = rec; else list.push(rec);
+}
+function dropAnn(page, pred){
+  const list = anns[page] || [];
+  const i = list.findIndex(pred);
+  if(i>=0) list.splice(i,1);
+}
+function ctxClose(){
+  const m = document.getElementById('ctxmenu');
+  if(m) m.hidden = true;
+  ctxTarget = null;
+}
+function ctxOpen(cx, cy, page, row, pt, pinId){
+  ctxClose();
+  const m = document.getElementById('ctxmenu');
+  const ex = row ? annFor(page,row.n) : null;
+  const pinA = pinId ? (anns[page]||[]).find(x=>x.type==='pin' && x.id===pinId) : null;
+  let html = '<div class="ct">'+esc(row ? (page+' · #'+row.n+' '+row.name)
+                                        : (pinA ? (page+' · 提示') : (page+' · 页面')))+'</div>';
+  if(row){
+    html += '<button data-a="del">'+((ex&&ex.action==='delete')?'取消删除':'标记删除')+'</button>';
+    html += '<button data-a="edit">修改说明…</button>';
+    html += '<button data-a="addpinrow">在控件上加提示标签…</button>';
+    if(ex) html += '<button data-a="clear">清除该控件批注</button>';
+  } else if(pinA){
+    html += '<button data-a="editpin">修改提示…</button>';
+    html += '<button data-a="clearpin">删除提示</button>';
+  } else {
+    html += '<button data-a="addpin">在此加提示标签…</button>';
+  }
+  m.innerHTML = html;
+  m.hidden = false;
+  const w = m.offsetWidth, h = m.offsetHeight;
+  m.style.left = Math.max(6, Math.min(cx, innerWidth - w - 8)) + 'px';
+  m.style.top = Math.max(6, Math.min(cy, innerHeight - h - 8)) + 'px';
+  ctxTarget = {page:page, row:row, pt:pt, pin:pinA};
+}
+document.addEventListener('contextmenu', e=>{
+  const item = e.target.closest('.item[data-rn], .pill[data-rn]');
+  if(item){
+    const page = item.getAttribute('data-page');
+    const n = +item.getAttribute('data-rn');
+    const r = D.pages[page] && D.pages[page].rows.find(x=>x.n===n);
+    if(r){ e.preventDefault(); ctxOpen(e.clientX,e.clientY,page,r,null); }
+    return;
+  }
+  const host = e.target.closest('.pcard, .big, #dock');
+  if(!host || e.target.closest('#ctxmenu')) return;
+  const page = host.getAttribute('data-sel') || cur;
+  const pin = e.target.closest('[data-pin]');
+  if(pin){ e.preventDefault(); ctxOpen(e.clientX,e.clientY,page,null,null,pin.getAttribute('data-pin')); return; }
+  const svg = e.target.closest('svg');
+  if(svg){ const xy = annLoc(svg,e); e.preventDefault(); ctxOpen(e.clientX,e.clientY,page,null,xy); }
+});
+document.getElementById('ctxmenu').addEventListener('click', e=>{
+  const b = e.target.closest('button');
+  if(!b || !ctxTarget) return;
+  const a = b.getAttribute('data-a'), t = ctxTarget;
+  ctxClose();
+  if(a==='del'){
+    const ex = annFor(t.page,t.row.n);
+    if(ex && ex.action==='delete'){
+      if(ex.note) ex.action='modify'; else dropAnn(t.page,x=>x.type==='control'&&x.n===t.row.n);
+    } else putControl(t.page,t.row,{action:'delete'});
+  } else if(a==='edit'){
+    const ex = annFor(t.page,t.row.n) || {type:'control', page:t.page, n:t.row.n,
+      name:t.row.name, box:t.row.box, action:'modify', note:''};
+    annOpen(ex); return;
+  } else if(a==='clear'){
+    dropAnn(t.page,x=>x.type==='control'&&x.n===t.row.n);
+  } else if(a==='addpinrow'){
+    const b2 = t.row.markBox || t.row.box;
+    annOpen({type:'pin', page:t.page, x:b2[0]+b2[2]/2, y:b2[1]+b2[3]/2,
+             id:Date.now()+'_'+Math.random().toString(36).slice(2,6), note:''}); return;
+  } else if(a==='editpin'){
+    annOpen(t.pin); return;
+  } else if(a==='clearpin'){
+    dropAnn(t.page,x=>x.type==='pin'&&x.id===t.pin.id);
+  } else if(a==='addpin'){
+    annOpen({type:'pin', page:t.page, x:t.pt[0], y:t.pt[1],
+             id:Date.now()+'_'+Math.random().toString(36).slice(2,6), note:''}); return;
+  }
+  saveAnns(); render(); annUI();
+});
+document.addEventListener('click', e=>{ if(!e.target.closest('#ctxmenu')) ctxClose(); });
+window.addEventListener('keydown', e=>{ if(e.key==='Escape') ctxClose(); });
+
 function boot(){
   document.getElementById('back').onclick=back;
   document.getElementById('home').onclick=()=>go(D.order[0]);
+  document.getElementById('mtoggle').onclick=()=>{marksOn=!marksOn;render();};
+  document.getElementById('anexport').onclick=annExport;
+  document.getElementById('anngo').onclick=()=>{annExport();
+    alert('已导出 w78_annotations.json。\n把文件交给 AI，改设计源后重新生成 H5/EEZ（④）。');};
+  document.getElementById('annsave').onclick=annSave;
+  document.getElementById('anncancel').onclick=annClose;
+  document.getElementById('annx').onclick=annClose;
   const v=location.hash.slice(1);
   if(['layers','jump','design'].includes(v)) view=v;
   render();
@@ -655,6 +970,8 @@ HTML = r"""<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
     <button class="btn" data-v="layers">分层总览</button>
     <button class="btn" data-v="jump">跳转演练</button>
     <button class="btn" data-v="design">高清设计图</button>
+    <button class="btn" id="mtoggle">标注：开</button>
+    <button class="btn" id="anexport">导出批注</button>
   </div>
   <button class="btn" id="back">‹ 返回</button>
   <button class="btn" id="home">回主控</button>
@@ -664,6 +981,15 @@ HTML = r"""<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
 <main><div id="legend" class="legend"></div>
 <div class="wrap" id="wrap"><div id="body"></div><aside id="dock"></aside></div></main>
 <div id="dockscrim"></div>
+<div id="annpanel" hidden>
+  <div class="ah"><b id="anntitle">批注</b><button class="btn" id="annx">×</button></div>
+  <textarea id="annnote" placeholder="修改说明（删除时可留空）"></textarea>
+  <label id="anndelrow"><input type="checkbox" id="anndel"> 标记删除（仅 H5 预览隐藏）</label>
+  <div class="af"><button class="btn" id="anncancel">取消</button><button class="btn" id="annsave">保存批注</button></div>
+</div>
+<div id="annbar"><span id="anncount">0 条批注</span>
+  <button class="btn" id="anngo">导出并返回 ④</button></div>
+<div id="ctxmenu" hidden></div>
 <script id="data" type="application/json">__DATA__</script>
 <script>__JS__</script></body></html>"""
 

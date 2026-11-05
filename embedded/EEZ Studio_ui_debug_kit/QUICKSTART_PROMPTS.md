@@ -35,6 +35,11 @@ C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_ui_debug_kit\EEZ
 | ⑥ | "烧真机，我来核对；通过后设计冻结" |
 | ⑦ | "本步核心=补齐每个界面的核心功能：对照清单表逐条立项（每功能一条卡 B），全勾销才算功能齐；返工时只说：按 §X 口径修 <现象>，验收判据=<数字>" |
 
+**H5 评审页生成/更新**：
+"用 `tools/h5_overview_template.py` 按设计源生成/更新 H5：三层视图、高清默认全部控件标注、
+右键右侧清单/底部标签弹控件菜单、效果图右键落页面 pin、导出 annotations.json；
+不手改 HTML，改设计源后重跑。"
+
 ## 卡 D · 防跑偏开关词（随时可用）
 
 ```

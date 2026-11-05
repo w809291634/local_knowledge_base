@@ -349,8 +349,10 @@ eventHandlers 清空），并单独采「父+子」组合（如 `LVGLButtonWidge
 
 ### `h5_overview_template.py` —— H5 评审页生成器模板 ★
 
-单文件三视图（分层总览 / 跳转演练 / 高清设计图）+ 6 类数据流向标注，2026-11-04 用户认可 w78 版为模板。
-文件头列了「换工程只改这五处」；做法、硬规则与门禁见 `reference/14_h5_review_overview.md`。
+单文件三视图（分层总览 / 跳转演练 / 高清设计图）+ 6 类数据流向标注；2026-11-05 同步 w78 v2：
+高清默认全部控件带号、读数/整卡 glyph/弹层态、右键清单/底部标签批注、效果图右键页面 pin、
+localStorage、导出 `annotations.json`。文件头列了「换工程只改这几处」；
+复用步骤、数据契约与门禁见 `reference/14_h5_review_overview.md` §10。
 
 ---
 
