@@ -152,6 +152,9 @@
   保存工程，再用 `tools/eez_defaults.py` 采样；生成器只克隆样板、改 `identifier/left/top/width/height/
   text/localStyles 值`，**不得手写或新增字段**（样板里没有的键一律不写）。`eez_check` 的 A10 会逐控件
   比对字段集，出现样板外字段即 FAIL。2026-11-05 实测就抓到人为加的 `pad_all`。
+- **标注控件必须物化为真实类型（A12）**：设计标注 toggle/slider/动作按钮/输入/进度/图表，
+  工程里必须分别是 Switch/Slider/Button/Textarea/Bar/Chart；整卡交互区用「容器 + 卡内真控件」，
+  卡内子控件坐标**相对父对象**。`eez_check` A12 逐行核对，透明容器冒充即 FAIL。
 - **坐标相对父对象**（Studio 保存时会把绝对坐标换算掉）；`*Unit: "content"` 用于
   label 自适应尺寸。
 - **hidden 三形态**：`hiddenFlagType:"literal"` + `hiddenFlag:true`；表达式绑定用

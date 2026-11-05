@@ -4436,3 +4436,8 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：PC 仿真 build 目录按工程单独命名
   - 产出/结论：run_sim.bat 改为 <project>\tmp\sim_build_<project name>（从 SIM_TARGET_PROJ_DIR 取工程名），SIM_BIN_DIR 随之私有；已有 build 改名复用，删 CMakeCache 重配一次后增量 1s；mem_report 按新名找 exe/lib（兼容旧名）；D7 白名单 sim_build_*/compile_cache；AGENTS 5、NO_FLOW 目录树/D7/收尾同步；CHANGELOG v0.9.126。
   - 关联：PR-0532
+### PR-0533 · 2026-11-05 14:35 · Qoder
+  - 提示词：我发现 ，我在设计图中的所有控件，在 EEZ 里面并没有创建，好多都是假的，我要求所有在设计图中标注的控件，都必须是真实建立的
+  - 诉求：设计图标注的所有控件必须在 EEZ 中真实建立，不能是假容器
+  - 产出/结论：审计 171 行标注，28 开关+8 滑条+38 动作按钮+2 输入（共76）只有透明容器；eez_gen 新增 widget_kind（Switch/Slider/Button/Textarea/Bar/Chart），整卡用容器+卡内真控件（子坐标相对父）；开关初值 states=CHECKED（不带 LV_STATE_ 前缀）；物化框内设计图形不再重复画；按钮内角标/副标题仍保留。eez_check 新增 A12 类型门禁；D5 确认标记加时效，工程变更即 FAIL。结果：控件 814、A1–A12 PASS、导航 72/72、D5 97.85%（待重新确认）、ESP32 -O2 只编译 442KB；P-0230；CHANGELOG v0.9.127。
+  - 关联：PR-0533
