@@ -13,6 +13,9 @@
 （一行一个 P-####，按现象/标签检索）+ grep kit/intake/reference），命中就照做；未命中再联网或试验，
 解决后回写经验库。**不凭记忆重造方法。**
 
+**Wi-Fi 列表/连接页**：直接移植 `reference/15` 的成熟结构（单页 + lv_list 动态行 + 密码半页 + 忘记对话框 +
+busy 遮罩），不要拆成三屏、不要自造交互。
+
 **问题索引维护**：修完新问题跑 `python tools/log_entry.py problem`（落 `intake/P-####` 并自动在
 `intake/index.md` 追一行）；流程正文只留一条指针，不复制全文。
 

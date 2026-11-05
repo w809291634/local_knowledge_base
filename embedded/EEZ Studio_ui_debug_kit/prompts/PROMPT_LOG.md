@@ -4293,3 +4293,15 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 产出/结论：① wifi_ui.cpp：5 行动态名称/加密·RSSI·频段/锁/状态、扫描与断开命令、行点击选网、密码页 textarea+keyboard、连接三态与页间跳转；② 真 wlanapi 扫描 12 AP 写入列表，截图 designer_annotated/wifi_ui.png；③ 修动态中文豆腐：cn12f/cn24f 运行时 GB2312 字库档 + LV_FONT_FMT_TXT_LARGE + D3 门禁改按条目核；④ 导航 82/82、D1–D8 全 PASS。
   - 关联：PR-0506
 
+### PR-0507 · 2026-11-05 09:41 · Qoder
+  - 提示词：这个eez不对，按照 我的示例工程的机构来，我说的是wifi连接页，我要求完全参考我的示例，样式可以调整
+  - 诉求：Wi-Fi 连接页完全按 app-wifi-scan-conn-no-flow 的结构重建，样式可调
+  - 产出/结论：单页+lv_list 动态行+密码半页+忘记对话框；删掉 Wi-Fi 密码/连接中两屏（24 页）；native 按示例分层移植 app/navigation/widgets/platform，删除自研 wifi_ui；多屏下 busy 遮罩改挂 lv_layer_top；导航 72/72、假后端连接流程通过、D5 24 页 98.53%（Wi-Fi 页 99.48%）、D1–D8 PASS。沉淀 P-0226 + CHANGELOG v0.9.101。
+  - 关联：PR-0507
+
+### PR-0508 · 2026-11-05 09:55 · Qoder
+  - 提示词：现在基本上可以，以后 wifi 连接 记住这种参考，输出到本地经验库中 工作流 中，方便 AI 下次自动识别，不需要我重复提醒
+  - 诉求：把 Wi-Fi 连接页的成熟参考写进经验库工作流入口，后续自动识别
+  - 产出/结论：新增 reference/15（触发词/EEZ 单页结构/native 分层/no-flow 改造点/验证四件套/坑）；NO_FLOW §0 加触发词指针；AGENTS 规则 12；reference/README 索引；CHANGELOG v0.9.102。
+  - 关联：PR-0508
+

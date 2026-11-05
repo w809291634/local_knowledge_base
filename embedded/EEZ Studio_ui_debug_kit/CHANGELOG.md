@@ -17,6 +17,27 @@
 
 ---
 
+## v0.9.102 — Wi-Fi 连接页参考实现固化进工作流（PR-0508）
+
+- 用户令：Wi-Fi 连接这类页面以后直接按成熟示例做，AI 自动识别，不用再提醒。
+- 新增 `reference/15_wifi_list_connect_pattern.md`：触发词、EEZ 单页结构（list_box/overlay_root/dlg_root）、
+  native app/navigation/widgets/platform 分层、no-flow 改造点、验证四件套、四个坑。
+- 入口：NO_FLOW §0 加一行「Wi-Fi 列表/连接页先移植 reference/15」；AGENTS 新增规则 12；
+  `reference/README.md` 索引加一行。
+
+## v0.9.101 — Wi-Fi 连接页完全对齐示例工程结构（PR-0507）
+
+- w78 用户令：Wi-Fi 连接页要完全参考 `app-wifi-scan-conn-no-flow`，样式可调。
+- EEZ：删掉「Wi-Fi 密码」「Wi-Fi 连接中」两屏（26→24 页），改成一个 Wi-Fi 页：
+  `list_box`（LVGL List，行由 native 动态建）+ `overlay_root`（scrim+sheet+pwd_ta+keyboard）
+  + `dlg_root`（忘记确认），对象名与示例一致（list_box/pwd_ta/kb_main/btn_refresh…）。
+- native：按示例分层移植 app/{wifi_events,wifi_logic,wifi_view,wifi_model,wifi_text} +
+  navigation/{wifi_nav,wifi_bind} + widgets/{wifi_list,wifi_busy,wifi_eye,wifi_skin} + platform；
+  删除自研 wifi_ui.cpp。样式改为 w78 深色（行高 56、720 宽、字体 cn12f）。
+- 多屏差异两处：① busy 遮罩挂 `lv_layer_top`（示例单屏才挂 objects.main）；
+  ② `lv_snapshot` 只拍当前屏、不含 layer_top，遮罩证据要用可见性断言/整窗截图。
+- 验证：导航 72/72；假后端 扫描12→开半页→密码→连接→列表把新网络置顶并标已连接；证据 4 张截图。
+
 ## v0.9.100 — Wi-Fi 列表接真扫描 + 运行时中文字库档（PR-0506）
 
 - w78 ⑦-2：`src/native/wifi_ui.cpp` 把平台快照写进 Wi-Fi 三屏——列表 5 行（名称/加密·RSSI·频段/锁/状态）、
