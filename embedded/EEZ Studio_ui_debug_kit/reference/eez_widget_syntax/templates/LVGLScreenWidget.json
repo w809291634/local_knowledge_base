@@ -1,0 +1,36 @@
+{
+ "objID": "__OBJID__",
+ "type": "LVGLScreenWidget",
+ "left": 0,
+ "top": 0,
+ "width": 100,
+ "height": 50,
+ "customInputs": [],
+ "customOutputs": [],
+ "style": {
+  "objID": "__STYLE_OBJID__",
+  "useStyle": "default",
+  "conditionalStyles": [],
+  "childStyles": []
+ },
+ "timeline": [],
+ "eventHandlers": [],
+ "leftUnit": "px",
+ "topUnit": "px",
+ "widthUnit": "px",
+ "heightUnit": "px",
+ "children": [],
+ "widgetFlags": "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
+ "hiddenFlagType": "literal",
+ "clickableFlagType": "literal",
+ "flagScrollbarMode": "OFF",
+ "checkedStateType": "literal",
+ "disabledStateType": "literal",
+ "states": "",
+ "localStyles": {
+  "objID": "__LOCAL_STYLE_OBJID__",
+  "definition": {}
+ },
+ "groupIndex": 0,
+ "identifier": "tpl_screen"
+}

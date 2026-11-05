@@ -1,0 +1,135 @@
+{
+ "LVGLScreenWidget": {
+  "source": "two-state-styles/two-state-styles.eez-project",
+  "source_identifier": "",
+  "file": "templates/LVGLScreenWidget.json",
+  "note": "屏幕",
+  "defaults": "defaults.json"
+ },
+ "LVGLLabelWidget": {
+  "source": "two-state-styles/two-state-styles.eez-project",
+  "source_identifier": "",
+  "file": "templates/LVGLLabelWidget.json",
+  "note": "标签",
+  "defaults": "defaults.json"
+ },
+ "LVGLButtonWidget": {
+  "source": "app-wifi-connect/app-wifi-connect.eez-project",
+  "source_identifier": "btn_refresh",
+  "file": "templates/LVGLButtonWidget.json",
+  "note": "按钮（含一个子标签）",
+  "defaults": "defaults.json"
+ },
+ "LVGLContainerWidget": {
+  "source": "app-wifi-connect/app-wifi-connect.eez-project",
+  "source_identifier": "list_box",
+  "file": "templates/LVGLContainerWidget.json",
+  "note": "容器",
+  "defaults": "defaults.json"
+ },
+ "LVGLPanelWidget": {
+  "source": "widget-gallery/widget-gallery.eez-project",
+  "source_identifier": "panel_demo",
+  "file": "templates/LVGLPanelWidget.json",
+  "note": "面板",
+  "defaults": "defaults.json"
+ },
+ "LVGLSwitchWidget": {
+  "source": "two-state-styles/two-state-styles.eez-project",
+  "source_identifier": "sw_demo",
+  "file": "templates/LVGLSwitchWidget.json",
+  "note": "开关（必须 CHECKABLE）",
+  "defaults": "defaults.json"
+ },
+ "LVGLSliderWidget": {
+  "source": "w67-w3-w2-slider-arc-bar/w67-w3-w2-slider-arc-bar.eez-project",
+  "source_identifier": "slider_normal",
+  "file": "templates/LVGLSliderWidget.json",
+  "note": "滑条",
+  "defaults": "defaults.json"
+ },
+ "LVGLBarWidget": {
+  "source": "w67-w3-w2-slider-arc-bar/w67-w3-w2-slider-arc-bar.eez-project",
+  "source_identifier": "bar_range",
+  "file": "templates/LVGLBarWidget.json",
+  "note": "进度条",
+  "defaults": "defaults.json"
+ },
+ "LVGLArcWidget": {
+  "source": "w67-w3-w2-slider-arc-bar/w67-w3-w2-slider-arc-bar.eez-project",
+  "source_identifier": "arc_normal",
+  "file": "templates/LVGLArcWidget.json",
+  "note": "圆弧",
+  "defaults": "defaults.json"
+ },
+ "LVGLChartWidget": {
+  "source": "w14-w35-w62-chart-led-scale/w14-w35-w62-chart-led-scale.eez-project",
+  "source_identifier": "chart_main",
+  "file": "templates/LVGLChartWidget.json",
+  "note": "图表",
+  "defaults": "defaults.json"
+ },
+ "LVGLScaleWidget": {
+  "source": "w14-w35-w62-chart-led-scale/w14-w35-w62-chart-led-scale.eez-project",
+  "source_identifier": "scale_main",
+  "file": "templates/LVGLScaleWidget.json",
+  "note": "刻度",
+  "defaults": "defaults.json"
+ },
+ "LVGLLedWidget": {
+  "source": "w14-w35-w62-chart-led-scale/w14-w35-w62-chart-led-scale.eez-project",
+  "source_identifier": "led_color",
+  "file": "templates/LVGLLedWidget.json",
+  "note": "LED",
+  "defaults": "defaults.json"
+ },
+ "LVGLCheckboxWidget": {
+  "source": "two-state-styles/two-state-styles.eez-project",
+  "source_identifier": "chk_demo",
+  "file": "templates/LVGLCheckboxWidget.json",
+  "note": "复选框",
+  "defaults": "defaults.json"
+ },
+ "LVGLDropdownWidget": {
+  "source": "w23-w59-w73-w16-select-switch/w23-w59-w73-w16-select-switch.eez-project",
+  "source_identifier": "dd_main",
+  "file": "templates/LVGLDropdownWidget.json",
+  "note": "下拉框",
+  "defaults": "defaults.json"
+ },
+ "LVGLRollerWidget": {
+  "source": "w23-w59-w73-w16-select-switch/w23-w59-w73-w16-select-switch.eez-project",
+  "source_identifier": "roller_main",
+  "file": "templates/LVGLRollerWidget.json",
+  "note": "滚轮",
+  "defaults": "defaults.json"
+ },
+ "LVGLTextareaWidget": {
+  "source": "app-wifi-connect/app-wifi-connect.eez-project",
+  "source_identifier": "pwd_ta",
+  "file": "templates/LVGLTextareaWidget.json",
+  "note": "输入框",
+  "defaults": "defaults.json"
+ },
+ "LVGLKeyboardWidget": {
+  "source": "app-wifi-connect/app-wifi-connect.eez-project",
+  "source_identifier": "kb_main",
+  "file": "templates/LVGLKeyboardWidget.json",
+  "note": "键盘",
+  "defaults": "defaults.json"
+ },
+ "LVGLListWidget": {
+  "source": "app-wifi-scan-conn-no-flow/app-wifi-scan-conn-no-flow.eez-project",
+  "source_identifier": "list_box",
+  "file": "templates/LVGLListWidget.json",
+  "note": "列表",
+  "defaults": "defaults.json"
+ },
+ "LVGLSpinnerWidget": {
+  "source": "widget-gallery/widget-gallery.eez-project",
+  "source_identifier": "spinner_demo",
+  "file": "templates/LVGLSpinnerWidget.json",
+  "note": "转圈",
+  "defaults": "defaults.json"
+ }
+}

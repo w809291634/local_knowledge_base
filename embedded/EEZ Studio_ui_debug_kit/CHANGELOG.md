@@ -17,6 +17,24 @@
 
 ---
 
+## v0.9.150 — 控件模板复位为标准新建值（PR-0556）
+
+- 用户追问模板是否“新建控件的标准模板”；核对发现字段集真实，但值带源工程定制
+  （Switch iOS 配色、Button 蓝底+`cn14`、尺寸/文案/选项/值域都是源工程值）。
+- 从 EEZ Studio `classInfo.defaultValue/defaultFlags` 取 19 类标准值，落到 `defaults.json`；
+  `build_templates_project.py` 全量复位，Button 按标准 100×50 + 子 Label“Button”。
+- `validate_templates.py` 逐项对照标准值；项目/经验库 README、AGENTS 8、NO_FLOW ⑩、reference/07 同步。
+- 自证：`[TPL_CHECK] PASS（19 个模板）`、`[BUILD] OK`；P-0250。
+
+## v0.9.149 — EEZ 控件语法库 + 模板采集工程（PR-0555）
+
+- 用户令：根目录新建工程采集 EEZ 控件模板，单个控件模板存经验库，建“新建控件”语法库。
+- 新增 `eez-widget-templates/`：从真实工程提取 19 种控件 JSON（objID 占位、事件清空、表达式 literal），
+  生成 18 页 gallery 并用 EEZ CLI 无头构建；`validate_templates.py` 校验字段集与 CHECKABLE。
+- 新增经验库 `reference/eez_widget_syntax/`（README + templates + manifest）；
+  `AGENTS 8`、`NO_FLOW ⑩/⑪`、`reference/07` 明确“新建控件唯一来源”。
+- 自证：`[TPL_CHECK] PASS（19 个模板）`、`[BUILD] OK`；P-0249。
+
 ## v0.9.148 — Switch 样板缺 CHECKABLE 导致开关不切换（PR-0554）
 
 - 用户指出开关点不动，并判断是样板未按拖拽生成；核对属实。

@@ -1,0 +1,36 @@
+{
+ "objID": "__OBJID__",
+ "type": "LVGLSpinnerWidget",
+ "left": 0,
+ "top": 0,
+ "width": 80,
+ "height": 80,
+ "customInputs": [],
+ "customOutputs": [],
+ "style": {
+  "objID": "__STYLE_OBJID__",
+  "useStyle": "default",
+  "conditionalStyles": [],
+  "childStyles": []
+ },
+ "timeline": [],
+ "eventHandlers": [],
+ "leftUnit": "px",
+ "topUnit": "px",
+ "widthUnit": "px",
+ "heightUnit": "px",
+ "children": [],
+ "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+ "hiddenFlagType": "literal",
+ "clickableFlagType": "literal",
+ "flagScrollbarMode": "OFF",
+ "checkedStateType": "literal",
+ "disabledStateType": "literal",
+ "states": "",
+ "localStyles": {
+  "objID": "__LOCAL_STYLE_OBJID__",
+  "definition": {}
+ },
+ "groupIndex": 0,
+ "identifier": "tpl_spinner"
+}

@@ -1,0 +1,37 @@
+{
+ "objID": "__OBJID__",
+ "type": "LVGLSwitchWidget",
+ "left": 0,
+ "top": 0,
+ "width": 50,
+ "height": 25,
+ "customInputs": [],
+ "customOutputs": [],
+ "style": {
+  "objID": "__STYLE_OBJID__",
+  "useStyle": "default",
+  "conditionalStyles": [],
+  "childStyles": []
+ },
+ "timeline": [],
+ "eventHandlers": [],
+ "leftUnit": "px",
+ "topUnit": "px",
+ "widthUnit": "px",
+ "heightUnit": "px",
+ "children": [],
+ "widgetFlags": "CHECKABLE|CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+ "hiddenFlagType": "literal",
+ "clickableFlagType": "literal",
+ "flagScrollbarMode": "OFF",
+ "checkedStateType": "literal",
+ "disabledStateType": "literal",
+ "states": "",
+ "localStyles": {
+  "objID": "__LOCAL_STYLE_OBJID__",
+  "definition": {}
+ },
+ "groupIndex": 0,
+ "identifier": "tpl_switch",
+ "checkedState": false
+}

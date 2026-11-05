@@ -1,0 +1,331 @@
+{
+ "_meta": {
+  "source": "EEZ Studio app.asar classInfo.defaultValue/defaultFlags",
+  "eez_exe": "C:/Users/yjt54/AppData/Local/Programs/eezstudio/EEZ Studio.exe",
+  "captured": "2026-11-05"
+ },
+ "LVGLArcWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 150,
+   "height": 150,
+   "clickableFlag": true,
+   "useAngle": false,
+   "rangeMin": 0,
+   "rangeMinType": "literal",
+   "rangeMax": 100,
+   "rangeMaxType": "literal",
+   "value": 25,
+   "valueType": "literal",
+   "previewValue": "25",
+   "mode": "NORMAL",
+   "startAngle": 135,
+   "startAngleType": "literal",
+   "previewStartAngle": "135",
+   "endAngle": 45,
+   "endAngleType": "literal",
+   "previewEndAngle": "45",
+   "bgStartAngle": 135,
+   "bgStartAngleType": "literal",
+   "previewBgStartAngle": "135",
+   "bgEndAngle": 45,
+   "bgEndAngleType": "literal",
+   "previewBgEndAngle": "45",
+   "rotation": 0,
+   "rotationType": "literal",
+   "previewRotation": "0"
+  },
+  "defaultFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLBarWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 150,
+   "height": 10,
+   "clickableFlag": true,
+   "min": 0,
+   "minType": "literal",
+   "max": 100,
+   "maxType": "literal",
+   "mode": "NORMAL",
+   "value": 25,
+   "valueType": "literal",
+   "previewValue": "25",
+   "valueStart": 0,
+   "valueStartType": "literal",
+   "previewValueStart": "0",
+   "enableAnimation": false
+  },
+  "defaultFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLButtonWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 100,
+   "height": 50,
+   "clickableFlag": true,
+   "children": [
+    {
+     "left": 0,
+     "top": 0,
+     "width": 80,
+     "height": 32,
+     "widthUnit": "content",
+     "heightUnit": "content",
+     "text": "Button",
+     "textType": "literal",
+     "longMode": "WRAP",
+     "recolor": false,
+     "localStyles": {
+      "definition": {
+       "MAIN": {
+        "DEFAULT": {
+         "align": "CENTER"
+        }
+       }
+      }
+     },
+     "useStaticText": true,
+     "type": "LVGLLabelWidget"
+    }
+   ]
+  },
+  "defaultFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLChartWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 180,
+   "height": 100,
+   "clickableFlag": true
+  },
+  "defaultFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLCheckboxWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 105,
+   "widthUnit": "content",
+   "height": 20,
+   "heightUnit": "content",
+   "clickableFlag": true,
+   "text": "Checkbox",
+   "textType": "literal",
+   "useStaticText": true
+  },
+  "defaultFlags": "ADV_HITTEST|CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLContainerWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 300,
+   "height": 200,
+   "clickableFlag": true
+  },
+  "defaultFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLDropdownWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 150,
+   "height": 32,
+   "heightUnit": "content",
+   "clickableFlag": true,
+   "options": "Option 1\nOption 2\nOption 3",
+   "optionsType": "literal",
+   "selected": 0,
+   "selectedType": "literal",
+   "direction": "bottom",
+   "useStaticText": true
+  },
+  "defaultFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLKeyboardWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 300,
+   "height": 120,
+   "localStyles": {
+    "definition": {
+     "MAIN": {
+      "DEFAULT": {
+       "align": "DEFAULT"
+      }
+     }
+    }
+   },
+   "clickableFlag": true,
+   "mode": "TEXT_LOWER"
+  },
+  "defaultFlags": "CLICKABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLLabelWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 80,
+   "height": 32,
+   "widthUnit": "content",
+   "heightUnit": "content",
+   "text": "Text",
+   "textType": "literal",
+   "longMode": "WRAP",
+   "recolor": false,
+   "localStyles": {},
+   "useStaticText": true
+  },
+  "defaultFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLLedWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 32,
+   "height": 32,
+   "clickableFlag": true,
+   "color": "#0000FF",
+   "colorType": "literal",
+   "brightness": 255,
+   "brightnessType": "literal"
+  },
+  "defaultFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLListWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 180,
+   "height": 100,
+   "clickableFlag": true
+  },
+  "defaultFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLPanelWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 300,
+   "height": 200,
+   "clickableFlag": true
+  },
+  "defaultFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLRollerWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 80,
+   "height": 100,
+   "clickableFlag": true,
+   "options": "Option 1\nOption 2\nOption 3",
+   "optionsType": "literal",
+   "selected": 0,
+   "selectedType": "literal",
+   "mode": "NORMAL"
+  },
+  "defaultFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLScaleWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 240,
+   "height": 40,
+   "clickableFlag": true,
+   "scaleMode": "HORIZONTAL_BOTTOM",
+   "localStyles": {},
+   "minValue": 10,
+   "minValueType": "literal",
+   "maxValue": 40,
+   "maxValueType": "literal",
+   "angleRange": 270,
+   "rotation": 135,
+   "rotationType": "literal",
+   "totalTickCount": 31,
+   "majorTickEvery": 5,
+   "postDraw": false,
+   "drawTicksOnTop": false,
+   "showLabels": true,
+   "labelTexts": "",
+   "sections": [],
+   "mainArcRounded": false
+  },
+  "defaultFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLScreenWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 100,
+   "height": 50,
+   "clickableFlag": true
+  },
+  "defaultFlags": "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER"
+ },
+ "LVGLSliderWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 150,
+   "height": 10,
+   "clickableFlag": true,
+   "min": 0,
+   "minType": "literal",
+   "max": 100,
+   "maxType": "literal",
+   "mode": "NORMAL",
+   "value": 25,
+   "valueType": "literal",
+   "previewValue": 25,
+   "valueLeft": 0,
+   "valueLeftType": "literal",
+   "previewValueLeft": 0,
+   "enableAnimation": false
+  },
+  "defaultFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLSpinnerWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 80,
+   "height": 80
+  },
+  "defaultFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLSwitchWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 50,
+   "height": 25,
+   "clickableFlag": true
+  },
+  "defaultFlags": "CHECKABLE|CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE"
+ },
+ "LVGLTextareaWidget": {
+  "defaultValue": {
+   "left": 0,
+   "top": 0,
+   "width": 150,
+   "height": 70,
+   "clickableFlag": true,
+   "text": "",
+   "textType": "literal",
+   "placeholder": "",
+   "oneLineMode": false,
+   "passwordMode": false,
+   "acceptedCharacters": "",
+   "maxTextLength": 128
+  },
+  "defaultFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ONE|SCROLL_WITH_ARROW|SNAPPABLE"
+ }
+}

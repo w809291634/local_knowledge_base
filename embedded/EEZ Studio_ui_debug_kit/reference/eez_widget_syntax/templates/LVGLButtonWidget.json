@@ -1,0 +1,68 @@
+{
+ "objID": "__OBJID__",
+ "type": "LVGLButtonWidget",
+ "left": 0,
+ "top": 0,
+ "width": 100,
+ "height": 50,
+ "customInputs": [],
+ "customOutputs": [],
+ "style": {
+  "objID": "__STYLE_OBJID__",
+  "useStyle": "default",
+  "conditionalStyles": [],
+  "childStyles": []
+ },
+ "timeline": [],
+ "eventHandlers": [],
+ "leftUnit": "px",
+ "topUnit": "px",
+ "widthUnit": "px",
+ "heightUnit": "px",
+ "children": [
+  {
+   "objID": "__OBJID__",
+   "type": "LVGLLabelWidget",
+   "left": 0,
+   "top": 0,
+   "width": 80,
+   "height": 32,
+   "widthUnit": "content",
+   "heightUnit": "content",
+   "text": "Button",
+   "textType": "literal",
+   "longMode": "WRAP",
+   "recolor": false,
+   "useStaticText": true,
+   "localStyles": {
+    "objID": "__LOCAL_STYLE_OBJID__",
+    "definition": {
+     "MAIN": {
+      "DEFAULT": {
+       "align": "CENTER"
+      }
+     }
+    }
+   },
+   "eventHandlers": [],
+   "timeline": [],
+   "children": [],
+   "identifier": "tpl_button_label",
+   "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+   "states": ""
+  }
+ ],
+ "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+ "hiddenFlagType": "literal",
+ "clickableFlagType": "literal",
+ "flagScrollbarMode": "OFF",
+ "checkedStateType": "literal",
+ "disabledStateType": "literal",
+ "states": "",
+ "localStyles": {
+  "objID": "__LOCAL_STYLE_OBJID__",
+  "definition": {}
+ },
+ "groupIndex": 0,
+ "identifier": "tpl_button"
+}

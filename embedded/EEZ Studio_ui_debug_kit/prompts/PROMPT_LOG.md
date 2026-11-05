@@ -4546,3 +4546,13 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：核查开关不切换是否样板问题
   - 产出/结论：属实——eez_defaults 的 Switch 采样自 watch 工程，widgetFlags 缺 CHECKABLE；生成代码 remove_flag，点击不切换。改用 two-state-styles 真实样板（带 CHECKABLE），checkedState=false/states=''；新增 A13 门禁；删除 native 临时补丁。自证 PRESSED→RELEASED：on 1→0、off 0→1；A1–A13 PASS。AGENTS 8、NO_FLOW ⑪、reference/07；P-0248；CHANGELOG v0.9.148。
   - 关联：PR-0554
+### PR-0555 · 2026-11-05 21:05 · Qoder
+  - 提示词：以后严格按照流程要，现在可以新建一个 eez 控件模板，你可以在根目录中新建一个项目，表示获取 eez 控件的模板，然后将每个 控件的模板保存到经验库中，以后按照这个经验库来新建控件，就不会出现问题，我建议单独创建一个 eez 控件的语法库，这个语法库先添加 新建 初始控件的 模板语法 。
+  - 诉求：新建控件一律用真实拖拽模板；建模板采集工程 + 经验库语法库
+  - 产出/结论：新增 `eez-widget-templates/`：从 7 个真实工程提取 19 种控件（objID 占位、事件清空、表达式 literal），生成 18 页 gallery 并 EEZ CLI 无头构建；`validate_templates.py` 校验 A10/A13。经验库新增 `reference/eez_widget_syntax/`（README+templates+manifest）；AGENTS 8、NO_FLOW ⑩/⑪、reference/07 写死“新建控件唯一来源”。自证 `[TPL_CHECK] PASS（19 个模板）`、`[BUILD] OK`；P-0249；CHANGELOG v0.9.149。
+  - 关联：PR-0555
+### PR-0556 · 2026-11-05 21:25 · Qoder
+  - 提示词：你核对一下，确认清楚，是否是新建一个 控件，获取的标准的 控件模板
+  - 诉求：确认模板是不是新建控件的标准模板
+  - 产出/结论：核对为“真实拖拽字段集 + 源工程改过的值”，不是标准新建值（Switch 60×30+iOS配色、Button 84×30 蓝底 cn14 刷新、Label 448×26 Two-State Styles 等）。从 EEZ app.asar classInfo 取 19 类 defaultValue/defaultFlags 落 `defaults.json`；生成器全量复位，validate 逐项核对；`[TPL_CHECK] PASS`、`[BUILD] OK`，生成代码无源工程样式。AGENTS 8、NO_FLOW ⑩、reference/07、两份 README 同步；P-0250；CHANGELOG v0.9.150。
+  - 关联：PR-0556
