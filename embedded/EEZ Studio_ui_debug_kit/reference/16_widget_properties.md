@@ -25,6 +25,17 @@
 > - 「模板默认值」= 模板库该字段的保存值；`—` = 模板未落盘。
 > - 「说明」只写三类**可从 classInfo 直接读出**的事实：可写表达式的 modes、classInfo 是否定义了条件显隐/禁用、
 >   模板是否落盘；不写主观解释。
+>
+> **每一列/每节的来源（便于判断“是不是 EEZ 原值”）**：
+>
+> | 列 / 节 | 来源 | 是否 EEZ 前端原值 |
+> |---|---|---|
+> | §1、§2 的属性名 / 显示名 / type / 可选值 / 分组 | `classInfo.properties` | **是** |
+> | §1「模板默认值」 | `templates/*.json`（EEZ UI 拖拽保存产物） | 是（UI 落盘值） |
+> | §1.1 flags 18 项 / §1.2 states 4 项 | `LVGL_FLAG_CODES` / `LVGL_STATE_CODES` | **是** |
+> | §1.3 / §1.6 样式属性目录 | `style-catalog`（`*_property_info`） | **是** |
+> | 各控件「可编辑 Part」 | `classInfo.lvgl.parts` | **是** |
+> | §1.4 `<属性>Type` 字段 / §1.5 结构字段 | 保存工程 JSON（UI 产物，**非** classInfo.properties） | 是（UI 落盘值） |
 
 
 ## 1. 通用属性（所有 LVGL 控件继承 `LVGLWidget`）
@@ -36,17 +47,17 @@
 
 | `identifier` | Name | 5 | — | — | — | classInfo 定义了条件禁用；放置时赋值；继承通用 |
 | `codeIdentifier` | —（未命名） | 5 | — | — | — | classInfo 定义了条件禁用；模板未落盘（编辑器预览字段）；继承通用 |
-| `left` | —（未命名） | 3 | — | 0 | Position and size | classInfo 定义了条件显隐；classInfo 定义了条件禁用；继承通用 |
-| `leftUnit` | —（未命名） | 4 | Pixels / Percent | px | Position and size | classInfo 定义了条件显隐；classInfo 定义了条件禁用；继承通用 |
-| `top` | —（未命名） | 3 | — | 0 | Position and size | classInfo 定义了条件显隐；classInfo 定义了条件禁用；继承通用 |
-| `topUnit` | —（未命名） | 4 | Pixels / Percent | px | Position and size | classInfo 定义了条件显隐；classInfo 定义了条件禁用；继承通用 |
-| `width` | —（未命名） | 3 | — | 180 | Position and size | classInfo 定义了条件显隐；classInfo 定义了条件禁用；继承通用 |
-| `widthUnit` | —（未命名） | 4 | Pixels / Percent / Content | px | Position and size | classInfo 定义了条件显隐；classInfo 定义了条件禁用；继承通用 |
-| `height` | —（未命名） | 3 | — | 100 | Position and size | classInfo 定义了条件显隐；classInfo 定义了条件禁用；继承通用 |
-| `heightUnit` | —（未命名） | 4 | Pixels / Percent / Content | px | Position and size | classInfo 定义了条件显隐；classInfo 定义了条件禁用；继承通用 |
+| `left` | —（未命名） | 3 | — | 0 | Position and size | 属性面板不显示（hideInPropertyGrid=true）；classInfo 定义了条件禁用；继承通用 |
+| `leftUnit` | —（未命名） | 4 | Pixels / Percent | px | Position and size | 属性面板不显示（hideInPropertyGrid=true）；classInfo 定义了条件禁用；继承通用 |
+| `top` | —（未命名） | 3 | — | 0 | Position and size | 属性面板不显示（hideInPropertyGrid=true）；classInfo 定义了条件禁用；继承通用 |
+| `topUnit` | —（未命名） | 4 | Pixels / Percent | px | Position and size | 属性面板不显示（hideInPropertyGrid=true）；classInfo 定义了条件禁用；继承通用 |
+| `width` | —（未命名） | 3 | — | 180 | Position and size | 属性面板不显示（hideInPropertyGrid=true）；classInfo 定义了条件禁用；继承通用 |
+| `widthUnit` | —（未命名） | 4 | Pixels / Percent / Content | px | Position and size | 属性面板不显示（hideInPropertyGrid=true）；classInfo 定义了条件禁用；继承通用 |
+| `height` | —（未命名） | 3 | — | 100 | Position and size | 属性面板不显示（hideInPropertyGrid=true）；classInfo 定义了条件禁用；继承通用 |
+| `heightUnit` | —（未命名） | 4 | Pixels / Percent / Content | px | Position and size | 属性面板不显示（hideInPropertyGrid=true）；classInfo 定义了条件禁用；继承通用 |
 | `geometryProperties` | —（未命名） | 22 | — | — | Position and size | classInfo 定义了条件禁用；模板未落盘（编辑器预览字段）；继承通用 |
 | `absolutePosition` | Absolute pos. | 5 | — | — | Position and size | classInfo 定义了条件显隐；模板未落盘（编辑器预览字段）；继承通用 |
-| `children` | —（未命名） | 0 | — | [] | — | classInfo 定义了条件显隐；继承通用 |
+| `children` | —（未命名） | 0 | — | [] | — | 属性面板不显示（hideInPropertyGrid=true）；继承通用 |
 | `hiddenFlag` | Hidden | boolean | — | — | Flags | 可写表达式（literal/expression）；仅隐藏时写入；继承通用 |
 | `clickableFlag` | Clickable | boolean | — | true | Flags | 可写表达式（literal/expression）；继承通用 |
 | `widgetFlags` | —（未命名） | 5 | — | CLICK_FOCUSABLE\|GESTURE_BUBBLE\|PRESS_LOCK\|SCROLLABLE\|… | Flags | 继承通用 |
@@ -98,13 +109,14 @@
 
 ### 1.3 样式（Style 组）
 
-`localStyles` 不按单一字段编辑，而是在 Style 面板里按 **Part（MAIN / INDICATOR / KNOB / SCROLLBAR / …）× State（DEFAULT / CHECKED / …）**
-逐项选择 LVGL 样式属性（背景、边框、圆角、内边距、文字颜色/字体、对齐、线宽…）。
+`localStyles` 不按单一字段编辑，而是在 Style 面板里按 **Part × State** 逐项选择 LVGL 样式属性
+（背景、边框、圆角、内边距、文字颜色/字体、对齐、线宽…），允许的属性目录见 **§1.6**。
 生成器只允许写 `localStyles.definition.<PART>.<STATE>` 里的 LVGL 样式属性键，
-A10 门禁校验键名合法性（如 `bg_color` / `text_font` / `pad_*` / `radius` / `align`）。
+A10 门禁校验键名合法性。
+每个控件能编辑哪些 Part，见各控件节标题下的「可编辑 Part」行（来自 `classInfo.lvgl.parts`）。
 
 
-### 1.4 表达式选择器字段 `<属性>Type`（每行属性右侧的小下拉）
+### 1.4 表达式选择器字段 `<属性>Type`（来源：保存工程字段，非 classInfo.properties）
 
 EEZ 里每个「可写表达式」的属性，在工程 JSON 中都伴随一个 `<属性名>Type` 字段，
 UI 上就是该属性行右侧的 `literal` / `expression` 下拉。**生成器改属性值时必须同时把对应
@@ -167,14 +179,256 @@ UI 上就是该属性行右侧的 `literal` / `expression` 下拉。**生成器�
 | `tabNameType` | literal / translated-literal / expression（按属性而定） | LVGLTabWidget |
 
 
-### 1.5 结构/行为集合字段（非单值属性）
+### 1.5 结构/行为集合字段（来源：保存工程字段，非 classInfo.properties）
 
-| 字段 | UI 位置 | 类型 | 说明 |
-|---|---|---|---|
-| `eventHandlers` | Events 分组 | 数组 | 事件绑定（CLICKED 等 → action）；生成时可为空数组，交互由 native 接 |
-| `timeline` | Timeline | 数组 | 时间线动画（EEZ Flow 动画），no-flow 工程保持空 |
-| `customInputs` / `customOutputs` | Flow 分组 | 数组 | 给 Flow 用的自定义输入/输出，no-flow 工程保持空 |
-| `children` | Widget 树 | 数组 | 子控件；Button 必须恰好 1 个 Label，Tab 只能挂在 Tabview 下 |
+| 字段 | 类型 | 说明（来源：保存工程字段） |
+|---|---|---|
+| `eventHandlers` | 数组 | 事件绑定（CLICKED 等 → action）；no-flow 工程保持空，交互由 native 接 |
+| `timeline` | 数组 | 时间线动画；no-flow 工程保持空 |
+| `customInputs` / `customOutputs` | 数组 | 自定义输入/输出（Flow 用）；no-flow 工程保持空 |
+| `style` | 对象 | `{objID, useStyle, conditionalStyles[], childStyles[]}` |
+| `children` | 数组 | 子控件；Button 必须恰好 1 个 Label，Tab 只能挂在 Tabview 下 |
+
+> `eventHandlers` / `timeline` 的**子字段结构**由 EEZ 在 UI 里配一条后生成（不同绑定类型结构不同），
+> 本表不臆造；需要写事件时先在 EEZ 里配好一条，再照抄其 JSON 结构。
+
+
+### 1.6 Style 面板属性目录（114 项，来源 EEZ style-catalog）
+
+> 这些是 Style 面板里可选的 LVGL 样式属性；按 `localStyles.definition.<PART>.<STATE>` 写入。
+> **注意**：这是 EEZ 的全量样式属性目录；具体控件/Part 实际显示哪些，由 EEZ 的
+> `isLvglStylePropertySupported()` 运行时过滤，本表**未逐控件裁剪**（该判定逻辑未取到可枚举结果）。
+
+| 属性名 | 显示名（classInfo `displayName`） | type（classInfo 原值） |
+|---|---|---|
+
+| `align` | Align | enum（定义于 makeEnumPropertyInfo） |
+
+| `anim` | —（未命名） | 5 |
+
+| `anim_duration` | —（未命名） | 3 |
+
+| `anim_speed` | —（未命名） | 3 |
+
+| `anim_time` | —（未命名） | 3 |
+
+| `arc_color` | Arc Color | 9 |
+
+| `arc_img_src` | Arc Image Source | 12 |
+
+| `arc_opa` | Arc Opacity | 3 |
+
+| `arc_rounded` | Arc Rounded | 2 |
+
+| `arc_width` | Arc Width | 3 |
+
+| `base_dir` | Base direction | enum（定义于 makeEnumPropertyInfo） |
+
+| `bg_color` | Bg Color | 9 |
+
+| `bg_dither_mode` | Bg Dither mode | enum（定义于 makeEnumPropertyInfo） |
+
+| `bg_grad` | —（未命名） | 3 |
+
+| `bg_grad_color` | Bg Grad. color | 9 |
+
+| `bg_grad_dir` | Bg Grad. Direction | enum（定义于 makeEnumPropertyInfo） |
+
+| `bg_grad_opa` | —（未命名） | 3 |
+
+| `bg_grad_stop` | Bg Gradient Stop | 3 |
+
+| `bg_img_opa` | Bg Image Opacity | 3 |
+
+| `bg_img_recolor` | Bg Image Recolor | 9 |
+
+| `bg_img_recolor_opa` | Bg Image Recolor Opa. | 3 |
+
+| `bg_img_src` | Bg Image Source | 12 |
+
+| `bg_img_tiled` | Bg Image Tiled | 2 |
+
+| `bg_main_opa` | —（未命名） | 3 |
+
+| `bg_main_stop` | Bg Main Stop | 3 |
+
+| `bg_opa` | Bg Opacity | 3 |
+
+| `blend_mode` | Blend mode | enum（定义于 makeEnumPropertyInfo） |
+
+| `border_color` | Border Color | 9 |
+
+| `border_opa` | Border Opacity | 3 |
+
+| `border_post` | Border Post | 2 |
+
+| `border_side` | Border Side | enum（定义于 makeEnumPropertyInfo） |
+
+| `border_width` | Border Width | 3 |
+
+| `clip_corner` | Clip corner | 2 |
+
+| `color_filter_dsc` | —（未命名） | 3 |
+
+| `color_filter_opa` | —（未命名） | 3 |
+
+| `flex_cross_place` | Flex cross place | enum（定义于 makeEnumPropertyInfo） |
+
+| `flex_flow` | Flex flow | enum（定义于 makeEnumPropertyInfo） |
+
+| `flex_grow` | Flex grow | 3 |
+
+| `flex_main_place` | Flex main place | enum（定义于 makeEnumPropertyInfo） |
+
+| `flex_track_place` | Flex track place | enum（定义于 makeEnumPropertyInfo） |
+
+| `grid_cell_column_pos` | Grid cell column pos | 3 |
+
+| `grid_cell_column_span` | Grid cell column span | 3 |
+
+| `grid_cell_row_pos` | Grid cell row pos | 3 |
+
+| `grid_cell_row_span` | Grid cell row span | 3 |
+
+| `grid_cell_x_align` | Grid cell X align | enum（定义于 makeEnumPropertyInfo） |
+
+| `grid_cell_y_align` | Grid cell Y align | enum（定义于 makeEnumPropertyInfo） |
+
+| `grid_column_align` | Grid column align | enum（定义于 makeEnumPropertyInfo） |
+
+| `grid_column_dsc_array` | Grid column descriptor | 19 |
+
+| `grid_row_align` | Grid row align | enum（定义于 makeEnumPropertyInfo） |
+
+| `grid_row_dsc_array` | Grid row descriptor | 19 |
+
+| `height` | —（未命名） | 3 |
+
+| `img_opa` | Image Opacity | 3 |
+
+| `img_recolor` | Image Recolor | 9 |
+
+| `img_recolor_opa` | Image Recolor Opa. | 3 |
+
+| `layout` | Layout | enum（定义于 makeEnumPropertyInfo） |
+
+| `length` | Length | 3 |
+
+| `line_color` | Line Color | 9 |
+
+| `line_dash_gap` | Line Dash Gap | 3 |
+
+| `line_dash_width` | Line Dash Width | 3 |
+
+| `line_opa` | Line Opacity | 3 |
+
+| `line_rounded` | Line Rounded | 2 |
+
+| `line_width` | Line Width | 3 |
+
+| `margin_bottom` | Margin Bottom | 3 |
+
+| `margin_left` | Margin Left | 3 |
+
+| `margin_right` | Margin Right | 3 |
+
+| `margin_top` | Margin Top | 3 |
+
+| `max_height` | Max. height | 3 |
+
+| `max_width` | Max. width | 3 |
+
+| `min_height` | Min. height | 3 |
+
+| `min_width` | Min. width | 3 |
+
+| `opa` | Opacity | 3 |
+
+| `outline_color` | Outline Color | 9 |
+
+| `outline_opa` | Outline Opacity | 3 |
+
+| `outline_pad` | Outline Padding | 3 |
+
+| `outline_width` | Outline Width | 3 |
+
+| `pad_bottom` | Pad Bottom | 3 |
+
+| `pad_column` | Pad Column | 3 |
+
+| `pad_left` | Pad Left | 3 |
+
+| `pad_radial` | Pad Radial | 3 |
+
+| `pad_right` | Pad Right | 3 |
+
+| `pad_row` | Pad Row | 3 |
+
+| `pad_top` | Pad Top | 3 |
+
+| `radial_offset` | Radial Offset | 3 |
+
+| `radius` | Radius | 3 |
+
+| `shadow_color` | Shadow Color | 9 |
+
+| `shadow_ofs_x` | Shadow X Offset | 3 |
+
+| `shadow_ofs_y` | Shadow Y Offset | 3 |
+
+| `shadow_opa` | Shadow Opacity | 3 |
+
+| `shadow_spread` | Shadow Spread | 3 |
+
+| `shadow_width` | Shadow Width | 3 |
+
+| `text_align` | Text Align | enum（定义于 makeEnumPropertyInfo） |
+
+| `text_color` | Text Color | 9 |
+
+| `text_decor` | Text Decoration | enum（定义于 makeEnumPropertyInfo） |
+
+| `text_font` | Text Font | 4 |
+
+| `text_letter_space` | Text Letter Space | 3 |
+
+| `text_line_space` | Text Line Space | 3 |
+
+| `text_opa` | Text Opacity | 3 |
+
+| `transform_angle` | —（未命名） | 3 |
+
+| `transform_height` | —（未命名） | 3 |
+
+| `transform_pivot_x` | Transform pivot X | 3 |
+
+| `transform_pivot_y` | Transform pivot Y | 3 |
+
+| `transform_rotation` | —（未命名） | 3 |
+
+| `transform_scale_x` | Transform scale X | 3 |
+
+| `transform_scale_y` | Transform scale Y | 3 |
+
+| `transform_skew_x` | Transform skew X | 3 |
+
+| `transform_skew_y` | Transform skew Y | 3 |
+
+| `transform_width` | —（未命名） | 3 |
+
+| `transform_zoom` | —（未命名） | 3 |
+
+| `transition` | —（未命名） | 22 |
+
+| `translate_x` | Translate X | 3 |
+
+| `translate_y` | Translate Y | 3 |
+
+| `width` | —（未命名） | 3 |
+
+| `x` | —（未命名） | 3 |
+
+| `y` | —（未命名） | 3 |
 
 
 ## 2. 各控件 Specific 属性
@@ -183,6 +437,8 @@ UI 上就是该属性行右侧的 `literal` / `expression` 下拉。**生成器�
 
 
 ### `LVGLAnimationImageWidget`（AnimationImage）｜手册 W1
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -194,6 +450,8 @@ UI 上就是该属性行右侧的 `literal` / `expression` 下拉。**生成器�
 
 
 ### `LVGLArcWidget`（Arc）｜手册 W2
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `INDICATOR` / `KNOB`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -219,6 +477,8 @@ UI 上就是该属性行右侧的 `literal` / `expression` 下拉。**生成器�
 
 ### `LVGLBarWidget`（Bar）｜手册 W3
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `INDICATOR`
+
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
 
@@ -234,6 +494,8 @@ UI 上就是该属性行右侧的 `literal` / `expression` 下拉。**生成器�
 
 ### `LVGLButtonMatrixWidget`（ButtonMatrix）｜手册 W11
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `ITEMS`
+
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
 
@@ -243,10 +505,14 @@ UI 上就是该属性行右侧的 `literal` / `expression` 下拉。**生成器�
 
 ### `LVGLButtonWidget`（Button）｜手册 W10
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
+
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLCalendarWidget`（Calendar）｜手册 W12
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `ITEMS`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -260,15 +526,21 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 ### `LVGLCanvasWidget`（Canvas）｜手册 W13
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
+
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLChartWidget`（Chart）｜手册 W14
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `ITEMS` / `INDICATOR`
+
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLCheckboxWidget`（Checkbox）｜手册 W16
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `INDICATOR`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -279,13 +551,17 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 ### `LVGLContainerWidget`（Container）｜手册 W20
 
+可编辑 Part：**classInfo 未声明**（继承 `LVGLWidget` 默认 Part，本表不推断具体值）
+
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
 
-| `containerVersion` | —（未命名） | 3 | — | — | — | classInfo 定义了条件显隐；模板未落盘 |
+| `containerVersion` | —（未命名） | 3 | — | — | — | 属性面板不显示（hideInPropertyGrid=true）；模板未落盘 |
 
 
 ### `LVGLDropdownWidget`（Dropdown）｜手册 W24
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `SELECTED` / `INDICATOR`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -297,6 +573,8 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLImageWidget`（Image）｜手册 W30
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -315,6 +593,8 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 ### `LVGLImgbuttonWidget`（Imgbutton）｜手册 W31
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
+
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
 
@@ -328,6 +608,8 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 ### `LVGLKeyboardWidget`（Keyboard）｜手册 W34
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `ITEMS`
+
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
 
@@ -336,6 +618,8 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLLabelWidget`（Label）｜手册 W35
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -349,6 +633,8 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 ### `LVGLLedWidget`（Led）｜手册 W36
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
+
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
 
@@ -357,6 +643,8 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLLineWidget`（Line）｜手册 W37
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -370,30 +658,42 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 ### `LVGLListWidget`（List）｜手册 W42
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `SCROLLBAR`
+
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLLottieWidget`（Lottie）｜手册 W43
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
 
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLMenuWidget`（Menu）｜手册 W45
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
+
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLMessageBoxWidget`（MessageBox）｜手册 W46
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
 
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLPanelWidget`（Panel）｜手册 W50
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `SCROLLBAR`
+
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLQRCodeWidget`（QRCode）｜手册 W56
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -405,6 +705,8 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 ### `LVGLRollerWidget`（Roller）｜手册 W61
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `SELECTED`
+
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
 
@@ -414,6 +716,8 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLScaleWidget`（Scale）｜手册 W62
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `ITEMS` / `INDICATOR`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -457,10 +761,14 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 ### `LVGLScreenWidget`（Screen）｜手册 W 章节未单列
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `SCROLLBAR`
+
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLSliderWidget`（Slider）｜手册 W67
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `INDICATOR` / `KNOB`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -477,6 +785,8 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 ### `LVGLSpanWidget`（Span）｜手册 W68
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
+
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
 
@@ -489,6 +799,8 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLSpinboxWidget`（Spinbox）｜手册 W69
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `SELECTED` / `CURSOR`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -504,15 +816,21 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 ### `LVGLSpinnerWidget`（Spinner）｜手册 W71
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `INDICATOR`
+
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLSwitchWidget`（Switch）｜手册 W74
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `INDICATOR` / `KNOB`
+
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLTabWidget`（Tab）｜手册 W75
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -522,10 +840,14 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 ### `LVGLTableWidget`（Table）｜手册 W76
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `ITEMS` / `SCROLLBAR`
+
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLTabviewWidget`（Tabview）｜手册 W78
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -536,6 +858,8 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLTextareaWidget`（Textarea）｜手册 W80
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN` / `SELECTED` / `CURSOR` / `SCROLLBAR` / `TEXTAREA_PLACEHOLDER`
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -550,10 +874,14 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 ### `LVGLTileViewWidget`（TileView）｜手册 W84
 
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
+
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
 ### `LVGLWindowWidget`（Window）｜手册 W87
+
+可编辑 Part（Style 面板，`classInfo.lvgl.parts`）：`MAIN`
 
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
@@ -577,7 +905,9 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 | 核对项 | 结果 |
 |---|---|
-| 行数 | 168 行（通用 27 + 各控件 Specific 141） |
+| 控件级字段行数 | 168 行（通用 27 + 各控件 Specific 141） |
+| Style 属性行数 | 114 项（`style-catalog`，含 `makeEnumPropertyInfo` 定义项） |
+| 每控件 Part 行 | 37 行（`classInfo.lvgl.parts`；Container 未声明，按默认 MAIN） |
 | 属性名 | 全部能在对应 `classInfo.properties` 里找到；classInfo 的每个属性也都出现在表中（双向 0 差异） |
 | 可选值 | 与 `enumItems` 逐字一致 |
 | 模板默认值 | 与 `templates/*.json` 逐字一致（空串显示为 `""`） |
