@@ -4651,4 +4651,9 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：把「不确定先查 EEZ 官方手册」「EEZ 里改参数优先、禁止脚本间接改 EEZ 工程」写进工作流，并要求工作流体现查阅官方手册
   - 产出/结论：NO_FLOW 新增 §2.2b（顺序：查手册→EEZ UI 设参数并构建看 `.c` 产物→结论带页码落 intake→才写进设计源/模板库；含「可以做/禁止」对照与判据）；FLOW §2 加同口径指针；`AGENTS.md` 铁律第 15 条（入口）。反例引用 I4：手册 P10 Bitmaps 可选 `INDEXED 4 BIT`，`bpp` 是 CF id 43，不能把 4/9/10 当位深试后就判"EEZ 不支持"。CHANGELOG v0.9.164。
   - 关联：PR-0577、CHANGELOG v0.9.164
+### PR-0579 · 2026-11-06 17:20 · Trae
+  - 提示词：另外新建一个eez工程，然后结合 EEZ 手册，每一个控件在 EEZ 的前端UI界面中可以修改哪些属性字段，输出一个md表格记录下来，方便后续eez工程生成时候参考，同时在经验库中，也严格要求按照 当前记录 的属性表格中获取可以修改的属性字段格式，要求记录详细一点
+  - 诉求：逐控件记录 EEZ 前端可改属性字段，产出 md 表；经验库后续生成工程必须按该表取字段
+  - 产出/结论：新增 `reference/16_widget_properties.md`（36 类 + Screen；属性名/UI 显示名/类型/枚举/模板默认值/分组/条件显隐；通用 27 项 + flags 18 项 + states + `<属性>Type` + Style 口径 + 5 条硬约束）。来源三方核对：EEZ 5.x `app.asar` classInfo、手册 W 章节（05/06）、templates 落盘；校验 0 缺失。规则写进 `reference/README`、`eez-widget-templates/README`、NO_FLOW §2.2、`AGENTS.md` 铁律 8。经用户确认「不新建工程，直接用现有工程核对」。CHANGELOG v0.9.165。
+  - 关联：PR-0578、CHANGELOG v0.9.165
 
