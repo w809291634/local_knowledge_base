@@ -244,7 +244,7 @@ defaults/manifest 校验。`tools/eez_defaults.py` 只用于从**已有工程**�
 **属性字段白名单（2026-11-06 用户定）**：可改字段一律以 **`reference/16_widget_properties.md`**
 （36 类控件 + Screen 的全字段表，来自 EEZ 前端属性面板 classInfo × 官方手册 W 章节 × 模板落盘值三方核对）
 为准；表里没有的字段不许写，Style 只写表内列出的 LVGL 样式属性。需要新字段时先在 EEZ UI 里把该属性改出来、
-保存工程，再回填该表并重提模板，之后才允许出现在生成器里。
+保存工程，再回填该表并重提模板，之后才允许出现在生成器里（详细步骤见 `reference/16_widget_properties.md` §6）。
 必配门禁：按钮恰一子标签、子标签文本非空、按钮自身无 `text`、字体覆盖所有字符。
 **克隆后仍要检查"表达式型"属性**：新模板的表达式型字段都已复位为 literal；若从旧工程/别的工程取样，
 需清掉表达式型字段绑定（如 `text/hiddenFlag` 的 expression），避免生成未声明的

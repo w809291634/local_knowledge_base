@@ -37,6 +37,9 @@
   ③Style 属性 × 控件/Part 可见性矩阵（只给全量 114 项目录，未逐控件裁剪）；④`eventHandlers`/`timeline`/
   `customInputs`/`customOutputs` 的条目子结构；⑤条件性才出现的字段规则（Keyboard `textarea`、Tab `tabName`、
   `hiddenFlag=true` 等）。均写明“需要时回 EEZ UI 确认后回填”。
+- **§6 字段补充流程**：查手册（W 章节）→ 在 EEZ UI 里拖出控件/改出属性并逐项看枚举 → UI 保存 →
+  `extract_templates.py` / `validate_templates.py` → 读模板落盘值 → 回填本表并重跑复核 → 用于生成器先过 A14/A10。
+  明令禁止脚本拼字段、脚本改 `.eez-project`、按 classInfo 片段猜值。
 
 ## v0.9.164 — 工作流写死「EEZ 参数优先 + 不确定先查官方手册」（PR-0578）
 

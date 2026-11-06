@@ -929,3 +929,20 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 | 4 | `eventHandlers` / `timeline` / `customInputs` / `customOutputs` 的**条目子字段结构** | 结构由 EEZ 在 UI 里配一条后生成，随绑定类型/版本变化；静态展开必然臆造 | 先在 EEZ 里配一条，再照抄其 JSON 结构 |
 | 5 | **条件性才出现的字段规则**（如 Keyboard 绑定后才出现 `textarea`、Tab 进入 Tabview 后才出现 `tabName`、遮罩真正隐藏时才有 `hiddenFlag=true`） | classInfo 用函数条件控制显隐，无法展开成静态字段规则 | 以 UI 实际出现的字段为准；本表只列字段本身，不伪造出现条件 |
 
+## 6. 字段补充流程（表里没有的字段怎么补）
+
+> 适用：§5 的 5 类，或 EEZ 升级后新增的属性。
+> **唯一合法来源仍然是 EEZ 前端（手册 + UI）**，脚本不得猜、不得手拼字段。
+
+| 步 | 动作 | 判据 |
+|---|---|---|
+| ① 查手册 | 查 `reference_guide_raw.txt` / 官方 PDF 对应 W 章节（kit 提炼版 `05_widgets_part1.md` / `06_widgets_part2.md`），确认该控件有没有这个属性、语义是什么 | 结论能指到章节/行号 |
+| ② 在 EEZ UI 里做出来 | 在 `eez-widget-templates.eez-project` 新建画布、从 Palette 拖出该控件；或在属性面板把该属性改出来，**枚举下拉逐项看一遍并记下选项** | UI 面板里能看到该字段与全部选项 |
+| ③ 保存工程 | 用 EEZ UI 保存（唯一合法写入方式；**禁止脚本改 `.eez-project`**） | 工程 JSON 里出现该键 |
+| ④ 重提模板并校验 | `python extract_templates.py` → `python validate_templates.py` | `[TPL_CHECK] PASS` |
+| ⑤ 读落盘值 | 从 `templates/<Type>.json` 读：键名、保存值、该属性是否可写表达式（`<属性>Type`）、枚举项 | 与 UI 看到的一致 |
+| ⑥ 回填本表 | 在对应控件节补一行（属性名 / 显示名 / type / 可选值 / 模板默认值 / 分组），重跑 §4 复核脚本 | 复核 0 差异 |
+| ⑦ 用到生成器 | 先改设计源 → 生成 → 过 A14/A10 → 构建 | 门禁全绿 |
+
+**禁止**：脚本拼字段或改工程 JSON；按 classInfo 片段猜值；把未经 UI 验证的键写进模板或生成器。
+
