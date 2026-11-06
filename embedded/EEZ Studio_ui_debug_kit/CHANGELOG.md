@@ -17,6 +17,16 @@
 
 ---
 
+## v0.9.174 — PC 仿真文件系统 A: → 工程根（PR-0591）
+
+- 新增 `src/native/app/sim_fs.c/.h`（PC 专用，ESP32 空实现）：向 LVGL 注册 `A:` 驱动，
+  路径前导 `/` 剥离后拼工程根（来自 `SIM_TARGET_PROJ_DIR`），支持 open/read/write/seek/tell；
+  仿真可直接 `A:/assets/xxx` 读写宿主文件，真机换 FATFS/LittleFS 保持同一写法。
+- `design/sim_cmake/lv_conf.h` 关闭内置 `LV_USE_FS_STDIO`（避免 A: 字母冲突）；
+  `main.c` 在 `lv_init` 后 `sim_fs_init`，新增 `W78_FS_TEST`；`run_sim.bat fstest` 自证。
+- 实测 `[FS] read 10 bytes: 'w78-fs-ok' / PASS`；`simtest` / `behaviortest` / `test` 全部 PASS。
+  NO_FLOW §2.0、⑤b 与 FLOW §2 同步（⑤b 扩为"动态读 + 文件系统"）。
+
 ## v0.9.173 — 工作流新增「⑤b PC 仿真器赋能」（PR-0590）
 
 - NO_FLOW §2 新增独立步骤 **⑤b PC 仿真器赋能（动态读）**：内部读按控件值刷新（初始化对齐）；

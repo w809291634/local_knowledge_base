@@ -4720,3 +4720,9 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：把 PC 仿真器动态读（内部读/外部读）固化成工作流步骤
   - 产出/结论：NO_FLOW §2 新增独立步骤 **⑤b PC 仿真器赋能**（内部读初始化对齐、外部读按节拍模拟、PC 专用+ESP32 空实现、simtest/behaviortest/test 三项自证）；⑦ 内环改为 ④→⑤→⑤b→⑥→⑦；§2.0 读数来源指向 ⑤b；FLOW §2 表加 ⑤b 行与顺序纪律。CHANGELOG v0.9.173。
   - 关联：PR-0589、CHANGELOG v0.9.173
+
+### PR-0591 · 2026-11-07 · Trae
+  - 提示词：是否可以增加文件系统支持，在pc仿真器中
+  - 诉求：PC 仿真器具备 LVGL 文件系统，能按路径读写宿主文件
+  - 产出/结论：新增 src/native/app/sim_fs（PC 专用，ESP32 空实现）：注册 A: → 工程根（SIM_TARGET_PROJ_DIR），剥前导 '/'，支持 open/read/write/seek/tell；sim_cmake/lv_conf.h 关闭内置 FS_STDIO 避免字母冲突；lv_init 后 sim_fs_init，新增 W78_FS_TEST 与 run_sim.bat fstest；assets/fs_probe.txt 自证。实测 [FS] PASS（w78-fs-ok）、simtest/behaviortest/test 全 PASS。NO_FLOW §2.0/⑤b、FLOW §2 同步为"动态读 + 文件系统"。CHANGELOG v0.9.174。
+  - 关联：PR-0590、CHANGELOG v0.9.174
