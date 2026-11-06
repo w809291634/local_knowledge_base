@@ -196,8 +196,10 @@
 - **LVGL Label 动态文本（Studio 1.22）**：不要在 widget 定义级把 `textType` 设为
   `expression`；该路径的 codegen 会生成空字符串且不报警（P-0143）。保留字面占位文本，
   用 flow 的 `labelSetText` 动作写入表达式；表达式字符仍须以 `glyphs` 补种。
-- tabview：`"tabs": [ … ]` 子项为 LVGLTabWidget（tabName 可写 FA 图标字符，
-  字形须烘进对应字号）；`"tabSize": 0` 隐藏原生 tab 栏。
+- tabview：`.eez-project` 里 Tab 是 `children` 中的 `LVGLTabWidget`（`tabName`/`tabNameType`；
+  `tabName` 可写 FA 图标字符，字形须烘进对应字号）；栏位置/尺寸/活动页用
+  `tabviewPosition`/`tabviewSize`/`selectedTab`/`selectedTabType`，`tabviewSize: 0` 隐藏原生 tab 栏。
+  json2eez DSL 的 `tabs`/`tabSize` 落盘即上面两组字段。
 
 ## 7. 事件绑定 eventHandlers ✅（三形态互斥，一个事件一种）
 

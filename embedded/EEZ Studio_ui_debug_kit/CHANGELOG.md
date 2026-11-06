@@ -51,6 +51,14 @@
   Image/AnimationImage/Canvas/Line 无 clickableFlag。
 - 复核发现 w78 工作树回到迁移前 HEAD，A14 0/813，需重跑 P-0259。P-0260。
 
+## v0.9.157 — 修正 reference/07 的 Tabview 落盘字段
+
+- `reference/07_project_json_schema.md` §6 旧稿写 `"tabs": [ … ]` / `"tabSize": 0`；
+  这两个键在 `.eez-project` 里不存在（全库 `.eez-project` 搜 `"tabs"`/`"tabSize"` 命中 0）。
+- 改为实测字段：Tab 在 `children`（`LVGLTabWidget`，`tabName`/`tabNameType`）；
+  栏位置/尺寸/活动页是 `tabviewPosition`/`tabviewSize`/`selectedTab`/`selectedTabType`；
+  `tabviewSize: 0` 隐藏原生 tab 栏，对应 json2eez DSL 的 `tabSize`（skills.md §11.8）。
+
 ## v0.9.153 — 全流程执行 + 测试夹具修复（PR-0560）
 
 - D5 全量树节点 `BLOCKED`：取 rect 前 `row.scrollIntoView({block:'center'})`，24/24 恢复。
