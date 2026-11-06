@@ -33,6 +33,10 @@
 - **复核（用户要求“不得随意捏造”）**：脚本逐行比对 168 行 → 属性名双向 0 差异、枚举值/模板默认值
   逐字一致、臆造字段 0。为守口径去掉了上一版的两处推断：①未在 classInfo 显式命名的属性不再补显示名，
   统一写「—（未命名）」；②数字型 `type` 保留 classInfo 原值，不翻译成中文类型名。
+- **§5 未收录清单（5 类，明确原因）**：①humanize 生成的显示名；②`PropertyType` 枚举名；
+  ③Style 属性 × 控件/Part 可见性矩阵（只给全量 114 项目录，未逐控件裁剪）；④`eventHandlers`/`timeline`/
+  `customInputs`/`customOutputs` 的条目子结构；⑤条件性才出现的字段规则（Keyboard `textarea`、Tab `tabName`、
+  `hiddenFlag=true` 等）。均写明“需要时回 EEZ UI 确认后回填”。
 
 ## v0.9.164 — 工作流写死「EEZ 参数优先 + 不确定先查官方手册」（PR-0578）
 

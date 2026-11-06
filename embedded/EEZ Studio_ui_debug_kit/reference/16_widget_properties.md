@@ -917,3 +917,15 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 1. 未显式命名的属性不编造显示名（EEZ 运行时用 `humanize(name)`，本机未取到该函数产物）；
 2. 数字型 `type` 不翻译成词（EEZ 内部 `PropertyType` 枚举名表未在 asar 产物中定位到）。
 
+## 5. 未收录清单（明确不写进本表的内容与原因）
+
+> 以下 5 类**故意不在表里**，也不允许生成器自行补写；需要时按 §3 规则 5 回 EEZ UI 确认后回填。
+
+| # | 未收录内容 | 为什么不写 | 需要时怎么做 |
+|---|---|---|---|
+| 1 | 属性面板的显示名（classInfo 未显式命名的行，统一写「—（未命名）」） | EEZ 运行时用 `humanize(name)` 生成显示名；本机 asar 中未定位到该函数产物，写出来就是猜 | 以 EEZ 属性面板实际显示为准，看到后回填 |
+| 2 | 数字型 `type` 对应的枚举名称（`2/3/4/5/…`） | EEZ 内部 `PropertyType` 枚举名表未在 asar 产物中定位到 | 查 EEZ 源码 `project-editor/core/object`；本表保留原值不翻译 |
+| 3 | Style 属性 × 控件/Part 的**可见性矩阵**（哪个控件哪个 Part 实际能选哪些样式） | EEZ 运行时用 `isLvglStylePropertySupported()` 过滤，判定逻辑无法静态枚举；§1.6 只是**全量目录** | 以 EEZ Style 面板实际列出的条目为准 |
+| 4 | `eventHandlers` / `timeline` / `customInputs` / `customOutputs` 的**条目子字段结构** | 结构由 EEZ 在 UI 里配一条后生成，随绑定类型/版本变化；静态展开必然臆造 | 先在 EEZ 里配一条，再照抄其 JSON 结构 |
+| 5 | **条件性才出现的字段规则**（如 Keyboard 绑定后才出现 `textarea`、Tab 进入 Tabview 后才出现 `tabName`、遮罩真正隐藏时才有 `hiddenFlag=true`） | classInfo 用函数条件控制显隐，无法展开成静态字段规则 | 以 UI 实际出现的字段为准；本表只列字段本身，不伪造出现条件 |
+
