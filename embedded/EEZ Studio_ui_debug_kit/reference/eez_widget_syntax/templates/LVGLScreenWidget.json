@@ -8,7 +8,7 @@
  "customInputs": [],
  "customOutputs": [],
  "style": {
-  "objID": "__OBJID__",
+  "objID": "__STYLE_OBJID__",
   "useStyle": "default",
   "conditionalStyles": [],
   "childStyles": []
@@ -28,8 +28,7 @@
  "disabledStateType": "literal",
  "states": "",
  "localStyles": {
-  "objID": "__OBJID__"
+  "objID": "__LOCAL_STYLE_OBJID__"
  },
- "groupIndex": 0,
- "identifier": "tpl_screen"
+ "groupIndex": 0
 }

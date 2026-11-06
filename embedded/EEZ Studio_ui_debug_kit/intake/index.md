@@ -459,9 +459,9 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0247 | 2026-11-05 | 控件存在/类型通过但交互件未接行为：初查69，已补15本地动作，剩53（28开关+22动作+3滑条）；问题在⑦不是核对 | 行为覆盖,⑦,开关,动作按钮,滑条,behavior_audit | open |
 | P-0248 | 2026-11-05 | 开关无法切换：采样样板缺 CHECKABLE；换真实拖拽样板，新增 A13 门禁 | Switch,CHECKABLE,EEZ,拖拽样板,A13,行为 | fixed |
 | P-0249 | 2026-11-05 | 新建控件统一从模板采集工程取真实拖拽 JSON；建 19 种控件语法库，gallery 无头构建通过 | EEZ,控件模板,语法库,克隆,拖拽样板,A10,A13 | fixed |
-| P-0250 | 2026-11-05 | 模板只有字段集真实，值带源工程配色/字体/尺寸；按 classInfo defaultValue 全量复位并加校验 | 控件模板,标准默认值,defaults.json,classInfo,样式残留 | fixed |
+| P-0250 | 2026-11-05 | 模板只有字段集真实，值带源工程配色/字体/尺寸；按 classInfo defaultValue 全量复位并加校验（已被 P-0258 取代：现行模板以 UI 拖拽保存对象为准） | 控件模板,标准默认值,defaults.json,classInfo,样式残留 | fixed |
 | P-0251 | 2026-11-05 | 双副本核对：经验库/示例工程 19 模板一致、gallery 0 不符、生成代码 0 不符；清理旧采样引用 | 模板副本,双副本,一致性,validate_templates,旧引用 | fixed |
-| P-0252 | 2026-11-05 | w78 初查 424/815 控件字段集不标准；补 hiddenFlag 基础字段、Button 子标签/Bar/Slider 字段，A14 现在 815/815 | 字段集,标准模板,A14,Button子标签,hiddenFlag,Slider,Bar | fixed |
+| P-0252 | 2026-11-05 | w78 初查 424/815 控件字段集不标准；补 hiddenFlag 基础字段、Button 子标签/Bar/Slider 字段，A14 现在 815/815（已被 P-0258 取代：现行模板不含 hiddenFlag） | 字段集,标准模板,A14,Button子标签,hiddenFlag,Slider,Bar | fixed |
 | P-0253 | 2026-11-05 | 全流程执行：D5 24页/PC 全套测试；修 D5 树行裁切、flowtest 死模式、conn 状态被消费、uitest 假通过 | 全流程,D5,scrollIntoView,flowtest,uitest,conn状态 | fixed |
 | P-0254 | 2026-11-05 | Wi-Fi 主页面多一颗断开：设计源删除，只保留长按对话框；控件 815→813，D5 Wi-Fi 99.56% | Wi-Fi,断开按钮,设计源,D5,控件计数 | fixed |
 | P-0255 | 2026-11-06 | 设计图/EEZ 核对：开关/滑条/进度条绿黄配色改设计琥珀；D5 98.03→98.19%，最低 95.89→96.32% | 设计核对,配色,Switch,Slider,Bar,琥珀色,D5 | fixed |

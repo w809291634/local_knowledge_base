@@ -234,14 +234,14 @@ watch2 三轮返工（骑表圈 → 坐标漂移 → 底图幽灵）每一项都
 第⑤步本体＝**把各界面连接起来**（native 导航接线：跳转/切换/每屏可达可回），
 页面细节功能留第⑦步。EEZ 画布无输入、no-flow Run 不执行 native 绑定 ⇒ **跳转只能在仿真器核对**。
 **生成方式（2026-11-04 用户定，PR-0473~0475）：所有控件都按 EEZ 原生默认结构改，不是只按钮。**
-新建控件一律从 `eez-widget-templates/templates/` 克隆；模板值已按 `defaults.json`
-（EEZ `classInfo.defaultValue/defaultFlags`）复位，`validate_templates.py` 逐项核对。
-`tools/eez_defaults.py` 只用于从**已有工程**采自定义样板/做对照，不再作为新建控件来源；
-冷门类型先补进模板工程（`SOURCES` + `defaults.json`）再克隆。
+新建控件一律从 `eez-widget-templates/templates/` 克隆；模板是 **EEZ UI 拖拽后保存的原始对象**，
+`defaults.json` 由同一工程派生，**不是按 `classInfo` 复位**；`validate_templates.py` 逐字段/占位符/
+defaults/manifest 校验。`tools/eez_defaults.py` 只用于从**已有工程**采自定义样板/做对照，
+不再作为新建控件来源；冷门类型先在模板工程新增画布、拖入该控件、保存后重跑 `extract_templates.py`。
 生成器只能"克隆默认 → 改几何/identifier/文本"，不许自己拼字段；字段对照见 `reference/07`。
 必配门禁：按钮恰一子标签、子标签文本非空、按钮自身无 `text`、字体覆盖所有字符。
-**克隆后要复位"表达式型"属性**（`hiddenFlag` 等）：采来的模板会带别的工程的表达式，
-不清就会生成 `get_var_xxx()` 这种未声明调用，C 编译直接报错（w78 实测）。
+**克隆后仍要检查"表达式型"属性**：新模板的表达式型字段都已复位为 literal；若从旧工程/别的工程取样，
+需清掉 `hiddenFlag/text` 等表达式，避免生成未声明的 `get_var_xxx()`（w78 实测）。
 **生成器十二条**（w78 23 页实测，每条都对应一次真缺陷）：
 ① 页名用 ASCII（中文被消成 `SCREEN_ID___` 撞车）；② identifier 全工程唯一（加页前缀）；
 ③ 字号来自设计令牌（**≤3 档共用**）；镜像方案只有 1 档带汉字（尽量小），其余档 ASCII/数字；生成时校验；④ 替换后的字符必须进字体子集；

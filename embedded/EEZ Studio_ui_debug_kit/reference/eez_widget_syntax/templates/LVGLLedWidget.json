@@ -8,7 +8,7 @@
  "customInputs": [],
  "customOutputs": [],
  "style": {
-  "objID": "__OBJID__",
+  "objID": "__STYLE_OBJID__",
   "useStyle": "default",
   "conditionalStyles": [],
   "childStyles": []
@@ -32,13 +32,12 @@
  "disabledStateType": "literal",
  "states": "",
  "localStyles": {
-  "objID": "__OBJID__"
+  "objID": "__LOCAL_STYLE_OBJID__"
  },
  "group": "",
  "groupIndex": 0,
  "color": "#0000FF",
  "colorType": "literal",
  "brightness": 255,
- "brightnessType": "literal",
- "identifier": "tpl_led"
+ "brightnessType": "literal"
 }

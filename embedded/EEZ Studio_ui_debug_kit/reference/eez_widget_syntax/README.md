@@ -16,18 +16,22 @@
 - `clickableFlag: true` 表示可点击，`widgetFlags` **不含 `CLICKABLE`**；
 - 有 `flagScrollbarMode`、`flagScrollDirection`、`scrollSnapX/Y`、`group`；
 - **没有 `hiddenFlag`、`checkedState`**（只有对应的 `*Type`）；
-- `localStyles` 只有 `{objID}`，没有 `definition`；
+- `localStyles` 默认只有 `{objID}`；Keyboard 与 Button 子 Label 保留实际 `definition`（align），不要删；
+- 身份角色独立占位：`__OBJID__` / `__STYLE_OBJID__` / `__LOCAL_STYLE_OBJID__`；
+  Button 子 Label 用 `__CHILD0_OBJID__` / `__CHILD0_STYLE_OBJID__` / `__CHILD0_LOCAL_STYLE_OBJID__`；
+- 模板**不带 `identifier`**（放置/克隆时赋值）；
 - Keyboard 没有 `textarea`；Button 子 Label 是完整 Label 字段集。
 
 ## 使用
 
 1. `copy.deepcopy(templates[type])`。
-2. 给 `objID` / `style.objID` / `localStyles.objID` 及所有子对象换新 UUID。
+2. 按角色给占位符换新 UUID，并赋新的 `identifier`。
 3. 所有 `*Type` 保持 `literal`；不要新增 `hiddenFlag/checkedState/textarea` 等字段。
-4. 只改 `identifier`、`left/top/width/height`、`text`、`localStyles` 的值。
+4. 只改 `left/top/width/height`、`text`、`localStyles` 的值。
 5. 跑 A10（字段集）与 A13（Switch CHECKABLE）；按钮跑 A4（恰一子 Label）。
 6. 改 UI 工程后，在工程目录运行 `python extract_templates.py` 重提取、
-   `python validate_templates.py` 逐字段校验；本经验库目录是它的镜像。
+   `python validate_templates.py` 逐字段校验（含占位符角色、覆盖完整性、defaults/manifest）；
+   本经验库目录是它的镜像。
 
 ## 类型
 

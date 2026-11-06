@@ -8,7 +8,7 @@
  "customInputs": [],
  "customOutputs": [],
  "style": {
-  "objID": "__OBJID__",
+  "objID": "__STYLE_OBJID__",
   "useStyle": "default",
   "conditionalStyles": [],
   "childStyles": []
@@ -31,7 +31,7 @@
  "disabledStateType": "literal",
  "states": "",
  "localStyles": {
-  "objID": "__OBJID__"
+  "objID": "__LOCAL_STYLE_OBJID__"
  },
  "group": "",
  "groupIndex": 0,
@@ -39,6 +39,5 @@
  "textType": "literal",
  "longMode": "WRAP",
  "recolor": false,
- "useStaticText": true,
- "identifier": "tpl_label"
+ "useStaticText": true
 }

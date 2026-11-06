@@ -8,7 +8,7 @@
  "customInputs": [],
  "customOutputs": [],
  "style": {
-  "objID": "__OBJID__",
+  "objID": "__STYLE_OBJID__",
   "useStyle": "default",
   "conditionalStyles": [],
   "childStyles": []
@@ -21,7 +21,7 @@
  "heightUnit": "px",
  "children": [
   {
-   "objID": "__OBJID__",
+   "objID": "__CHILD0_OBJID__",
    "type": "LVGLLabelWidget",
    "left": 0,
    "top": 0,
@@ -30,7 +30,7 @@
    "customInputs": [],
    "customOutputs": [],
    "style": {
-    "objID": "__OBJID__",
+    "objID": "__CHILD0_STYLE_OBJID__",
     "useStyle": "default",
     "conditionalStyles": [],
     "childStyles": []
@@ -53,7 +53,7 @@
    "disabledStateType": "literal",
    "states": "",
    "localStyles": {
-    "objID": "__OBJID__",
+    "objID": "__CHILD0_LOCAL_STYLE_OBJID__",
     "definition": {
      "MAIN": {
       "DEFAULT": {
@@ -68,8 +68,7 @@
    "textType": "literal",
    "longMode": "WRAP",
    "recolor": false,
-   "useStaticText": true,
-   "identifier": "tpl_button_label"
+   "useStaticText": true
   }
  ],
  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
@@ -84,9 +83,8 @@
  "disabledStateType": "literal",
  "states": "",
  "localStyles": {
-  "objID": "__OBJID__"
+  "objID": "__LOCAL_STYLE_OBJID__"
  },
  "group": "",
- "groupIndex": 0,
- "identifier": "tpl_button"
+ "groupIndex": 0
 }

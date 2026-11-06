@@ -127,6 +127,9 @@
   "group": "", "groupIndex": 0 }
 ```
 
+> 上面是**已有工程/显隐绑定的字段并集**；**UI 新建/模板对象**不含 `hiddenFlag`、`checkedState`、
+> Keyboard 的 `textarea`，以 `reference/eez_widget_syntax/templates/` 为准。
+
 - **identifier 命名规则**：全工程唯一，`^[A-Za-z][A-Za-z0-9_]*$`；无 identifier 的
   codegen 一律 `objN`（无法沟通）。⚠ widget 的名字字段叫 **`identifier`**（不是 name）。
 - **identifier 按类别码命名（2026-11-04 用户定，v1，后续迭代）**：
@@ -162,8 +165,10 @@
 - **Switch 样板必须带 `CHECKABLE`（A13）**：LVGL 开关在 `RELEASED` 时靠该标志切换；
   采样样板漏掉它，生成代码会 `lv_obj_remove_flag(CHECKABLE)`，点击不变状态。
   验证要发 `PRESSED → RELEASED`，只发 `CLICKED` 不会切换。
-- **字段集必须等于标准模板库（A14）**：生成控件逐键比对 `templates/<Type>.json`，多/少字段即 FAIL；
-  模板统一带基础字段 `hiddenFlagType: literal` / `hiddenFlag: false`，隐藏控件只改值。
+- **字段集必须等于标准模板库（A14）**：生成控件逐键比对 `templates/<Type>.json`，多/少字段即 FAIL。
+  模板是 **UI 拖拽保存的默认对象**：有 `hiddenFlagType`，但**没有 `hiddenFlag`**；也没有
+  `checkedState`、Keyboard 的 `textarea`；可点击类型有 `clickableFlag: true`（Label/Spinner 除外）。
+  不得按旧版"补 hiddenFlag 基础字段"处理；显隐/勾选/键盘绑定只在确实需要时按 UI 语法追加。
 - **设备读数也是控件（value 类）**：温度/湿度/百分比/功率/电量/在线状态/日期时间等从设备读来的值，
   作为 `value` 控件行（`out_read`，`hr` 码）生成真实 Label；标题/说明/按钮文案不算。
   **滑条/进度条旁的数值显示归 `in_read`（UI 自己控制），自动识别，不当外部读或静态文本。**
@@ -607,5 +612,7 @@ flow 组件的 left/top 不影响构建，但决定编辑器画布可读性。�
 
 给按钮写 `text` 的后果：按钮能显示、**一个字都没有**，而且不报错——这类"静默不显示"
 只能靠生成器门禁挡：按钮必须恰好一个子标签且其 `text` 非空、按钮自身不得有 `text`。
-模板文件：`eez-widget-templates/templates/<Type>.json`（`objID` 已换成占位符，克隆时递归换新），
-标准值见同目录 `defaults.json`；旧工程的 `design/eez_defaults.json` 只作历史样板。
+模板文件：`eez-widget-templates/templates/<Type>.json`。身份占位符分角色：`__OBJID__` /
+`__STYLE_OBJID__` / `__LOCAL_STYLE_OBJID__`；Button 子标签用 `__CHILD0_*`；模板不带 `identifier`，
+克隆时逐角色换新 UUID 再赋 `identifier`。`defaults.json` 与模板同源派生（不是 classInfo 复位）；
+旧工程的 `design/eez_defaults.json` 只作历史样板。
