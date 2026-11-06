@@ -4708,3 +4708,15 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：把「独立控件安全净距」与「同尺寸个体等距」写成规则并自动检查，先 warn 后 FAIL
   - 产出/结论：新增 reference/17（R1 净距≥8px、R2 等距±1px、适用范围/例外/判定数据/流程）；layout_check 增 L6（--layout-json 卡片框等距）与 L7（可交互控件净距），--warn 不改退出码；w78 增 design/layout_boxes.py（card() 打 data-card 标记导出）。首跑：L6 0、L7 3（主控顶部入口间隔 4px）。CHANGELOG v0.9.171。
   - 关联：PR-0587、CHANGELOG v0.9.171
+
+### PR-0589 · 2026-11-07 · Trae
+  - 提示词：进行下一步，PC仿真为动态赋能，内部读和外部读赋能
+  - 诉求：PC 仿真里让内部读跟随控件、外部读随时间动态变化
+  - 产出/结论：新增 src/native/app/sim_reads（PC 专用，ESP32 空实现）：外部读每秒抖动、开关派生每 100ms；value_bind 补色温映射（45%=3000K、100%=6500K）并在初始化刷新，修 master_r01→master_r02 错绑；main.c 接入 init/tick，新增 W78_SIM_TEST 与 run_sim.bat simtest。实测 [SIM] PASS（12.4→12.6 kWh、2→3 分钟）、UI_BEHAVIOR PASS、NAV 64/64 PASS；截图确认主控/安防/能源/灯详情/插座读数正常。CHANGELOG v0.9.172、NO_FLOW §2.0 读数来源。
+  - 关联：PR-0588、CHANGELOG v0.9.172
+
+### PR-0590 · 2026-11-07 · Trae
+  - 提示词：在工作流中增加这个步骤，pc仿真器赋能
+  - 诉求：把 PC 仿真器动态读（内部读/外部读）固化成工作流步骤
+  - 产出/结论：NO_FLOW §2 新增独立步骤 **⑤b PC 仿真器赋能**（内部读初始化对齐、外部读按节拍模拟、PC 专用+ESP32 空实现、simtest/behaviortest/test 三项自证）；⑦ 内环改为 ④→⑤→⑤b→⑥→⑦；§2.0 读数来源指向 ⑤b；FLOW §2 表加 ⑤b 行与顺序纪律。CHANGELOG v0.9.173。
+  - 关联：PR-0589、CHANGELOG v0.9.173
