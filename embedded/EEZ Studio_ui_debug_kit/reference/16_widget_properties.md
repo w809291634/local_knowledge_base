@@ -378,22 +378,22 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
-### `LVGLMenuWidget`（Menu）
+### `LVGLMenuWidget`（Menu）｜手册 W45
 
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
-### `LVGLMessageBoxWidget`（MessageBox）
+### `LVGLMessageBoxWidget`（MessageBox）｜手册 W46
 
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
-### `LVGLPanelWidget`（Panel）
+### `LVGLPanelWidget`（Panel）｜手册 W50
 
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
-### `LVGLQRCodeWidget`（QRCode）
+### `LVGLQRCodeWidget`（QRCode）｜手册 W56
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -403,7 +403,7 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 | `lightColor` | —（未命名） | 9 | — | #E2F5FE | Specific | — |
 
 
-### `LVGLRollerWidget`（Roller）
+### `LVGLRollerWidget`（Roller）｜手册 W61
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -413,7 +413,7 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 | `mode` | —（未命名） | 4 | NORMAL / INFINITE | NORMAL | Specific | — |
 
 
-### `LVGLScaleWidget`（Scale）
+### `LVGLScaleWidget`（Scale）｜手册 W62
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -455,12 +455,12 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 | `sections` | —（未命名） | 0 | — | [] | Specific | — |
 
 
-### `LVGLScreenWidget`（Screen）
+### `LVGLScreenWidget`（Screen）｜手册 W 章节未单列
 
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
-### `LVGLSliderWidget`（Slider）
+### `LVGLSliderWidget`（Slider）｜手册 W67
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -475,7 +475,7 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 | `enableAnimation` | —（未命名） | 2 | — | false | Specific | — |
 
 
-### `LVGLSpanWidget`（Span）
+### `LVGLSpanWidget`（Span）｜手册 W68
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -488,7 +488,7 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 | `spans` | —（未命名） | 0 | — | [{'objID': '__SPANS0_OBJID__', 'text': 'Span', 'textType'… | Specific | — |
 
 
-### `LVGLSpinboxWidget`（Spinbox）
+### `LVGLSpinboxWidget`（Spinbox）｜手册 W69
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -502,17 +502,17 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 | `value` | —（未命名） | integer | — | 0 | Specific | 可写表达式（literal/expression） |
 
 
-### `LVGLSpinnerWidget`（Spinner）
+### `LVGLSpinnerWidget`（Spinner）｜手册 W71
 
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
-### `LVGLSwitchWidget`（Switch）
+### `LVGLSwitchWidget`（Switch）｜手册 W74
 
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
-### `LVGLTabWidget`（Tab）
+### `LVGLTabWidget`（Tab）｜手册 W75
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -520,12 +520,12 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 | `tabName` | —（未命名） | string | — | Tab | Specific | 可写表达式（literal/translated-literal/expression） |
 
 
-### `LVGLTableWidget`（Table）
+### `LVGLTableWidget`（Table）｜手册 W76
 
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
-### `LVGLTabviewWidget`（Tabview）
+### `LVGLTabviewWidget`（Tabview）｜手册 W78
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -535,7 +535,7 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 | `selectedTab` | Active tab | integer | — | 0 | Specific | 可写表达式（literal/expression） |
 
 
-### `LVGLTextareaWidget`（Textarea）
+### `LVGLTextareaWidget`（Textarea）｜手册 W80
 
 | 属性名（classInfo `name`） | 显示名（classInfo `displayName`） | type（classInfo 原值） | 可选值（`enumItems`） | 模板默认值 | 分组（`propertyGridGroup`） | 说明 |
 |---|---|---|---|---|---|---|
@@ -548,12 +548,12 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 | `maxTextLength` | —（未命名） | 3 | — | 128 | Specific | — |
 
 
-### `LVGLTileViewWidget`（TileView）
+### `LVGLTileViewWidget`（TileView）｜手册 W84
 
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
 
-### `LVGLWindowWidget`（Window）
+### `LVGLWindowWidget`（Window）｜手册 W87
 
 EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
 
