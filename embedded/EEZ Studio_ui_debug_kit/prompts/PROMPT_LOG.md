@@ -4601,3 +4601,8 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：用 EEZ UI 新建工程/画布，从 Palette 拖控件，落定后保存；不要脚本生成 .eez-project
   - 产出/结论：EEZ UI 新建 LVGL 9.4 工程，建 18 个画布（每页一个控件），逐个真实鼠标拖拽、松开稳定后保存；删除默认 Main。只读提取 19 模板 + defaults/manifest，`validate_templates.py` 逐字段对照 UI 工程 PASS，构建 `Build successfully finished`。新语法有 clickableFlag/scroll/group，无 hiddenFlag/checkedState/textarea，flags 不含 CLICKABLE。旧模板根因：保存形态 + classInfo 片段 + 手工 hiddenFlag，校验自洽循环。w78 旧语法 A14 0/813，待迁移。P-0258；CHANGELOG v0.9.154。
   - 关联：PR-0568
+### PR-0569 · 2026-11-06 11:10 · Qoder
+  - 提示词：迁移 w78 旧工程到 UI 拖拽保存语法
+  - 诉求：w78 全部控件字段集对齐 EEZ UI 拖拽保存语法，保持设计与行为不变
+  - 产出/结论：`eez_defaults.json` 已用样板去 `hiddenFlag`/`checkedState`，补 `clickableFlag`/`flagScrollDirection`/`scrollSnapX/Y`/`group`，`widgetFlags` 去 `CLICKABLE`；`no_click()` 改 `clickableFlag=false`；A14 放行放置期 `identifier`、隐藏遮罩 `hiddenFlag`、Keyboard 绑定 `textarea`。重生成/构建后 A14 813/813、D5 24 页平均 98.27%（最低 96.40%，灯详情）、NAV 72/72、UI 行为/flowtest/uitest/quittest、D1–D9 全 PASS，D5 确认标记已更新。P-0259；CHANGELOG v0.9.155。
+  - 关联：PR-0569

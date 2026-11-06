@@ -28,6 +28,17 @@
   widgetFlags 不含 CLICKABLE；localStyles 只有 objID。
 - w78 仍是旧语法，A14 0/813，待迁移。P-0258。
 
+---
+
+## v0.9.155 — w78 迁移到 EEZ UI 拖拽保存语法（PR-0569）
+
+- 以新模板为字段真值迁移 w78：删 `hiddenFlag`/`checkedState`，补
+  `clickableFlag`/`flagScrollDirection`/`scrollSnapX/Y`/`group`，`widgetFlags` 去掉 `CLICKABLE`。
+- `no_click()` 改为 `clickableFlag=false`，装饰件/进度条/图表仍不接收点击。
+- A14 放行放置期 `identifier`、隐藏遮罩 `hiddenFlag`、Keyboard 绑定 `textarea`。
+- 结果：A14 813/813、D5 24 页平均 98.27%（最低 96.40%）、NAV 72/72、D1–D9 PASS。
+- 设计源与交互语义未改；设计冻结结论仍以 D5 重跑为准。P-0259。
+
 ## v0.9.153 — 全流程执行 + 测试夹具修复（PR-0560）
 
 - D5 全量树节点 `BLOCKED`：取 rect 前 `row.scrollIntoView({block:'center'})`，24/24 恢复。
