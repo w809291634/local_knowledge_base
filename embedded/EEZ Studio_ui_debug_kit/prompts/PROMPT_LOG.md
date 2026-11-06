@@ -4561,3 +4561,38 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：同时核对经验库模板与示例工程模板是否正确、一致
   - 产出/结论：经验库 vs 工程 19 个模板 + defaults/manifest 逐字节一致，两处各 `[TPL_CHECK] PASS`；gallery 18 页与模板 0 不符，生成代码 18 种创建函数/尺寸/文本/选项/值/颜色 0 不符，Switch 50×25 无 remove CHECKABLE，构建 OK；manifest 19 条溯源有效。清理 AGENTS/NO_FLOW/reference07/tools/README/reference README/根索引/语法库 README 的旧“临时工程新建 + eez_defaults 采样”引用；validator 支持 --templates/--defaults；P-0251；CHANGELOG v0.9.151。
   - 关联：PR-0557
+### PR-0558 · 2026-11-05 22:20 · Qoder
+  - 提示词：继续修改eez工程看看哪儿不对，就是智能家居的工程
+  - 诉求：继续检查并修改 w78 智能家居工程
+  - 产出/结论：EEZ 结构/门禁仍 PASS；主要缺口是 ⑦ 行为未接。新增 `src/native/ui_behavior.c/.h`，接主控场景 4、空调 8、窗帘 3（共 15 个本地动作），滑条赋值补发 `VALUE_CHANGED` 刷新读数；新增 `W78_UI_BEHAVIOR_TEST` 与 `run_sim.bat behaviortest`。自证 `[UI_BEHAVIOR] PASS`、`[NAV] 72/72`、`[DELIVERY] PASS`；behavior_audit 69→53（开关28/动作22/滑条3），主卧晚安模式标静态。另发现 3 个卡内滑条超出父容器 1–3px，属设计源几何，冻结期暂不改；P-0247 进展。
+  - 关联：PR-0558
+### PR-0559 · 2026-11-05 22:45 · Qoder
+  - 提示词：确认eez所有控件是从标准模板中修改过来的
+  - 诉求：核对智能家居 815 个控件是否都从标准模板克隆
+  - 产出/结论：初查 424/815 字段集不标准（104 Button 子 Label 精简样板；104+203+1+3+2 多 hiddenFlag；8 Slider 缺 valueLeft*；1 Bar 缺 valueStart*）。标准模板补 hiddenFlag 基础字段并由 `_apply_fields()` 持久化；w78 Button 子标签改完整 Label、补 Bar/Slider range 字段；`eez_check` 新增 A14（字段集 == 标准库），现在 `815/815`。生成代码 pos/size 1630、style 9149、flags 687 行与迁移前逐行一致；A/D、UI 行为、NAV 72/72 全 PASS。P-0252；CHANGELOG v0.9.152。
+  - 关联：PR-0559
+### PR-0560 · 2026-11-05 21:10 · Qoder
+  - 提示词：全部流程执行完
+  - 诉求：把智能家居工程全流程跑完并修掉阻塞
+  - 产出/结论：EEZ 构建、A1–A14、D1–D9 全 PASS；D5 24/24 平均 98.03%、最低 95.89%；NAV 72/72、UI 行为 PASS；Wi-Fi 真扫描 8 AP、flowtest/uitest/quittest PASS、24 张截图；模板库 PASS/OK。修 D5 树行裁切（scrollIntoView）、flowtest 死模式、pick 指针 qsort 失效、CONN_STATE 被消费导致误判、uitest 假通过。P-0253；CHANGELOG v0.9.153。
+  - 关联：PR-0560
+### PR-0561 · 2026-11-05 23:10 · Qoder
+  - 提示词：跟设计图核对过没，然后Wi-Fi页面怎么多出来一个断开按钮 → 可以
+  - 诉求：确认设计核对；按成熟示例删掉 Wi-Fi 主页面多余的“断开”，保留对话框里的
+  - 产出/结论：D5 24/24 已核对；查明主页面 `btn_disconnect` 是设计源 `wifi_frame` 额外加的，对话框 `btn_dlg_disconnect` 是长按态设计。删除主页面按钮及控件行，EEZ/绑定/门禁/审计同步；控件 815→813，A14 813/813；D5 重跑平均 98.03%、最低 95.89%、Wi-Fi 99.56%；NAV/UI/flow/uitest/quit 全 PASS；D1–D9 PASS。P-0254。
+  - 关联：PR-0561
+### PR-0562 · 2026-11-06 07:45 · Qoder
+  - 提示词：核对一下设计图和eez
+  - 诉求：设计图与 EEZ 工程再做一次对照
+  - 产出/结论：D5 24/24；发现 Switch 选中态绿色、Slider/Bar 黄/绿色与设计源琥珀色 `#F2B45C` 不一致；只改 `design/eez_defaults.json` 设计值（字段集不变，A14 813/813），重生成/构建/重跑 D5：平均 98.03→98.19%，最低 95.89→96.32%（灯详情），Wi-Fi 99.56%。NAV 72/72、UI/flow/uitest/quit、D1–D9 全 PASS；D5 确认记录已更新。P-0255。
+  - 关联：PR-0562
+### PR-0563 · 2026-11-06 07:55 · Qoder
+  - 提示词：我看到按钮颜色对不上
+  - 诉求：核对并修正按钮颜色
+  - 产出/结论：通用页按钮背景 0 处不符；Wi-Fi 自定义页 `build_wifi_page` 未设文字色，扫描/连接/忘记等沿用样板白字。`make_button` 增加 fg 参数，按设计补 T1/ACCENT/T2/BG/RED；D5 平均 98.19%、最低 96.32%、Wi-Fi 99.56→99.57%；NAV 72/72、UI/flow/uitest/quit、D1–D9 全 PASS。P-0256。
+  - 关联：PR-0563
+### PR-0564 · 2026-11-06 08:10 · Qoder
+  - 提示词：不只是Wi-Fi界面，我说所有界面进行检查，和设计图差异
+  - 诉求：全部 24 页对照设计图，找出并修正差异
+  - 产出/结论：D5 逐页 + 仿真器 24 张实拍对照；发现运行时 `ui_behavior COLOR_ACCENT` 写成绿色（仿真器按钮发绿，D5 画布看不到），改设计琥珀；Slide/Bar 轨道由整条 20px 收为 6/8px；按钮文字色/图表网格同步。D5 98.03→98.27%，最低 95.89→96.40%，Wi-Fi 99.57%；NAV 72/72、UI/flow/uitest/quit、D1–D9 全 PASS。剩余差异：旋钮 20px vs 14px、字体字形、EEZ 画布图表网格、Wi-Fi 动态列表。P-0257。
+  - 关联：PR-0564

@@ -32,5 +32,6 @@
   "definition": {}
  },
  "groupIndex": 0,
- "identifier": "tpl_spinner"
+ "identifier": "tpl_spinner",
+ "hiddenFlag": false
 }

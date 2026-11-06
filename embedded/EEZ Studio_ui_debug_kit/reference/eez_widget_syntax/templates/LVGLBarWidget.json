@@ -44,5 +44,6 @@
  "valueStartType": "literal",
  "previewValue": "25",
  "previewValueStart": "0",
- "enableAnimation": false
+ "enableAnimation": false,
+ "hiddenFlag": false
 }

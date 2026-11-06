@@ -56,5 +56,6 @@
  "rangeMaxType": "literal",
  "value": 25,
  "valueType": "literal",
- "previewValue": "25"
+ "previewValue": "25",
+ "hiddenFlag": false
 }

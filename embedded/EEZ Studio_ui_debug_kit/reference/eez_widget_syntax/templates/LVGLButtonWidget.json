@@ -49,7 +49,9 @@
    "children": [],
    "identifier": "tpl_button_label",
    "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
-   "states": ""
+   "states": "",
+   "hiddenFlagType": "literal",
+   "hiddenFlag": false
   }
  ],
  "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
@@ -64,5 +66,6 @@
   "definition": {}
  },
  "groupIndex": 0,
- "identifier": "tpl_button"
+ "identifier": "tpl_button",
+ "hiddenFlag": false
 }

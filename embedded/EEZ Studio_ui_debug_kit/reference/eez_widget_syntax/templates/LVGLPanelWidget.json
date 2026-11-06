@@ -32,5 +32,6 @@
   "definition": {}
  },
  "groupIndex": 0,
- "identifier": "tpl_panel"
+ "identifier": "tpl_panel",
+ "hiddenFlag": false
 }

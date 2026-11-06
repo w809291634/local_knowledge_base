@@ -38,5 +38,6 @@
  "selected": 0,
  "selectedType": "literal",
  "direction": "bottom",
- "useStaticText": true
+ "useStaticText": true,
+ "hiddenFlag": false
 }

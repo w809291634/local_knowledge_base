@@ -36,5 +36,6 @@
  "text": "Checkbox",
  "textType": "literal",
  "useStaticText": true,
- "checkedState": false
+ "checkedState": false,
+ "hiddenFlag": false
 }

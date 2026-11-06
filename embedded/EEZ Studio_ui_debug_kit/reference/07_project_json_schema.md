@@ -161,6 +161,8 @@
 - **Switch 样板必须带 `CHECKABLE`（A13）**：LVGL 开关在 `RELEASED` 时靠该标志切换；
   采样样板漏掉它，生成代码会 `lv_obj_remove_flag(CHECKABLE)`，点击不变状态。
   验证要发 `PRESSED → RELEASED`，只发 `CLICKED` 不会切换。
+- **字段集必须等于标准模板库（A14）**：生成控件逐键比对 `templates/<Type>.json`，多/少字段即 FAIL；
+  模板统一带基础字段 `hiddenFlagType: literal` / `hiddenFlag: false`，隐藏控件只改值。
 - **设备读数也是控件（value 类）**：温度/湿度/百分比/功率/电量/在线状态/日期时间等从设备读来的值，
   作为 `value` 控件行（`out_read`，`hr` 码）生成真实 Label；标题/说明/按钮文案不算。
   **滑条/进度条旁的数值显示归 `in_read`（UI 自己控制），自动识别，不当外部读或静态文本。**

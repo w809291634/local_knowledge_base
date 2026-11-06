@@ -37,5 +37,6 @@
  "longMode": "WRAP",
  "recolor": false,
  "useStaticText": true,
+ "hiddenFlag": false,
  "identifier": "tpl_label"
 }

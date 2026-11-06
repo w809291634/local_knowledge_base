@@ -9,6 +9,8 @@ EEZ `classInfo.defaultValue/defaultFlags` 复位标准值 + EEZ 构建验证）�
 
 - `templates/<Type>.json`：控件初始字段集（含标准默认样式/子结构/标志），值已复位为标准默认值。
 - `defaults.json`：标准默认值真值表（几何、单位、标志、文本、选项、值域、localStyles）。
+- 所有模板含基础字段 `hiddenFlagType: literal` / `hiddenFlag: false`；隐藏控件只改值，不删字段。
+  `defaults.json` 只列 classInfo 默认值，不含这个基础字段。
 - `manifest.json`：每类模板的源工程与源 identifier（仅字段集来源）。
 
 ## 使用

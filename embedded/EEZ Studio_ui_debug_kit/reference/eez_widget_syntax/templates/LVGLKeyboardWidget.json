@@ -40,5 +40,6 @@
  "groupIndex": 0,
  "identifier": "tpl_keyboard",
  "textarea": "",
- "mode": "TEXT_LOWER"
+ "mode": "TEXT_LOWER",
+ "hiddenFlag": false
 }

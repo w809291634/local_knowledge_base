@@ -33,5 +33,6 @@
  },
  "groupIndex": 0,
  "identifier": "tpl_switch",
- "checkedState": false
+ "checkedState": false,
+ "hiddenFlag": false
 }

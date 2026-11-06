@@ -48,5 +48,6 @@
  "showLabels": true,
  "labelTexts": "",
  "sections": [],
- "mainArcRounded": false
+ "mainArcRounded": false,
+ "hiddenFlag": false
 }

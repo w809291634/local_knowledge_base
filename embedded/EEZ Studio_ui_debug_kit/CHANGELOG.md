@@ -17,6 +17,26 @@
 
 ---
 
+## v0.9.153 — 全流程执行 + 测试夹具修复（PR-0560）
+
+- D5 全量树节点 `BLOCKED`：取 rect 前 `row.scrollIntoView({block:'center'})`，24/24 恢复。
+- `flowtest` 原是死模式（env 无人处理，无头下无限循环）；实现假世界连接闭环。
+- 连接成功判定修正：`pick` 指针 `qsort` 后失效，先拷 SSID；`CONN_STATE=2` 被 logic 消费，
+  改为查后端 AP `connected`；`uitest` 由“打印 conn=0 仍 0 退出”改为断言失败非 0。
+- 结果：A/D 全 PASS，D5 24 页平均 98.03%、最低 95.89%；NAV 72/72、UI 行为 PASS；
+  Wi-Fi 真扫描 8 AP、假连接/UI PASS、关闭 PASS、24 张截图；模板库 PASS/OK。P-0253。
+
+## v0.9.152 — 标准字段集补 hiddenFlag + 智能家居 A14 全绿（PR-0559）
+
+- 用户要求确认 EEZ 所有控件都从标准模板改；初查 w78 有 424/815 控件字段集不标准：
+  104 个 Button 子 Label 是精简样板、104+203+1+3+2 个控件多 `hiddenFlag`、
+  8 个 Slider 缺 `valueLeft*`、1 个 Bar 缺 `valueStart*`。
+- 标准模板补基础字段 `hiddenFlagType: literal` / `hiddenFlag: false`，`_apply_fields()` 持久化；
+  w78 Button 子标签改完整 Label 字段集，补 Bar/Slider range 字段，恢复 literal hiddenFlag。
+- `eez_check.py` 新增 **A14**：逐控件字段集必须等于标准模板库；w78 现在 `815/815`。
+- 生成代码 pos/size 1630 行、style 9149 行、flags 687 行与迁移前逐行一致；视觉/行为不变。
+- A/D 门禁、UI 行为、NAV 72/72 全 PASS；P-0252。
+
 ## v0.9.151 — 模板双副本核对 + 旧采样引用清理（PR-0557）
 
 - 用户要求同时核对经验库和示例工程的模板；两处 19 个模板、defaults、manifest 逐字节一致，

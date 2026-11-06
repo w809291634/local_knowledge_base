@@ -44,5 +44,6 @@
  "enableAnimation": false,
  "valueLeft": 0,
  "valueLeftType": "literal",
- "previewValueLeft": 0
+ "previewValueLeft": 0,
+ "hiddenFlag": false
 }

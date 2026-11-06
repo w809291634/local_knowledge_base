@@ -39,5 +39,6 @@
  "oneLineMode": false,
  "passwordMode": false,
  "acceptedCharacters": "",
- "maxTextLength": 128
+ "maxTextLength": 128,
+ "hiddenFlag": false
 }

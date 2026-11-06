@@ -37,5 +37,6 @@
  "optionsType": "literal",
  "selected": 0,
  "selectedType": "literal",
- "mode": "NORMAL"
+ "mode": "NORMAL",
+ "hiddenFlag": false
 }
