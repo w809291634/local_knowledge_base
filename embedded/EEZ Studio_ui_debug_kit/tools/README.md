@@ -104,7 +104,7 @@ python tools/ink_check.py <图.png> --against L T W H      # 与声明框对比�
 ### `audit_ui.py` —— 回归断言集（把踩过的坑固化成断言）
 
 ```bash
-python tools/audit_ui.py                # 全量 A1~A10
+python tools/audit_ui.py                # 全量 A1~A11
 python tools/audit_ui.py A3 A6          # 只跑指定项
 ```
 
@@ -120,6 +120,7 @@ python tools/audit_ui.py A3 A6          # 只跑指定项
 | A8 | 设计源 / 工程 / 生成代码 三者跳转数一致 | 效果图上有按钮、上机没有 |
 | A9 | 生成代码用到的 LVGL 部件在运行配置里已开 | 用了 `lv_switch_create` 但 `LV_USE_SWITCH=0` → 上机编译失败 |
 | A10 | 样式值符合目标框架的取值语法（颜色必须 `0xRRGGBB`） | 写成 int/十进制时**构建不报错**，只在 GUI 报 invalid color → 见 `cases/B6` |
+| A11 | Tab 的父级必须是 Tabview | Tab 挂 Screen 直下：GUI 报 `Invalid position of Tab widget`，headless 构建不查 |
 
 **A6 的两个细节**（都踩过，会影响可信度）：
 

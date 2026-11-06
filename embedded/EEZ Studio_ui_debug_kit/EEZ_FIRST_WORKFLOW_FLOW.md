@@ -120,7 +120,9 @@
 | ③ EEZ 构建 | 工程 → src/ui | GUI Check/Build **或** headless（`eez_build.py`） | 构建完成、连接检查无报错 | GUI 会重写 src/ui；CLI 不烘字体需单独烘 |
 | ④ **EEZ 里看效果（主验收）** | — | 打开工程：画布核视觉；**Run（F5）核交互** | 观感 → 画布；点击/滑动 → Run 实测 | 画布无输入；见 §3 |
 
-> 生成工程时：**控件一律克隆 EEZ 默认结构再改**（按钮文字在子标签，见 `reference/07`；PR-0473/0474）。
+> 生成工程时：**控件一律从 `eez-widget-templates/templates/`（kit `reference/eez_widget_syntax`）克隆后只改值**，
+> 字段集必须等于模板（A14）；模板缺类型/形态时先在模板工程 UI 拖拽保存 → `extract_templates.py` 重提取，
+> **禁止手搓、禁止脚本拼字段**（按钮文字在子标签，细则见 `reference/07` 与 NO_FLOW §2.2 ⑩）。
 > 交付时：跑 `design/delivery_gate.py` 过 **D1–D8**（NO_FLOW §2.2 的表），输出贴进交付说明。
 | ⑤ 仿真辅助 | 编译 + 出图 / 交互 | `python design/sim.py`；脚本化拖拽 | 出图齐全、与基线/对照一致 | tick 源、输入设备等（§3.4） |
 | ⑥ 门禁 | 断言集 | `python tools/run_gate.py` | 全绿才提交 | 缺屏/超阈值会非 0 退出 |
