@@ -245,6 +245,9 @@ defaults/manifest 校验。`tools/eez_defaults.py` 只用于从**已有工程**�
 （36 类控件 + Screen 的全字段表，来自 EEZ 前端属性面板 classInfo × 官方手册 W 章节 × 模板落盘值三方核对）
 为准；表里没有的字段不许写，Style 只写表内列出的 LVGL 样式属性。需要新字段时先在 EEZ UI 里把该属性改出来、
 保存工程，再回填该表并重提模板，之后才允许出现在生成器里（详细步骤见 `reference/16_widget_properties.md` §6）。
+**滑块/开关尺寸（LVGL 9.4 源码口径）**：旋钮直径＝控件高度＋KNOB 的 `pad_*`（`width/height` 不参与，EEZ 也不生成）；
+轨道高＝控件高度－MAIN 上下 pad（上下相等才居中）。w78 配方：滑条高 20 + MAIN pad 7/7 → 6px 轨道居中、
+KNOB pad=-2 → 16px 旋钮；开关 44×24 + pad=-2 → 20px 旋钮，触摸区用透明容器承载。键都在 `reference/16` 表内。
 必配门禁：按钮恰一子标签、子标签文本非空、按钮自身无 `text`、字体覆盖所有字符。
 **克隆后仍要检查"表达式型"属性**：新模板的表达式型字段都已复位为 literal；若从旧工程/别的工程取样，
 需清掉表达式型字段绑定（如 `text/hiddenFlag` 的 expression），避免生成未声明的

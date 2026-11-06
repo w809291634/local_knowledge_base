@@ -34,7 +34,7 @@
 | ★ **最小 EEZ 工程脚手架** | 从零搭可编译的最小 EEZ 模板：四块目录职责、三条硬规矩（native 不 REQUIRES ui / GLOB 需 reconfigure / 不写死生成对象句柄）、三大链接机制（CMP0079、lvgl__lvgl 依赖 lv_mem_psram、--undefined=lv_thread_init）、A/B 宏测量法与实测账单、与 P-0154 的三层拆分口径 | `11_minimal_eez_project_scaffold.md` |
 | ★ **Wi-Fi 列表/连接页** | 直接移植成熟参考实现：一页 lv_list 动态行 + 密码半页 + 忘记对话框 + busy；native app/navigation/widgets/platform 分层、no-flow 改造点、验证四件套、四个坑 | `15_wifi_list_connect_pattern.md` |
 | ★ **控件语法库** | 37 个 **EEZ UI 拖拽创建并保存后**提取的控件语法（Palette 全部 36 项 + Screen；39 画布 = 35 控件页 + 4 个 Tabview 变体页；Tab 挂在 Tabview 内；`templates/variants/` 存 0/1/2/3 个 Tab 的整块形态；`validate_templates.py` 逐字段校验）：只从这里克隆新建控件；Switch 必须 CHECKABLE、Button 恰一子 Label、objID 占位符必须换新 | `eez_widget_syntax/README.md` |
-| ★ **控件可改属性总表** | 36 类 LVGL 控件 + Screen 的**全部可改属性字段**：属性名 / UI 显示名 / type 原值 / 枚举可选值 / 模板默认值 / 属性面板分组 / 条件显隐；含通用 27 项、`widgetFlags` 18 个复选框、`states` 复选框、`<属性>Type` 表达式选择器、Style 全量属性目录（114 项）、每控件可编辑 Part。**生成控件时只允许改本表列出的字段**（EEZ 前端 classInfo + style-catalog + 模板落盘三方核对）；**§5 列明 5 类故意未收录的内容与原因**（显示名/type 枚举名/样式可见性矩阵/事件子结构/条件性字段规则），**§6 给出补字段流程**（查手册 → EEZ UI 里生成/改出该属性 → 保存 → 重提模板 → 回填本表） | `16_widget_properties.md` |
+| ★ **控件可改属性总表** | 36 类 + Screen 的全字段表（属性名/显示名/type/枚举/默认值/分组），含通用 27 项、flags 18 项、Style 目录 114 项、每控件可编辑 Part；**生成时只允许改表内字段**。§5 列 5 类故意未收录的内容，§6 是补字段流程（手册→UI→重提模板→回填） | `16_widget_properties.md` |
 | ★ **no-flow native 分层** | 设计源/生成 UI/native 的单向依赖、`app`/`platform`/`navigation`/`widgets`/`third_party` 文件夹职责、迁移纪律与验收判据 | `12_no_flow_native_module_layout.md` |
 
 ## 本项目（eez-test，LVGL 9.4 / 800×480 横屏 / BGR）最常用入口

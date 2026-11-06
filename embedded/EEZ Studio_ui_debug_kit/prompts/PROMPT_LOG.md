@@ -4656,4 +4656,14 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：逐控件记录 EEZ 前端可改属性字段，产出 md 表；经验库后续生成工程必须按该表取字段
   - 产出/结论：新增 `reference/16_widget_properties.md`（36 类 + Screen；属性名/显示名/type 原值/枚举/模板默认值/分组/条件）。来源：EEZ 5.x `app.asar` classInfo（逐字段真值）+ 手册 W 章节（语义/W 编号，手册无逐字段表）+ templates 落盘值。逐行复核 168 行：属性名双向 0 差异、枚举/默认值逐字一致、臆造字段 0。为守“不得捏造”，未显式命名的属性写「—（未命名）」、数字 type 不翻译。规则写进 `reference/README`、`eez-widget-templates/README`、NO_FLOW §2.2、`AGENTS.md` 铁律 8。经用户确认「不新建工程，直接用现有工程核对」。CHANGELOG v0.9.165。
   - 关联：PR-0578、CHANGELOG v0.9.165
+### PR-0580 · 2026-11-06 19:25 · Trae
+  - 提示词：当前的滑块效果可以，我建议在工作流中，记录eez滑块的默认样式 / 你修改了eez, 就要编译确认无错误，每次必须执行，不要遗留
+  - 诉求：把 EEZ 滑块的默认样式与尺寸口径写进工作流；并规定每次改完 EEZ 必须当场编译确认
+  - 产出/结论：NO_FLOW §2.2 新增「滑块/开关默认样式与尺寸口径」（依据 LVGL 9.4 `lv_slider.c`/`lv_switch.c`）：旋钮直径=控件高度+KNOB `pad_*`（width/height 不参与、EEZ 不生成）；轨道高度=控件高度−MAIN 上下 pad（相等才居中）。配方：20px 滑条 + MAIN pad 7/7 → 6px 轨道居中；KNOB pad=-2 → 16px 旋钮；开关 44×24 + pad=-2 → 20px 旋钮（触摸区用容器承载）。`AGENTS.md` 铁律 11 增加「改完 EEZ 必须当场跑 cli_build→字体补烘→gcc→eez_check 四件套」。w78 D5 平均 98.57%。CHANGELOG v0.9.166。
+  - 关联：PR-0579、CHANGELOG v0.9.166
+### PR-0581 · 2026-11-06 19:40 · Trae
+  - 提示词：你修改了eez, 就要编译确认无错误，每次必须执行，不要遗留，这个要在经验库的流程中增加
+  - 诉求：把“改完 EEZ 必须编译确认”写进经验库流程（不只 AGENTS）
+  - 产出/结论：NO_FLOW 新增 §2.2c「改完 EEZ 必须当场编译确认」：`cli_build`（0 错 0 警）→ 字体补烘 → `gcc -fsyntax-only`（screens/ui/styles/images）→ `eez_check`（A1–A14）四项全绿才算做完；禁止只改不编译/报错绕过/遗留；汇报必须贴四项结果。FLOW §2 加同口径指针。CHANGELOG v0.9.167。
+  - 关联：PR-0580、CHANGELOG v0.9.167
 
