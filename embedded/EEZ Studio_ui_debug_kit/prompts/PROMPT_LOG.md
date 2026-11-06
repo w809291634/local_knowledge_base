@@ -4666,4 +4666,9 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：把“改完 EEZ 必须编译确认”写进经验库流程（不只 AGENTS）
   - 产出/结论：NO_FLOW 新增 §2.2c「改完 EEZ 必须当场编译确认」：`cli_build`（0 错 0 警）→ 字体补烘 → `gcc -fsyntax-only`（screens/ui/styles/images）→ `eez_check`（A1–A14）四项全绿才算做完；禁止只改不编译/报错绕过/遗留；汇报必须贴四项结果。FLOW §2 加同口径指针。CHANGELOG v0.9.167。
   - 关联：PR-0580、CHANGELOG v0.9.167
+### PR-0582 · 2026-11-06 20:10 · Trae
+  - 提示词：最好通过一种共用且强大的自查，能够保证相似度的同时，也能够识别出这种类似错误
+  - 诉求：用一条共用自查同时保证相似度、并识别容器重叠这类错误
+  - 产出/结论：新增 `tools/layout_check.py`（L1 越界/零尺寸、L2 结构控件部分重叠、L3 identifier 重复、L4 D5 相似度门槛）；w78 实测重叠 0、相似度 98.57%；同时 w78 `eez_check` 内置 A15 并修掉 `detail_camera` 控件框 460×300→252 的重叠（53%）。NO_FLOW §2.2c 记录命令。CHANGELOG v0.9.168。
+  - 关联：PR-0581、CHANGELOG v0.9.168
 

@@ -17,6 +17,11 @@
 
 ---
 
+## v0.9.168 — 共用布局自查 tools/layout_check.py（PR-0582）
+
+- 新增 `tools/layout_check.py`：L1 越界/零尺寸、L2 结构控件部分重叠、L3 identifier 重复、L4 D5 相似度门槛。
+- w78 `eez_check` 内置 A15；修 `detail_camera` 控件框 460×300→252（原压住下一行 53%）。NO_FLOW §2.2c、P-0262。
+
 ## v0.9.167 — 流程写死「改完 EEZ 必须当场编译四件套」（PR-0581）
 
 - 用户令：改了 EEZ 就要编译确认无错误，每次必须执行、不得遗留；并要求写进**经验库流程**（不只 AGENTS）。
