@@ -17,6 +17,34 @@
 
 ---
 
+## v0.9.177 — 开机动画改为真实 MP4 解码（PR-0595）
+
+- 新增 `src/native/app/sim_video.c/.h`（PC 专用）：用 ffmpeg 子进程解码 `assets/boot.mp4`
+  为 800×480 BGRA，逐帧写入 LVGL canvas；**不再把 MP4 预转成帧序列/动图**。
+- `run_sim.bat` 注入 `FFMPEG_EXE`（来自 `imageio_ffmpeg`，PATH 有 ffmpeg 也可）；
+  `boottest` 改为验证真实解码帧数（实测 75 帧 @25fps，`[VIDEO] PASS`）。
+- 删除旧帧序列方案：`boot_anim.c/.h`、`boot_frames.h`、`design/boot_from_mp4.py`；
+  源码只保留 `assets/boot.mp4`。
+- 坑与解：`_popen` + 带引号 exe 会被 cmd 拆坏 → exe 无空格时不加引号，临时 `chdir` 到工程根用相对路径。
+  NO_FLOW §2 ⑤b、§4 与 FLOW §2 同步为"真实 MP4"口径。
+
+## v0.9.176 — 开机动画帧改为生成物（方案 B，PR-0594）
+
+- `assets/boot/` 不再入库：只保留 `assets/boot.mp4`，帧由 `design/boot_from_mp4.py` 生成；
+  新增 `.gitignore` 忽略该目录。
+- `run_sim.bat` 在非 build 模式下检测 `boot_000.jpg` 缺失 → 自动运行转帧脚本再启动（build 不触发）。
+- 实测：删光 36 帧后 `boottest` 自动生成 36 帧并 `[BOOT] PASS`；源码侧只多 1 个 119KB 的 MP4。
+- 修复 `run_sim.bat` 被写成 LF 行尾导致 cmd 解析错乱的问题（统一 CRLF）。
+
+## v0.9.175 — 开机动画：MP4 → 帧序列（PR-0593）
+
+- 新增 `design/boot_from_mp4.py`：cv2 读任意 MP4（无 ffmpeg 也可），按 fps/最大帧数缩放居中出 JPEG，
+  写入 `assets/boot/` 并生成 `src/native/app/boot_frames.h`；`--demo` 可生成演示 MP4 `assets/boot.mp4`。
+- 新增 `src/native/app/boot_anim.c/.h`：顶层黑底覆盖 + `lv_image` 顺序播放，**逐帧 `lv_image_cache_drop`**，
+  播完自动删除；首帧打不开（FS 不可用）直接跳过。`main.c` 交互启动时播放。
+- 新增 `W78_BOOT_TEST` / `run_sim.bat boottest`；实测 36 帧 @12fps、`[BOOT] PASS`、中间帧截图正常；
+  `test` / `simtest` / `fstest` 回归全 PASS。NO_FLOW §2 ⑤b、FLOW §2 同步加"开机动画"。
+
 ## v0.9.174 — PC 仿真文件系统 A: → 工程根（PR-0591）
 
 - 新增 `src/native/app/sim_fs.c/.h`（PC 专用，ESP32 空实现）：向 LVGL 注册 `A:` 驱动，

@@ -125,7 +125,7 @@
 > **禁止手搓、禁止脚本拼字段**（按钮文字在子标签，细则见 `reference/07` 与 NO_FLOW §2.2 ⑩）。
 > 交付时：跑 `design/delivery_gate.py` 过 **D1–D8**（NO_FLOW §2.2 的表），输出贴进交付说明。
 | ⑤ 仿真辅助 | 编译 + 出图 / 交互 | `python design/sim.py`；脚本化拖拽 | 出图齐全、与基线/对照一致 | tick 源、输入设备等（§3.4） |
-| **⑤b PC 仿真器赋能（动态读 + 文件系统，2026-11-07）** | 内部读按控件值刷新（初始化对齐）；外部读按节拍模拟；`A:` 映射工程根（PC 专用 sim_fs，真机换 FATFS/LittleFS）；假数据 PC 专用 + ESP32 空实现 | `run_sim.bat fstest / simtest / behaviortest / test` | 读文件、读数在变、与控件状态一致、截图不溢出；四项自证全 PASS | 假数据不得写进 UI 生成代码；SDL 端口用真实时钟（`lv_tick_inc` 无效）；`sim_fs_init` 必须在 `lv_init` 之后 |
+| **⑤b PC 仿真器赋能（动态读 + 文件系统 + 真实 MP4，2026-11-07）** | 内部读按控件值刷新（初始化对齐）；外部读按节拍模拟；`A:` 映射工程根（PC 专用 sim_fs，真机换 FATFS/LittleFS）；**PC 直接用 ffmpeg 解码真实 MP4 播放（禁止预转帧/动图）**；假数据 PC 专用 + ESP32 空实现 | `run_sim.bat boottest / fstest / simtest / behaviortest / test` | 真实 MP4 解码帧数 >0 且播完自动收、读文件、读数在变、与控件状态一致、截图不溢出；五项自证全 PASS | 假数据不得写进 UI 生成代码；SDL 端口用真实时钟（`lv_tick_inc` 无效）；`sim_fs_init` 必须在 `lv_init` 之后；ffmpeg 路径用 `FFMPEG_EXE` 注入 |
 | ⑥ 门禁 | 断言集 | `python tools/run_gate.py` | 全绿才提交 | 缺屏/超阈值会非 0 退出 |
 | ⑦ 真机 | 烧录终验 | `idf.py flash monitor`（R 段条例） | 物理 / 性能 / 手感 | ①②证通路不证真值；`#if ESP_PLATFORM` 代码仿真编不到 |
 

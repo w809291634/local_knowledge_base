@@ -4732,3 +4732,21 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：把 PC 仿真文件系统同步到最小模板工程并验证
   - 产出/结论：模板工程新增 src/native/app/sim_fs.c/.h（A: → 工程根）、assets/fs_probe.txt、lv_conf 关闭内置 FS_STDIO、main.c 在 lv_init 后 sim_fs_init + SIM_FS_TEST 模式、run_sim.bat fstest、README 增加「PC 仿真（含文件系统）」段。实测 [FS] read 10 bytes / PASS、ESP32 空实现 gcc 0 错。CHANGELOG v0.9.174 补记。
   - 关联：PR-0591、CHANGELOG v0.9.174
+
+### PR-0593 · 2026-11-07 · Trae
+  - 提示词：增加开机动画，使用mp4文件
+  - 诉求：在 PC 仿真启动时播放 MP4 开机动画
+  - 产出/结论：新增 design/boot_from_mp4.py（cv2 解码任意 MP4，--demo 生成演示 MP4；出 JPEG 帧 + boot_frames.h）；新增 src/native/app/boot_anim.c/.h（顶层覆盖、逐帧丢缓存、播完自动收，FS 不可用则跳过）；main.c 交互启动即播，新增 W78_BOOT_TEST / run_sim.bat boottest；实测 36 帧 @12fps、[BOOT] PASS、中间帧截图正常，test/simtest/fstest 回归全 PASS。NO_FLOW §2 ⑤b、FLOW §2、CHANGELOG v0.9.175。
+  - 关联：PR-0592、CHANGELOG v0.9.175
+
+### PR-0594 · 2026-11-07 · Trae
+  - 提示词：为什么assert增加这么多图片 / 按方案 B 执行，只保留 MP4 文件，帧目录作为生成物
+  - 诉求：assets 不要塞 36 张帧图；只保留 MP4，帧按需生成
+  - 产出/结论：删除 assets/boot/*.jpg；新增 .gitignore 忽略 assets/boot/；run_sim.bat 非 build 模式检测首帧缺失→自动跑 boot_from_mp4.py 再启动；boot_frames.h 保留（编译需要）。实测删帧后 boottest 自动生成 36 帧并 [BOOT] PASS。顺带修复 run_sim.bat LF 行尾导致 cmd 解析错乱（统一 CRLF）。CHANGELOG v0.9.176。
+  - 关联：PR-0593、CHANGELOG v0.9.176
+
+### PR-0595 · 2026-11-07 · Trae
+  - 提示词：要求仿真时候播放视频、要求真实mp4，不允许是动图，记录经验库
+  - 诉求：PC 仿真必须直接播放真实 MP4，不接受预转帧/动图；写入经验库
+  - 产出/结论：新增 src/native/app/sim_video（PC 专用）：ffmpeg 子进程解码 assets/boot.mp4 为 800x480 BGRA → LVGL canvas，逐帧驱动；run_sim 注入 FFMPEG_EXE（imageio_ffmpeg）；boottest 验证真实解码帧数，实测 75 帧 @25fps PASS。删除 boot_anim/boot_frames/boot_from_mp4 帧序列方案，只留 assets/boot.mp4。坑：_popen 带引号 exe + 多参数被 cmd 拆坏 → 无空格不加引号 + 临时 chdir 到工程根用相对路径。NO_FLOW §2 ⑤b/§4、FLOW §2 记录「真实 MP4，禁止预转动图」；CHANGELOG v0.9.177。
+  - 关联：PR-0594、CHANGELOG v0.9.177
