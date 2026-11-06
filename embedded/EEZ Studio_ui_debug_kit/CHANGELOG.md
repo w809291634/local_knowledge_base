@@ -96,6 +96,18 @@
   （改 `tabviewSize`、删一个 Tab、塞 `identifier`）；EEZ CLI 构建 39 页
   `No error and no warning detected`（13:03:31）。kit 镜像 37+4 逐字节同步。P-0261。
 
+## v0.9.161 — 变体按用户令在 UI 重做；模板工程写死“禁止手搓”（PR-0575）
+
+- 用户令“还原本轮改动，只改 eez-widget-templates；重新建立 Tabview 0/1/2/3，
+  必须用 EEZ 拖动新建创建法”：在 UI 里删四页→Add Page→拖 Tabview→把 Tab 拖到
+  Widgets Structure 行下半区（0/1/2/3 次）→保存；误删的 Lottie 页同样补拖回来。
+- 重新提取后 37 模板 + 4 变体与重做前**逐字节相同**，`[TPL_CHECK] PASS`；
+  EEZ 构建 39 页 0 错 0 警（14:03:53）。
+- 工程 UUID 换新、页面顺序变化导致 `SCREEN_ID_*` 重排（35~39），属重建副作用。
+- `eez-widget-templates/README.md` 新增「硬规则：不得手搓，只能用 UI 拖拽保存语法」：
+  唯一 oracle、只读提取产物、只允许改值的白名单、新增形态必须回 UI 拖、Tab 只能拖进
+  结构树行下半区。kit 镜像 README 同步。P-0261。
+
 ## v0.9.153 — 全流程执行 + 测试夹具修复（PR-0560）
 
 - D5 全量树节点 `BLOCKED`：取 rect 前 `row.scrollIntoView({block:'center'})`，24/24 恢复。

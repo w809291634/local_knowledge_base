@@ -3,7 +3,7 @@
 本工程覆盖 EEZ Studio LVGL 9.4 Components Palette 的全部 **36 项**控件。
 
 - 39 个画布（Pages）：35 个“一页一控件”（`Tab` 不能独立成页，建在 `Tabview` 页内），
-  外加 4 个 Tabview 变体页 `Tabview0/1/2/3`；
+  外加 4 个 Tabview 变体页 `Tabview0/1/2/3`（2026-11-06 在 UI 里重新拖拽创建并保存）；
 - 每个控件都是**从 Components Palette 拖到画布、松开稳定后保存**的；`Tab` 是拖到
   Widgets Structure 的 `Tabview` 行内（行下半区）落定后保存；
 - 没有用脚本生成/修改 `.eez-project`；
@@ -37,6 +37,23 @@
 - Tabview 的 0/1/2/3 个 Tab 实测**只差 `children` 数量**，其余字段与每个 Tab 对象完全相同；
   多 Tab 一律整块克隆 `templates/variants/`，不要拿基础模板手拼 `children`。
 
+## 硬规则：不得手搓，只能用 UI 拖拽保存语法（2026-11-06 用户令）
+
+- 本工程是唯一 oracle：控件的字段与结构**只能**来自 EEZ Studio UI 里从 Palette 拖拽创建、
+  松开稳定后保存的工程。禁止用脚本生成/修改 `.eez-project`；禁止按 classInfo/defaultValue/
+  拖动 payload 补字段。
+- `templates/`、`templates/variants/`、`defaults.json`、`manifest.json` 都是**只读提取产物**。
+  生成器克隆后只允许改值：objID/style/localStyles objID（占位符）、`identifier`、
+  `left/top/width/height`、`text`/`tabName`、样式值（`localStyles.definition`）、
+  `children`（子对象也必须是克隆件）、`tabviewSize`/`selectedTab`；**不得增删或重排字段**。
+- 新增控件或新形态（例如第 4 个 Tab）：先在 UI 里拖出来保存 → `python extract_templates.py`
+  → `python validate_templates.py`；不通过就回 UI 重做，**不改模板文件**。
+- `Tab` 只能拖到 Widgets Structure 的 `Tabview` 行内（行下半区）；画布拖放一律落到页面层，
+  在画布上松手只会得到页面级兄弟对象。
+- 门禁：`validate_templates.py` 逐字段对照 UI 工程（含变体四重核对）；
+  `tab_parent_check.py` 卡 Tab 的父级结构。
+
+
 ## 面板名与类型名
 
 多数面板名等于控件类型；不同名的只有：
@@ -49,7 +66,7 @@
 
 ## 使用
 
-1. 克隆 `templates/<WidgetType>.json`；
+1. 克隆 `templates/<WidgetType>.json`（**不要手写或拼字段**）；
 2. 按角色给占位符换新 UUID，并赋新的 `identifier`；
 3. 只改几何/文本/样式值，不增删字段；
 4. Switch 保留 `CHECKABLE`；Button 保留唯一子 Label；

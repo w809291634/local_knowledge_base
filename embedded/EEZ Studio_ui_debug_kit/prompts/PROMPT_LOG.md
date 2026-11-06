@@ -4621,3 +4621,18 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：核对 kit 与模板库是否同步并修掉错处；把 Tabview 的 0/1/2/3 Tab 形态整块入库
   - 产出/结论：① 核对 kit：`reference/eez_widget_syntax` 37 模板 + defaults/manifest/README 与工程逐字节一致；抓到并修正 `reference/07` §6 的 `"tabs"/"tabSize"`——`.eez-project` 无此二键（全库搜索命中 0），实为 `children` + `tabviewPosition/tabviewSize/selectedTab/selectedTabType`，CHANGELOG v0.9.157。② Tab 结构不变量落地：新增 `tools/tab_parent_check.py` 与 `audit_ui.py` A11，全库 26 工程/11 Tab/违例 0，反向夹具（Tab 挂 Screen）FAIL 生效，v0.9.158。③ Tabview 变体：在模板源工程真实拖出 `Tabview0/1/2/3`（39 画布），实测只差 `children` 数量；新增 `templates/variants/` 4 份，`extract_templates.py`/`validate_templates.py` 支持变体四重核对，`[TPL_CHECK] PASS（37 个模板 + 4 个变体）`，三条反向夹具全 FAIL，EEZ CLI 构建 39 页 0 错 0 警（13:03:31），kit 镜像 37+4 逐字节同步。P-0261；CHANGELOG v0.9.160。
   - 关联：PR-0570、PR-0571
+### PR-0573 · 2026-11-06 13:35 · Qoder
+  - 提示词：4个的应该可以推断出来吧
+  - 诉求：确认 4 个 Tab 的形态能否由 0~3 变体推断，不必再补 Tabview4 页
+  - 产出/结论：可以推断，且有真实佐证——全库扫到一个 4-Tab 工程 `w23-w59-w73-w16-select-switch`（Main 页），其 4 个 `LVGLTabWidget` 去掉设计值后**键集只有 1 种**，与 0~3 变体"只差 children 数量"的结论同构。要守的两条：占位符按 `__CHILD3_*` 递增且唯一、`identifier` 逐个赋值。建议但不擅自落地：在 `validate_templates.py` 加派生断言 `tabsN.children == tabs(N-1).children + 一个 Tab 块`，让任意 N 由门禁背书。
+  - 关联：PR-0572
+### PR-0574 · 2026-11-06 13:45 · Qoder
+  - 提示词：同步检查一下经验库中是否正确
+  - 诉求：核对 kit 与模板库/示例现状是否一致，找出过期或错处
+  - 产出/结论：① 镜像逐字节一致（templates+variants、defaults、manifest、README）。② living 文档口径正确：`reference/README`（Palette 36 项 + Screen、39 画布 = 35 控件页 + 4 变体页）、`reference/07` tabview 段（`children`+`tabviewPosition/tabviewSize/selectedTab`，多 Tab 整块克隆 variants）、`skills.md` §11.20 四、P-0261、CHANGELOG v0.9.160。③ 抓到 1 处过期数字并修：`skills.md` §11.20 三写"全库 26 工程 / 11 个 Tab"，实测 `tools/tab_parent_check.py --all` = **26 工程 / 17 个 Tab / 违例 0**（模板工程 7 个），已改写并注明构成；历史条目（P-0258/P-0260、CHANGELOG v0.9.158）保留当时原数。④ 复现三条反向夹具全 FAIL：tab 内塞 `pad_all`、改 `tabviewSize`、塞 `identifier`（副本跑完即删）。⑤ 提取幂等复验：重跑 `extract_templates.py` 后 `git status` 为空。⑥ 可选缺口：`AGENTS.md` 8 入口行只写 `eez-widget-templates/templates/`，未点名 `templates/variants/`，多 Tab 靠细节文档才能查到——要不要补一行由用户定。
+  - 关联：PR-0572、PR-0573
+### PR-0575 · 2026-11-06 14:05 · Qoder
+  - 提示词：我还原 刚刚所有修改，要求修改针对 eez-widget-templates 这个工程，那么你就修复一下，要求不能手搓，要求使用拖拽新建法，然后保存下来，将语法模板保存下来，同时在eez-widget-templates 工程严格说明，不能手搓，要求使用之前的拖拽新建法，完全使用EEZ软件的前端保存生成的json格式，我建议你重新建立建立 tabview 不需要 tab, 有1个 tab，有2个tab，3个tab，分别创建示例，防止动态添加导致语法不同，使用eez拖动新建创建法
+  - 诉求：只改 eez-widget-templates；用 EEZ UI 拖动新建重做 Tabview 0/1/2/3 变体；模板入库；工程内写死“禁止手搓、必须用 UI 保存语法”
+  - 产出/结论：在 EEZ UI 里删掉四页→Add Page→拖 Tabview→Tab 拖到 Widgets Structure 行下半区（0/1/2/3 次）→保存；批量删页时误删 Lottie，已同样补拖回来；保存后重提取，37 模板+4 变体与重做前逐字节相同，`[TPL_CHECK] PASS`；EEZ 构建 39 页 0 错 0 警（14:03:53）。工程 UUID 换新、页面顺序变（变体在前、Lottie 在末）导致 `SCREEN_ID_*` 重排，属重建副作用。README 新增「硬规则：不得手搓，只能用 UI 拖拽保存语法」（唯一 oracle / 只读提取产物 / 只允许改值的白名单 / 新增形态回 UI 拖 / Tab 只能拖进结构树行下半区），kit 镜像同步。未改任何示例工程生成器。P-0261；CHANGELOG v0.9.161。
+  - 关联：PR-0572

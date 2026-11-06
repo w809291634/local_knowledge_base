@@ -36,10 +36,23 @@ Widgets Structure 的 Tabview 行下半区），保存后逐字段比对：
   `Build successfully finished at 2026/11/6 13:03:31`，`screens.c` 生成 39 个
   `create_screen_*`（含 tabview0~3）。
 
+## 重做（2026-11-06 14:00，用户令）
+
+用户要求“重新建立 Tabview 0/1/2/3，使用 EEZ 拖动新建创建法”，并只改 `eez-widget-templates`：
+
+- 在 EEZ UI 里删掉 `Tabview0/1/2/3` 四页，再 Add Page 重建；每页把 `Tabview` 从 Palette
+  拖到画布，`Tab` 拖到 Widgets Structure 的 `Tabview` 行内（行下半区）落定，0/1/2/3 次；
+- 期间误删了 `Lottie` 页（批量删页时行位置漂移），已用同样方式重新拖出并保存；
+- 保存后重新 `extract_templates.py`：37 模板 + 4 变体**与重做前逐字节相同**，
+  `validate_templates.py` PASS；EEZ 构建 39 页 0 错 0 警（14:03:53）；
+- 工程 UUID 全换新，页面顺序变为变体在前、`Lottie` 在末，`screens.h` 的 `SCREEN_ID_*`
+  随之重排（35~39）；这是重建的副作用，不影响模板语法；
+- README 新增「硬规则：不得手搓，只能用 UI 拖拽保存语法」。
+
 ## 遗留
 
-- 变体只覆盖到 3 个 Tab；要更多 Tab 需在源工程再拖一页并扩 `VARIANT_PAGES`，
-  不允许凭推断生成。
+- 变体只入库到 3 个 Tab；4 个起可由“只差 `children` 数量”推断（已用 4-Tab 的真实工程佐证），
+  若要把第 4 个也入库，仍须在 UI 拖一页再提取，不允许手拼。
 
 ## 关联
 

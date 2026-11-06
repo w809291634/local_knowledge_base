@@ -1483,7 +1483,8 @@ set_wake["children"] = place(pane_wake(...),     SET_X, SB_H, "wake_")
 遍历工程 JSON，断言每个 `type:"LVGLTabWidget"` 的 parent type 是
 `LVGLTabviewWidget`（本次手工执行：13 tab / 4 tabview / 违例 0）。
 **常驻门禁**：`tools/audit_ui.py` 的 A11（随 G1 自动跑）；批量扫多个工程用
-`tools/tab_parent_check.py --all <root>`。全库实测 26 工程 / 11 个 Tab / 违例 0。
+`tools/tab_parent_check.py --all <root>`。全库实测 26 工程 / 17 个 Tab / 违例 0
+（其中模板工程 7 个：Tabview 1 + 变体 0/1/2/3）。
 
 #### 四、Tab 数量只影响 children（2026-11-06 实测，`PR-0572`）
 

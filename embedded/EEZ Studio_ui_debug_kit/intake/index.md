@@ -470,4 +470,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0258 | 2026-11-06 | 模板工程按 EEZ UI 拖拽重建：18 画布/19 模板，拖拽落定后保存，validate PASS；w78 迁移见 P-0259 | 模板重建,EEZ UI,拖拽,18画布,clickableFlag | fixed |
 | P-0259 | 2026-11-06 | w78 迁移到 UI 拖拽保存语法：去 hiddenFlag/补 clickableFlag，`no_click` 改 clickableFlag=false；12:42 重放收尾 A14 813/813、D1–D9 全 PASS（hiddenFlag 放行要带值判据） | w78迁移,A14,clickableFlag,hiddenFlag,字段集,D5 | fixed |
 | P-0260 | 2026-11-06 | 模板库补齐 Palette 全部 36 项：35 画布/37 模板；Tab 拖进 Tabview 树行下半区；validate PASS | 模板覆盖,36项,Tab嵌套,Widgets Structure,LVGLSpanWidget | fixed |
-| P-0261 | 2026-11-06 | Tabview 0/1/2/3 个 Tab 整块入库：39 画布/37 模板+4 变体；实测只差 children；validate PASS + 三条反向夹具 FAIL + 构建 0 错 0 警 | Tabview变体,children,动态添加,variants,整块克隆 | fixed |
+| P-0261 | 2026-11-06 | Tabview 0/1/2/3 个 Tab 整块入库：39 画布/37 模板+4 变体；实测只差 children；validate PASS + 三条反向夹具 FAIL + 构建 0 错 0 警；14:00 按用户令在 UI 重做变体并在 README 写死“禁止手搓” | Tabview变体,children,动态添加,variants,整块克隆 | fixed |
