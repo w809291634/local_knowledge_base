@@ -39,6 +39,18 @@
 - 结果：A14 813/813、D5 24 页平均 98.27%（最低 96.40%）、NAV 72/72、D1–D9 PASS。
 - 设计源与交互语义未改；设计冻结结论仍以 D5 重跑为准。P-0259。
 
+---
+
+## v0.9.156 — 模板库补齐到 Palette 全部 36 项（PR-0570）
+
+- 原模板库只覆盖 18 类，与面板 36 项差 18 类；本轮在同一个 UI 工程补齐到 36 项。
+- 新增 17 画布；`Tab` 不独立成页，拖到 Widgets Structure 的 Tabview 行内保存。
+- 35 画布 / 37 模板（36 控件 + Screen）；`validate_templates.py` PASS。
+- 实测：画布拖放只落页面层，嵌套必须在结构树目标行下半区落点。
+- `Spangroup`→`LVGLSpanWidget`；MessageBox localStyles 带 definition；
+  Image/AnimationImage/Canvas/Line 无 clickableFlag。
+- 复核发现 w78 工作树回到迁移前 HEAD，A14 0/813，需重跑 P-0259。P-0260。
+
 ## v0.9.153 — 全流程执行 + 测试夹具修复（PR-0560）
 
 - D5 全量树节点 `BLOCKED`：取 rect 前 `row.scrollIntoView({block:'center'})`，24/24 恢复。

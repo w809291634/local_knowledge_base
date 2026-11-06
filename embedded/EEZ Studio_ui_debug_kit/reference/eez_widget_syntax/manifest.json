@@ -1,73 +1,153 @@
 {
+ "LVGLAnimationImageWidget": {
+  "page": "AnimationImage",
+  "file": "templates/LVGLAnimationImageWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "AnimationImage"
+ },
  "LVGLArcWidget": {
   "page": "Arc",
   "file": "templates/LVGLArcWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Arc"
  },
  "LVGLBarWidget": {
   "page": "Bar",
   "file": "templates/LVGLBarWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Bar"
+ },
+ "LVGLButtonMatrixWidget": {
+  "page": "ButtonMatrix",
+  "file": "templates/LVGLButtonMatrixWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "ButtonMatrix"
  },
  "LVGLButtonWidget": {
   "page": "Button",
   "file": "templates/LVGLButtonWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Button"
+ },
+ "LVGLCalendarWidget": {
+  "page": "Calendar",
+  "file": "templates/LVGLCalendarWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Calendar"
+ },
+ "LVGLCanvasWidget": {
+  "page": "Canvas",
+  "file": "templates/LVGLCanvasWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Canvas"
  },
  "LVGLChartWidget": {
   "page": "Chart",
   "file": "templates/LVGLChartWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Chart"
  },
  "LVGLCheckboxWidget": {
   "page": "Checkbox",
   "file": "templates/LVGLCheckboxWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Checkbox"
  },
  "LVGLContainerWidget": {
   "page": "Container",
   "file": "templates/LVGLContainerWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Container"
  },
  "LVGLDropdownWidget": {
   "page": "Dropdown",
   "file": "templates/LVGLDropdownWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Dropdown"
+ },
+ "LVGLImageWidget": {
+  "page": "Image",
+  "file": "templates/LVGLImageWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Image"
+ },
+ "LVGLImgbuttonWidget": {
+  "page": "Imgbutton",
+  "file": "templates/LVGLImgbuttonWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Imgbutton"
  },
  "LVGLKeyboardWidget": {
   "page": "Keyboard",
   "file": "templates/LVGLKeyboardWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Keyboard"
  },
  "LVGLLabelWidget": {
   "page": "Label",
   "file": "templates/LVGLLabelWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Label"
  },
  "LVGLLedWidget": {
   "page": "Led",
   "file": "templates/LVGLLedWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Led"
+ },
+ "LVGLLineWidget": {
+  "page": "Line",
+  "file": "templates/LVGLLineWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Line"
  },
  "LVGLListWidget": {
   "page": "List",
   "file": "templates/LVGLListWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "List"
+ },
+ "LVGLLottieWidget": {
+  "page": "Lottie",
+  "file": "templates/LVGLLottieWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Lottie"
+ },
+ "LVGLMenuWidget": {
+  "page": "Menu",
+  "file": "templates/LVGLMenuWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Menu"
+ },
+ "LVGLMessageBoxWidget": {
+  "page": "MessageBox",
+  "file": "templates/LVGLMessageBoxWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "MessageBox"
  },
  "LVGLPanelWidget": {
   "page": "Panel",
   "file": "templates/LVGLPanelWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Panel"
+ },
+ "LVGLQRCodeWidget": {
+  "page": "QRCode",
+  "file": "templates/LVGLQRCodeWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "QRCode"
  },
  "LVGLRollerWidget": {
   "page": "Roller",
   "file": "templates/LVGLRollerWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Roller"
  },
  "LVGLScaleWidget": {
   "page": "Scale",
   "file": "templates/LVGLScaleWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Scale"
  },
  "LVGLScreenWidget": {
   "page": "Label",
@@ -77,21 +157,67 @@
  "LVGLSliderWidget": {
   "page": "Slider",
   "file": "templates/LVGLSliderWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Slider"
+ },
+ "LVGLSpanWidget": {
+  "page": "Spangroup",
+  "file": "templates/LVGLSpanWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Spangroup"
+ },
+ "LVGLSpinboxWidget": {
+  "page": "Spinbox",
+  "file": "templates/LVGLSpinboxWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Spinbox"
  },
  "LVGLSpinnerWidget": {
   "page": "Spinner",
   "file": "templates/LVGLSpinnerWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Spinner"
  },
  "LVGLSwitchWidget": {
   "page": "Switch",
   "file": "templates/LVGLSwitchWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Switch"
+ },
+ "LVGLTabWidget": {
+  "page": "Tabview",
+  "file": "templates/LVGLTabWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Tab"
+ },
+ "LVGLTableWidget": {
+  "page": "Table",
+  "file": "templates/LVGLTableWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Table"
+ },
+ "LVGLTabviewWidget": {
+  "page": "Tabview",
+  "file": "templates/LVGLTabviewWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Tabview"
  },
  "LVGLTextareaWidget": {
   "page": "Textarea",
   "file": "templates/LVGLTextareaWidget.json",
-  "source": "EEZ Studio UI drag-created"
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Textarea"
+ },
+ "LVGLTileViewWidget": {
+  "page": "TileView",
+  "file": "templates/LVGLTileViewWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "TileView"
+ },
+ "LVGLWindowWidget": {
+  "page": "Window",
+  "file": "templates/LVGLWindowWidget.json",
+  "source": "EEZ Studio UI drag-created",
+  "palette": "Window"
  }
 }

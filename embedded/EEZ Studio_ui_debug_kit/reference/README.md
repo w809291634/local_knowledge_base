@@ -33,7 +33,7 @@
 | ★ **硬件 ⇄ UI 分离** | **跨项目模板**。§0 先给**文件目录结构**（四角色目录树 + 每个目录怎么自证身份 + 依赖方向图 + 一条信号跨目录的流向 + 陌生工程 5 分钟认路），再讲四条不变式、四层归属、A/B/C 三通道判据、变量桥三条硬规矩、★平台分界三种机制的选择判据、线程模型配方、仿真镜像纪律、加信号清单、9 条反模式、机器检查清单 | `10_hw_ui_separation.md` |
 | ★ **最小 EEZ 工程脚手架** | 从零搭可编译的最小 EEZ 模板：四块目录职责、三条硬规矩（native 不 REQUIRES ui / GLOB 需 reconfigure / 不写死生成对象句柄）、三大链接机制（CMP0079、lvgl__lvgl 依赖 lv_mem_psram、--undefined=lv_thread_init）、A/B 宏测量法与实测账单、与 P-0154 的三层拆分口径 | `11_minimal_eez_project_scaffold.md` |
 | ★ **Wi-Fi 列表/连接页** | 直接移植成熟参考实现：一页 lv_list 动态行 + 密码半页 + 忘记对话框 + busy；native app/navigation/widgets/platform 分层、no-flow 改造点、验证四件套、四个坑 | `15_wifi_list_connect_pattern.md` |
-| ★ **控件语法库** | 19 个 **EEZ UI 拖拽创建并保存后**提取的控件语法（18 画布，每页一个控件；`validate_templates.py` 逐字段校验）：只从这里克隆新建控件；Switch 必须 CHECKABLE、Button 恰一子 Label、objID 占位符必须换新 | `eez_widget_syntax/README.md` |
+| ★ **控件语法库** | 37 个 **EEZ UI 拖拽创建并保存后**提取的控件语法（Palette 全部 36 项 + Screen；35 画布，Tab 挂在 Tabview 内；`validate_templates.py` 逐字段校验）：只从这里克隆新建控件；Switch 必须 CHECKABLE、Button 恰一子 Label、objID 占位符必须换新 | `eez_widget_syntax/README.md` |
 | ★ **no-flow native 分层** | 设计源/生成 UI/native 的单向依赖、`app`/`platform`/`navigation`/`widgets`/`third_party` 文件夹职责、迁移纪律与验收判据 | `12_no_flow_native_module_layout.md` |
 
 ## 本项目（eez-test，LVGL 9.4 / 800×480 横屏 / BGR）最常用入口

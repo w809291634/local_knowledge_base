@@ -4604,5 +4604,10 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
 ### PR-0569 · 2026-11-06 11:10 · Qoder
   - 提示词：迁移 w78 旧工程到 UI 拖拽保存语法
   - 诉求：w78 全部控件字段集对齐 EEZ UI 拖拽保存语法，保持设计与行为不变
-  - 产出/结论：`eez_defaults.json` 已用样板去 `hiddenFlag`/`checkedState`，补 `clickableFlag`/`flagScrollDirection`/`scrollSnapX/Y`/`group`，`widgetFlags` 去 `CLICKABLE`；`no_click()` 改 `clickableFlag=false`；A14 放行放置期 `identifier`、隐藏遮罩 `hiddenFlag`、Keyboard 绑定 `textarea`。重生成/构建后 A14 813/813、D5 24 页平均 98.27%（最低 96.40%，灯详情）、NAV 72/72、UI 行为/flowtest/uitest/quittest、D1–D9 全 PASS，D5 确认标记已更新。P-0259；CHANGELOG v0.9.155。
+  - 产出/结论：`eez_defaults.json` 已用样板去 `hiddenFlag`/`checkedState`，补 `clickableFlag`/`flagScrollDirection`/`scrollSnapX/Y`/`group`，`widgetFlags` 去 `CLICKABLE`；`no_click()` 改 `clickableFlag=false`；A14 放行放置期 `identifier`、隐藏遮罩 `hiddenFlag`、Keyboard 绑定 `textarea`。重生成/构建后 A14 813/813、D5 24 页平均 98.27%（最低 96.40%，灯详情）、NAV 72/72、UI 行为/flowtest/uitest/quittest、D1–D9 全 PASS，D5 确认标记已更新。P-0259；CHANGELOG v0.9.155。后续复核发现工作树已回到迁移前 HEAD，A14 0/813，需重跑。
   - 关联：PR-0569
+### PR-0570 · 2026-11-06 11:45 · Qoder
+  - 提示词：是，缺的是模板库覆盖数量，不是新建工程拖拽出错：新建工程只建了模板库已有的 18 类……面板里另外 18 类根本没有模板可对。（附 36 项清单）
+  - 诉求：把模板库补齐到 EEZ 9.4 Palette 全部 36 项
+  - 产出/结论：在同一个 UI 工程追加 17 画布；Tab 拖进 Widgets Structure 的 Tabview 行下半区保存。最终 35 画布/37 模板（36 控件 + Screen），`validate_templates.py` PASS，面板 36 项与 `manifest.palette` 集合一致，kit 镜像逐字节一致。实测画布拖放只落页面层，嵌套必须走结构树行内下半区。新增事实：Spangroup→LVGLSpanWidget、MessageBox localStyles 带 definition、Image/AnimationImage/Canvas/Line 无 clickableFlag。复核 A14 时发现 w78 工作树已回到迁移前 HEAD（0/813），非本次模板改动导致，需重跑 P-0259。P-0260；CHANGELOG v0.9.156。
+  - 关联：PR-0570

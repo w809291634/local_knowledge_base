@@ -468,4 +468,5 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0256 | 2026-11-06 | 按钮颜色对不上：Wi-Fi 自定义页按钮沿用白字；make_button 补 fg，扫描/连接/忘记等按设计补色 | 按钮颜色,文字色,Wi-Fi,make_button,fg | fixed |
 | P-0257 | 2026-11-06 | 全 24 页设计对照：运行时选中色绿→琥珀、滑条/进度条轨道收细、图表网格；D5 98.27%，最低 96.40% | 全页面核对,运行时颜色,滑条轨道,进度条,图表网格,D5 | fixed |
 | P-0258 | 2026-11-06 | 模板工程按 EEZ UI 拖拽重建：18 画布/19 模板，拖拽落定后保存，validate PASS；w78 迁移见 P-0259 | 模板重建,EEZ UI,拖拽,18画布,clickableFlag | fixed |
-| P-0259 | 2026-11-06 | w78 迁移到 UI 拖拽保存语法：去 hiddenFlag/补 clickableFlag，`no_click` 改 clickableFlag=false；A14 813/813，D5 98.27%/最低 96.40% | w78迁移,A14,clickableFlag,hiddenFlag,字段集,D5 | fixed |
+| P-0259 | 2026-11-06 | w78 迁移到 UI 拖拽保存语法：去 hiddenFlag/补 clickableFlag，`no_click` 改 clickableFlag=false；A14 813/813，D5 98.27%/最低 96.40%（后续工作树回退，需重跑） | w78迁移,A14,clickableFlag,hiddenFlag,字段集,D5 | fixed |
+| P-0260 | 2026-11-06 | 模板库补齐 Palette 全部 36 项：35 画布/37 模板；Tab 拖进 Tabview 树行下半区；validate PASS | 模板覆盖,36项,Tab嵌套,Widgets Structure,LVGLSpanWidget | fixed |

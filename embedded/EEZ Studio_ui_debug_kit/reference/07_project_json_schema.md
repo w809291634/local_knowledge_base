@@ -167,7 +167,9 @@
   验证要发 `PRESSED → RELEASED`，只发 `CLICKED` 不会切换。
 - **字段集必须等于标准模板库（A14）**：生成控件逐键比对 `templates/<Type>.json`，多/少字段即 FAIL。
   模板是 **UI 拖拽保存的默认对象**：有 `hiddenFlagType`，但**没有 `hiddenFlag`**；也没有
-  `checkedState`、Keyboard 的 `textarea`；可点击类型有 `clickableFlag: true`（Label/Spinner 除外）。
+  `checkedState`、Keyboard 的 `textarea`；可点击类型有 `clickableFlag: true`
+  （Label/Spinner/Image/AnimationImage/Canvas/Line 除外）。Palette 36 项现已全覆盖；
+  `Spangroup` 的类型名是 `LVGLSpanWidget`，`Tab` 只能放 `Tabview.children` 内。
   不得按旧版"补 hiddenFlag 基础字段"处理；显隐/勾选/键盘绑定只在确实需要时按 UI 语法追加。
 - **设备读数也是控件（value 类）**：温度/湿度/百分比/功率/电量/在线状态/日期时间等从设备读来的值，
   作为 `value` 控件行（`out_read`，`hr` 码）生成真实 Label；标题/说明/按钮文案不算。

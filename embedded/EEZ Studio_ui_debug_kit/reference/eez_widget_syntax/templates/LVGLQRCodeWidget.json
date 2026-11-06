@@ -1,0 +1,42 @@
+{
+ "objID": "__OBJID__",
+ "type": "LVGLQRCodeWidget",
+ "left": 0,
+ "top": 0,
+ "width": 160,
+ "height": 160,
+ "customInputs": [],
+ "customOutputs": [],
+ "style": {
+  "objID": "__STYLE_OBJID__",
+  "useStyle": "default",
+  "conditionalStyles": [],
+  "childStyles": []
+ },
+ "timeline": [],
+ "eventHandlers": [],
+ "leftUnit": "px",
+ "topUnit": "px",
+ "widthUnit": "px",
+ "heightUnit": "px",
+ "children": [],
+ "widgetFlags": "CLICK_FOCUSABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_CHAIN|SCROLL_WITH_ARROW|SNAPPABLE|PRESS_LOCK|GESTURE_BUBBLE|ADV_HITTEST",
+ "hiddenFlagType": "literal",
+ "clickableFlag": true,
+ "clickableFlagType": "literal",
+ "flagScrollbarMode": "",
+ "flagScrollDirection": "",
+ "scrollSnapX": "",
+ "scrollSnapY": "",
+ "checkedStateType": "literal",
+ "disabledStateType": "literal",
+ "states": "",
+ "localStyles": {
+  "objID": "__LOCAL_STYLE_OBJID__"
+ },
+ "group": "",
+ "groupIndex": 0,
+ "text": "https://envox.eu/",
+ "darkColor": "#20429F",
+ "lightColor": "#E2F5FE"
+}

@@ -1,47 +1,56 @@
-# EEZ 控件语法库（UI 拖拽创建模板）
+# EEZ 控件语法模板（UI 拖拽创建）
 
-真值来源：`C:\Users\yjt54\Desktop\EEz_stidio_examples\eez-widget-templates`。
-该工程是在 EEZ Studio UI 里新建的 18 个画布，每页一个控件，**从 Components Palette 拖到画布、
-松开稳定后保存**；`templates/` 是从保存后的工程只读提取的语法。
-**新建控件只从这里克隆**，不要临时去别的工程抓样板，也不要手写字段。
+本工程覆盖 EEZ Studio LVGL 9.4 Components Palette 的全部 **36 项**控件。
+
+- 35 个画布（Pages）：每个 Palette 控件一页；`Tab` 不能独立成页，建在 `Tabview` 页内；
+- 每个控件都是**从 Components Palette 拖到画布、松开稳定后保存**的；`Tab` 是拖到
+  Widgets Structure 的 `Tabview` 行内（行下半区）落定后保存；
+- 没有用脚本生成/修改 `.eez-project`；
+- `templates/*.json` 是从这份保存后的工程只读提取的语法（36 控件 + Screen = 37 个模板）。
 
 ## 文件
 
-- `templates/<Type>.json`：拖拽后保存的控件语法（objID 已占位）。
-- `defaults.json`：每类的页面、`defaultFlags` 与保存后的默认值（不含对象 ID/位置）。
-- `manifest.json`：类型 → 页面/模板文件。
+- `eez-widget-templates.eez-project`：UI 创建并保存的源工程（35 画布）。
+- `templates/<WidgetType>.json`：从各画布控件提取的语法模板（objID 已占位）。
+- `defaults.json`：每类控件的页面、flags 与保存后的默认值（不含对象 ID/位置）。
+- `manifest.json`：类型 → 页面/模板文件；`palette` 是面板显示名。
+- `extract_templates.py`：**只读提取**，从保存后的工程重写 templates/defaults/manifest。
+- `validate_templates.py`：只读校验，逐字段对比模板与 UI 工程保存的控件，并校验占位符角色/覆盖完整性/defaults/manifest。
 
-## 关键语法（与拖动中的 payload、classInfo 片段区分）
+## 关键语法口径
+
+这是“拖拽后保存”的语法，不是拖动中的临时 payload，也不是 classInfo 片段：
 
 - `clickableFlag: true` 表示可点击，`widgetFlags` **不含 `CLICKABLE`**；
 - 有 `flagScrollbarMode`、`flagScrollDirection`、`scrollSnapX/Y`、`group`；
-- **没有 `hiddenFlag`、`checkedState`**（只有对应的 `*Type`）；
-- `localStyles` 默认只有 `{objID}`；Keyboard 与 Button 子 Label 保留实际 `definition`（align），不要删；
-- 身份角色独立占位：`__OBJID__` / `__STYLE_OBJID__` / `__LOCAL_STYLE_OBJID__`；
-  Button 子 Label 用 `__CHILD0_OBJID__` / `__CHILD0_STYLE_OBJID__` / `__CHILD0_LOCAL_STYLE_OBJID__`；
-- 模板**不带 `identifier`**（放置/克隆时赋值）；
-- Keyboard 没有 `textarea`；Button 子 Label 是完整 Label 字段集。
+- **没有** `hiddenFlag`、`checkedState`；
+- `localStyles` 常见只有 `{objID}`；Keyboard、MessageBox 与 Button 子 Label 保留实际
+  `definition`（如 align），不要删；
+- 三个身份角色用独立占位符：`__OBJID__` / `__STYLE_OBJID__` / `__LOCAL_STYLE_OBJID__`；
+  Button 子 Label 用 `__CHILD0_*`，Spangroup 的 span 用 `__SPANS0_OBJID__`；
+- 模板**不带 `identifier`**（放置/克隆时才赋值）；
+- Keyboard **没有** `textarea`（绑定后才会出现）；
+- Button 子 Label 是完整 Label 字段集。
+
+## 面板名与类型名
+
+多数面板名等于控件类型；不同名的只有：
+
+- `Spangroup` → `LVGLSpanWidget`
+- `Tab` → `LVGLTabWidget`（挂在 `LVGLTabviewWidget` 内）
+
+`Label`、`Spinner`、`Image`、`AnimationImage`、`Canvas`、`Line` 保存后没有
+`clickableFlag`，其余控件有。
 
 ## 使用
 
-1. `copy.deepcopy(templates[type])`。
-2. 按角色给占位符换新 UUID，并赋新的 `identifier`。
-3. 所有 `*Type` 保持 `literal`；不要新增 `hiddenFlag/checkedState/textarea` 等字段。
-4. 只改 `left/top/width/height`、`text`、`localStyles` 的值。
-5. 跑 A10（字段集）与 A13（Switch CHECKABLE）；按钮跑 A4（恰一子 Label）。
-6. 改 UI 工程后，在工程目录运行 `python extract_templates.py` 重提取、
-   `python validate_templates.py` 逐字段校验（含占位符角色、覆盖完整性、defaults/manifest）；
-   本经验库目录是它的镜像。
+1. 克隆 `templates/<WidgetType>.json`；
+2. 按角色给占位符换新 UUID，并赋新的 `identifier`；
+3. 只改几何/文本/样式值，不增删字段；
+4. Switch 保留 `CHECKABLE`；Button 保留唯一子 Label；
+5. `Tab` 只能复制到 `Tabview.children` 下；`Tab` 的 `tabName` 是页签标题；
+6. 改动 UI 工程后跑 `python extract_templates.py` 再提取，跑 `python validate_templates.py` 校验。
 
-## 类型
-
-Label / Button / Container / Panel / Switch / Slider / Bar / Arc / Chart / Scale / Led /
-Checkbox / Dropdown / Roller / Textarea / Keyboard / List / Spinner（+ Screen）。
-
-## 硬约束
-
-- **模板只来自 EEZ UI 拖拽后保存的工程**；不要用脚本生成/修改 `.eez-project`。
-- **Switch `widgetFlags` 必须含 `CHECKABLE`**；LVGL 在 RELEASED 靠它切换。
-- Button 恰一个子 Label，文字在子 Label；按钮自身无 text。
-- 模板里的 objID 是占位符，严禁原样拷进工程（会撞 ID）。
-- 克隆后仍要检查表达式字段，防止带入 `get_var_*`。
+> Screen 是页面根节点，不是 Palette 拖拽控件；它的模板从页面根提取，`children` 清空。
+> EEZ 画布拖放一律落在页面这一层；要把控件放进某个容器/Tabview，必须拖到
+> Widgets Structure 对应行内（行下半区），不能只看画布位置。
