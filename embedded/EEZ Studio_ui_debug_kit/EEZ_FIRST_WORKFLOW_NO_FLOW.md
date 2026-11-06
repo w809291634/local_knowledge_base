@@ -254,8 +254,9 @@ watch2 三轮返工（骑表圈 → 坐标漂移 → 底图幽灵）每一项都
 ⑨ **纯展示/装饰容器必须去掉 `CLICKABLE`**（只改 widgetFlags，不新增字段），
    否则透明底板会盖在按钮上吞掉点击——EEZ 画布看不出，仿真/真机才发现点不动；
 ⑩ **控件 JSON 禁止捏造**：新建控件**只从根目录 `eez-widget-templates/templates/`（kit `reference/eez_widget_syntax`）克隆**；
-   不允许临时去其他工程抓样板。模板字段集来自真实 EEZ 拖拽工程，属性值必须等于 EEZ classInfo
-   标准默认值（`defaults.json`，`validate_templates.py` 逐项核对），不得带源工程配色/字体/尺寸；
+   不允许临时去其他工程抓样板。模板来自 **EEZ UI 拖拽创建并保存后的工程**，
+   `validate_templates.py` 逐字段核对；不得按 classInfo/defaultValue 片段或拖动 payload 补字段，
+   不要用脚本生成/修改 `.eez-project`；不得带源工程配色/字体/尺寸；
    生成器只改几何/identifier/文本/样式值；**字段集不得超出样板**，A10 门禁逐控件核对；
    Switch 必须带 `CHECKABLE`（A13）。
 ⑪ **标注控件必须物化为真实类型**：toggle→`LVGLSwitchWidget`、slider→`LVGLSliderWidget`、

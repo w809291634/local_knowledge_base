@@ -152,8 +152,9 @@
   height/text/localStyles 值`，**不得手写或新增字段**（样板里没有的键一律不写）。`eez_check` 的 A10
   会逐控件比对字段集，出现样板外字段即 FAIL。2026-11-05 实测就抓到人为加的 `pad_all`。
   **唯一来源**：根目录 `eez-widget-templates/templates/`（kit `reference/eez_widget_syntax`），
-  字段集来自真实拖拽工程并经构建验证；属性值必须等于 EEZ classInfo 标准默认值（`defaults.json`），
-  `validate_templates.py` 逐项核对，不得带源工程配色/字体/尺寸；不要临时去别的工程抓样板。
+  模板来自 **EEZ UI 拖拽创建并保存后的工程**，`validate_templates.py` 逐字段核对；
+  不得按 classInfo/defaultValue 片段或拖动 payload 补字段，不要用脚本生成/修改 `.eez-project`；
+  不得带源工程配色/字体/尺寸；不要临时去别的工程抓样板。
   `tools/eez_defaults.py` 只用于已有工程的自定义样板采样/对照；冷门类型先补进模板工程再克隆。
 - **标注控件必须物化为真实类型（A12）**：设计标注 toggle/slider/动作按钮/输入/进度/图表，
   工程里必须分别是 Switch/Slider/Button/Textarea/Bar/Chart；整卡交互区用「容器 + 卡内真控件」，

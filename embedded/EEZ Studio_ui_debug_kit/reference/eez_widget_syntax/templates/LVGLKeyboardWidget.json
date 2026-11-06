@@ -8,7 +8,7 @@
  "customInputs": [],
  "customOutputs": [],
  "style": {
-  "objID": "__STYLE_OBJID__",
+  "objID": "__OBJID__",
   "useStyle": "default",
   "conditionalStyles": [],
   "childStyles": []
@@ -20,15 +20,19 @@
  "widthUnit": "px",
  "heightUnit": "px",
  "children": [],
- "widgetFlags": "CLICKABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
+ "widgetFlags": "GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
  "hiddenFlagType": "literal",
+ "clickableFlag": true,
  "clickableFlagType": "literal",
- "flagScrollbarMode": "OFF",
+ "flagScrollbarMode": "",
+ "flagScrollDirection": "",
+ "scrollSnapX": "",
+ "scrollSnapY": "",
  "checkedStateType": "literal",
  "disabledStateType": "literal",
  "states": "",
  "localStyles": {
-  "objID": "__LOCAL_STYLE_OBJID__",
+  "objID": "__OBJID__",
   "definition": {
    "MAIN": {
     "DEFAULT": {
@@ -37,9 +41,8 @@
    }
   }
  },
+ "group": "",
  "groupIndex": 0,
- "identifier": "tpl_keyboard",
- "textarea": "",
  "mode": "TEXT_LOWER",
- "hiddenFlag": false
+ "identifier": "tpl_keyboard"
 }

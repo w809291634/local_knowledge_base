@@ -3,12 +3,12 @@
  "type": "LVGLScreenWidget",
  "left": 0,
  "top": 0,
- "width": 100,
- "height": 50,
+ "width": 800,
+ "height": 480,
  "customInputs": [],
  "customOutputs": [],
  "style": {
-  "objID": "__STYLE_OBJID__",
+  "objID": "__OBJID__",
   "useStyle": "default",
   "conditionalStyles": [],
   "childStyles": []
@@ -22,16 +22,14 @@
  "children": [],
  "widgetFlags": "CLICKABLE|PRESS_LOCK|CLICK_FOCUSABLE|GESTURE_BUBBLE|SNAPPABLE|SCROLLABLE|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER",
  "hiddenFlagType": "literal",
+ "clickableFlag": true,
  "clickableFlagType": "literal",
- "flagScrollbarMode": "OFF",
  "checkedStateType": "literal",
  "disabledStateType": "literal",
  "states": "",
  "localStyles": {
-  "objID": "__LOCAL_STYLE_OBJID__",
-  "definition": {}
+  "objID": "__OBJID__"
  },
  "groupIndex": 0,
- "hiddenFlag": false,
  "identifier": "tpl_screen"
 }

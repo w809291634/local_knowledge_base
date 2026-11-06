@@ -8,7 +8,7 @@
  "customInputs": [],
  "customOutputs": [],
  "style": {
-  "objID": "__STYLE_OBJID__",
+  "objID": "__OBJID__",
   "useStyle": "default",
   "conditionalStyles": [],
   "childStyles": []
@@ -23,15 +23,17 @@
  "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
  "hiddenFlagType": "literal",
  "clickableFlagType": "literal",
- "flagScrollbarMode": "OFF",
+ "flagScrollbarMode": "",
+ "flagScrollDirection": "",
+ "scrollSnapX": "",
+ "scrollSnapY": "",
  "checkedStateType": "literal",
  "disabledStateType": "literal",
  "states": "",
  "localStyles": {
-  "objID": "__LOCAL_STYLE_OBJID__",
-  "definition": {}
+  "objID": "__OBJID__"
  },
+ "group": "",
  "groupIndex": 0,
- "identifier": "tpl_spinner",
- "hiddenFlag": false
+ "identifier": "tpl_spinner"
 }

@@ -4596,3 +4596,8 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：全部 24 页对照设计图，找出并修正差异
   - 产出/结论：D5 逐页 + 仿真器 24 张实拍对照；发现运行时 `ui_behavior COLOR_ACCENT` 写成绿色（仿真器按钮发绿，D5 画布看不到），改设计琥珀；Slide/Bar 轨道由整条 20px 收为 6/8px；按钮文字色/图表网格同步。D5 98.03→98.27%，最低 95.89→96.40%，Wi-Fi 99.57%；NAV 72/72、UI/flow/uitest/quit、D1–D9 全 PASS。剩余差异：旋钮 20px vs 14px、字体字形、EEZ 画布图表网格、Wi-Fi 动态列表。P-0257。
   - 关联：PR-0564
+### PR-0568 · 2026-11-06 09:55 · Qoder
+  - 提示词：原工程文件我都删除了 / 要求拖动的控件，松开后稳定在画布中，然后保存
+  - 诉求：用 EEZ UI 新建工程/画布，从 Palette 拖控件，落定后保存；不要脚本生成 .eez-project
+  - 产出/结论：EEZ UI 新建 LVGL 9.4 工程，建 18 个画布（每页一个控件），逐个真实鼠标拖拽、松开稳定后保存；删除默认 Main。只读提取 19 模板 + defaults/manifest，`validate_templates.py` 逐字段对照 UI 工程 PASS，构建 `Build successfully finished`。新语法有 clickableFlag/scroll/group，无 hiddenFlag/checkedState/textarea，flags 不含 CLICKABLE。旧模板根因：保存形态 + classInfo 片段 + 手工 hiddenFlag，校验自洽循环。w78 旧语法 A14 0/813，待迁移。P-0258；CHANGELOG v0.9.154。
+  - 关联：PR-0568

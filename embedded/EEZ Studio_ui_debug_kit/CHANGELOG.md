@@ -17,6 +17,17 @@
 
 ---
 
+## v0.9.154 — 模板工程按 EEZ UI 拖拽重建（PR-0568）
+
+- 旧模板被确认不是“拖拽后保存语法”：它来自保存形态 + classInfo 片段 + 手工 hiddenFlag，
+  且校验是模板↔defaults 自洽循环。
+- 按用户令在 EEZ UI 新建工程、18 个画布，每页从 Palette 拖一个控件、松开稳定后保存；
+  没有用脚本创建/修改 `.eez-project`。
+- 只读提取 19 个模板；`validate_templates.py` 逐字段对照 UI 工程 PASS；构建成功。
+- 新语法：有 clickableFlag/scroll/group，无 hiddenFlag/checkedState/textarea；
+  widgetFlags 不含 CLICKABLE；localStyles 只有 objID。
+- w78 仍是旧语法，A14 0/813，待迁移。P-0258。
+
 ## v0.9.153 — 全流程执行 + 测试夹具修复（PR-0560）
 
 - D5 全量树节点 `BLOCKED`：取 rect 前 `row.scrollIntoView({block:'center'})`，24/24 恢复。

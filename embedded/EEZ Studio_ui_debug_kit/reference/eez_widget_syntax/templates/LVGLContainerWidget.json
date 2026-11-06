@@ -8,7 +8,7 @@
  "customInputs": [],
  "customOutputs": [],
  "style": {
-  "objID": "__STYLE_OBJID__",
+  "objID": "__OBJID__",
   "useStyle": "default",
   "conditionalStyles": [],
   "childStyles": []
@@ -20,18 +20,21 @@
  "widthUnit": "px",
  "heightUnit": "px",
  "children": [],
- "widgetFlags": "CLICKABLE|CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_ON_FOCUS|SCROLL_WITH_ARROW|SNAPPABLE",
+ "widgetFlags": "CLICK_FOCUSABLE|GESTURE_BUBBLE|PRESS_LOCK|SCROLLABLE|SCROLL_CHAIN_HOR|SCROLL_CHAIN_VER|SCROLL_ELASTIC|SCROLL_MOMENTUM|SCROLL_WITH_ARROW|SNAPPABLE",
  "hiddenFlagType": "literal",
+ "clickableFlag": true,
  "clickableFlagType": "literal",
- "flagScrollbarMode": "OFF",
+ "flagScrollbarMode": "",
+ "flagScrollDirection": "",
+ "scrollSnapX": "",
+ "scrollSnapY": "",
  "checkedStateType": "literal",
  "disabledStateType": "literal",
  "states": "",
  "localStyles": {
-  "objID": "__LOCAL_STYLE_OBJID__",
-  "definition": {}
+  "objID": "__OBJID__"
  },
+ "group": "",
  "groupIndex": 0,
- "identifier": "tpl_container",
- "hiddenFlag": false
+ "identifier": "tpl_container"
 }
