@@ -35,6 +35,7 @@
 | ★ **Wi-Fi 列表/连接页** | 直接移植成熟参考实现：一页 lv_list 动态行 + 密码半页 + 忘记对话框 + busy；native app/navigation/widgets/platform 分层、no-flow 改造点、验证四件套、四个坑 | `15_wifi_list_connect_pattern.md` |
 | ★ **控件语法库** | 37 个 **EEZ UI 拖拽创建并保存后**提取的控件语法（Palette 全部 36 项 + Screen；39 画布 = 35 控件页 + 4 个 Tabview 变体页；Tab 挂在 Tabview 内；`templates/variants/` 存 0/1/2/3 个 Tab 的整块形态；`validate_templates.py` 逐字段校验）：只从这里克隆新建控件；Switch 必须 CHECKABLE、Button 恰一子 Label、objID 占位符必须换新 | `eez_widget_syntax/README.md` |
 | ★ **控件可改属性总表** | 36 类 + Screen 的全字段表（属性名/显示名/type/枚举/默认值/分组），含通用 27 项、flags 18 项、Style 目录 114 项、每控件可编辑 Part；**生成时只允许改表内字段**。§5 列 5 类故意未收录的内容，§6 是补字段流程（手册→UI→重提模板→回填） | `16_widget_properties.md` |
+| ★ **布局间距规则** | 独立控件安全净距 ≥8px；同组同尺寸个体等距（pitch ±1px）；适用范围/例外/判定数据，以及 `layout_check` L6/L7 的 warn→FAIL 流程 | `17_layout_spacing_rules.md` |
 | ★ **no-flow native 分层** | 设计源/生成 UI/native 的单向依赖、`app`/`platform`/`navigation`/`widgets`/`third_party` 文件夹职责、迁移纪律与验收判据 | `12_no_flow_native_module_layout.md` |
 
 ## 本项目（eez-test，LVGL 9.4 / 800×480 横屏 / BGR）最常用入口
