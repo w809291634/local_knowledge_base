@@ -26,6 +26,8 @@
   `main.c` 在 `lv_init` 后 `sim_fs_init`，新增 `W78_FS_TEST`；`run_sim.bat fstest` 自证。
 - 实测 `[FS] read 10 bytes: 'w78-fs-ok' / PASS`；`simtest` / `behaviortest` / `test` 全部 PASS。
   NO_FLOW §2.0、⑤b 与 FLOW §2 同步（⑤b 扩为"动态读 + 文件系统"）。
+- **模板工程同步**：`minimal-lvgl-project-no-flow` 也加入 `src/native/app/sim_fs`、`assets/fs_probe.txt`、
+  `run_sim.bat fstest` 与 README 说明；实测 `[FS] PASS`、ESP32 空实现语法 0 错。
 
 ## v0.9.173 — 工作流新增「⑤b PC 仿真器赋能」（PR-0590）
 

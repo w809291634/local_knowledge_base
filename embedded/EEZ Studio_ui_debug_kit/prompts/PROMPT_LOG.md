@@ -4726,3 +4726,9 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：PC 仿真器具备 LVGL 文件系统，能按路径读写宿主文件
   - 产出/结论：新增 src/native/app/sim_fs（PC 专用，ESP32 空实现）：注册 A: → 工程根（SIM_TARGET_PROJ_DIR），剥前导 '/'，支持 open/read/write/seek/tell；sim_cmake/lv_conf.h 关闭内置 FS_STDIO 避免字母冲突；lv_init 后 sim_fs_init，新增 W78_FS_TEST 与 run_sim.bat fstest；assets/fs_probe.txt 自证。实测 [FS] PASS（w78-fs-ok）、simtest/behaviortest/test 全 PASS。NO_FLOW §2.0/⑤b、FLOW §2 同步为"动态读 + 文件系统"。CHANGELOG v0.9.174。
   - 关联：PR-0590、CHANGELOG v0.9.174
+
+### PR-0592 · 2026-11-07 · Trae
+  - 提示词：C:\Users\yjt54\Desktop\EEz_stidio_examples\minimal-lvgl-project-no-flow这个也增加，并验证
+  - 诉求：把 PC 仿真文件系统同步到最小模板工程并验证
+  - 产出/结论：模板工程新增 src/native/app/sim_fs.c/.h（A: → 工程根）、assets/fs_probe.txt、lv_conf 关闭内置 FS_STDIO、main.c 在 lv_init 后 sim_fs_init + SIM_FS_TEST 模式、run_sim.bat fstest、README 增加「PC 仿真（含文件系统）」段。实测 [FS] read 10 bytes / PASS、ESP32 空实现 gcc 0 错。CHANGELOG v0.9.174 补记。
+  - 关联：PR-0591、CHANGELOG v0.9.174
