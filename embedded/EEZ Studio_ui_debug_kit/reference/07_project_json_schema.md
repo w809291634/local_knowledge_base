@@ -170,7 +170,8 @@
   `checkedState`、Keyboard 的 `textarea`；可点击类型有 `clickableFlag: true`
   （Label/Spinner/Image/AnimationImage/Canvas/Line 除外）。Palette 36 项现已全覆盖；
   `Spangroup` 的类型名是 `LVGLSpanWidget`，`Tab` 只能放 `Tabview.children` 内。
-  不得按旧版"补 hiddenFlag 基础字段"处理；显隐/勾选/键盘绑定只在确实需要时按 UI 语法追加。
+  不得按旧版"补 hiddenFlag 基础字段"处理；显隐/勾选/键盘绑定只在确实需要时按 UI 语法追加，
+  门禁放行带值判据：`hiddenFlag` 只在等于 `True`（真隐藏遮罩）时允许，整键放行会放过一堆残留 `false`。
 - **设备读数也是控件（value 类）**：温度/湿度/百分比/功率/电量/在线状态/日期时间等从设备读来的值，
   作为 `value` 控件行（`out_read`，`hr` 码）生成真实 Label；标题/说明/按钮文案不算。
   **滑条/进度条旁的数值显示归 `in_read`（UI 自己控制），自动识别，不当外部读或静态文本。**
@@ -199,7 +200,8 @@
 - tabview：`.eez-project` 里 Tab 是 `children` 中的 `LVGLTabWidget`（`tabName`/`tabNameType`；
   `tabName` 可写 FA 图标字符，字形须烘进对应字号）；栏位置/尺寸/活动页用
   `tabviewPosition`/`tabviewSize`/`selectedTab`/`selectedTabType`，`tabviewSize: 0` 隐藏原生 tab 栏。
-  json2eez DSL 的 `tabs`/`tabSize` 落盘即上面两组字段。
+  json2eez DSL 的 `tabs`/`tabSize` 落盘即上面两组字段。多 Tab 整块克隆
+  `eez-widget-templates/templates/variants/LVGLTabviewWidget.tabs<N>.json`（N=0~3），别手拼 children。
 
 ## 7. 事件绑定 eventHandlers ✅（三形态互斥，一个事件一种）
 
@@ -409,7 +411,7 @@
 6. `cacheFonts:false` → headless 构建静默 0 字体产出。
 7. 子控件超出父边界 → 被 LVGL 裁掉，画布上看起来「画了但没显示」。
 8. tab 直接挂 screen（非 tabview 子对象）→ headless 能编过、GUI 报
-   Invalid position of Tab widget（headless 过 ≠ 结构合法）。
+   Invalid position of Tab widget（headless 过 ≠ 结构合法）。门禁：`audit_ui.py` A11。
 9. 无 identifier 的 flow 组件没进 check_identifiers 白名单 → 生成期 FAIL
    （自己管线里的检查，非 EEZ 报错）。
 10. bitmaps 条目缺 `bpp` → 该位图生成 TypeError（.c 不产出），其余文件照常

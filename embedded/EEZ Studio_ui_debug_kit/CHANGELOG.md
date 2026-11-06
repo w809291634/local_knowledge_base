@@ -59,6 +59,43 @@
   栏位置/尺寸/活动页是 `tabviewPosition`/`tabviewSize`/`selectedTab`/`selectedTabType`；
   `tabviewSize: 0` 隐藏原生 tab 栏，对应 json2eez DSL 的 `tabSize`（skills.md §11.8）。
 
+## v0.9.158 — Tab 结构不变量落地为常驻门禁
+
+- Tab 是 Components Palette 里的独立控件（asar：`LVGLTabWidget` 的 `enabledInComponentPalette`），
+  但只能作 `LVGLTabviewWidget` 的子对象；挂 Screen 直下时 GUI 报
+  `Invalid position of Tab widget`，headless 构建不查这层结构（P-0033）。
+- 新增 `tools/tab_parent_check.py`：逐工程断言 Tab 的父级；`--all <root>` 批量扫。
+- `tools/audit_ui.py` 加 **A11 Tab 结构**（随 G1 自动跑）；`project_file` 不是 `.eez-project` 时跳过。
+- 自证：全库 26 工程 / 11 个 Tab / 违例 0；反向夹具（Tab 挂 Screen）出 `[A11]` 且非 0 退出。
+- skills.md §11.20 的「遗留建议」改为已落地；reference/07 静默失败清单第 8 条补门禁指针。
+
+## v0.9.159 — 门禁放行要带值判据；核对跑完的实例与 tmp 残留（PR-0571）
+
+- w78 迁移重放后，A10/A14 最初整键放行 `hiddenFlag`，会放过 811 个残留 `hiddenFlag: false`；
+  改为只在值等于 `True`（真隐藏遮罩）时放行。反向夹具验证：注入 `hiddenFlag: false` 与
+  `pad_all` 都出 FAIL。
+- 教训：字段级门禁的"例外"必须写成**值条件**，不能写成键名豁免；例外键名要同时落到
+  A10（样板并集）与 A14（模板字段集），只改一处会一边 PASS 一边 FAIL。
+- D5/仿真跑完会留下 EEZ 实例、headless Edge 与 `tmp/` 杂物（`edgeprof`/`eezprof`/
+  `d_page.html`/`eez_*.js`/`wifi_*.bmp`），占着文件句柄让 D7 FAIL；收尾按 user-data-dir
+  精确匹配关自己起的实例（别动用户浏览器），再删杂物，构建缓存保留。
+- Screen 模板没有 `flagScrollbarMode`，迁移后 24 行 `LV_SCROLLBAR_MODE_OFF` 从 screens.c 消失，
+  D5 逐页相似度不变（98.27%/96.40%）。P-0259。
+
+## v0.9.160 — Tabview 0/1/2/3 个 Tab 整块入库（PR-0572）
+
+- 用户要求分别建「无 Tab / 1 / 2 / 3 个 Tab」的 Tabview 形态，防止动态添加导致语法不同。
+- 在模板源工程真实拖出 `Tabview0/1/2/3` 四页（Tabview 拖画布，Tab 走 Widgets Structure
+  行下半区），实测**只差 `children` 数量**：其余 34 个字段、`tabviewSize=32`、
+  `selectedTab=0` 与每个 Tab 对象（180×68、`tabName:"Tab"`）完全相同。
+- 新增 `templates/variants/LVGLTabviewWidget.tabs{0,1,2,3}.json`；`extract_templates.py`
+  加 `VARIANT_PAGES`/`extract_variants()` 与 `manifest._variants`；`validate_templates.py`
+  页数 39、变体四重核对（等于变体页 / children 数 / 除 children 外等于基础模板 /
+  每个 Tab 归一后等于 Tab 模板）。
+- 自证：`[TPL_CHECK] PASS（37 个模板 + 4 个变体）`；反向夹具三条全 FAIL
+  （改 `tabviewSize`、删一个 Tab、塞 `identifier`）；EEZ CLI 构建 39 页
+  `No error and no warning detected`（13:03:31）。kit 镜像 37+4 逐字节同步。P-0261。
+
 ## v0.9.153 — 全流程执行 + 测试夹具修复（PR-0560）
 
 - D5 全量树节点 `BLOCKED`：取 rect 前 `row.scrollIntoView({block:'center'})`，24/24 恢复。

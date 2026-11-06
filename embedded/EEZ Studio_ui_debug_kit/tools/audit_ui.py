@@ -16,6 +16,7 @@ audit_ui.py —— 回归断言集（只读，不改任何文件）
   A8 链路忠实性    设计源跳转数 == 工程连线数 == 生成代码回调数
   A9 部件开关      生成代码用到的 LVGL 部件，必须在运行时配置里开启（A6 的「部件版」）
   A10 样式值语法   颜色等样式值必须符合目标框架的取值语法（写错时工具多半静默忽略）
+  A11 Tab 结构     LVGLTabWidget 的父级必须是 LVGLTabviewWidget（headless 构建不查）
 
 一切路径与阈值都来自 ui_debug_kit.config.json，**脚本内不含任何工程信息**。
 缺哪份输入，对应项就自动跳过（打印"跳过"而不是报错）。
@@ -593,6 +594,35 @@ def a10_style_value_syntax(cfg, code="A10"):
     print("  %s 样式值语法     : %s" % (code, "OK" if not bad else "%d 处不合法" % len(bad)))
 
 
+def a11_tab_parent(cfg, code="A11"):
+    """Tab 结构不变量：`LVGLTabWidget` 的父级必须是 `LVGLTabviewWidget`。
+
+    不检查会怎样：Tab 挂到 Screen 直下时，EEZ GUI Checks 报
+    `Invalid position of Tab widget inside Widgets Structure`，但 **headless 构建不查
+    这层结构**——编过、仿真全绿也不代表合法（P-0033 / skills.md §11.20）。
+    输入取 `project.project_file`；指向的不是 `.eez-project` 就跳过。
+    """
+    pf = kit.cfg_path(cfg, "project.project_file")
+    if not pf or not os.path.exists(pf):
+        print("  %s Tab 结构       : 跳过（未配 project.project_file）" % code)
+        return
+    try:
+        with open(pf, encoding="utf-8") as fp:
+            data = json.load(fp)
+    except Exception:
+        print("  %s Tab 结构       : 跳过（project_file 不是 JSON）" % code)
+        return
+    if not isinstance(data, dict) or "userPages" not in data:
+        print("  %s Tab 结构       : 跳过（project_file 不是 .eez-project）" % code)
+        return
+    import tab_parent_check
+    tabs, hosts, bad = tab_parent_check.check(pf)
+    for ident, parent in bad:
+        err(code, "Tab %s 的父级是 %s，必须挂在 LVGLTabviewWidget 下" % (ident, parent))
+    print("  %s Tab 结构       : %s" % (code,
+          "OK（%d tab / %d tabview）" % (tabs, hosts) if not bad else "%d 处违例" % len(bad)))
+
+
 CHECKS = {
     "A1": a1_font_names,
     "A2": a2_font_baseline,
@@ -604,12 +634,13 @@ CHECKS = {
     "A8": a8_chain_parity,
     "A9": a9_widget_switches,
     "A10": a10_style_value_syntax,
+    "A11": a11_tab_parent,
 }
 
 
 def main():
     import argparse
-    ap = argparse.ArgumentParser(description="UI 回归断言集 A1~A10")
+    ap = argparse.ArgumentParser(description="UI 回归断言集 A1~A11")
     ap.add_argument("codes", nargs="*", help="只跑指定项，如 A3 A6")
     ap.add_argument("--config", help="指定配置文件")
     args = ap.parse_args()

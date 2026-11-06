@@ -1482,7 +1482,18 @@ set_wake["children"] = place(pane_wake(...),     SET_X, SB_H, "wake_")
 
 遍历工程 JSON，断言每个 `type:"LVGLTabWidget"` 的 parent type 是
 `LVGLTabviewWidget`（本次手工执行：13 tab / 4 tabview / 违例 0）。
-**遗留建议**：把该断言做进 `json2eez.py` 的 check_bounds 邻位，成为常驻门禁。
+**常驻门禁**：`tools/audit_ui.py` 的 A11（随 G1 自动跑）；批量扫多个工程用
+`tools/tab_parent_check.py --all <root>`。全库实测 26 工程 / 11 个 Tab / 违例 0。
+
+#### 四、Tab 数量只影响 children（2026-11-06 实测，`PR-0572`）
+
+- 在模板工程真实拖出 0/1/2/3 个 Tab 的四页，保存后逐字段比对：**除 `children` 数量外，
+  34 个字段与每个 Tab 对象完全相同**（`tabviewSize=32`、`selectedTab=0`、Tab 均 180×68）。
+- 因此“动态添加导致语法不同”在 EEZ 侧不存在；但生成器仍**整块克隆**
+  `eez-widget-templates/templates/variants/LVGLTabviewWidget.tabs<N>.json`（N=0~3），
+  不要拿基础模板手拼 `children`。
+- 门禁：`validate_templates.py` 逐变体核对「等于变体页 + 除 children 外等于基础模板 +
+  每个 Tab 等于 Tab 模板」；反向夹具（改 `tabviewSize`、删一个 Tab、塞 `identifier`）全部 FAIL。
 
 
 ### 11.21 ★ 绑变量的滑杆：`get_var` 与 `set_var` 必须指向同一块内存（2026-10-03 真机确认，`intake/P-0110`）

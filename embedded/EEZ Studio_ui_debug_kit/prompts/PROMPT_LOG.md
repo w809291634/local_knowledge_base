@@ -4611,3 +4611,13 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：把模板库补齐到 EEZ 9.4 Palette 全部 36 项
   - 产出/结论：在同一个 UI 工程追加 17 画布；Tab 拖进 Widgets Structure 的 Tabview 行下半区保存。最终 35 画布/37 模板（36 控件 + Screen），`validate_templates.py` PASS，面板 36 项与 `manifest.palette` 集合一致，kit 镜像逐字节一致。实测画布拖放只落页面层，嵌套必须走结构树行内下半区。新增事实：Spangroup→LVGLSpanWidget、MessageBox localStyles 带 definition、Image/AnimationImage/Canvas/Line 无 clickableFlag。复核 A14 时发现 w78 工作树已回到迁移前 HEAD（0/813），非本次模板改动导致，需重跑 P-0259。P-0260；CHANGELOG v0.9.156。
   - 关联：PR-0570
+### PR-0571 · 2026-11-06 12:50 · Qoder
+  - 提示词：按照本地经验，来修复 w78-tabview-smart-home 控件语法错误
+  - 诉求：按 P-0259 重放迁移，把 813 个控件字段集对齐 UI 拖拽保存语法
+  - 产出/结论：`eez_defaults.json` 53 条样板逐字段重放（去 `hiddenFlag`/`checkedState`，补 `clickableFlag`/`flagScrollDirection`/`scrollSnapX/Y`/`group`，`widgetFlags` 去 `CLICKABLE`，Screen 去 `flagScrollbarMode`，补齐模板有而样板缺的 Bar `valueStart`、Scale `mainArcRounded`、Slider `valueLeft/previewValueLeft`）；`no_click()` 改 `clickableFlag=false`；A10 与 A14 同步放行口径并把 `hiddenFlag` 例外改成**只在值为 True 时**放行，反向夹具（`hiddenFlag:false`、`pad_all`）均 FAIL。重生成+构建后 A14 813/813、`[EEZ_CHECK] PASS`；D5 全量 24 页平均 98.27%、最低 96.40%（灯详情），逐页与 08:10 已核对基线一致；NAV 72/72、UI 行为、flowtest、uitest（真扫描 12 AP）、quittest PASS；`screens.c` 差异仅 24 行 `LV_SCROLLBAR_MODE_OFF` 消失。收尾清掉 D5/仿真残留（自己起的 EEZ 实例与 headless Edge 按 user-data-dir 精确关闭、`tmp` 杂物删除，构建缓存保留），`[DELIVERY] PASS`。P-0259；CHANGELOG v0.9.159。
+  - 关联：PR-0571
+### PR-0572 · 2026-11-06 13:05 · Qoder
+  - 提示词：检查一下本地经验库是否正确 / 明显错误的就修复 / 我建议 建立 tabview 不需要 tab, 有1个 tab，有2个tab，3个tab，分别创建示例，防止动态添加导致语法不同，添加到示例中去 / 可以的，额外创建几个页
+  - 诉求：核对 kit 与模板库是否同步并修掉错处；把 Tabview 的 0/1/2/3 Tab 形态整块入库
+  - 产出/结论：① 核对 kit：`reference/eez_widget_syntax` 37 模板 + defaults/manifest/README 与工程逐字节一致；抓到并修正 `reference/07` §6 的 `"tabs"/"tabSize"`——`.eez-project` 无此二键（全库搜索命中 0），实为 `children` + `tabviewPosition/tabviewSize/selectedTab/selectedTabType`，CHANGELOG v0.9.157。② Tab 结构不变量落地：新增 `tools/tab_parent_check.py` 与 `audit_ui.py` A11，全库 26 工程/11 Tab/违例 0，反向夹具（Tab 挂 Screen）FAIL 生效，v0.9.158。③ Tabview 变体：在模板源工程真实拖出 `Tabview0/1/2/3`（39 画布），实测只差 `children` 数量；新增 `templates/variants/` 4 份，`extract_templates.py`/`validate_templates.py` 支持变体四重核对，`[TPL_CHECK] PASS（37 个模板 + 4 个变体）`，三条反向夹具全 FAIL，EEZ CLI 构建 39 页 0 错 0 警（13:03:31），kit 镜像 37+4 逐字节同步。P-0261；CHANGELOG v0.9.160。
+  - 关联：PR-0570、PR-0571

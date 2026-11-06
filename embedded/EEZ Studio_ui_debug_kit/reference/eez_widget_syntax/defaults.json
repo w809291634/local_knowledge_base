@@ -2,8 +2,9 @@
  "_meta": {
   "source": "EEZ Studio UI drag-created project; saved post-drag syntax",
   "project": "eez-widget-templates.eez-project",
-  "pages": 35,
-  "templates": 37
+  "pages": 39,
+  "templates": 37,
+  "variants": 4
  },
  "LVGLAnimationImageWidget": {
   "page": "AnimationImage",

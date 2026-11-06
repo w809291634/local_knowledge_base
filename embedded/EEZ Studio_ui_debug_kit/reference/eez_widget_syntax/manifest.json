@@ -219,5 +219,31 @@
   "file": "templates/LVGLWindowWidget.json",
   "source": "EEZ Studio UI drag-created",
   "palette": "Window"
+ },
+ "_variants": {
+  "0": {
+   "page": "Tabview0",
+   "tabs": 0,
+   "file": "templates/variants/LVGLTabviewWidget.tabs0.json",
+   "source": "EEZ Studio UI drag-created"
+  },
+  "1": {
+   "page": "Tabview1",
+   "tabs": 1,
+   "file": "templates/variants/LVGLTabviewWidget.tabs1.json",
+   "source": "EEZ Studio UI drag-created"
+  },
+  "2": {
+   "page": "Tabview2",
+   "tabs": 2,
+   "file": "templates/variants/LVGLTabviewWidget.tabs2.json",
+   "source": "EEZ Studio UI drag-created"
+  },
+  "3": {
+   "page": "Tabview3",
+   "tabs": 3,
+   "file": "templates/variants/LVGLTabviewWidget.tabs3.json",
+   "source": "EEZ Studio UI drag-created"
+  }
  }
 }
