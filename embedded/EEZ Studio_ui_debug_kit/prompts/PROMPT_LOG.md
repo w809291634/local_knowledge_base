@@ -4646,4 +4646,9 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：确认 `eez-widget-templates` 的 Tabview 0/1/2/3 变体是 UI 拖拽产物；把字段集门禁正式保存进 kit
   - 产出/结论：EEZ Home→Create 新建独立 LVGL 9.4 工程，UI 真实拖出 Tabview 0/1/2/3；与 `templates/variants/*.json` 字段/值/键序 **0 差异**，A11 `6 Tab / 4 Tabview / 违例 0`；新建工程仅自带 `Main` 示例 Label 为旧写法（非拖拽控件），F0–F3 四页全干净。`tools/template_field_check.py` 已在 f719990 入库，本轮补 tools/README 条目与 A11 行；用它量仓库外四个 Tabview 示例：387/387 控件偏差（旧手搓写法），确认问题在示例生成器而非模板库。CHANGELOG v0.9.163。
   - 关联：PR-0572、PR-0575、PR-0576
+### PR-0578 · 2026-11-06 16:30 · Trae
+  - 提示词：所以后续，如果不确定的，一定要先查找eez手册，确认好，也就是，如果使用eez创建UI，始终优先 eez 中修改参数，不得使用脚本间接修改eez 工程程序，写在工作流中，始终注意，同时 工作流中也体现 查阅 官方手册
+  - 诉求：把「不确定先查 EEZ 官方手册」「EEZ 里改参数优先、禁止脚本间接改 EEZ 工程」写进工作流，并要求工作流体现查阅官方手册
+  - 产出/结论：NO_FLOW 新增 §2.2b（顺序：查手册→EEZ UI 设参数并构建看 `.c` 产物→结论带页码落 intake→才写进设计源/模板库；含「可以做/禁止」对照与判据）；FLOW §2 加同口径指针；`AGENTS.md` 铁律第 15 条（入口）。反例引用 I4：手册 P10 Bitmaps 可选 `INDEXED 4 BIT`，`bpp` 是 CF id 43，不能把 4/9/10 当位深试后就判"EEZ 不支持"。CHANGELOG v0.9.164。
+  - 关联：PR-0577、CHANGELOG v0.9.164
 

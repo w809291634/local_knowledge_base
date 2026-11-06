@@ -17,6 +17,16 @@
 
 ---
 
+## v0.9.164 — 工作流写死「EEZ 参数优先 + 不确定先查官方手册」（PR-0578）
+
+- 用户令：用 EEZ 建 UI 时始终优先在 EEZ 里改参数，不得用脚本间接改 EEZ 工程程序；不确定的先查官方手册，
+  并要求把"查阅官方手册"写进工作流。
+- `EEZ_FIRST_WORKFLOW_NO_FLOW.md` 新增 §2.2b：顺序＝查手册 → EEZ UI 设参数并构建看 `.c` 产物 →
+  结论带页码落 intake → 才写进设计源/模板库；给出「可以做 / 禁止」对照与判据（手册位置 + 构建产物取证）。
+- `EEZ_FIRST_WORKFLOW_FLOW.md` §2 增加同口径两行指针；`AGENTS.md` 铁律新增第 15 条（入口一行）。
+- 反例引用 I4 翻案：手册 P10 Bitmaps 的 Color format 可选 `INDEXED 4 BIT`；`bpp` 是 CF id
+  （`CF_INDEXED_4_BIT=43`），不能用脚本把 4/9/10 当位深试后就判"EEZ 不支持"。
+
 ## v0.9.154 — 模板工程按 EEZ UI 拖拽重建（PR-0568）
 
 - 旧模板被确认不是“拖拽后保存语法”：它来自保存形态 + classInfo 片段 + 手工 hiddenFlag，
