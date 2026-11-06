@@ -20,6 +20,7 @@ reference 找现成方法；**命中就照做，不重新发明**；未命中再
 
 | 任务 | 先读 |
 |---|---|
+| C / C++ 代码注释、函数说明或文件职责分区 | `workflow/code-comment-convention.md`（函数注释格式与长度、文件分类标题规范） |
 | 嵌入式通用排查方法、调试器、IDE、STM32/RT-Thread/C51 坑 | `embedded/README.md` |
 | ESP32 / ESP-IDF 构建、LVGL 帧率与显示调试 | `embedded/esp32/`（入口：`embedded/README.md` 第 1 节） |
 | UI 效果对照、生成式 UI 的回归门禁（EEZ Studio、LVGL、各类前端） | `embedded/EEZ Studio_ui_debug_kit/README.md` → `PLAYBOOK.md` |
