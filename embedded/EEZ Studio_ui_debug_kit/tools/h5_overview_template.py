@@ -204,6 +204,18 @@ def build():
     out["忘记网络"] = {"svg": sc.wifi_dialog_frame(), "rows": dlg_rows, "layer": 5,
                      "status": False, "entry": "Wi-Fi 设置·对话框", "exit": "Wi-Fi 设置",
                      "gesture": []}
+    # 动态条目区：设计图不画对象，H5 只框区域；条目由应用代码在运行期创建
+    zones = {}
+    for z in getattr(pg, "DYN_ZONES", []):
+        assert z["page"] in out, "动态区指向不存在的页：%s" % z["page"]
+        x, y, w, h = z["box"]
+        assert 0 <= x and 0 <= y and x + w <= 800 and y + h <= 480, "动态区越界：%s" % z["name"]
+        tag = "动态区 · 运行期由应用代码生成"
+        zones.setdefault(z["page"], []).append({
+            "name": z["name"], "box": list(z["box"]), "note": z["note"],
+            "tag": tag, "tagw": len(tag) * 11 + 16})
+    for p in out:
+        out[p]["dynz"] = zones.get(p, [])
     lost = [(p, r["n"], r["name"]) for p in order for r in out[p]["rows"]
             if any(q["name"] == r["name"] and q["behav"] == "换页" for q in data[p]["rows"])
             and r["io"] != "nav"]
@@ -505,6 +517,16 @@ function mark(page, opts){
     + ' orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff8fb8"/></marker>'
     + '</defs>';
   if (o.marks !== false){
+    (p.dynz||[]).forEach(z=>{        // 动态条目区：只画虚线框；条目不进设计图，运行期由应用代码创建
+      const b=z.box, col='#57d3ff', ty=b[1]+b[3]-22;   // 标签放区底，避开顶部序号徽标
+      const tx=b[0]+b[2]-z.tagw-6;
+      s += '<g class="dynz">'
+        + '<rect x="'+b[0]+'" y="'+b[1]+'" width="'+b[2]+'" height="'+b[3]+'" rx="10"'
+        + ' fill="none" stroke="'+col+'" stroke-width="2" stroke-dasharray="9 6" opacity=".9"/>'
+        + '<rect x="'+tx+'" y="'+ty+'" width="'+z.tagw+'" height="18" rx="9" fill="'+col+'" opacity=".92"/>'
+        + '<text x="'+(tx+7)+'" y="'+(ty+12.5)+'" font-size="10.5" font-weight="700" fill="#05080f"'
+        + ' font-family="sans-serif">'+z.tag+'</text></g>';
+    });
     p.rows.filter(showIo).forEach(r=>{
       const b=r.box, mb=r.markBox || b, comp=!!r.markBox, col=IO.color[r.io];
       const hot = o.hot ? (r.io==='nav' && (r.target || r.dyn)) : (o.hotBack && r.dyn);
@@ -655,10 +677,16 @@ function sideHtml(p){
     return '<div class="grp"><div class="gt"><i style="background:'+IO.color[k]+'"></i>'+
       IO.name[k]+'<em>'+IO.desc[k]+'</em></div>'+items.join('')+'</div>';
   }).join('');
+  const dyn = (d.dynz||[]).length
+    ? '<div class="grp"><div class="gt"><i style="background:#57d3ff"></i>动态条目区'+
+      '<em>设计图不画对象，运行期由应用代码生成</em></div>'+
+      d.dynz.map(z=>'<div class="item"><span class="k">⇅</span><span>'+z.name+'</span>'+
+        '<span class="go" style="color:#57d3ff;cursor:default">'+z.note+'</span></div>').join('')+
+      '</div>' : '';
   return '<h3>'+p+'页 <span class="badge">L'+d.layer+'</span></h3>'+
     '<p class="m">'+d.rows.length+' 个控件 · 入口：'+d.entry.replace(/^入口：/,'')+
     ' · 出口：'+d.exit.replace(/^出口：/,'')+'</p>'+
-    (list||'<p class="m">当前筛选下没有控件</p>')+
+    (list||'<p class="m">当前筛选下没有控件</p>')+dyn+
     '<p class="hint">点帧上橙色控件 = 真跳到目标页（新页从右滑入）；点左右边缘粉色条 = '+
     '按手势方向滑页；‹ 上一页 = 反向滑回。序号 = 右栏行号，顶栏色签可按类隐藏。</p>';
 }
