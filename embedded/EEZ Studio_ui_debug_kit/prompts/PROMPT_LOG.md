@@ -4641,4 +4641,9 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：把“按模板库语法新建控件”写进流程文件，作为后续所有项目的强制前置，不只靠实例工程 README 或门禁事后抓
   - 产出/结论：① `EEZ_FIRST_WORKFLOW_NO_FLOW.md` §2.2 生成方式首段新增：后续所有项目（no flow / flow）新建控件一律先克隆模板 → 只改值 → 过 A14；模板缺类型/形态时回模板工程 UI 拖拽保存后重提取，禁止手搓/脚本拼字段。② `EEZ_FIRST_WORKFLOW_FLOW.md` §2 第②步注记同步改写：原“克隆 EEZ 默认结构再改”升级为模板库克隆 + A14 + 缺类型回 UI 拖。③ 未改模板文件与任何示例工程；w78 复跑 `eez_check.py` 仍 `[A14] 813/813` / `[EEZ_CHECK] PASS`。CHANGELOG v0.9.162。
   - 关联：PR-0575、PR-0569
+### PR-0577 · 2026-11-06 14:55 · Qoder
+  - 提示词：我刚刚让另外的会话修改了这些问题，你核对一下，tabview的几个示例是否使用拖拽新建法创建的 / 我说的是这个工程 / 仔细确认好，你可以自己新建一个工程测试，核对语法 / template_field_check.py 可以保存下来吗
+  - 诉求：确认 `eez-widget-templates` 的 Tabview 0/1/2/3 变体是 UI 拖拽产物；把字段集门禁正式保存进 kit
+  - 产出/结论：EEZ Home→Create 新建独立 LVGL 9.4 工程，UI 真实拖出 Tabview 0/1/2/3；与 `templates/variants/*.json` 字段/值/键序 **0 差异**，A11 `6 Tab / 4 Tabview / 违例 0`；新建工程仅自带 `Main` 示例 Label 为旧写法（非拖拽控件），F0–F3 四页全干净。`tools/template_field_check.py` 已在 f719990 入库，本轮补 tools/README 条目与 A11 行；用它量仓库外四个 Tabview 示例：387/387 控件偏差（旧手搓写法），确认问题在示例生成器而非模板库。CHANGELOG v0.9.163。
+  - 关联：PR-0572、PR-0575、PR-0576
 

@@ -118,6 +118,17 @@
   “模板库克隆 + A14 字段集 + 缺类型回 UI 拖”，与 no flow 口径一致。
 - 未改模板文件与示例工程；w78 复跑 `[A14] 813/813`、`[EEZ_CHECK] PASS`。
 
+## v0.9.163 — 工具索引补齐字段集门禁；独立新工程复核 Tabview 变体（PR-0577）
+
+- `tools/template_field_check.py` 已入库（f719990），本轮补 tools/README 条目与 A11 行：
+  任意 `.eez-project` 逐控件字段集必须等于拖拽模板（`identifier` 不计），按类型列
+  “多/缺”字段与数量，违例非 0 退出；默认 kit 镜像模板，`--templates` 可指向工程侧模板库。
+- 独立复核：EEZ Home→Create 新建 LVGL 9.4 工程，UI 真实拖出 Tabview 0/1/2/3；
+  与 `templates/variants/*.json` **字段/值/键序 0 差异**；A11 `6 Tab / 4 Tabview / 违例 0`。
+  新建工程仅自带 `Main` 示例 Label 是旧写法（非拖拽控件），F0–F3 四页全干净。
+- 用该门禁量仓库外四个 Tabview 示例（w23 / tabview-swipe-switch / perf / watch）：
+  **387/387 控件偏差**（旧手搓写法），确认是示例生成器的问题，不是模板库。
+
 ## v0.9.153 — 全流程执行 + 测试夹具修复（PR-0560）
 
 - D5 全量树节点 `BLOCKED`：取 rect 前 `row.scrollIntoView({block:'center'})`，24/24 恢复。

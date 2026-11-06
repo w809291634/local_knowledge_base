@@ -99,6 +99,19 @@ python tools/ink_check.py <图.png> --against L T W H      # 与声明框对比�
 `--against` 会输出 `dx/dy = 墨迹左上 − 声明框左上`。
 **非 0 就意味着父容器/控件有默认 padding 或 border**（`PLAYBOOK §4.2` / `cases/B3`）。
 
+### `template_field_check.py` —— 字段集必须等于拖拽模板（A14 级，任意工程通用）
+
+```bash
+python tools/template_field_check.py <a.eez-project> [b.eez-project ...]
+python tools/template_field_check.py --all <工程库根>
+python tools/template_field_check.py --templates <模板目录> ...
+```
+
+逐控件比对 `templates/<Type>.json` 的字段集（`identifier` 是放置期字段，不计），
+按类型输出“多/缺”字段模式与数量。专抓**生成器手搓字段**、**模板升级后示例未跟**；
+违例非 0 退出。默认用 `reference/eez_widget_syntax/templates`，可 `--templates`
+指向工程侧模板库。
+
 ---
 
 ### `audit_ui.py` —— 回归断言集（把踩过的坑固化成断言）
