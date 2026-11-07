@@ -17,6 +17,19 @@
 
 ---
 
+## v0.9.185 — 资源账纳入全部 UI 代码（PR-0603）
+
+- 口径（2026-11-07 用户定）：资源账＝`src/ui` + `src/native` 下全部 `.c/.cpp`（自动发现），
+  只排除 `platform/**`（硬件平台与 PC 仿真）和硬件业务（`wifi_logic/model/events`）。
+  报告分「EEZ UI / Native UI / 合计」，预算与 `[MEM-BIN] ui=` 用合计。
+- `esp32_estimate.py`：native 文件用同一套 IDF 参数编译（C 用 gcc、C++ 用 g++ + gnu++2b），
+  结果进 `native_files/native_flash/total_flash`；`measure_levels` 用合计。
+- `esp32_mem_report.py`：资源树新增 Native UI 段，预算按合计；hash 纳入 native，缓存不失效错位。
+- `esp32_size.py`（w78）：精确缓存 hash 同步纳入 native。
+- 标准模板 `minimal-lvgl-project-no-flow` 同步同一套脚本；模板当前 Native 0B（只有 platform/pc）。
+- 实测 w78：EEZ UI 454.3KB/3.2KB + Native UI 16.2KB/0.5KB = **471KB/4KB**，预算 PASS。
+- NO_FLOW §2.5 增「统计范围」、§4 增「只统计 src/ui」误区。
+
 ## v0.9.184 — 自检页默认不通过 EEZ 创建（PR-0602）
 
 - 明确创建方式（2026-11-07 用户定）：自检页**默认不通过 EEZ 创建**，由运行期覆盖层

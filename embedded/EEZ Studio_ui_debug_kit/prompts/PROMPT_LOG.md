@@ -4792,3 +4792,9 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：把「自检页默认不通过 EEZ 创建」固化为规则
   - 产出/结论：NO_FLOW §2.1 改为「开机页默认不通过 EEZ 创建」：默认由运行期覆盖层 boot_selftest 创建，EEZ 只保留业务页，仅用户明确要求才改成 EEZ 真页；reference/18 顶部补「创建方式」；README 索引同步；CHANGELOG v0.9.184。
   - 关联：PR-0601、CHANGELOG v0.9.184
+
+### PR-0603 · 2026-11-07 · Trae
+  - 提示词：那么应该包含计算，所有跟UI相关的都应该计算内存，除了和硬件、仿真无关的部分 / 标准模板也增加，然后本地经验库也增加
+  - 诉求：资源账覆盖全部 UI 相关代码；同步到标准模板与经验库
+  - 产出/结论：esp32_estimate 自动发现 src/native 全部 .c/.cpp（排除 platform/** 与 wifi_logic/model/events），C/C++ 分别用 gcc/g++ 按 IDF 参数编译；报告分 EEZ UI / Native UI / 合计，预算与 MEM-BIN 用合计；esp32_mem_report/esp32_size 的 hash 同步。w78 实测 454.3+16.2=471KB / 3.2+0.5=4KB PASS；minimal-lvgl-project-no-flow 同步脚本并验证（Native 0B，PASS）。NO_FLOW §2.5/§4 记录；CHANGELOG v0.9.185。
+  - 关联：PR-0602、CHANGELOG v0.9.185

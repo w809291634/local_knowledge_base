@@ -408,6 +408,14 @@ build 目录按工程名命名，避免多工程冲突。
 「ESP32（目标/P-IDF 版本/优化等级）→ 逐文件 Flash/RAM → 优化等级对比 → 字库 → `[MEM-BIN]`」，
 **不再输出 PC 编译/仿真接口段**（PC 值只作开发机参考，不进交付）。
 
+**统计范围＝所有 UI 相关代码（2026-11-07 用户定）**：资源账必须包含 `src/ui` **加上**
+`src/native` 下全部 UI 代码（自动发现 `.c/.cpp`，新增 UI 模块不用改脚本）；
+只排除 `platform/**`（硬件平台与 PC 仿真）和硬件业务（如 `wifi_logic/model/events`）。
+报告分「EEZ UI / Native UI / 合计」，预算与 `[MEM-BIN] ui=` 用**合计值**；
+开机页 `boot_selftest`、背景图 `ui_bg`、导航/绑定、UI 控件都计入。
+`assets/` 下的 MP4/PNG 走文件系统，不算固件 Flash/RAM（真机只占存储）。
+标准模板 `minimal-lvgl-project-no-flow` 与 w78 使用同一套脚本。
+
 **设计阶段就确认预算（第①步询问用户，别默认）**：常见档位 200K / 500K / 1M / 2M / 4M，或项目实际值；
 确认结果写进 `design/mem_budget.json`，未确认不进入 ④ 预生成；再由 AI 按档位决定字号档数、bpp、图片与动图规模。**不做固定上限**，
 也不为省内存牺牲清晰度和主视觉。
@@ -492,6 +500,7 @@ build 目录按工程名命名，避免多工程冲突。
 | "把 MP4 转成帧序列就是播放视频" | 仿真要求**真实 MP4 解码**（ffmpeg → LVGL canvas）；帧序列/动图只允许作为真机资源包，不能冒充"播放视频"（2026-11-07 用户定） |
 | "开机只做自检页，或只做动画" | 成品固定为 **自检 0→100% → 真实 MP4 → 主界面** 两段衔接；`boottest` 必须打印 `selftest=100 video=N active=0`（N>0） |
 | "大字号写中文更好看" | 本栈只有 `ui_font_cn12` 带汉字；`cn24/cn32` 仅 Latin/数字，写中文全是豆腐块；中文一律用 cn12 + `letter_space` 撑开 |
+| "资源账只统计 src/ui 就够了" | UI 还包括 `src/native` 的导航/绑定/开机页/背景/控件；漏算会让固件预算偏低。脚本自动发现 native UI，只排除 `platform/**` 与硬件业务 |
 | "仿真替身放进 app" | `sim_fs` / `sim_reads` / `sim_video` 等 PC 专用替身必须放 `src/native/platform/pc/`；`app/` 只留跨平台业务（2026-11-07 用户定） |
 | "手改一下 src/ui" | 覆盖式重写；永远回上游改设计源 |
 | "字体全量 TTF 最省事" | 字体大小不是要害；**条目形态（D5/renderingEngine/lvglGlyphs）才是**——缺了就崩（P-0125） |
