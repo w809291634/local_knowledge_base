@@ -2,6 +2,7 @@
 
 同源生成两份：overview_pro.html（整页）+ overview_pro.fragment.html（可内联片段）。
 方法/踩坑见 reference/14_h5_review_overview.md；验证用 tools/cdp/h5_edge.sh + h5_probe.js。
+2026-11-07 同步 w78：开机自检 H5-only 页接入点、cat=uivalue 归内部读、order 含 H5-only 时的 lost 保护。
 
 换工程只改这几处（其余照抄）：
   1. 顶部 import：换成本工程的 基元 / 页面语义表 / 跳转表 / H5 页数据模块。
@@ -22,6 +23,8 @@
     + 整卡交互区（卡+glyph）+ 隐藏弹层展开态；标题/说明/按钮文案不标。
   - 右键右侧控件清单行/底部控件标签 → 控件菜单（删/改/加提示/清除）；
     右键效果图空白 → 页面 pin；右键 pin → 修改/删除。
+    **命中面必须是全量渲染容器**：`.pcard`（总览/高清卡片）、`.big`（演练大图）、`#dock`（停靠栏）
+    + `.item[data-rn]` / `.pill[data-rn]`；禁止只绑其中一两个容器（B25 踩过）。
   - 批注存 localStorage、导出 annotations.json；删除仅本地隐藏预览；
     H5 不改工程，AI 按 JSON 改设计源后重生成。
   - 点空白收右侧停靠栏；全站单一来路栈；高清设计图仍可点返回热区。
@@ -95,6 +98,8 @@ def gestures():
 
 
 def io_of(page, row):
+    if row["cat"] == "uivalue":
+        return "in_read"          # 滑条/进度条旁的数值显示，归 UI 内部读
     k = OVERRIDES.get((page, row["name"]))
     if k:
         return k
@@ -216,13 +221,30 @@ def build():
             "tag": tag, "tagw": len(tag) * 11 + 16})
     for p in out:
         out[p]["dynz"] = zones.get(p, [])
-    lost = [(p, r["n"], r["name"]) for p in order for r in out[p]["rows"]
+    # 开机自检：H5-only 设计预览（不进 EEZ、不参与导航）。
+    # 工程侧同时提供 pg.BOOT_H5_ONLY=True 与 sc.boot_init_frame() 时自动接入；
+    # 下列 box 是 800×480 参考值，换屏尺寸时按本工程几何替换。
+    if getattr(pg, "BOOT_H5_ONLY", False) and hasattr(sc, "boot_init_frame"):
+        boot_rows = [
+            {"n": 1, "name": "进度条", "io": "out_read", "cat": "read",
+             "act": "自检进度 0–100%", "box": [140, 300, 520, 8], "target": "",
+             "markBox": None, "dyn": False},
+            {"n": 2, "name": "状态字条", "io": "out_read", "cat": "read",
+             "act": "随当前检测项切换（单行）", "box": [300, 332, 186, 18],
+             "target": "", "markBox": None, "dyn": True},
+        ]
+        out["开机自检"] = {"svg": sc.boot_init_frame(), "rows": boot_rows, "layer": 1,
+                           "status": False, "entry": "上电", "exit": "主控",
+                           "gesture": [], "dynz": []}
+        order = ["开机自检"] + order
+    lost = [(p, r["n"], r["name"]) for p in order if p in data for r in out[p]["rows"]
             if any(q["name"] == r["name"] and q["behav"] == "换页" for q in data[p]["rows"])
             and r["io"] != "nav"]
     assert not lost, "覆盖判类吃掉了换页控件的跳转：%s" % lost
     return {"pages": out, "order": order,
             "io": {"color": IO_COLORS, "name": IO_NAME, "desc": IO_DESC},
-            "layerNote": {1: "一级：与主页同一种切换方式可达（本工程无 pageview tab / 侧栏，故只有主控）",
+            "layerNote": {0: "设计预览：H5-only（不进 EEZ、不参与导航）",
+                          1: "一级：与主页同一种切换方式可达（本工程无 pageview tab / 侧栏，故只有主控）",
                           2: "二级：从一级页用按钮进入的新子页",
                           3: "三级：从二级页进入的新子页",
                           4: "四级：从三级页进入的新子页",

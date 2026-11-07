@@ -472,3 +472,5 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0260 | 2026-11-06 | 模板库补齐 Palette 全部 36 项：35 画布/37 模板；Tab 拖进 Tabview 树行下半区；validate PASS | 模板覆盖,36项,Tab嵌套,Widgets Structure,LVGLSpanWidget | fixed |
 | P-0261 | 2026-11-06 | Tabview 0/1/2/3 个 Tab 整块入库：39 画布/37 模板+4 变体；实测只差 children；validate PASS + 三条反向夹具 FAIL + 构建 0 错 0 警；14:00 按用户令在 UI 重做变体并在 README 写死“禁止手搓” | Tabview变体,children,动态添加,variants,整块克隆 | fixed |
 | P-0262 | 2026-11-06 | 控件框重叠 D5 查不出：设计源自叠 → 画布同源一致，相似度仍 97–99%；新增 A15/L2 几何重叠门禁（绝对坐标、排除 deco/隐藏/父子/文本，≥20% 判 FAIL）；修 w78 摄像头页 460×300→252 | 容器交叉,部分重叠,D5查不出,layout_check,A15 | fixed |
+| P-0263 | 2026-11-07 | H5 复用旧模板导致批注整块缺失（右键只绑 `[data-cpage]` 与 `#bigbox/#dock`，总览胶囊与高清卡片落空）；补批注模块 + 改为 `[data-cpage]`/`svg[data-page]` 语义全量命中 + step1_gate C7 门禁；实测 `y|3|y|1` | H5评审页,批注,右键菜单,模板复用,命中范围,C7 | fixed |
+| P-0264 | 2026-11-07 | 观感类形容词连续猜五轮：未按 §6 卡 E 索取锚点就反复重画设计图 | 观感,返工,提示词,设计冻结,单一真值 | fixed |

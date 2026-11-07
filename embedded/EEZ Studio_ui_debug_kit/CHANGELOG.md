@@ -2195,6 +2195,17 @@ Tab 栏坐标与字体文件名 —— 换个项目就得改代码，违背了"�
 
 ---
 
+## 2026-11-07
+
+- `tools/h5_overview_template.py` 同步 w78 最新实现：
+  - 开机自检 H5-only 页接入点（`pg.BOOT_H5_ONLY` + `sc.boot_init_frame()`，不进 EEZ、不参与导航）；
+  - `cat=uivalue` 归 `in_read`（滑条/进度条旁数值）；
+  - `order` 含 H5-only 页时的 `lost` 保护（`p in data`）；
+  - `layerNote[0]` 补「设计预览：H5-only」；
+  - 头部补硬规则：右键命中面必须是全量渲染容器 `.pcard/.big/#dock` + `.item[data-rn]/.pill[data-rn]`。
+- 新增 `cases/B25`、`intake/P-0263`：复用旧 H5 模板导致批注整块缺失、右键只绑两处；
+  对应工程门禁 C7（导出按钮 / contextmenu / annotations.json / localStorage 四件套）。
+
 ## 待办 / 想法
 
 - [ ] `tree_check.py` 增加"配色/对比度"检查（低对比度文本在真机上几乎看不见）
