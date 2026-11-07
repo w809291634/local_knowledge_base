@@ -4756,3 +4756,39 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：把 PC 仿真专用文件从 app/ 移到平台层，并验证
   - 产出/结论：w78 的 sim_fs/sim_reads/sim_video 从 src/native/app/ 移到 src/native/platform/pc/（与 wifi_platform_pc/win 同层），main.c include 同步；模板工程 minimal-lvgl-project-no-flow 的 sim_fs 同步移动。PC_SIM 递归 glob 无需改构建。验证：w78 boottest（真实 MP4 75 帧）/fstest/simtest/behaviortest/test（NAV 64/64）全 PASS；模板 fstest PASS。reference/12、NO_FLOW §4 记录「PC 仿真替身放 platform/pc，app 只留跨平台业务」；CHANGELOG v0.9.178。
   - 关联：PR-0595、CHANGELOG v0.9.178
+
+### PR-0597 · 2026-11-07 · Trae
+  - 提示词：以后要求增加开机初始化的设计图，要求有开机自检等等，不要 1、2、3、 这种，而是进度条低下使用动态字条（根据每个检测项变化）输出设计图
+  - 诉求：新增开机自检设计图；进度条下方单行动态字条随检测项变化，禁止编号列表
+  - 产出/结论：新增 w78 design/boot_init_design.py，输出 designer_annotated/boot_init_设计图.png（800x480，2x=1600x1260）；版式：品牌+系统自检、中央徽标、进度条+42%、单行「正在检查 Wi-Fi 模块…」、页脚请勿断电/v1.0.0；图下方附动态字条取值序列（内存→显示→Wi-Fi→存储→完成），非 UI 内容。NO_FLOW §2.1 增加「开机自检页」设计原则（禁止 1/2/3 编号与多项堆叠）；CHANGELOG v0.9.179。
+  - 关联：CHANGELOG v0.9.179
+
+### PR-0598 · 2026-11-07 · Trae
+  - 提示词：H5呢
+  - 诉求：开机自检页也要出现在 H5 评审页
+  - 产出/结论：overview_pro 增加 H5-only 页「开机自检」（sc.boot_init_frame：品牌标+房子徽标+42% 进度条+单行状态字条+页脚），排在首位；控件清单 2 项（进度条/状态字条）；不進 EEZ、不参与导航。重生成 H5：25 页 / 255 控件 / 手势边 21 / node --check OK；Edge 截图目检正常。NO_FLOW §2.1 补「必须进 H5 作为 H5-only 页」；CHANGELOG v0.9.180。
+  - 关联：PR-0597、CHANGELOG v0.9.180
+
+### PR-0599 · 2026-11-07 · Trae
+  - 提示词：要求自检后，播放视频，你全部适配一下，我要成品
+  - 诉求：开机流程做成成品——自检页跑完接真实 MP4，再进主界面；设计图/H5/仿真全部对齐
+  - 产出/结论：新增 w78 `src/native/app/boot_selftest.c/.h`（顶层覆盖层，2s 0→100%，进度条+环形+单行动态字条），完成后删除覆盖层并调 `sim_video_play_boot()`；`sim_cmake/main.c` 启动与 boottest 均改为 `boot_selftest_start()`，判据 `selftest=100 && video>0 && !active`。设计三处同源：徽标 112×112@(344,72)、环 r=88、进度条@(140,300)、字条 x=316；PNG 设计图补环形进度与外发光并重生成，H5 重生成（25 页/255 控件/JS OK）。坑：cn24/cn32 无汉字，中文只用 cn12。验证：boottest（100/75/0）、NAV 64/64、fstest、simtest、behaviortest、eez_check 762/762 全 PASS。NO_FLOW §2 ⑤b、§2.1、§4 同步；CHANGELOG v0.9.181。
+  - 关联：PR-0598、CHANGELOG v0.9.181
+
+### PR-0600 · 2026-11-07 · Trae
+  - 提示词：开机页不在 eez 体现吗 → 算了，初始化页不需要体现在 eez，这个比较简单
+  - 诉求：确认开机页归属；最终决定不进 EEZ，恢复运行期覆盖层
+  - 产出/结论：先实现 EEZ 真页方案（pages.py 新增「开机自检」、eez_gen 新增 arc/line 构造、25 页/784 控件，boottest PASS），随后按用户决定完整回退：删除 pages/values/overview/eez_gen/eez_check 的开机页改动，恢复 boot_selftest 覆盖层与 main.c 截图口径。重建后 24 页/762 控件、A14 762/762 PASS、boottest（100/75/0）PASS、NAV 64/64 PASS。NO_FLOW §2.1 记录「开机页不进 EEZ」；CHANGELOG v0.9.182。
+  - 关联：PR-0599、CHANGELOG v0.9.182
+
+### PR-0601 · 2026-11-07 · Trae
+  - 提示词：以后设计图中，默认包含了自检页，添加到本地经验库
+  - 诉求：把「设计图默认包含开机自检页」固化为规则
+  - 产出/结论：NO_FLOW §2.1 改为「设计图默认必出」：所有工程的 PNG 设计图与 H5 评审页默认包含「开机初始化」页，只有用户明确说不要才可省；reference/18 顶部加默认规则、README 索引同步；CHANGELOG v0.9.183。版式与实现仍按 18 号文档（自检覆盖层 → 真实 MP4 → 主界面，不进 EEZ）。
+  - 关联：PR-0600、CHANGELOG v0.9.183
+
+### PR-0602 · 2026-11-07 · Trae
+  - 提示词：自检页可以默认不通过 eez 中进行创建，添加到本地经验库
+  - 诉求：把「自检页默认不通过 EEZ 创建」固化为规则
+  - 产出/结论：NO_FLOW §2.1 改为「开机页默认不通过 EEZ 创建」：默认由运行期覆盖层 boot_selftest 创建，EEZ 只保留业务页，仅用户明确要求才改成 EEZ 真页；reference/18 顶部补「创建方式」；README 索引同步；CHANGELOG v0.9.184。
+  - 关联：PR-0601、CHANGELOG v0.9.184

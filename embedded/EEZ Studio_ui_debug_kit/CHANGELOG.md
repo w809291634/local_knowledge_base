@@ -17,6 +17,57 @@
 
 ---
 
+## v0.9.184 — 自检页默认不通过 EEZ 创建（PR-0602）
+
+- 明确创建方式（2026-11-07 用户定）：自检页**默认不通过 EEZ 创建**，由运行期覆盖层
+  （`boot_selftest`）实现，EEZ 只保留业务页；只有用户明确要求时才改成 EEZ 真页。
+- 同步：NO_FLOW §2.1 该条改为「开机页默认不通过 EEZ 创建」；`reference/18_boot_selftest_page.md`
+  顶部补「创建方式」；README 索引同步。
+
+## v0.9.183 — 设计图默认包含开机自检页（PR-0601）
+
+- 新规则（2026-11-07 用户定）：以后所有工程的**设计图（PNG）与 H5 评审页默认包含「开机初始化」页**，
+  不因工程暂无开机动画/自检需求而省略；只有用户明确说“不要”才可省。
+- 同步：NO_FLOW §2.1 标题与首句改为「设计图默认必出」；`reference/18_boot_selftest_page.md`
+  顶部加默认规则；`reference/README.md` 索引标注「设计图默认必出」。
+
+## v0.9.182 — 开机页确认不进 EEZ（PR-0600）
+
+- 曾把开机自检页做成 EEZ 真页（arc + line + 进度条 + 字条，25 页/784 控件），验证通过后
+  按用户决定回退：开机页简单且是运行期覆盖层，**EEZ 只保留业务页**（24 页/762 控件）。
+- 流程恢复：`boot_selftest` 顶层覆盖层 0→100% → 删除 → 真实 MP4 → 主界面；
+  H5 仍以 H5-only 页展示「开机自检」+ PNG 设计图。
+- NO_FLOW §2.1 记录该决策，避免后续重复把过场页塞进 EEZ。
+- 新增 `reference/18_boot_selftest_page.md`（流程/版式几何/单行动态字条/真实 MP4/自证/踩坑），
+  并登记到 `reference/README.md` 工程实践类索引。
+
+## v0.9.181 — 开机成品：自检页 → 真实 MP4 → 主界面（PR-0599）
+
+- 新增 `src/native/app/boot_selftest.c/.h`：LVGL 顶层覆盖层，2s 内 0→100%，
+  进度条 + 环形进度 + **单行动态字条**（内存/显示/Wi-Fi/存储/完成）；到 100% 删除覆盖层并调
+  `sim_video_play_boot()`，播完露出主界面；ESP32 侧无解码器时自检后直接进主界面。
+- `sim_cmake/main.c`：启动与 `boottest` 都改为 `boot_selftest_start()`；`boottest` 判据为
+  `selftest=100 && video>0 && !active`，并在自检中/视频第 30 帧各留一张截图。
+- 设计三处同源：LVGL/H5/PNG 统一徽标 112×112 @ (344,72)、环 r=88、进度条 @ (140,300)、字条 x=316；
+  设计图补环形进度与外发光圈，标题改中文 16px（cn12 + letter_space）。
+- 坑：`ui_font_cn24/cn32` 不含汉字，中文写上去是豆腐块 → 中文只用 `ui_font_cn12`。
+- 验证：`boottest`（selftest=100 / video=75 / active=0）、`test`（NAV 64/64）、`fstest`、`simtest`、
+  `behaviortest`、`eez_check`（A14 762/762）全 PASS。
+
+## v0.9.180 — 开机自检页进 H5（PR-0598）
+
+- `overview_pro.py` 新增 H5-only 页「开机自检」：`sc.boot_init_frame()` 画品牌标/房子徽标/
+  进度条 42%/单行状态字条/页脚；控件清单列出「进度条」「状态字条」两项。
+- 该页**不进 EEZ、不参与导航**，只作设计评审预览；H5 门禁通过（25 页 / 255 控件 / JS OK）。
+- 视觉升级：渐变背景 + 中心光晕 + 环形进度（42%）+ 渐变进度条 + 品牌标；状态字条保持单行。
+
+## v0.9.179 — 开机初始化设计图（PR-0597）
+
+- 新增 w78 `design/boot_init_design.py`：生成 800×480（2x）开机自检设计图
+  `designer_annotated/boot_init_设计图.png`；版式＝品牌 + 中央徽标 + 进度条/百分比 + **单行动态字条** + 页脚。
+- 规则：字条只显示当前检测项（内存/显示/Wi-Fi/存储/完成），**禁止 "1、2、3、" 编号列表与多项堆叠**；
+  已写入 NO_FLOW §2.1「开机自检页（2026-11-07 用户定）」。
+
 ## v0.9.178 — 仿真替身归位 platform/pc（PR-0596）
 
 - w78：`src/native/app/sim_fs|sim_reads|sim_video` → `src/native/platform/pc/`；
