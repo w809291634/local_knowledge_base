@@ -4750,3 +4750,9 @@ ative\watch_nav.cpp:1:2`，铁证；随后 md5 复原。② 口径对齐样板 �
   - 诉求：PC 仿真必须直接播放真实 MP4，不接受预转帧/动图；写入经验库
   - 产出/结论：新增 src/native/app/sim_video（PC 专用）：ffmpeg 子进程解码 assets/boot.mp4 为 800x480 BGRA → LVGL canvas，逐帧驱动；run_sim 注入 FFMPEG_EXE（imageio_ffmpeg）；boottest 验证真实解码帧数，实测 75 帧 @25fps PASS。删除 boot_anim/boot_frames/boot_from_mp4 帧序列方案，只留 assets/boot.mp4。坑：_popen 带引号 exe + 多参数被 cmd 拆坏 → 无空格不加引号 + 临时 chdir 到工程根用相对路径。NO_FLOW §2 ⑤b/§4、FLOW §2 记录「真实 MP4，禁止预转动图」；CHANGELOG v0.9.177。
   - 关联：PR-0594、CHANGELOG v0.9.177
+
+### PR-0596 · 2026-11-07 · Trae
+  - 提示词：这些文件，是不是有的属于PC平台层 / 以后注意这种事情，那就移动文件并构建验证
+  - 诉求：把 PC 仿真专用文件从 app/ 移到平台层，并验证
+  - 产出/结论：w78 的 sim_fs/sim_reads/sim_video 从 src/native/app/ 移到 src/native/platform/pc/（与 wifi_platform_pc/win 同层），main.c include 同步；模板工程 minimal-lvgl-project-no-flow 的 sim_fs 同步移动。PC_SIM 递归 glob 无需改构建。验证：w78 boottest（真实 MP4 75 帧）/fstest/simtest/behaviortest/test（NAV 64/64）全 PASS；模板 fstest PASS。reference/12、NO_FLOW §4 记录「PC 仿真替身放 platform/pc，app 只留跨平台业务」；CHANGELOG v0.9.178。
+  - 关联：PR-0595、CHANGELOG v0.9.178

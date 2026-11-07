@@ -17,6 +17,15 @@
 
 ---
 
+## v0.9.178 — 仿真替身归位 platform/pc（PR-0596）
+
+- w78：`src/native/app/sim_fs|sim_reads|sim_video` → `src/native/platform/pc/`；
+  `main.c` include 同步；PC_SIM 递归 glob 无需改构建。
+- 模板工程 `minimal-lvgl-project-no-flow` 的 `sim_fs` 同步移到 `platform/pc/`。
+- 验证：w78 `boottest`（真实 MP4 75 帧）/`fstest`/`simtest`/`behaviortest`/`test`（NAV 64/64）全 PASS；
+  模板工程 `fstest` PASS。
+- reference/12 与 NO_FLOW §4 增加规则："PC 仿真替身一律放 `platform/pc/`，`app/` 只留跨平台业务"。
+
 ## v0.9.177 — 开机动画改为真实 MP4 解码（PR-0595）
 
 - 新增 `src/native/app/sim_video.c/.h`（PC 专用）：用 ffmpeg 子进程解码 `assets/boot.mp4`

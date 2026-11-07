@@ -58,6 +58,8 @@ src/native/
 
 **不要做的事**：不在 `src/ui/` 改业务；不让 `platform/` 引用 `objects.*`；不在
 `app/` 随意复制 UI 坐标；不直接手改 `generated/` 或 `third_party/`。
+**PC 仿真替身一律放 `platform/pc/`**：`sim_fs`（宿主文件系统 `A:`）、`sim_reads`（假读数）、
+`sim_video`（ffmpeg 解 MP4）这类只在仿真存在的实现，不得放进 `app/`；`app/` 只留跨平台业务。
 
 ## 依赖方向
 
