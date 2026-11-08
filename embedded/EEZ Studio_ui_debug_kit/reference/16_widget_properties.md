@@ -898,10 +898,10 @@ EEZ 前端**没有 Specific 属性**（只用通用属性 + Style 面板）。
    `geometryProperties` 在模板里没有保存值（EEZ 编辑器预览/内部用），生成器不得写。
 5. **新增能力**：手册/属性面板里没有的字段，先回 EEZ UI 拖出并保存 → `extract_templates.py`
    重提模板 → 同步补本表，之后才允许出现在生成器里。
-6. **对齐默认居中**（2026-11-08 用户定）：按钮子标签默认 `align=CENTER` +
-   `text_align=CENTER`（水平+垂直居中）；容器内的文本默认居中。只有设计源**显式**
-   标 `text-anchor=start/end` 的行式清单、数值列、左对齐标题才用 LEFT/RIGHT；
-   生成器不得因为测量盒、锚点缺失或控件坐标而默认左对齐。
+6. **文本默认居中**：按钮子标签 content + `align/text_align=CENTER`；禁止等于按钮盒；
+   左/右例外用 `LEFT_MID/RIGHT_MID` + 父 pad；配 `BTN_CHILD` 门禁。
+7. **Slider**：MAIN 透明 + 独立 6px 轨道；`top=track.y-9`；`KNOB pad=-4`（24→16px）。
+8. **读数 Label**：用原文实测 x/y/w/h，不用热区盒；热区盒只给 H5 点击/标注。
 
 ## 4. 逐行复核（2026-11-06）
 

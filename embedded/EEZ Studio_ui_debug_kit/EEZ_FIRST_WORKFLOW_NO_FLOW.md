@@ -229,11 +229,11 @@ KNOB pad=-2 → 16px 旋钮；开关 44×24 + pad=-2 → 20px 旋钮，触摸区
 ⑫ **设备读数单独成控件**：温度/湿度/百分比/功率/电量/在线状态等按 `value` 类追加控件行，
    生成真实 Label（`hr` 码）并进入控件表/H5 标注；标题、说明、按钮文案不误判为读数。
    w78 实测自动补 57 条读数，总控件 239。
-⑬ **文本对齐默认居中**（2026-11-08 用户定）：按钮子标签默认 `align=CENTER` +
-   `text_align=CENTER`（水平+垂直居中）；容器内的文本默认居中。只有设计源**显式**
-   标 `text-anchor=start/end` 的行式清单、数值列、左对齐标题才用 LEFT/RIGHT；
-   生成器不得因为测量盒、锚点缺失或控件坐标而默认左对齐。SVG 无 `text-anchor`
-   时按 `middle` 处理，H5 与 EEZ 同口径。
+⑬ **文本默认居中**：按钮子标签 **content 尺寸** + `align/text_align=CENTER`；
+   禁止等于按钮盒（等大时 CENTER 失效、文字贴顶/偏左）。左/右例外用
+   `LEFT_MID/RIGHT_MID` + 父 pad；无 `text-anchor` 按 middle；配 `BTN_CHILD` 门禁。
+⑭ **Slider**：MAIN 透明 + 独立 6px 轨道；`top=track.y-9`；`KNOB pad=-4`（24→16px）。
+⑮ **读数 Label**：用原文实测 x/y/w/h，不用热区盒；热区盒只给 H5 点击/标注。
 
 核对分四层，按 A→B1（④站内）→C→B2（⑤站内）做：
 

@@ -17,6 +17,20 @@
 
 ---
 
+## v0.9.189 — 按钮子标签 content、Slider 轨道、读数盒、静态波形（PR-0624）
+
+- **按钮子标签不能等于按钮盒**：子标签与按钮等大时 `align=CENTER` 失效，文字贴顶/偏左；
+  改为 `widthUnit/heightUnit=content` + `align=CENTER`，左/右例外用 `LEFT_MID/RIGHT_MID`
+  + 父级 pad。新增 **BTN_CHILD 硬门禁**：生成器内置断言 + `design/check_button_child.py`
+  复检，负向测试 2 条违规可 FAIL。
+- **Slider 轨道单独画**：EEZ Slider 的 MAIN 背景铺满控件高度；6px 轨道改用独立容器，
+  Slider `MAIN bg_opa=0`，`top=track.y-9`，`KNOB pad=-4`（24px 盒 → 16px 旋钮）。
+- **读数 Label 用原文实测盒**：不要用控件热区盒，否则大数字整体偏移 8–10px。
+- **静态波形/趋势**：polyline 生成 `LVGLLineWidget`，B1 相似度显著提升；运行期 native 更新点。
+- **字体**：设计帧与 EEZ 均用微软雅黑；24/64 档 Bold、16 档 Regular。
+- 实测多参数监护仪：A 差异 0；B1 14/14，平均相似度 **97.26%**（alarm_settings 97.92%，
+  shutdown 98.14%，wifi_pwd 98.33%）。
+
 ## v0.9.188 — 文本对齐默认居中（PR-0623）
 
 - 规则（2026-11-08 用户定）：按钮子标签默认 `align=CENTER` + `text_align=CENTER`；
