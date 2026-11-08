@@ -177,6 +177,10 @@ H5 只采集修改指令，**不能直接改 `.eez-project` / `src/ui` / 设计�
   **右键效果图空白** → 在光标位置加提示标签（viewBox 坐标）；右键已有 pin → 修改/删除提示。
 - 删除只在 H5 本地隐藏/标灰预览；批注存 `localStorage`，导出 `annotations.json`。
 - 有未导出修改时底部提示「N 条批注 · 导出并返回 ④」；AI 按 JSON 改设计源后重生成。
+- **修复后必须删批注（2026-11-08 用户定）**：AI 按批注改完设计源并重生成 H5 时，
+  必须删除对应批注，不得让已修复的 pin/标记继续留在设计图上。做法：生成器维护
+  `RESOLVED_ANN_IDS`（已处理批注 id 列表），H5 加载时过滤这些 id 并回写 `localStorage`；
+  交付前用 Edge/CDP 断言旧 pin 不再出现、未处理批注仍保留。
 - 坐标一律用 viewBox（0–800/0–480），卡片缩放不影响；弹层态用各自展开帧坐标。
 - 不手改生成的 HTML；设计源仍是唯一真值。
 
@@ -209,5 +213,6 @@ H5 只采集修改指令，**不能直接改 `.eez-project` / `src/ui` / 设计�
 不另画界面。整卡开关/滑条必须给 `markBox`（卡内 glyph）；弹层控件放独立“展开态”数据项，别画在基础页。
 
 生成后必须保留并自测：标注全局开关、高清默认带号、右键清单/底部标签控件菜单、效果图右键页面 pin、
-localStorage 保存、导出 `annotations.json`、删除仅本地预览。验证：`node --check` + Edge headless CDP
-（右键菜单标题、删除后 opacity、pin 保存）。改完本实现要回灌模板；回灌时只换文件头说明，不保留工程专有数据。
+localStorage 保存、导出 `annotations.json`、删除仅本地预览、**已修复批注自动删除
+（`RESOLVED_ANN_IDS` 过滤）**。验证：`node --check` + Edge headless CDP
+（右键菜单标题、删除后 opacity、pin 保存、旧 pin 清理）。改完本实现要回灌模板；回灌时只换文件头说明，不保留工程专有数据。

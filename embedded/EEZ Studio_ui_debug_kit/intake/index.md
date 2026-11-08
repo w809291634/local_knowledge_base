@@ -478,3 +478,4 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0266 | 2026-11-08 | F3 未核源字库 cmap：•/‹ 在 simhei.ttf 无字形，EEZ 官方字体烘焙直接 FAIL | 字体,cmap,F3,D3,字形 | fixed |
 | P-0267 | 2026-11-08 | 工程脚本 design/inspect.py 遮蔽标准库 inspect，fontTools 导入即 AttributeError | 命名冲突,fontTools,工具链 | fixed |
 | P-0268 | 2026-11-08 | B1 画布链四处坑：ELECTRON_RUN_AS_NODE 破坏 EEZ 启动、跨目标抓旧帧、最佳匹配判据偏置、对照图右半裁切 | B1,CDP,EEZ画布,判据,目检 | fixed |
+| P-0269 | 2026-11-08 | H5 修复后旧批注未删除，设计图残留 pin | H5,批注,设计评审 | fixed |

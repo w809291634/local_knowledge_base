@@ -27,6 +27,9 @@
     + `.item[data-rn]` / `.pill[data-rn]`；禁止只绑其中一两个容器（B25 踩过）。
   - 批注存 localStorage、导出 annotations.json；删除仅本地隐藏预览；
     H5 不改工程，AI 按 JSON 改设计源后重生成。
+  - **修复后必须删批注（2026-11-08 用户定）**：AI 按批注改完设计源并重生成时，
+    把已处理批注 id 写进 `RESOLVED_ANN_IDS`；H5 加载时过滤这些 id 并回写 localStorage，
+    设计图不得残留已修复的 pin/标记；交付前用 CDP 断言旧 pin 不再出现。
   - 点空白收右侧停靠栏；全站单一来路栈；高清设计图仍可点返回热区。
 
 铁律：H5 只内嵌设计源渲染的帧 + 叠标注/热区，绝不重画界面；
@@ -47,6 +50,10 @@ import export_ui as eu             # noqa: E402
 
 OUT = os.path.join(sc.OUT, "overview_pro.html")
 OUT_FRAG = os.path.join(sc.OUT, "overview_pro.fragment.html")
+
+# 已修复的批注 id：H5 加载时自动从 localStorage 删除，避免修复后旧 pin 残留。
+# 每轮修复把 annotations.json 里已处理的 pin/control id 追加到这里，再重生成。
+RESOLVED_ANN_IDS = []
 
 IO_COLORS = {
     "in_read": "#7fb3ff", "out_read": "#8fa2b8", "in_write": "#c08cff",
@@ -409,6 +416,17 @@ let marksOn = true;              // 高清设计图默认显示全部控件标�
 const ANN_KEY = 'w78_annotations_v1';
 let anns = {};
 try { anns = JSON.parse(localStorage.getItem(ANN_KEY) || '{}') || {}; } catch (e) { anns = {}; }
+const RESOLVED = __RESOLVED__;
+(function dropResolved(){
+  let dirty = false;
+  Object.keys(anns).forEach(p=>{
+    const list = anns[p] || [];
+    const keep = list.filter(a=>!(a && a.id && RESOLVED.indexOf(a.id) >= 0));
+    if(keep.length !== list.length) dirty = true;
+    if(keep.length) anns[p] = keep; else delete anns[p];
+  });
+  if(dirty){ try{ localStorage.setItem(ANN_KEY, JSON.stringify(anns)); }catch(e){} }
+})();
 let annDraft = null, ctxTarget = null;
 function annsOf(p){ return anns[p] || (anns[p] = []); }
 function annTotal(){ return Object.keys(anns).reduce((n,p)=>n+anns[p].length,0); }
@@ -1057,6 +1075,7 @@ def fragment(html):
 def main():
     payload = build()
     html = (HTML.replace("__CSS__", CSS).replace("__JS__", JS)
+            .replace("__RESOLVED__", json.dumps(RESOLVED_ANN_IDS))
             .replace("__DATA__", json.dumps(payload, ensure_ascii=False)))
     io.open(OUT, "w", encoding="utf-8", newline="\n").write(html)
     io.open(OUT_FRAG, "w", encoding="utf-8", newline="\n").write(fragment(html))

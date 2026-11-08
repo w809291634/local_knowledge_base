@@ -17,6 +17,16 @@
 
 ---
 
+## v0.9.186 — H5 修复后自动删除已处理批注（PR-0620）
+
+- 规则（2026-11-08 用户定）：AI 按 `annotations.json` 改完设计源并重生成 H5 后，
+  必须删除对应批注，设计图不得残留已修复的 pin/标记。
+- 模板 `tools/h5_overview_template.py`：新增 `RESOLVED_ANN_IDS`；H5 加载时过滤已修复 id
+  并回写 `localStorage`，未处理批注保留。
+- 流程 `EEZ_FIRST_WORKFLOW_NO_FLOW.md` §2.0c 增「修复后清理批注」检查项；
+  `reference/14_h5_review_overview.md` §8/§10 增规则与自测项。
+- 登记 P-0269；验证：预置两条已修复 pin + 一条保留 pin，刷新后仅保留 keep123（annTotal=1）。
+
 ## v0.9.185 — 资源账纳入全部 UI 代码（PR-0603）
 
 - 口径（2026-11-07 用户定）：资源账＝`src/ui` + `src/native` 下全部 `.c/.cpp`（自动发现），
