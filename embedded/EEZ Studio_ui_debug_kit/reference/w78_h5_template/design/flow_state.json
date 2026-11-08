@@ -1,0 +1,8 @@
+{
+  "overview_confirmed": true,
+  "confirmed_at": "2026-11-04 17:36",
+  "note": "全览已确认（2026-11-04 用户「可以进行下一步」后置真）：H5 出可点跳转 + AI 预估控件图。",
+  "design_frozen": true,
+  "frozen_at": "2026-11-05 19:50",
+  "frozen_note": "用户确认 D5：24 页平均 98.03%，最低 96.07%（灯详情）；D1–D9 PASS。之后改设计须回 ①。"
+}
