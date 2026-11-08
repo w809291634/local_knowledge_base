@@ -7,6 +7,8 @@
 > 本篇管「控件清单、数据流向分类、层级、跳转关系一次性看全并亲手点验」（评审页 `designer_simple/overview_pro.html`）。
 > 都从同一份设计源生成，都不是第二真值，都不替代 EEZ 画布与仿真。
 
+第二步将控件类型及跳转关系标在同一设计帧中，并在本 H5 完成分层查看、跳转演练与用户批注；以 w78 同款格式为准。
+
 ## 1. 交付形态
 
 单文件 HTML：CSS/JS/数据全内联，零外部请求（`<a>` 数=0、Network 失败数=0 是硬判据）。
@@ -80,6 +82,18 @@ EEZ 控件的 identifier 也带同一套类别码（`r/hr/w/hw/go/sw`，固定�
   **设计图不画任何对象**，条目运行期由应用代码创建；H5 只画青色虚线框 +
   「动态区 · 运行期由应用代码生成」，右栏清单单列「动态条目区」。
   确需临时测试对象时只许 1 个、名称带「示例」，联调后删除。
+
+## 模板框架一致性与确认门
+
+本规范以 `tools/h5_overview_template.py` 的 CSS、JS、HTML 为评审框架基线，产品界面本身仍由设计源定义。新工程不得另写缺少 w78 能力的简化版本；框架确需变更时先升级共享模板并补回归。生成后执行：
+
+```text
+python <kit>/tools/h5_template_audit.py design/overview_pro.py --html designer_simple/overview_pro.html --phase design
+# 当前工程第一步经用户确认后：
+python <kit>/tools/h5_template_audit.py design/overview_pro.py --html designer_simple/overview_pro.html --phase review
+```
+
+脚本比较框架、生成物和确认状态；只自动容许项目标识字符串变化。未确认态设计帧可看，但控件语义/标注及可点跳转不输出；确认后才能做交互评审。**PASS 不能替代真实浏览器点击和批注保存、导出检查**，完整门禁见下文。尺寸或其他确需改框架时，脚本会报差异，须适配共享模板并验证，不得绕开。
 
 ## 5. 门禁
 
@@ -187,6 +201,8 @@ H5 只采集修改指令，**不能直接改 `.eez-project` / `src/ui` / 设计�
 ## 10. 复用：生成同类 H5 评审页（2026-11-05 模板 v2）
 
 模板：`tools/h5_overview_template.py`（从 w78 当前实现整体同步；含三视图、读数、整卡 glyph、弹层态、右键批注）。
+
+**完整可运行参考实例**：`reference/w78_h5_template/`，包含 w78 页面数据、生成器、示例 H5 和导航核验工具；先复制到工程外的工作目录再适配，具体边界见该目录 `README.md`。
 
 1. 复制到目标工程 `design/overview_pro.py`。
 2. 改顶部 import：`simple_control / pages / export_ui / nav_map` 换成本工程模块。

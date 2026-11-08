@@ -28,7 +28,7 @@ C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_ui_debug_kit\EEZ
 | 步 | 直接这样说 |
 | --- | --- |
 | ① | "出 XX 页设计图：先问我 UI 内存预算档位（200K/500K/1M/2M/4M 或实际值，落 `design/mem_budget.json`），并定一套 ≤3 档的字号令牌全工程共用；再写设计源，渲染落 designer/，**给我看的是 H5 评审页 `designer_simple/overview_pro.html` 的「高清设计图」页签**（§2.0；SVG 留档可选），停下等我确认" |
-| ② | "图上序号已标（附标注图/清单）：整理控件清单表；未标注的按纯展示处理" |
+| ② | "第一步设计确认后，严格复制并适配 `tools/h5_overview_template.py`（完整参考 `reference/w78_h5_template/`），保留三视图、真实控件跳转、右侧清单和右键批注；仅替换项目设计数据及标识，运行 `h5_template_audit.py --phase review` 和导航检查，再真实点击验证跳转、返回、标注和批注导出；不得用简化画廊冒充模板，交我核对" |
 | ③ | "框架确认：no flow，写进工程文档" |
 | ④ | "用 EEZ 预生成所有界面并做静态验收：A 声明层对账差异=0 → B1 画布逐屏截图对照 designer/；发现不对按④站自主修复条款自己修到达标；完成后贴对照图给我确认 EEZ 界面效果，我点头才进⑤；放不下的大图列出来问我要不要 TF 卡" |
 | ⑤ | "跑导航闭环核对（默认仿真器）：C 逐跳转边断言全 PASS → B2 仿真截图与 B1 互证；**每次编译/测试打资源树，默认用 IDF 工具链只编译估算**（目标架构、逐文件字节、Flash 偏高约17%；**默认 `-O2`，给 -O0/-O1/-O2/-O3/-Os 对比**），PC 编译上限并列；**只有我说“用 IDF 工程编译”时才做最终链接**；细节功能后补" |
@@ -38,7 +38,7 @@ C:\Users\yjt54\Desktop\local_knowledge_base\embedded\EEZ Studio_ui_debug_kit\EEZ
 **H5 评审页生成/更新**：
 "用 `tools/h5_overview_template.py` 按设计源生成/更新 H5：三层视图、高清默认全部控件标注、
 右键右侧清单/底部标签弹控件菜单、效果图右键落页面 pin、导出 annotations.json；
-不手改 HTML，改设计源后重跑。"
+不手改 HTML，改设计源后重跑；运行 `python <kit>/tools/h5_template_audit.py design/overview_pro.py --html designer_simple/overview_pro.html --phase design`（已确认后用 `--phase review`），并在浏览器验证交互。"
 
 ## 卡 D · 防跑偏开关词（随时可用）
 

@@ -129,7 +129,7 @@
 | ⑥ 门禁 | 断言集 | `python tools/run_gate.py` | 全绿才提交 | 缺屏/超阈值会非 0 退出 |
 | ⑦ 真机 | 烧录终验 | `idf.py flash monitor`（R 段条例） | 物理 / 性能 / 手感 | ①②证通路不证真值；`#if ESP_PLATFORM` 代码仿真编不到 |
 
-**设计图交付形态**：按 no flow 文件 §2.0（**H5 评审页为主，SVG 可选留档**）与其 **②b 独立核验步**（§2.0c：高清设计图确认 + 控件标注到位后再出页面连接；标注改设计源、H5 重生成，不手改 HTML）；做法与坑见 `reference/13_design_v2_h5_prototype.md`；
+**设计图交付形态**：按 no flow 文件 §2.0（**H5 评审页为主，SVG 可选留档**）与其 **第②步控件标注与 H5 交互评审**（§2.0c：高清设计图确认 + 控件标注到位后再出页面连接；标注改设计源、H5 重生成，不手改 HTML）；做法与坑见 `reference/13_design_v2_h5_prototype.md`；
 「清单/分类/层级/跳转一次看全」的评审页形态（分层总览 + 跳转演练 + 停靠放大栏）见
 `reference/14_h5_review_overview.md`，模板 `tools/h5_overview_template.py`；
 交付给用户的形态＝工程内 HTML 的绝对路径（浏览器自开），不做对话内嵌预览、不单独出设计图查看器页；
