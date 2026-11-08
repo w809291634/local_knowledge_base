@@ -17,6 +17,14 @@
 
 ---
 
+## v0.9.188 — 文本对齐默认居中（PR-0623）
+
+- 规则（2026-11-08 用户定）：按钮子标签默认 `align=CENTER` + `text_align=CENTER`；
+  容器内文本默认居中。只有设计源显式标 `text-anchor=start/end` 的行式清单、数值列、
+  左对齐标题才用 LEFT/RIGHT；生成器不得因测量盒/锚点缺失默认左对齐。
+- 同步：NO_FLOW §2.2 生成器规则 ⑬；`reference/16` §3 规则 6；H5 模板数据契约。
+- 工程侧：SVG→EEZ 生成器无 `text-anchor` 时按 middle；多参数监护仪顶栏患者按钮改为居中。
+
 ## v0.9.187 — SVG→EEZ 预生成两条坑（P-0270/P-0271，PR-0622）
 
 - **connectionLines 不能写自定义 schema**：LVGL/no-flow 工程若给 userPage 写
