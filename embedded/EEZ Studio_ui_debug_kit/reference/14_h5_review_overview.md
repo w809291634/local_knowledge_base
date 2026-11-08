@@ -83,17 +83,11 @@ EEZ 控件的 identifier 也带同一套类别码（`r/hr/w/hw/go/sw`，固定�
   「动态区 · 运行期由应用代码生成」，右栏清单单列「动态条目区」。
   确需临时测试对象时只许 1 个、名称带「示例」，联调后删除。
 
-## 模板框架一致性与确认门
+## 模板框架与确认顺序
 
-本规范以 `tools/h5_overview_template.py` 的 CSS、JS、HTML 为评审框架基线，产品界面本身仍由设计源定义。新工程不得另写缺少 w78 能力的简化版本；框架确需变更时先升级共享模板并补回归。生成后执行：
+第一步使用本 H5 的「高清设计图」页签供用户确认；确认后沿用同一 H5 完成控件标注、分层预览、跳转演练与批注。以 `tools/h5_overview_template.py` 和 w78 参考实例为基线，保留三视图、真实控件热区、返回、标注开关、右侧清单和批注；项目设计帧及数据从设计源生成。
 
-```text
-python <kit>/tools/h5_template_audit.py design/overview_pro.py --html designer_simple/overview_pro.html --phase design
-# 当前工程第一步经用户确认后：
-python <kit>/tools/h5_template_audit.py design/overview_pro.py --html designer_simple/overview_pro.html --phase review
-```
-
-脚本比较框架、生成物和确认状态；只自动容许项目标识字符串变化。未确认态设计帧可看，但控件语义/标注及可点跳转不输出；确认后才能做交互评审。**PASS 不能替代真实浏览器点击和批注保存、导出检查**，完整门禁见下文。尺寸或其他确需改框架时，脚本会报差异，须适配共享模板并验证，不得绕开。
+当前经验库没有专门的 H5 模板一致性自动审计脚本；对照模板核查并完成下述真实浏览器和导航检查，未执行的项目要注明。现有 `overview_pro.py` 不会根据确认状态自动隐藏标注或跳转，第一步与第二步的先后顺序由实际用户确认和工作流程控制。
 
 ## 5. 门禁
 
