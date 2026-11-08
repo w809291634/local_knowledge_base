@@ -13,7 +13,8 @@ EEZ 按钮文字看起来贴顶/偏左；项目里子标签 widthUnit/heightUnit
 
 ## 复现（怎么稳定重现）
 
-（待补）
+生成器克隆 Button 模板后把子 Label 的 `widthUnit/heightUnit` 改成 `px`，且宽高写成与按钮盒相等；
+打开工程看画布，文字贴顶/偏左，`align=CENTER` 无可移动空间。
 
 ## 根因（真正的原因）
 

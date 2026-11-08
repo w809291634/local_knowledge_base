@@ -60,6 +60,7 @@ ui_debug_kit/
 ├── EEZ_FIRST_WORKFLOW_FLOW.md     ← ★ 栈专属流程·flow 方式（2026-10-22 由 EEZ_FIRST_WORKFLOW.md 拆出）：
 │                              EEZ 为主、仿真为辅（验证优先级金字塔 / 框架分层 / 七步主链 / 应用侧实测注意）；仿真点名才跑
 ├── reference/w78_h5_template/ ← w78 H5 完整参考实例（源码、评审页及运行说明；先复制后适配）
+├── reference/eez_gen_template/ ← ★ 通用 EEZ 生成器说明与 design_source schema（单入口 + 模板克隆 + BTN_CHILD）
 ├── EEZ_FIRST_WORKFLOW_NO_FLOW.md  ← ★ 栈专属流程·no flow 方式（与 FLOW 版成对）：§2 七步主线为唯一流程
 │                              （设计图[独立脚本出，用户确认，**交付＝§2.0 H5 评审页「高清设计图」页签（SVG 可选留档）+ §2.0b 精灵动图自检索引**]→控件标注与 H5 交互评审[§2.0c、§2.1]→框架确认→EEZ预生成[含静态核对A+B1]→导航闭环核对[仿真C+B2，§2.2 四层两站]→用户核对+真机→逐个补功能[内环=旧主链]）
 ├── diagrams/               ← ★ 框图库（SVG；颜色=代码归属分区，每跳带函数代码）：
@@ -95,6 +96,8 @@ ui_debug_kit/
     ├── ink_check.py        墨迹检测（包围盒 / 触边 / 与声明框对比算偏移）
     ├── text_measure.py     文本真实宽度与字形度量
     ├── h5_overview_template.py  ★ H5 评审页生成器模板（分层总览/跳转演练/停靠放大栏）
+    ├── eez_gen_template.py  ★ 通用 EEZ 生成器模板（单入口 + 模板克隆 + BTN_CHILD + Slider/Label 规则）
+    ├── check_button_child.py  BTN_CHILD 通用门禁（按钮子标签必须 content，禁止等于按钮盒）
     ├── README.md           工具索引（每个工具一句话 + 参数速查）
     └── cdp/                抓"原生渲染图"（Chromium / Electron 系通用）
         ├── launch.sh           按配置启动并等 CDP 端口就绪

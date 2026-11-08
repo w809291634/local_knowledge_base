@@ -372,6 +372,19 @@ eventHandlers 清空），并单独采「父+子」组合（如 `LVGLButtonWidge
 localStorage、导出 `annotations.json`。文件头列了「换工程只改这几处」；
 复用步骤、数据契约与门禁见 `reference/14_h5_review_overview.md` §10。
 
+### `eez_gen_template.py` —— 通用 EEZ 生成器模板 ★
+
+单入口：`python tools/eez_gen_template.py --src <design_source.json> --base <eez_base.json> --out <x.eez-project> --base-dir <工程根>`。
+工程只提供两份数据（页面/节点/主题/字体映射 + EEZ 骨架），通用规则按控件类型分函数实现：
+模板克隆、A14 字段集、BTN_CHILD（子标签 content）、Slider（独立 6px 轨道 + MAIN 透明）、
+读数 Label（原文实测盒）、no-flow 跳转只落 `eventHandlers`（`connectionLines=[]`）。
+schema 与边界见 `reference/eez_gen_template/README.md`。
+
+### `check_button_child.py` —— BTN_CHILD 通用门禁
+
+`python tools/check_button_child.py <x.eez-project>`：按钮子标签必须
+`widthUnit/heightUnit=content`，且几何不得等于按钮盒；违规退出码 1。
+
 ---
 
 ## 四、栈专属工具放哪里

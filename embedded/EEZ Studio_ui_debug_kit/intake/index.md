@@ -479,8 +479,9 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0267 | 2026-11-08 | 工程脚本 design/inspect.py 遮蔽标准库 inspect，fontTools 导入即 AttributeError | 命名冲突,fontTools,工具链 | fixed |
 | P-0268 | 2026-11-08 | B1 画布链四处坑：ELECTRON_RUN_AS_NODE 破坏 EEZ 启动、跨目标抓旧帧、最佳匹配判据偏置、对照图右半裁切 | B1,CDP,EEZ画布,判据,目检 | fixed |
 | P-0269 | 2026-11-08 | H5 修复后旧批注未删除，设计图残留 pin | H5,批注,设计评审 | fixed |
-| P-0270 | 2026-11-08 | EEZ LVGL 工程 connectionLines 自定义 schema 导致 displayName 异常、Pages 树空白 | - | open |
-| P-0271 | 2026-11-08 | SVG→EEZ 生成器：3px 高亮条被当按钮底板、fill-opacity 丢失致弹层全黑 | - | open |
-| P-0272 | 2026-11-08 | 按钮子标签与按钮等大导致 align=CENTER 失效、文字不居中 | - | open |
-| P-0273 | 2026-11-08 | EEZ Slider MAIN 背景铺满控件高度、轨道变粗 | - | open |
-| P-0274 | 2026-11-08 | 读数 Label 用控件热区盒导致大数字整体偏移 8–10px | - | open |
+| P-0270 | 2026-11-08 | EEZ LVGL 工程 connectionLines 自定义 schema 导致 displayName 异常、Pages 树空白 | connectionLines,EEZ工程,跳转,no-flow | fixed |
+| P-0271 | 2026-11-08 | SVG→EEZ 生成器：3px 高亮条被当按钮底板、fill-opacity 丢失致弹层全黑 | 生成器,按钮底板,fill-opacity,遮罩 | fixed |
+| P-0272 | 2026-11-08 | 按钮子标签与按钮等大导致 align=CENTER 失效、文字不居中 | EEZ,Button,对齐,生成器,门禁 | fixed |
+| P-0273 | 2026-11-08 | EEZ Slider MAIN 背景铺满控件高度、轨道变粗 | EEZ,Slider,轨道,生成器 | fixed |
+| P-0274 | 2026-11-08 | 读数 Label 用控件热区盒导致大数字整体偏移 8–10px | EEZ,Label,读数,热区盒,生成器 | fixed |
+| P-0275 | 2026-11-08 | 多个工程各写一份 EEZ 生成逻辑：规则漂移、修复不同步；收敛为单入口通用生成器 + 模板 JSON + 按类型分函数 | 生成器,单入口,复用,模板,schema | fixed |

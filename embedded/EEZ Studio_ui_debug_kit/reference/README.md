@@ -39,6 +39,7 @@
 | ★ **布局间距规则** | 独立控件安全净距 ≥8px；同组同尺寸个体等距（pitch ±1px）；适用范围/例外/判定数据，以及 `layout_check` L6/L7 的 warn→FAIL 流程 | `17_layout_spacing_rules.md` |
 | ★ **开机自检页（设计图默认必出）** | 成品流程：自检覆盖层 0→100% → 真实 MP4 → 主界面；版式几何、单行动态字条、环半径/字体坑、`boottest` 判据；**设计图/H5 默认包含自检页**，**默认不通过 EEZ 创建**（运行期覆盖层） | `18_boot_selftest_page.md` |
 | ★ **no-flow native 分层** | 设计源/生成 UI/native 的单向依赖、`app`/`platform`/`navigation`/`widgets`/`third_party` 文件夹职责、迁移纪律与验收判据 | `12_no_flow_native_module_layout.md` |
+| ★ **通用 EEZ 生成器** | 单入口 `tools/eez_gen_template.py`：工程只传 `design_source.json` + `eez_base.json`；按控件类型分函数、模板克隆、BTN_CHILD / Slider / 读数 Label / 跳转硬规则；含 design_source schema 与边界 | `eez_gen_template/README.md` |
 
 ## 本项目（eez-test，LVGL 9.4 / 800×480 横屏 / BGR）最常用入口
 

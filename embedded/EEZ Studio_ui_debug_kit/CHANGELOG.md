@@ -17,6 +17,25 @@
 
 ---
 
+## v0.9.191 — 经验库补录与索引对齐（PR-0626）
+
+- intake 新增 P-0275：生成逻辑按工程各写一份导致规则漂移 → 收敛为单入口通用生成器；
+  P-0270～P-0274 状态置 fixed，补齐工程/工具/标签/复现/沉淀段。
+- `reference/README.md`、`tools/README.md` 登记 `eez_gen_template.py` 与 `check_button_child.py`。
+- FLOW 版流程 §3 生成工程段补一句：新工程优先用通用生成器，工程侧只留薄封装。
+
+---
+
+## v0.9.190 — 通用 EEZ 生成器模板落地（PR-0626）
+
+- 新增 `tools/eez_gen_template.py`：单入口通用生成器，工程只传
+  `design_source.json` + `eez_base.json`；内置模板克隆、BTN_CHILD、Slider、
+  读数 Label、no-flow eventHandlers 规则。
+- 新增 `tools/check_button_child.py`：任意 `.eez-project` 的 BTN_CHILD 通用门禁。
+- 新增 `reference/eez_gen_template/README.md`：schema、用法与边界。
+- 工程侧 `build_ui.py` 改为薄封装；实测多参数监护仪 14 页/540 节点/630 控件，
+  A14 630/630、BTN_CHILD 76/76、B1 平均 97.26%（与专用生成器逐页字节一致）。
+
 ## v0.9.189 — 按钮子标签 content、Slider 轨道、读数盒、静态波形（PR-0624）
 
 - **按钮子标签不能等于按钮盒**：子标签与按钮等大时 `align=CENTER` 失效，文字贴顶/偏左；

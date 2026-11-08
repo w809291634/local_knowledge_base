@@ -234,6 +234,8 @@ KNOB pad=-2 → 16px 旋钮；开关 44×24 + pad=-2 → 20px 旋钮，触摸区
    `LEFT_MID/RIGHT_MID` + 父 pad；无 `text-anchor` 按 middle；配 `BTN_CHILD` 门禁。
 ⑭ **Slider**：MAIN 透明 + 独立 6px 轨道；`top=track.y-9`；`KNOB pad=-4`（24→16px）。
 ⑮ **读数 Label**：用原文实测 x/y/w/h，不用热区盒；热区盒只给 H5 点击/标注。
+> ④ 预生成优先用 `tools/eez_gen_template.py`（单入口 + 模板 JSON + 工程 design_source）；
+> 工程侧 `build_ui.py` 只做薄封装；生成后跑 A14 + `check_button_child.py`。
 
 核对分四层，按 A→B1（④站内）→C→B2（⑤站内）做：
 

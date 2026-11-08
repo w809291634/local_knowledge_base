@@ -1,11 +1,11 @@
 # P-0270 · EEZ LVGL 工程 connectionLines 自定义 schema 导致 displayName 异常、Pages 树空白
 
-- **工程**：（待补）
+- **工程**：多参数监护仪 UI（multipara_monitor_ui）
 - **日期**：2026-11-08
-- **工具**：未知工具
-- **状态**：open
-- **标签**：（无）
-- **关联提示词**：（无）
+- **工具**：Trae
+- **状态**：fixed
+- **标签**：connectionLines,EEZ工程,跳转,no-flow
+- **关联提示词**：PR-0622
 
 ## 现象（看到什么）
 
@@ -13,7 +13,7 @@
 
 ## 复现（怎么稳定重现）
 
-（待补）
+生成的 .eez-project 里任一 userPage 的 connectionLines 非空，数组元素带 source/target/control 而非 EEZ flow 的 output 引用；用 EEZ Studio 打开该工程即复现。
 
 ## 根因（真正的原因）
 
@@ -29,4 +29,6 @@ LVGL/no-flow 工程 connectionLines 置空，跳转只用控件 eventHandlers；
 
 ## 沉淀（新增断言 / 案例 / 文档）
 
-（待补）
+- `tools/eez_gen_template.py` 固定 `connectionLines=[]`，跳转只写控件 `eventHandlers`。
+- A 声明层对账判据改为：design goto == 工程 eventHandlers == 生成回调，三者必须同为 44。
+- 文档：NO_FLOW §2.2 生成器规则、`reference/eez_gen_template/README.md`、CHANGELOG v0.9.187。
