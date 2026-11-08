@@ -17,6 +17,18 @@
 
 ---
 
+## v0.9.187 — SVG→EEZ 预生成两条坑（P-0270/P-0271，PR-0622）
+
+- **connectionLines 不能写自定义 schema**：LVGL/no-flow 工程若给 userPage 写
+  `{source,target,control}` 连线，EEZ 会按 flow 连线解析并抛
+  `Cannot read properties of undefined (reading 'displayName')`，Pages 树空白、
+  Components Palette 报 Error rendering component。处置：`connectionLines` 置空，
+  跳转只落控件 `eventHandlers`；A 对账改用 design goto == eventHandlers == 生成回调。
+- **SVG→EEZ 生成器两处映射**：① 控件盒内 3px 高亮条不能被选为按钮底板（只取
+  >=8×8 的 rect），否则整条 tab 渲染成实心块；② rect 的 `fill-opacity` 必须映射到
+  容器 `bg_opa`，否则密码半页/关机确认的暗化遮罩变成不透明黑，背景页不可见。
+- 实测多参数监护仪：14 页 / 527 节点 / 44 跳转，A 差异 0，B1 14/14、平均 95.34%。
+
 ## v0.9.186 — H5 修复后自动删除已处理批注（PR-0620）
 
 - 规则（2026-11-08 用户定）：AI 按 `annotations.json` 改完设计源并重生成 H5 后，

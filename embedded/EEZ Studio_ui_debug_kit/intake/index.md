@@ -479,3 +479,5 @@ P-0087 P-0089 P-0090 P-0091 P-0092 P-0097 P-0100 P-0101 P-0105`（工程含义�
 | P-0267 | 2026-11-08 | 工程脚本 design/inspect.py 遮蔽标准库 inspect，fontTools 导入即 AttributeError | 命名冲突,fontTools,工具链 | fixed |
 | P-0268 | 2026-11-08 | B1 画布链四处坑：ELECTRON_RUN_AS_NODE 破坏 EEZ 启动、跨目标抓旧帧、最佳匹配判据偏置、对照图右半裁切 | B1,CDP,EEZ画布,判据,目检 | fixed |
 | P-0269 | 2026-11-08 | H5 修复后旧批注未删除，设计图残留 pin | H5,批注,设计评审 | fixed |
+| P-0270 | 2026-11-08 | EEZ LVGL 工程 connectionLines 自定义 schema 导致 displayName 异常、Pages 树空白 | - | open |
+| P-0271 | 2026-11-08 | SVG→EEZ 生成器：3px 高亮条被当按钮底板、fill-opacity 丢失致弹层全黑 | - | open |
