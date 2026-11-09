@@ -3,6 +3,8 @@
 > **工具无关**的规则入口：Trae / Claude Code / Cursor / Codex 等均可读取。
 > Claude Code 可在 `CLAUDE.md` 写 `@AGENTS.md`；Cursor 在 `.cursor/rules/*.mdc` 引用本文件。
 > 本目录方法**不针对某一项目**，适用于任何版式固定、内容按项目替换的文档族。
+> **要按流程执行任务（含交给其他 AI 执行）：读 `authoring-workflow-and-experience-index.md`**，
+> 它把 S0~S10 每阶段的动作、完成判据、该读的经验条目和停手条件串好，并有「症状 → 先读哪一条」反查表。
 
 ## 适用场景
 
@@ -44,6 +46,7 @@
 
 | 文件 | 内容 |
 |---|---|
+| `authoring-workflow-and-experience-index.md` | **编写流程总编排**：S0~S10 每阶段的动作/完成判据/该读条目/停手条件、十条铁律、交付物最小集、续接纪律、开工提示词五元组、症状反查索引、机器环境占位符、一票否决清单 |
 | `template-doc-methodology.md` | 总纲：十条通用原则 |
 | `template-inheritance-in-place-replace.md` | 核心方法：就地替换 |
 | `template-baselines.md` | 公司模板版式基线族入口：九份文档的版号总表、两档入库判定、跨程序页数口径、建档方法 |

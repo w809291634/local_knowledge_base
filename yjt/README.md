@@ -8,6 +8,8 @@
 生成/迭代医疗器械注册文档族（软件研究资料 PEMS、产品技术要求、说明书、验证/确认记录）的规则与脚本库。
 
 - **先读 `yjt/PEMS/AGENTS.md`**（工具无关的硬约束与交付前 6 步），文件索引看 `yjt/PEMS/README.md`。
+- **要按流程执行（人或任意 AI 都行）看 `yjt/PEMS/authoring-workflow-and-experience-index.md`**：
+  S0~S10 每阶段的动作、完成判据、该读哪条经验、什么时候必须停手问人，另有「症状 → 先读哪一条」反查表和开工提示词五元组。
 - 关键规则文件：`one-pass-quality-gate.md`（事实基线 + 自动闸门 + 证据/签署状态）、
   `generality-boundaries-and-precedence.md`（事实来源优先级；**经验库不得含项目事实**）、
   `consistency-gate.md`（多文档对账 + 说明书/代码/注意事项三方收口）、

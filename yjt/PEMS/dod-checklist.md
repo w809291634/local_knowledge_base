@@ -1,6 +1,7 @@
 # 交付质量清单（Definition of Done，通用）
 
 > 每轮交付前自检。通用项与项目特有项分开：**A/B/D 通用，C 按行业/产品替换**。
+> 本清单是**判据集合**；按什么顺序执行、每阶段跑完要回显什么，看 `authoring-workflow-and-experience-index.md` 的 S0~S10。
 
 ## 结论先行
 

@@ -2278,6 +2278,7 @@ If you've learned something here, support my efforts writing daily TILs by
 自建中文经验库（按芯片/项目归档）· 分区索引见 [yjt/README.md](yjt/README.md)
 
 - [PEMS 模板化 Word 文档族 · 规则入口 AGENTS.md](yjt/PEMS/AGENTS.md)
+- [PEMS 编写流程与经验索引（S0~S10，交给任意 AI 都能照着做）](yjt/PEMS/authoring-workflow-and-experience-index.md)
 - [PEMS 文件索引 README](yjt/PEMS/README.md)
 - [CH571（CH57x）BLE 设备 ID：滚码 NV 格式、控制台/BLE 写法与校验](yjt/ch571/ble-device-id-rollcode-nv.md)
 - [移植实战：把「滚码设备 ID」落到一个新 CH571 工程（ZY0_BLE_CH571）](yjt/ch571/port-rollcode-device-id-to-new-project.md)

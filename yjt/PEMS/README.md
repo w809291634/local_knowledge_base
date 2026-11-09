@@ -8,6 +8,7 @@
 | 文件 | 内容 |
 |---|---|
 | `AGENTS.md` | **规则入口**（工具无关，AI 工具先读这个） |
+| `authoring-workflow-and-experience-index.md` | **编写流程总编排**：S0~S10 阶段（动作/完成判据/该读条目/停手条件）、十条铁律、交付物最小集、续接与会话纪律、开工提示词五元组、症状→先读哪一条反查表、机器环境占位符、一票否决清单 |
 | `template-doc-methodology.md` | 总纲：十条通用原则 + 适用边界 |
 | `template-inheritance-in-place-replace.md` | 核心方法：以参考文档「就地替换」 |
 | `template-format-audit-2026-10.md` | 九份模板的格式符合性审计：逐份结论表、27 张越版心表、通道差异（LO 造空白页/静默失败）、保留·生成时修·待裁决三分类 |
@@ -39,6 +40,7 @@
 
 ## 换项目三步
 
+0. **先读 `authoring-workflow-and-experience-index.md`**，按它的 S0~S10 走；下面三步只是最短路径，不含阶段判据与停手条件。
 1. 复制本目录（方法论与 `tools/` 无需改动）。
 2. 建立项目主事实文件（YAML、JSON 或受控配置文件三选一）：填项目元数据、型号/配置、指标、版本、编号、术语和证据索引；调用本库脚本时生成适配的配置 JSON。
 3. 指定参考模板（只读），依次跑 `build_docs.py`（核对 `manifest.json`）→ `consistency_check.py`（按 `scope` 对账）→ 渲染对拍 → 人工核图与签署。

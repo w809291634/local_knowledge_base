@@ -61,6 +61,8 @@ python tools/consistency_check.py --config <project-config.json>
 
 ## 5. 交付前多源收口（每轮必做）
 
+> 分级与登记方式见 `authoring-workflow-and-experience-index.md` §4.2（一致 / 不一致 / 单方独有 / 已定口径 + 逐行落点与反查）；本节讲判据。
+
 > 文档族内部一致不等于与产品事实一致。每项声明都应根据性质核对相应的受控来源：说明书、注意事项、技术要求、型号差异表、源码、硬件/BOM、图纸、风险文件、检验记录或临床/可用性证据。
 
 ### 5.1 按声明类型选择对照来源
