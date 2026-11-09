@@ -111,7 +111,9 @@ project/
 3. **推导过程要打印**：生成前打印「已存在轮次 / 本轮默认轮次 / 是否被环境变量覆盖」，让人能当场拦住。
 4. **已存在即拒写**：目标目录存在时拒绝写入；确需重建同一轮次要显式 `--force`，且先把旧目录改名备份。
 5. **同号自检**：闸门比对目录名轮次、文件名后缀、`manifest.doc_round` 三处，必须完全一致。
-6. **manifest 必登记**：`doc_round`、`template_version`（逐文档）、`software_version`、每份页数、
-   脚本版本、事实/模板/产物/配图/检查报告哈希。
+6. **manifest 必登记**：`doc_round`、`template_version`（逐文档）、`template_sha`（逐份基线件）、`software_version`、
+   每份页数、脚本版本、事实与说明书哈希（如 `facts_sha` / `ifu_sha`）、产物与配图哈希、各检查报告哈希、
+   `supersedes`（本版取代哪一版）、`entity_mode`（生产主体形态）、变更摘要。
+   检查报告本体落工作目录，manifest 只记路径与哈希，不必塞进交付目录。
 
 判据口径见 `pitfalls.md` §83（换项目要重设的项目级口径）与 §88（版本命名与默认轮次）。
