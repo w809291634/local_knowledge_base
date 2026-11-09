@@ -141,9 +141,12 @@ def make_node(spec, page_id, idx, theme, page_index):
                       border_width=1 if stroke else 0,
                       border_color=stroke or "#000000")
         if spec.get("goto"):
+            if spec["goto"] not in page_index:
+                raise SystemExit("[EEZ_GEN] 跳转目标不在 EEZ 页内：%r（h5_only 页不能当 goto 目标）"
+                                 % spec["goto"])
             obj["eventHandlers"].append({
                 "objID": oid(), "eventName": "CLICKED", "handlerType": "action",
-                "action": "nav_goto", "userData": page_index.get(spec["goto"], 0),
+                "action": "nav_goto", "userData": page_index[spec["goto"]],
             })
 
     elif kind == "switch":
