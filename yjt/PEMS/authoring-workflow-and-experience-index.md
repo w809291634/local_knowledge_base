@@ -32,7 +32,7 @@
 |---|---|
 | 1 事实生成 + manifest | S1、S4、S6 |
 | 2 一致性检查（按 scope 分组） | S8 |
-| 3 渲染与墨占比、3b 分页七项 | S7、S8 |
+| 3 渲染与墨占比、3b 分页键分档处置 | S7、S8 |
 | 4 人工核对图/签署/交叉引用/残留 | S5、S9 |
 | 5 Word 只读打开记页数 | S9 |
 | 6 三方收口 | S10 |
@@ -51,11 +51,15 @@
 5. **无证据不填实值**：签署人、测试人员、测试结果、日期、结论，未经注册人/受控记录不得代填。
 6. **不编数据**：来源缺失就留白并进待办，不从相近项目、案例或常识推断。
 7. **判据必须能失败**：跑不起来、缺依赖、拿不到中间产物一律非零退出，不许降级为弱判据后报通过（§58）。
-8. **新判据必做反向测试**：投一个已知坏样本必须命中，旧样本本版必须 0 命中。
-9. **修改走同源原语**（`tools/docx_ops.py`、`tools/para_ops.py`），项目里不写第二套分页/字体/表格修复。
+8. **新判据必做反向测试**：投一个已知坏样本必须命中并让流程失败；对已知好产物不得误报。两者缺一，判据就不算生效。
+9. **修改走同源原语**（`tools/docx_ops.py`、`tools/para_ops.py`、`tools/release_ops.py`）：调哪一条见 §10 对照表；
+   库里没有的六类（§10.1）才在项目里写，且两个项目重复写过的要提进库里。
 10. **汇报只讲可复现证据**：命令 + 实测数字 + 产物路径，没跑过的数字不写。
 
 ## 3. 阶段流水线
+
+**阶段不是单向的**：S8 与 S9 要跑成一圈（闸门 → 注入自测 → 修判据 → 复跑闸门），**最后一圈全绿才算数**；
+本轮新增或改动过判据、或沿用上一项目的脚本时，先做 S9 的注入自测再进 S8（`pitfalls.md` §83 的四处口径逐项重定）。
 
 ### S0 立项与资料冻结
 - 动作：收齐受控说明书、技术要求、代码/BOM/图纸、历史版本、模板与版号；列明缺什么。
@@ -77,7 +81,11 @@
 
 ### S3 结构核查（先结构后内容）
 - 动作：比对标题序列、目录形态、分节、表格骨架、图示位置与基线件是否一致。
-- 完成判据：标题文字序列与基线一致；各节页宽/方向 ⊆ 基线；目录域 begin/separate/end 配平。
+- 完成判据：**标题序列顺序保持**（`ops.check_heading_text_against_template(模板, 产物)` 的 `order_preserved` 必须为 True），
+  而 `template_only` / `output_only` 的差异**不要求为空**——标题随产品内容改写是常态（成熟件实测每份都有非零差异），
+  但每一条差异都必须逐条登记为「改写 / 删除 / 新增」并进生成记录或基线变更清单；各节页宽/方向 ⊆ 基线；
+  目录域健康 = `toc_diagnose` 的 `balance==0` 且 `toc_has_begin`；
+  页眉页脚版号在本档内唯一且等于本项目模板版号（首页眉/偶数眉/页脚各查一次，并与基线件对比，`pitfalls.md` §85）。
 - 该读：`cover-pagination-and-sections.md`、`docx-fields-and-toc-repair.md` §5/§9、`pitfalls.md` §79、§53、§65。
 - 停手条件：结构差异需要删章节或补章节 → 属于版号问题，回 S2 裁决。
 
@@ -89,36 +97,52 @@
 
 ### S5 配图
 - 动作：按章节需要画图（架构/流程/拓扑/硬件关系），图内文字字体与正文一致，走机器自检。
-- 完成判据：文本宽度预警为空；图有哈希与宽高比校验；文档内嵌图哈希与本项目图一致；必备图示不缺项。
+- 完成判据：文本宽度预警为空；图有哈希与宽高比校验；文档内嵌图哈希与本项目图一致；必备图示不缺项；
+  闸门有图片白名单与图题检查（图题只收真正引用图片部件的段，形状图例不算配图，`pitfalls.md` §69）。
 - 该读：`diagram-generation-and-figure-insertion.md`、`reference-document-format-and-diagram-requirements.md`、`pitfalls.md` §73、§74、§69（图片清理条件别挂在"要插图"上）。
 - 停手条件：图内文字机器读不到，需目检 → 交人工，不自行宣布"图正确"。
 
 ### S6 生成
-- 动作：只跑生成器，产物落新版本目录；`.doc` 转换/PDF/PNG/临时件一律进工作临时目录。
+- 动作：只跑生成器，产物落新版本目录；`.doc` 转换/PDF/PNG/临时件一律进工作临时目录；
+  同名版本目录确需重建时，先备份旧产物并记录改动归属，再显式允许覆盖。
 - 完成判据：生成日志打印每条槽位命中段号；ERRORS 为空；残留词全包扫描（document + 眉脚 + 文本框）0 命中；
-  输出目录按 `<族名>_V<版本号>` 命名且与 `manifest.json` 里的版本号一致。
+  输出目录按 `<族名>_V{n}` 命名，目录号、文件名后缀、`manifest.doc_round` 三处同号；默认轮次由扫描既有目录推导并打印出来，不写死在代码里（`iteration-and-versioning.md` §8~§9）；备份件可一键回退。
 - 该读：`one-pass-quality-gate.md` §4、`tools/build_docs.py`、`pitfalls.md` §35、§50、§64、§78。
 - 停手条件：目标目录已存在且非本轮重建 → 生成器必须拒写；需要覆盖时先取得明确授权。
 
 ### S7 收口（版式 / 分页 / 目录）
-- 动作：Word 刷新目录 → 版式收口 → 二次刷新 → 二次收口 → 导出 PDF → 按实测页同步目录页码 → 再导出。
-  这条顺序要先按本项目实测确认（哪几份有目录域、哪几份是静态目录），不照抄别项目脚本（`pitfalls.md` §83）。
-- 完成判据：分页七项全清；字体分区且正文小标题不挂标题样式；编号字形统一；封面独立成页且无空白页；
-  目录页码与渲染实测一致，且页码同步只跑一遍。
-- 该读：`font-and-style-normalization.md` §6~§10、`cover-pagination-and-sections.md` §8、`pitfalls.md` §36、§38~§42、§45~§49、§54~§59、§66、§83。
-- 停手条件：压页需要偏离正文基线的行距/缩进 → 不压，记为提示项交人工（§37）。
+- 动作：先回收上一轮残留的无头 Office 实例与 `~$` 锁 → Word 刷新目录 → 版式收口 → 二次刷新 → 二次收口 →
+  导出 PDF → 按实测页同步目录页码 → 再导出 → 再回收一次实例。
+  这条顺序要先按本项目实测确认（哪几份有目录域、哪几份是静态目录），不照抄别项目脚本（`pitfalls.md` §83）；
+  收口之后必须重算交付清单哈希，否则清单记的是改前的产物（§36）。
+- 完成判据：`tools/docx_ops.py:pagination_audit(doc, cover_texts=[...])` 的返回键要**分三类处置**，不得笼统要求"全部为空"：
+  - **缺陷键，必须为空**：`hard_page_breaks`、`stacked_breaks`、`redundant_breaks`、`keep_on_body`、`chapter_pad`、`outline_anomaly`；
+  - **形态位，只记录不阻断**：`toc_field`（True 只说明本文有 TOC 域，健康与否由 `toc_diagnose` 判）；
+  - **必须先分诊再定**：`numbered_not_in_tree`、`body_page_break` —— 成熟件实测会命中，两种成因要分开：
+    静态目录件的目录条目没挂 TOC 样式（真缺陷：Word 导航与页码同步都落不到位，改法是给条目段落挂 TOC 样式或改走域），
+    以及"目录"这类大标题段没有大纲级却带段前分页（改法是给它大纲级，或登记进与生成器同源的豁免表，§49）；
+    命中项要么修掉，要么逐条进豁免并写理由，禁止整键忽略。
+  字体分区且正文小标题不挂标题样式；编号字形统一；封面独立成页且无空白页；目录页码与渲染实测一致，且页码同步只跑一遍。
+- 该读：`font-and-style-normalization.md` §6~§10、`cover-pagination-and-sections.md` §8、
+  `docx-fields-and-toc-repair.md` §6、`pitfalls.md` §36、§38~§42、§45~§49、§54~§59、§66、§83、§86（判据键数与键义以原语为准，别照抄"七项/九项"这种旧口径）。
+- 停手条件：压页需要偏离正文基线的行距/缩进 → 不压，记为提示项交人工（§37）；无头实例反复起不来 → 换通道并记进档案（§44、§50）。
 
 ### S8 自动闸门与对账
-- 动作：内容闸门、版式闸门、对象模型审计、渲染墨占比分级、跨文档一致性对账，逐份产物跑。
-- 完成判据：三类报告齐且退出码为 0；对账表每行存「值 → 应命中文档 → 实测次数」，并跑反向"产物数字 → 来源"。
+- 动作：内容闸门、版式闸门、对象模型审计、渲染墨占比分级、跨文档一致性对账，逐份**交付物本身**跑（不读过程副本）。
+- 完成判据：三类报告齐且退出码为 0；对账表每行存「值 → 应命中文档 → 实测次数」，并跑反向"产物数字 → 来源"；
+  **生成器与闸门共用同一份判据与豁免表**，一边豁免一边不豁免即判为缺陷；本轮**新增或改动过的判据**必须已带回 S9 的注入实验结论。
 - 该读：`dod-checklist.md` A~H 组、`consistency-gate.md` §5、`one-pass-quality-gate.md` §6、`pitfalls.md` §68、§71、§72、§75、§83。
-- 停手条件：任一判据被降级、跳过或改成"只打印提醒" → 本次不得报通过。
+- 停手条件：任一判据被降级、跳过或改成"只打印提醒" → 本次不得报通过；判据刚写出来还没被坏样本咬过 → 不得当作已通过。
 
-### S9 反向测试与人工复核
-- 动作：复制产物做注入实验（旧项目词、代填结果列、自加措辞、密码/敏感串），确认逐项命中；再逐页目检渲染。
-- 完成判据：注入样本全部命中且退出码非 0，测试副本已删除；人工复核清单逐条有结论。
-- 该读：`dod-checklist.md`、`one-pass-quality-gate.md` §7、`pitfalls.md` §83。
-- 停手条件：图内文字、观感、签署状态只能人判 → 明确写"待人核"，并给出可自跑的验证入口。
+### S9 人工复核与判据反向测试
+- 动作：①逐页目检渲染产物，并单独目检配图 PNG（机器读不到图内文字）；②用 Word 只读打开每一份产物并记录页数
+  （LibreOffice 与 python-docx 都不报的损坏，Word 会报）；③做判据反向测试——复制产物注入
+  旧项目词、敏感串、代填结果列、自加措辞，确认逐项命中且退出码非零，随后删除副本；④上一轮报告过的缺陷重新核对一遍。
+- 完成判据：人工复核清单逐条有结论；每份页数已记录并核账（新页数＝旧页数−本轮消除的空白页数），页数写进 manifest 或生成记录；
+  注入样本全部命中，未命中的判据当轮就补上并复跑 S8（`pitfalls.md` §48、§57、§58、§68、§83）。
+- 该读：`dod-checklist.md`、`one-pass-quality-gate.md` §7、`diagram-generation-and-figure-insertion.md`、`pitfalls.md` §83。
+- 停手条件：图内文字、观感、签署状态只能人判 → 明确写"待人核"，并给出用户自己能跑的验证入口；
+  反向测试没命中就是判据缺失，禁止改用更宽阈值放行。
 
 ### S10 三方收口与归档
 - 动作：说明书 / 代码 / 注意事项逐参数对账，冲突分级为「一致 / 不一致 / 单方独有 / 已定口径」；重算交付清单哈希；写版本说明与待办。
@@ -128,7 +152,8 @@
 
 ## 4. 交付物最小集
 
-新版本目录里必须有：全部产物文档、`manifest.json`（配置/事实/模板/产物/图/报告哈希）、生成记录（本轮改了什么、为什么、检查结果）、
+新版本目录里必须有：全部产物文档、`manifest.json`（模板哈希、事实哈希、脚本版本、输出哈希、文件页数、
+配图哈希、各检查报告哈希与变更摘要）、生成记录（本轮改了什么、为什么、检查结果）、
 闸门报告（内容 + 版式 + 对象模型 + 渲染）、三方对账表、待办与裁决清单。缺任一项不算交付完成。
 
 ### 4.1 生成记录骨架
@@ -148,7 +173,7 @@
 ### 4.2 三方对账表骨架（说明书 / 代码 / 历史受控文档）
 
 ```
-字段 | 说明书值 | 代码值 | 老文档值 | 采用值 | 依据来源 | 分级 | 落点文档与段号
+字段 | 说明书值 | 代码值 | 老文档值 | 采用值 | 依据来源 | 分级 | 落点文档与位置（段号或表号）
 分级 = 一致 / 不一致 / 单方独有 / 已定口径
 ```
 
@@ -173,7 +198,7 @@
 ```
 目标：产出 <文档族> 的第 <N> 版，目录 <输出目录>，不覆盖历史。
 口径：事实只取 <主事实文件>；模板版号 <各份文档版号>；未确认的字段留白并进待办。
-验收：S3 结构判据、S4 槽位命中数、S6 残留 0、S7 分页七项、S8 三报告退出码 0、S9 反向测试命中、S10 三方冲突清零。
+验收：S3 结构判据、S4 槽位命中数、S6 残留 0、S7 分页键分档处置、S8 四报告退出码 0、S9 反向测试命中、S10 三方冲突清零。
 约束：模板与源文档只读；无证据不填实值；不编数据；公共处理只调用 <工具库原语>；不许降级判据。
 验证归档：每条判据附可复现命令与实测输出；写生成记录 + manifest；未决项列成裁决清单交回。
 ```
@@ -189,6 +214,7 @@
 | 中文页被判成空白页 | `pitfalls.md` §41、§77（渲染墨占比分级，别数文字） |
 | 目录刷新后指令裸露、超链接失效 | `docx-fields-and-toc-repair.md` §9、`pitfalls.md` §47 |
 | 目录页码与实际页不一致 | `pitfalls.md` §54、§33 |
+| 同一文档页眉出现两个模板版号（首页眉留旧版号） | `pitfalls.md` §85、`dod-checklist.md` B12 |
 | 正文里混进标题样式段（两条链路都放过） | `pitfalls.md` §67、§21、§34 |
 | 标题字号忽大忽小、封面大标题被压成正文 | `font-and-style-normalization.md` §10、`pitfalls.md` §55、§66 |
 | 表格左边框像丢了 / 列宽超出版心 / 刷新后框线变细 | `pitfalls.md` §51、§76、§80、§60 |
@@ -201,6 +227,7 @@
 | 校验器全绿，改的却不是交付物本身 | `pitfalls.md` §75 |
 | 架构图其实不是图片，是形状加硬排版文字 | `pitfalls.md` §73 |
 | 换项目沿用上一套脚本，判据假绿或假红 | `pitfalls.md` §83 |
+| 目录名把模板版号/主体拼进轮次；默认版本落后好几轮；文件名与目录不同号 | `iteration-and-versioning.md` §8~§9、`pitfalls.md` §88 |
 | 新版模板被按旧骨架补回已删章节 | `iteration-and-versioning.md` §7、`template-baselines.md` |
 | 要求"结果/人员/日期"照旧文档填 | `one-pass-quality-gate.md` §5、`generality-boundaries-and-precedence.md` §四 |
 | 说明书没写、只有代码或历史文档有 | `consistency-gate.md` §5（三方收口分级与裁决记录） |
@@ -221,3 +248,41 @@
 覆盖模板或历史版本；把上一项目事实写进通用经验库；无证据填实值或写"通过"；正文出现过程话术；
 判据降级为提醒；未做反向测试就宣布新门禁生效；只改 docx 不看渲染；跳过人工目检直接送检；
 强制结束用户正在使用的 Word/WPS/LibreOffice 实例。
+
+## 10. 判据 → 可调原语对照（签名均在本机库内实测）
+
+`sys.path.insert(0, <库根>/yjt/PEMS/tools)` 后直接调用；**禁止在项目中另写同功能实现**（§57 要求新判据入库后回扫旧脚本）。
+
+| 阶段判据 | 原语与调用要点 |
+|---|---|
+| S3 标题文字序列 | `ops.heading_text_sequence(doc)`、`ops.check_heading_text_against_template(模板, 产物)` |
+| S3 各节页宽/方向 | `ops.page_size_report(doc)`（gate 侧比 ⊆ 模板） |
+| S3/S7 目录域健康 | `ops.toc_diagnose(doc)` → `applicable / toc_instr / balance / toc_has_begin`；修复用 `ops.close_toc_field` / `ops.fix_stray_toc_instruction` / `ops.normalize_toc_page_break` |
+| S7 域刷新 | `ops.refresh_toc_via_word(...)`（Word 通道，配 §44/§50 的实例回收与退避重试） |
+| S7 分页与标题树 | `ops.pagination_audit(doc, cover_texts=[封面文档名])`，**按 S7 的三类键分档处置**（缺陷键清空 / 形态位只记录 / 分诊键修或豁免）；修复只走 `ops.pagination_repair(doc, cover_texts, apply=[本轮动作])`；共用判据 `ops.chapter_pad_map` / `ops.sect_breaks_page_el` |
+| S7 字体分区 | `ops.unify_document_fonts(doc, east_asia, latin, body_sz, table_sz, caption_sz, styles, cover_first_cell)`；核查 `ops.non_baseline_font_runs(doc, baseline=(...))`（含表格段，私用区 run 除外） |
+| S7 标题字号族内统一 | `ops.heading_format_profile_from(参照)` → `ops.normalize_heading_format(...)`（改样式默认值，护栏见 font-and-style §10） |
+| S7 编号字形 | `ops.heading_numbering_mechanisms` / `ops.numbering_glyph_audit(doc, first_cell_text='文件编号', levels=(0,1,2))` / `ops.normalize_numbering_glyphs` |
+| S7 表格几何与六向框线 | `ops.normalize_table_geometry(doc, ..., apply=('indent','float','grid','borders'), grid_overrides=...)` + `ops.audit_table_geometry` + `ops.set_table_borders_six_way` |
+| S7 封面留白 | `ops.set_cover_spacers(doc, n=3, first_cell_text='文件编号')`（幂等：先 `ops.trim_cover_spacers` 再补） |
+| S7 正文段版式与重复段 | `po.effective_para_format / para_format_sig / align_para_formats / dedupe_paragraphs`；判定 `po.dup_kind`（exact/near/same-lead/contained）与 `find_duplicate_paragraphs(doc, allow=[(A,B)])` |
+| S4/S8 "文字正文·样式标题" | `ops.new_body_paragraph()`、`ops.demote_paragraph_to_body()`、`ops.body_paragraphs_with_heading_style()` |
+| S5 图组核对 | `ops.verify_figures(doc, expected_pngs)` → `(ok, rows)`：数量+顺序、二进制哈希、显示宽高比（VML 图只核二进制） |
+| S3/S8 眉脚残留与版号指纹 | `ops.header_footer_text_audit(doc, allow=[...])`（返回各节页眉页脚文本，配合 `apply_xml_substitutions` 写受控值） |
+| S6/S8 全包文本与残留词 | `ro.package_text(path)` → `(全文, {部件:文本})`；命中定位用 `ro.find_phrase_parts(path, 词表)`；XML 槽位替换用 `ro.apply_xml_substitutions(path, [(旧,新)])` |
+| S8/S10 交付清单 | `ro.sha256_file` / `ro.write_manifest(path, dict)` / `ro.load_structured` / `ro.now_iso` |
+| S7/S8 渲染判据 | `ops.page_ink_coverage(pdf_path, dpi=50, band=0.08, cutoff=200)` + `ops.grade_pages_by_ink(cov, blank=0.15, thin=0.8)` |
+
+### 10.1 库里没有原语、必须项目侧实现的六类
+
+同标签多点位取值一致、型号集合或"无型号串"判据、结果列留空/白名单（含豁免列必须填齐）、
+必备图示清单核对、页数核账（取渲染产物或 Word 统计，非 docx 自数）、槽位命中数统计。
+
+这六类要在项目里写成可复现判据并做反向测试；同一功能两个项目各写一套时，把多数派版本提进
+`tools/` 或写进本表，避免下一轮又自写第三套（§57、§83）。
+
+### 10.2 已知的重复实现（下一轮重建时收敛）
+
+- 内容闸门自写全包文本扫描 → 改调 `ro.package_text` / `ro.find_phrase_parts`。
+- 内容闸门自写配图哈希对比 → 改调 `ops.verify_figures`。
+- 版式收口脚本在项目侧复制一份 → 保留项目专属顺序，公共动作全部走 `tools/` 原语，两处漂移即缺陷。

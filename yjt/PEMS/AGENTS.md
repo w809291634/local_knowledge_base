@@ -18,7 +18,7 @@
 2. **格式靠继承**：以参考文档 `.docx` 为模板「就地替换」，**禁止从零拼 Word**
    （会丢封面大标题、浮动封面表、目录域、页眉页脚、分节）。
 3. **封面独立成页**；封面后不得出现空白页。
-4. **输出到新版本目录**（`*_V{n}/`），永不覆盖源文档与历史版本。
+4. **输出到新版本目录**（`<族名>_V{n}/`），永不覆盖源文档与历史版本。目录名只放族名与轮次，模板版号与交付主体另立一轴；默认轮次由扫描既有目录推导，不写死在代码里（细则见 `iteration-and-versioning.md` §8~§9，坑见 `pitfalls.md` §88）。
 5. **相同代码只写一份**：公共处理封装在 `tools/docx_ops.py`，项目只提供配置。
 6. **三方收口**：每轮输出文档后，必须核对 **说明书 / 代码 / 注意事项** 三者一致性，
    冲突未清零不得发布（规则见 `consistency-gate.md` 第 5 节）。
@@ -33,9 +33,9 @@
 3) soffice --headless --convert-to pdf --outdir out "某份.docx"   # 一次只转一份
    → 逐页 page_ink_coverage + grade_pages_by_ink：封面独立页 + 无空白页 + 页眉编号正确
      （不要用抽文字字数判空白页：中文 PDF 缺 ToUnicode 会双向误判，见 pitfalls.md §41）
-3b) pagination_audit(doc, cover_texts=[封面文档名]) 七项必须全清；需修复时只用同源的
-     pagination_repair(..., apply=[本轮已确认的动作])，改完复跑 audit 并重渲染核账页数
-     （流程见 cover-pagination-and-sections.md §8，终检项见 dod-checklist.md F 组）
+3b) pagination_audit(doc, cover_texts=[封面文档名]) 的**返回键必须全部为空**（项数随原语演进，以函数返回键为准，当前 9 项）；
+    需修复时只用同源的 pagination_repair(..., apply=[本轮已确认的动作])，改完复跑 audit 并重渲染核账页数
+    （流程见 cover-pagination-and-sections.md §8，终检项见 dod-checklist.md F 组，阶段编排见 authoring-workflow-and-experience-index.md S7）
 4) 人工核对：图（图文一致）、签署栏、交叉引用文件名、他项目残留
 5) **用 Word 只读打开每一份产物并记录页数**（LibreOffice 与 python-docx 都不报的损坏，Word 会报；
    典型诱因见 `pitfalls.md` 第 6/7 节）
