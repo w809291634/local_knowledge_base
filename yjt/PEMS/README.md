@@ -8,7 +8,7 @@
 | 文件 | 内容 |
 |---|---|
 | `AGENTS.md` | **规则入口**（工具无关，AI 工具先读这个） |
-| `authoring-workflow-and-experience-index.md` | **编写流程总编排**：S0~S10 阶段（动作/完成判据/该读条目/停手条件）、十条铁律、交付物最小集、续接与会话纪律、开工六项资料清单（3 项必填、3 项可选）与任务提示词、症状→先读哪一条反查表、机器环境占位符、一票否决清单 |
+| `authoring-workflow-and-experience-index.md` | **编写流程总编排**：S0~S10 阶段（动作/完成判据/该读条目/停手条件）、十条铁律、交付物最小集、续接与会话纪律、开工六项资料清单（3 项必填、3 项可选）、参考资料优先级与任务提示词、症状→先读哪一条反查表、机器环境占位符、一票否决清单 |
 | `template-doc-methodology.md` | 总纲：十条通用原则 + 适用边界 |
 | `template-inheritance-in-place-replace.md` | 核心方法：以参考文档「就地替换」 |
 | `template-format-audit-2026-10.md` | 九份模板的格式符合性审计：逐份结论表、27 张越版心表、通道差异（LO 造空白页/静默失败）、保留·生成时修·待裁决三分类 |
@@ -47,7 +47,7 @@
 
 ## 质量与格式补充
 
-- generality-boundaries-and-precedence.md：通用规则边界、证据优先级和案例隔离要求。
+- generality-boundaries-and-precedence.md：通用规则边界、参考资料优先级（补充注意事项 > 技术要求 > 程序源码 > 产品说明书）、声明证据边界和案例隔离要求。
 
 - `one-pass-quality-gate.md`：事实基线、自动质量闸门、证据/签署状态与发布归档。
 - `reference-format-profile-template.md`：项目模板格式档案的空白文字模板。
