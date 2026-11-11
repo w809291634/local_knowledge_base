@@ -83,7 +83,7 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
 | `cover-pagination-and-sections.md` | 封面/分页/分节三大风险点 |
 | `consistency-gate.md` | 多文档一致性对账 + 说明书/代码/注意事项**三方收口** |
 | `iteration-and-versioning.md` | 迭代与版本管理 |
-| `multi-ai-tool-adaptation.md` | 一套内容适配多 AI 工具 |
+| `multi-ai-tool-adaptation.md` | 推荐 DeepSeek Flash、Qwen Flash、Codex 等；统一规则与跨工具适配 |
 | `pitfalls.md` | 环境/格式坑 |
 | `dod-checklist.md` | 交付质量清单（DoD） |
 | `font-and-style-normalization.md` | 字体字号统一（正文/标题/表格/图题分区，样式默认值与配图字体一起改） |
