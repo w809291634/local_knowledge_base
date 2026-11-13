@@ -57,7 +57,7 @@
 | 正文 | 见 `font-and-style-normalization.md` §6~§9、`AGENTS.md`「段落基线补充」、`dod-checklist.md` 45d/45e/45j、`pitfalls.md` §90/§95 |
 | 字体颜色 | 见 `font-and-style-normalization.md` §6/§7、`template-baseline-rd052-2.1.md` §5（红字转黑）、`one-pass-quality-gate.md` §5（批注与占位残留） |
 | 表格 | 见 `dod-checklist.md` G 组 40~43 与 13b、`pitfalls.md` §51/§96；几何与边框原语见 `tools/docx_ops.py` |
-| 单元格对齐 | 见 `dod-checklist.md` 13b、`pitfalls.md` §95（段落角色分类）、`one-pass-quality-gate.md` §9（好/坏样例）；逐份默认值由项目格式档案登记 |
+| 单元格对齐 | 见 `dod-checklist.md` 13b、`pitfalls.md` §95（段落角色分类）与 §83（判据反向测试）；逐份默认值由项目格式档案登记 |
 | 页眉页脚 | 见 `dod-checklist.md` 12、`pitfalls.md` §85、`docx-fields-and-toc-repair.md` §6；扫描原语见 `tools/docx_ops.py:header_footer_text_audit` |
 | 分页 | 见 `cover-pagination-and-sections.md` §8、`dod-checklist.md` F 组 32~39、`AGENTS.md`「分页与标题树的四条追加纪律」 |
 | 图示图题 | 见本文件「四、必备图示」、`diagram-generation-and-figure-insertion.md`、`dod-checklist.md` 14/14b/14c |

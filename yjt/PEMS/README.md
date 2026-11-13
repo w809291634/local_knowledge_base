@@ -9,7 +9,6 @@
 |---|---|
 | `AGENTS.md` | **规则入口**（工具无关，AI 工具先读这个） |
 | `authoring-workflow-and-experience-index.md` | **编写流程总编排**：S0~S10 阶段（动作/完成判据/该读条目/停手条件）、十条铁律、交付物最小集、续接与会话纪律、开工六项资料清单（3 项必填、3 项可选）、参考资料优先级、§1.3 严格格式执行及阶段证据、任务提示词、症状→先读哪一条反查表、机器环境占位符、一票否决清单 |
-| `template-doc-methodology.md` | 总纲：十条通用原则 + 适用边界 |
 | `template-inheritance-in-place-replace.md` | 核心方法：以参考文档「就地替换」 |
 | `template-format-audit-2026-10.md` | 九份模板的格式符合性审计：逐份结论表、27 张越版心表、通道差异（LO 造空白页/静默失败）、保留·生成时修·待裁决三分类 |
 | `template-baselines.md` | **公司模板版式基线族入口**：九份文档的版号总表（页眉原值、WPS/Word 页数、目录形态、是否入库）、零残留入库判定、跨程序页数判据口径、建档方法 |
@@ -21,12 +20,10 @@
 | `docx-fields-and-toc-repair.md` | 域（Field）与目录修复：TOC 坏的三形态、诊断、补壳、"更新目录"会拍平域壳的教训 |
 | `consistency-gate.md` | 多文档同数据一致性对账 + 说明书/代码/注意事项三方收口 |
 | `iteration-and-versioning.md` | 迭代机制与版本管理 |
-| `multi-ai-tool-adaptation.md` | 推荐 DeepSeek Flash、Qwen Flash、Codex 等；统一规则与跨工具适配 |
 | `pitfalls.md` | 环境与格式坑（含"Word 判文件损坏"三坑、文本框节点级替换；§38–§42 分页控制属性误用、双重分页空白页、布尔属性 `w:val`、中文 PDF 空白页判据、标题/图题判据收紧；§45–§50 分页时序与形态、空段三种命运、域平衡与页数核账、闸门误报、无头实例瞬时失败；§51 表格左边框四类根因与列宽污染、§52 封面留白统一、§53 标题编号机制三态混用；§54 只有大标题分页与目录页码同步、§55 标题分档/零缩进/封面大标题被压、§56 空白页另外三种形态；§57 新判据入库后回扫旧脚本、§58 判据降级必须失败退出、§59 补空段时序与显式写零；§60 用户要求全表带边框时规则 D 让位、§61 连续回车顶页造成的空白块、§62 补空格正则要按最长合法前缀；§63 封面居中偏上的可行做法、§64 lxml 真值与配置解析器键模式两类静默失效；§65 自动编号的字形藏在 numbering.xml 的 lvl/rPr、§66 标题统一要量到渲染层（逐字 bbox 三条判据）、§67 插入正文段不要克隆供体（"文字正文·样式标题"两条链路都不管）、§68 闸门全绿不等于文档没错（正文字号/标题间距/表头底纹/眉脚残留/编号字形五类盲区，生效值审计分三层）、§69 改完反而更糟的三个坑（按索引批量删元素自我移位、点名替换的时序与幂等、图片清理挂在"要插图"条件上）、§70 把"留空"改成"实值"引出的三类新缺陷（否定说明命中自家禁用词、台账值混解释拼出重复短语、带括注组合值被说两遍；禁用词表与台账要成对更新）、§71 注册人要求"结果列填结论"时判据改白名单而非整条关闭（列名从表头解析＋豁免列必须填齐＋清空白名单必须全部命中）、§72 对账表的每个 ✅ 必须可被脚本反查（正向来源→产物＋反向产物数字→来源双向对账，有意不写也要占行留理由）；§73 模板里的架构图可能不是图（VML 形状 + 正文段缩进硬排版：残留要扫正文段、图区动不得、换项目不能靠替换图片）；§74 数图不能只数 `inline_shapes`（VML 图不计，WPS 稿会判成零图，判据要 media 与引用双口径）；§75 校验器必须读交付物本身（读过程副本会全绿但绿的是副本；换版先重跑判据再改档案；哈希要现场核对）；§76 模板自带表格普遍略超版心（越界量要算 tblInd 与所在节版心，基线件先存底，fixed 与 autofit 分开列）；§77 墨占比判据要按页型分级，LibreOffice 会静默转不出某些 docx（拿不到 PDF 就失败退出并换通道）） |
 | `dod-checklist.md` | 交付质量清单（Definition of Done）；F 组为分页与标题树终检 7 条 |
 | `font-and-style-normalization.md` | 字体字号统一：正文/标题/表格/图题分区，样式默认值与配图字体一起改；§10 文档族内标题字号统一（以参照文档取基线、逐级别多数派、四条护栏） |
 | `diagram-generation-and-figure-insertion.md` | 配图生成与 Word 插图替换（绘图三原则、五个插图坑、自检与校验） |
-| `case-study-anonymized.md` | 匿名化落地实例（仅保留方法，不是项目事实来源） |
 | `tools/docx_ops.py` | 通用原语库（统一封装共用函数；分页/标题树闸门 `pagination_audit` 与同源修复 `pagination_repair`（共用判据 `chapter_pad_map` / `sect_breaks_page_el`）、渲染判据 `page_ink_coverage` / `grade_pages_by_ink`、样式链生效级别 `effective_outline`、表格版式体检与修复 `audit_table_geometry` / `normalize_table_geometry`、封面留白统一 `set_cover_spacers`、标题字号族内统一 `heading_format_profile_from` / `normalize_heading_format` / 跨档闸门 `check_heading_tiers`、编号机制审计 `heading_numbering_mechanisms`、正文段原语 `new_body_paragraph` / `demote_paragraph_to_body` 与"文字正文·样式标题"闸门 `body_paragraphs_with_heading_style`、编号字形 `normalize_numbering_glyphs` / `numbering_glyph_audit`、表头底纹 `unify_table_header_shading`、标题间距 `normalize_heading_spacing`、眉脚残留 `header_footer_text_audit`） |
 | `tools/para_ops.py` | 段落级原语：重复段判据（四形态）、生效版式比对与锚点对齐、承接顺序 |
 | `tools/fig_tools.py` | 配图绘制原语（框图/流程图/拓扑图；1 单位=1 英寸、边界精确、箭头端点自动算） |

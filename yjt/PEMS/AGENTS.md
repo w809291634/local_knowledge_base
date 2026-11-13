@@ -76,7 +76,6 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
 | 文件 | 内容 |
 |---|---|
 | `authoring-workflow-and-experience-index.md` | **编写流程总编排**：S0~S10 每阶段的动作/完成判据/该读条目/停手条件、十条铁律、交付物最小集、续接纪律、开工六项资料清单与任务提示词、症状反查索引、机器环境占位符、一票否决清单 |
-| `template-doc-methodology.md` | 总纲：十条通用原则 |
 | `template-inheritance-in-place-replace.md` | 核心方法：就地替换 |
 | `template-baselines.md` | 公司模板版式基线族入口：模板库**九份**的版号总表（交付族为**八份**、不含 RD-057，见 `authoring-workflow-and-experience-index.md` S2）、两档入库判定、跨程序页数口径、建档方法 |
 | `template-format-audit-2026-10.md` | 模板自身的格式符合性审计（哪些是模板缺陷要在生成时修、哪些是原样保留、哪些要注册人裁决） |
@@ -86,12 +85,10 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
 | `cover-pagination-and-sections.md` | 封面/分页/分节三大风险点 |
 | `consistency-gate.md` | 多文档一致性对账 + 说明书/代码/注意事项**三方收口** |
 | `iteration-and-versioning.md` | 迭代与版本管理 |
-| `multi-ai-tool-adaptation.md` | 推荐 DeepSeek Flash、Qwen Flash、Codex 等；统一规则与跨工具适配 |
 | `pitfalls.md` | 环境/格式坑 |
 | `dod-checklist.md` | 交付质量清单（DoD） |
 | `font-and-style-normalization.md` | 字体字号统一（正文/标题/表格/图题分区，样式默认值与配图字体一起改） |
 | `diagram-generation-and-figure-insertion.md` | 配图生成与插图替换（绘图三原则、插图五坑、自检与校验） |
-| `case-study-anonymized.md` | 落地实例（含项目数据） |
 | `tools/docx_ops.py` | 通用原语库（统一封装，跨项目复用；标题文字一致性 `heading_text_sequence` / `check_heading_text_against_template`、字体统一判据 `non_baseline_font_runs`（含表格内段落，私用区 run 除外）） |
 | `tools/fig_tools.py` | 配图绘制原语（框图/流程图；边界精确、箭头端点自动算） |
 | `tools/build_docs.py` / `config.example.json` | 配置驱动的生成入口 |
