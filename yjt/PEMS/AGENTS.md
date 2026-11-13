@@ -33,7 +33,7 @@
 
 PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控修正编写，并在全过程落实检查；字体统一、脚本成功或 PDF 可导出均不足以证明格式合格。流程的必做动作与证据见 `yjt/PEMS/authoring-workflow-and-experience-index.md` §1.3、S2～S10，验收逐项对应 `yjt/PEMS/dod-checklist.md` B/F/G/H 组。
 
-- **格式要求的索引入口是 `yjt/PEMS/reference-document-format-and-diagram-requirements.md`**（2026-11-12 起）：第六节按分类引用库内既有条款，**引用处即真值来源**，不重新定规则、不重复登记数值；第七节「封面格式要求」为已详细化条文。其他文件里的「按本轮基线／按已确认基线／按项目情况调整」等表述，在其已确认类别范围内仍按对应专题条款执行。
+- **格式要求的主文件是 `yjt/PEMS/reference-document-format-and-diagram-requirements.md`**（2026-11-12 起登记，2026-11-13 起按用户要求统一迁入专题条文）：第六节按分类引用库内既有条款，**引用处即真值来源**，不重新定规则、不重复登记数值；第七节「封面格式要求」为已详细化条文；第八节起为全文迁入的专题格式条文（已迁入：字体与版式），原专题文件已删除（迁入前全文另存归档）。其他文件里的「按本轮基线／按已确认基线／按项目情况调整」等表述，在其已确认类别范围内仍按对应专题条款执行。
 
 - 开工冻结各文档的格式基线；保留封面、目录、分节、页眉页脚、编号、表格结构及图片定位。新增内容仍按该基线排版，不以 AI 审美或方便导出为由另造格式。
 - 结构修复前保存副本并记录已确认动作；渲染通道失败不等于模板结构不可用，不得为使导出成功直接删分节、合并所有节或重建眉脚。确有结构变更需要时登记依据和影响；已有明确授权可直接复用，不逐阶段索取批准。
@@ -81,13 +81,12 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
 | `template-format-audit-2026-10.md` | 模板自身的格式符合性审计（哪些是模板缺陷要在生成时修、哪些是原样保留、哪些要注册人裁决） |
 | `templates/<版号>/<件名>_基线.md` | 与基线件同目录的变更清单：逐条列出删除/替换/改写/保留的原文、位置与复核判据；`template-baseline-deletions.md` 是这些清单的总表与指针 |
 | `template-baseline-rdXXX-<版号>.md` + `templates/<版号>/*.docx` | 各文档各版号的独立基线档案与基线件；一份只描述一个版号，判据互不通用；不得按旧版骨架补回新版已删除的章节、目录或表格 |
-| `reference-document-format-and-diagram-requirements.md` | **格式要求索引入口**：格式深度、必备图示、全页验收；第六节按分类引用库内既有条款（不重复定规则），第七节为封面详细条文 |
+| `reference-document-format-and-diagram-requirements.md` | **格式要求主文件**：格式深度、必备图示、全页验收；第六节分类索引、第七节封面详细条文、第八节起统一迁入的专题条文 |
 | `cover-pagination-and-sections.md` | 封面/分页/分节三大风险点 |
 | `consistency-gate.md` | 多文档一致性对账 + 说明书/代码/注意事项**三方收口** |
 | `iteration-and-versioning.md` | 迭代与版本管理 |
 | `pitfalls.md` | 环境/格式坑 |
 | `dod-checklist.md` | 交付质量清单（DoD） |
-| `font-and-style-normalization.md` | 字体字号统一（正文/标题/表格/图题分区，样式默认值与配图字体一起改） |
 | `diagram-generation-and-figure-insertion.md` | 配图生成与插图替换（绘图三原则、插图五坑、自检与校验） |
 | `tools/docx_ops.py` | 通用原语库（统一封装，跨项目复用；标题文字一致性 `heading_text_sequence` / `check_heading_text_against_template`、字体统一判据 `non_baseline_font_runs`（含表格内段落，私用区 run 除外）） |
 | `tools/fig_tools.py` | 配图绘制原语（框图/流程图；边界精确、箭头端点自动算） |
@@ -98,7 +97,7 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
 ## 环境
 
 - Python 3 + `python-docx`；`.doc` 转换需 `pywin32`（Word 或 WPS）。
-- 配图需 `matplotlib`（中文字体用 SimHei/Microsoft YaHei；**文档正文统一宋体时，图内也要改用 SimSun 重绘**，否则一眼看出不统一，见 `font-and-style-normalization.md`）。
+- 配图需 `matplotlib`（中文字体用 SimHei/Microsoft YaHei；**文档正文统一宋体时，图内也要改用 SimSun 重绘**，否则一眼看出不统一，见 `reference-document-format-and-diagram-requirements.md` 第八节）。
 - 渲染校验用 LibreOffice（`soffice --headless`）。
 
 ## 质量闸门补充（2026-10-14）
@@ -112,7 +111,7 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
 - **字体基线要"分区 + 二遍"**：正文/表格/图题各有字号档，标题与封面只统一字体不改字号；
   字体统一必须在**目录刷新之后**再跑一遍（Word 保存会抹掉显式 `rFonts` 与等价样式字号）。
   覆盖正文、表格单元格、空 run、样式默认值四处，配图回绘图脚本换字体重绘。
-  见 `font-and-style-normalization.md` §6/§7 与 `tools/docx_ops.py:unify_document_fonts`。
+  见 `reference-document-format-and-diagram-requirements.md` 第八节 §6/§7 与 `tools/docx_ops.py:unify_document_fonts`。
 - 承接旧稿做块对齐时：空段先剔除、封面区与目录域禁止插入、刷新后比对目录条目数，
   超阈值还原备份（`pitfalls.md` §11/§12）。
 - **承接与槽位是两条写入轨道，必须互相查重**：写前用"本轮正文池"拦承接／插入，写后全量扫
@@ -120,7 +119,7 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
   两段都是模板原样时只报不删，去重前确认独有事实已并入保留段（`pitfalls.md` §16）。
 - **段落版式按"生效版式"对齐**：本轮新写段以就近模板段为锚点，先双向对齐 `pStyle` 再抄其直接
   pPr；只读段落 pPr、用多数派或互相参照都会误伤模板（`pitfalls.md` §18、
-  `font-and-style-normalization.md` §8）。闸门两条：无重复正文段、本轮正文段版式与锚点一致。
+  `reference-document-format-and-diagram-requirements.md` 第八节 §8）。闸门两条：无重复正文段、本轮正文段版式与锚点一致。
 - 同锚点多段插入必须按顺序 `append`；闸门校验承接段先后与来源版一致（`pitfalls.md` §17）。
 - 渲染复用只在"PDF 不比 docx 旧"时成立；页码补丁必须在渲染之后跑（`pitfalls.md` §19）。
 - 详细规则见 `one-pass-quality-gate.md`、`reference-format-profile-template.md`、`reference-document-format-and-diagram-requirements.md` 和 `diagram-generation-and-figure-insertion.md`。
@@ -135,7 +134,7 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
 
 - **正文段落统一要"全量套用基线"**，不是只补齐本轮新写段：模板自带段的行距/缩进/对齐本身就不一致。
   基线写进配置（首行缩进字符数、左右缩进、行距、对齐、正文样式），生成末尾先删后写全量套用；
-  排除项与版式比对共用同一判据函数。见 `font-and-style-normalization.md` §9、`pitfalls.md` §20。
+  排除项与版式比对共用同一判据函数。见 `reference-document-format-and-diagram-requirements.md` 第八节 §9、`pitfalls.md` §20。
 - 标题判据必须含**纯文本编号形态**（`1.1 名称`／`第X章`），只按整段加粗会漏半粗体标题，
   漏了就被加上正文缩进（`pitfalls.md` §21）。
 - 断句合并用配置显式声明（`merge_paras`），启发式只做扫描报告；补标点的整句替换必须排在合并之后
@@ -185,7 +184,7 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
   四条硬护栏：只动封面表之后的段落（**封面大标题也带 outlineLvl=0，不排除会被一起压成正文号**）、
   跳过目录域内段落、跳过表内段落、引导句降级而不是套标题格式；同时改 `Heading N` 样式默认值，
   否则 Word 保存会按样式回涨。终检：每档每级只剩一种取值 + 封面字号回读等于改前值 + 页数与空白页复测。
-  见 `font-and-style-normalization.md` §10、`dod-checklist.md` H 组。
+  见 `reference-document-format-and-diagram-requirements.md` 第八节 §10、`dod-checklist.md` H 组。
 - 上述全部判据已封装为一条原语，交付时直接调用，不要另写：
   `tools/docx_ops.py:pagination_audit(doc, cover_texts=[...])` 返回 `hard_page_breaks` /
   `stacked_breaks` / `body_page_break` / `keep_on_body` / `chapter_pad` / `outline_anomaly` /
@@ -278,6 +277,6 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
 - **页眉页脚是独立残留槽位**：生成器显式遍历各节 header/footer 做词替换（用跳过含域段落的原语），
   残留扫描覆盖全包 `word/*.xml`。§35。
 - **版式收口排在 Word 刷新目录之后**，收口之后**重算交付清单哈希**（清单—产物—检查三者同代）。§36 /
-  `font-and-style-normalization.md` §6。
+  `reference-document-format-and-diagram-requirements.md` 第八节 §6。
 - **渲染判据分级**：无文字页与中间页文字极少＝阻断；末页仅 1～2 行溢出＝记提示并写进版本说明，
   不要用偏离基线的行距去压页。§37。

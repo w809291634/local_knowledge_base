@@ -105,7 +105,7 @@ for el in list(body):
 | 各节页宽不一致 | 模板可能把某节设成**横向**（`pgSz@orient="landscape"`）→ 后面页宽和前面不同，检测/修法见 `cover-pagination-and-sections.md` 第 6 节 |
 | 页眉编号 | 页眉常含 `<编号> <版本>`，换项目时它也要改 |
 | 输出目录 | 产物目录独立，避免覆盖源文档与历史版本 |
-| 字体/编码 | 中文文档注意 `eastAsia` 字体槽；GBK 文件读写别用 UTF-8 假设（详见 `font-and-style-normalization.md`） |
+| 字体/编码 | 中文文档注意 `eastAsia` 字体槽；GBK 文件读写别用 UTF-8 假设（详见 `reference-document-format-and-diagram-requirements.md` 第八节） |
 | 无 PyYAML 环境 | 事实文件仍用 YAML 时，自带一个只支持"两层 key: value + 标量列表 + 内联字典 + 嵌套列表"的极简解析器；解析器要能容忍 `key:` 行后跟行内注释 |
 | 上游生成器留下的同义重复段 | 用"承接旧稿 + 插入新段"方式产出的文档，常有两段几乎同义的句子（如两版"目的：…"、两版"设计准则：…"）。下游继承时**必须逐份去重**：删除项按"只有重复段才命中的尾串"精确匹配，同键多次出现用 keep-first-only |
 | 控制台中文乱码 | Windows GBK 终端里 `print` 中文是乱码，但**文件本身没坏**；核对内容请写 UTF-8 文件后用编辑器/读文件工具看，别据乱码判断文档出错 |
@@ -853,7 +853,7 @@ AUTH[p._p] = "slot"         # 同理，来历表也用元素做键
 
 ## 53. 标题编号机制三态混用：渲染全对、无双编号，闸门却一条都不报
 
-字号分档（`font-and-style-normalization.md` §10.5）做完之后，标题看起来已经统一了，
+字号分档（`reference-document-format-and-diagram-requirements.md` 第八节 §10.5）做完之后，标题看起来已经统一了，
 但**编号机制**可能还是三种混在一起：
 
 | 机制 | 形态 | 判据位置 |

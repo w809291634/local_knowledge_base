@@ -82,5 +82,5 @@ soffice --headless --convert-to pdf --outdir out "某份.docx"   # 一次只转�
 
 ## 6. 版式收口
 
-字体字号统一（分区、样式默认值、配图字体一起改）见 `font-and-style-normalization.md`；
+字体字号统一（分区、样式默认值、配图字体一起改）见 `reference-document-format-and-diagram-requirements.md` 第八节；
 它同样要"改生成器 + 改事实文件的 `formatting:` 段"，不要在 Word 里手改产物。
