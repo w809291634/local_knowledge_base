@@ -21,7 +21,7 @@
 | 页眉页脚 | 文控编号、模板版号、位置及首页设置符合基线；页码、总页数及起算方式正确。 |
 
 **S7 修复 → S8 独立格式门禁 → S9 最终全页复核。必要项失败或未执行，不得标记格式验收完成；可如实归档工作稿并继续独立工作。**
-本表仅汇总现有规则，不替代逐份格式档案；字体细则见 `yjt/PEMS/reference-document-format-and-diagram-requirements.md` 第八节，验收清单见 `yjt/PEMS/dod-checklist.md`。
+本表仅汇总现有规则，不替代逐份格式档案；字体细则见 `yjt/PEMS/reference-document-format-and-diagram-requirements.md` 「分类规则 -- 字体与版式」，验收清单见 `yjt/PEMS/dod-checklist.md`。
 
 ## 0. 为什么别的 AI 会写坏
 
@@ -140,7 +140,7 @@ S7 负责目录刷新后的必要版式收口、自然重排复核与页码同�
   但每一条差异都必须逐条登记为「改写 / 删除 / 新增」并进生成记录或基线变更清单；逐节页尺寸、方向和页边距符合对应已确认基线，节数、首页不同与眉脚关系保留；必要结构变化逐项登记依据与影响；
   按已确认基线确定目录类型，不能因工具未检出域就改判“不适用”。域目录要求 `toc_diagnose` 的 `healthy==True`（含 TOC 指令、begin/separate、域配平），且无 `text_has_toc` 裸指令，随后核对渲染结果；经本轮确认采用静态目录时按确认形式逐条核对标题、导航要求和实测页码；按模板设计不设目录的文档登记不适用，不为通过判据擅加目录；
   页眉页脚版号在本档内唯一且等于本项目模板版号（首页眉/偶数眉/页脚各查一次，并与基线件对比，`pitfalls.md` §85）。
-- 该读：`reference-document-format-and-diagram-requirements.md` 第九～十二节（封面结构／目录分页／页面设置／空白页五步）、`docx-fields-and-toc-repair.md` §5/§9、`pitfalls.md` §79、§53、§65。
+- 该读：`reference-document-format-and-diagram-requirements.md` 各分类节（封面／目录／页面设置／分页）、`docx-fields-and-toc-repair.md` §5/§9、`pitfalls.md` §79、§53、§65。
 - 停手条件：未经本轮确认的章节／分节／页边距／眉脚变化 → 回 S2 核实依据；渲染失败时先排查通道，不得直接删除分节或改变首页设置以换取导出成功。已有明确授权的调整按依据执行并留痕。
 
 ### S4 槽位清单与生成器
@@ -182,7 +182,7 @@ S7 负责目录刷新后的必要版式收口、自然重排复核与页码同�
     以及"目录"这类大标题段没有大纲级却带段前分页（改法是给它大纲级，或登记进与生成器同源的豁免表，§49）；
     命中项必须逐项判定为需修复或有依据保留，列出位置、适用依据和核验结果；同类项允许引用同一条已确认规则，但各位置和结果仍须核对，不得整键忽略或未经核验批量填写“模板原样／按注册人口径”。
   字体分区且正文小标题不挂标题样式；编号字形统一；封面独立成页且无空白页；目录页码与渲染实测一致，且页码同步只跑一遍。
-- 该读：`reference-document-format-and-diagram-requirements.md` 第八节 §6~§10、第十二节（空白页五步）、
+- 该读：`reference-document-format-and-diagram-requirements.md` 「分类规则 -- 字体与版式」§6~§10、「分类规则 -- 分页」（空白页五步）、
   `docx-fields-and-toc-repair.md` §6、`pitfalls.md` §36、§38~§42、§45~§49、§54~§59、§66、§83、§86（判据键数与键义以原语为准，别照抄"七项/九项"这种旧口径）。
 - 停手条件：压页需要偏离正文基线的行距/缩进 → 不压，记为提示项交人工（§37）；无头实例反复起不来 → 换通道并记进档案（§44、§50）。
 
@@ -306,14 +306,14 @@ build / 收口 / 闸门 / 渲染 / 反向测试 的命令与实测数字；页�
 | 交付后才发现旧项目词、旧主体、旧参数还在 | `one-pass-quality-gate.md` §6、`pitfalls.md` §35、§49、§70、§83 |
 | 表格某列把标签盖掉，或值留着模板旧值 | `pitfalls.md` §82、§78、§51 |
 | 图片前面冒出分页标记、正文被粘成大块 | `pitfalls.md` §38、§39 |
-| 封面后多一张空白页 / 中间冒出整页空白 | `reference-document-format-and-diagram-requirements.md` 第九节、第十二节、`pitfalls.md` §45~§48、§56、§61、§63 |
+| 封面后多一张空白页 / 中间冒出整页空白 | `reference-document-format-and-diagram-requirements.md` 「分类规则 -- 封面」「分类规则 -- 分页」、`pitfalls.md` §45~§48、§56、§61、§63 |
 | 中文页被判成空白页 | `pitfalls.md` §41、§77（渲染墨占比分级，别数文字） |
 | 目录刷新后指令裸露、超链接失效 | `docx-fields-and-toc-repair.md` §9、`pitfalls.md` §47 |
 | 目录页码与实际页不一致 | `pitfalls.md` §54、§33 |
 | 同一文档页眉出现两个模板版号（首页眉留旧版号） | `pitfalls.md` §85、`dod-checklist.md` B12 |
 | 正文里混进标题样式段（两条链路都放过） | `pitfalls.md` §67、§21、§34 |
 | 编号后跟一整句正文却挂着大纲级、标题正文没分开；只改了被点名的一处别处还有 | `pitfalls.md` §89（全族统一判据扫描 + 标题/正文同文档供体克隆） |
-| 标题字号忽大忽小、封面大标题被压成正文 | `reference-document-format-and-diagram-requirements.md` 第八节 §10、`pitfalls.md` §55、§66 |
+| 标题字号忽大忽小、封面大标题被压成正文 | `reference-document-format-and-diagram-requirements.md` 「分类规则 -- 字体与版式」§10、`pitfalls.md` §55、§66 |
 | 表格左边框像丢了 / 列宽超出版心 / 刷新后框线变细 | `pitfalls.md` §51、§76、§80、§60 |
 | Word 判"文件可能已损坏" | `pitfalls.md` §6/§7、§63 |
 | LibreOffice/Word 无头转换失败或静默不出 PDF | `pitfalls.md` §50、§77、§44 |
@@ -358,7 +358,7 @@ build / 收口 / 闸门 / 渲染 / 反向测试 的命令与实测数字；页�
 | S7 域刷新 | `ops.refresh_toc_via_word(...)`（Word 通道，配 §44/§50 的实例回收与退避重试） |
 | S7 分页与标题树 | `ops.pagination_audit(doc, cover_texts=[封面文档名])`，**按 S7 的三类键分档处置**（缺陷键清空 / 形态位只记录 / 分诊键修或豁免）；修复只走 `ops.pagination_repair(doc, cover_texts, apply=[本轮动作])`；共用判据 `ops.chapter_pad_map` / `ops.sect_breaks_page_el` |
 | S7 字体分区 | `ops.unify_document_fonts(doc, east_asia, latin, body_sz, table_sz, caption_sz, styles, cover_first_cell)`；核查 `ops.non_baseline_font_runs(doc, baseline=(...))`（含表格段，私用区 run 除外） |
-| S7 标题字号族内统一 | `ops.heading_format_profile_from(参照)` → `ops.normalize_heading_format(...)`（改样式默认值，护栏见格式主文件第八节 §10） |
+| S7 标题字号族内统一 | `ops.heading_format_profile_from(参照)` → `ops.normalize_heading_format(...)`（改样式默认值，护栏见格式主文件「分类规则 -- 字体与版式」§10） |
 | S7 编号字形 | `ops.heading_numbering_mechanisms` / `ops.numbering_glyph_audit(doc, first_cell_text='文件编号', levels=(0,1,2))` / `ops.normalize_numbering_glyphs` |
 | S7 表格几何与六向框线 | `ops.normalize_table_geometry(doc, ..., apply=('indent','float','grid','borders'), grid_overrides=...)` + `ops.audit_table_geometry` + `ops.set_table_borders_six_way` |
 | S7 封面留白 | `ops.set_cover_spacers(doc, n=3, first_cell_text='文件编号')`（幂等：先 `ops.trim_cover_spacers` 再补） |

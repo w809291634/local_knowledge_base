@@ -30,7 +30,7 @@
 - **导航树（`outlineLvl`）不必照模板**：模板的大纲级别常常是错的（漏挂、空段挂级、正文段挂级），以正确性为准重建。
 - **模板里可作通用描述的正文保留原句**（方法句、目的句、范围句式、术语条目结构）；只有项目事实才替换。
 - **字体一律按字体基线统一**：模板自带的混排（雅黑章标题、楷体正文、黑体目录条目、同级一半 Times 一半宋体）
-  视为**模板错误**，不再"按模板原样保留"。唯一例外：Symbol/Wingdings 私用区 run（改了变方块，见 `reference-document-format-and-diagram-requirements.md` 第八节 §9）。
+  视为**模板错误**，不再"按模板原样保留"。唯一例外：Symbol/Wingdings 私用区 run（改了变方块，见 `reference-document-format-and-diagram-requirements.md` 「分类规则 -- 字体与版式」§9）。
 
 **族级判据（各清单不再重复写）**
 

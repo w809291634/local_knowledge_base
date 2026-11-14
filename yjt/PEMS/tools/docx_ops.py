@@ -769,7 +769,7 @@ def convert_doc_to_docx(src, dst, prefer=('Word.Application', 'KWPS.Application'
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 域（Field）/ 目录（TOC）修复与分页一致性（详见 docx-fields-and-toc-repair.md、
-# reference-document-format-and-diagram-requirements.md 第十节／第十一节）。四个函数互相独立，可单独调用。
+# reference-document-format-and-diagram-requirements.md 「分类规则 -- 目录」「分类规则 -- 页面设置」）。四个函数互相独立，可单独调用。
 # ─────────────────────────────────────────────────────────────────────────────
 
 def toc_diagnose(doc):
@@ -1015,7 +1015,7 @@ def export_pdf_via_word(path, pdf_path):
         app.Quit()
 
 # --------------------------------------------------------------------------
-# 字体与字号统一（文档族级版式收口；详见 reference-document-format-and-diagram-requirements.md 第八节）
+# 字体与字号统一（文档族级版式收口；详见 reference-document-format-and-diagram-requirements.md 「分类规则 -- 字体与版式」）
 #   三条实测必要性：
 #     ① 必须删掉 rFonts 的 *Theme 属性，否则主题字体优先级高于显式 rFonts，改了不生效；
 #     ② 必须单独遍历表格——doc.paragraphs **不含表格内段落**，漏了表格等于没统一；
