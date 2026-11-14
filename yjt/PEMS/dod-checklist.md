@@ -79,7 +79,7 @@
 
 ## F. 分页与标题树终检（每轮固定，逐份产物跑）
 
-> 流程与判据见 `cover-pagination-and-sections.md` §8；坑详解见 `pitfalls.md` §38–§42。
+> 流程与判据见 `reference-document-format-and-diagram-requirements.md` 第十二节；坑详解见 `pitfalls.md` §38–§42。
 > 同批文档的结构与数值检查用同一段脚本逐份执行并留档；这不能替代 S9 的每份文档逐页目检。
 
 - [ ] 32. `pagination_audit` 按 S7 分三类处置，不写死返回键数：缺陷键 hard_page_breaks/stacked_breaks/keep_on_body/chapter_pad/outline_anomaly 清零；toc_field 仅记录；redundant_breaks/body_page_break/numbered_not_in_tree 结合基线和实际渲染逐项判定修复或有依据保留。保留项须记录具体位置、依据和复核；同类项可引用同一确认规则，但不能整键关闭或未经核验批量豁免。
@@ -209,5 +209,5 @@
 - 交付件里留着模板批注/占位文字；
 - 图里是别的项目；
 - 封面与正文同页，或出现空白页；
-- 只删"看起来多余"的那一个分页符而不核页数账，或改完不重渲染就交付（页数账对不上必须停，见 `cover-pagination-and-sections.md` §8 第 5 步）；
+- 只删"看起来多余"的那一个分页符而不核页数账，或改完不重渲染就交付（页数账对不上必须停，见 `reference-document-format-and-diagram-requirements.md` 第十二节第 5 步）；
 - **说明书 / 代码 / 注意事项 三方存在未处置的冲突就发布**（最常见：说明书承诺的保护动作代码里没有）。

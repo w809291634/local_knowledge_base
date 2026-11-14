@@ -33,7 +33,7 @@
 
 PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控修正编写，并在全过程落实检查；字体统一、脚本成功或 PDF 可导出均不足以证明格式合格。流程的必做动作与证据见 `yjt/PEMS/authoring-workflow-and-experience-index.md` §1.3、S2～S10，验收逐项对应 `yjt/PEMS/dod-checklist.md` B/F/G/H 组。
 
-- **格式要求的主文件是 `yjt/PEMS/reference-document-format-and-diagram-requirements.md`**（2026-11-12 起登记，2026-11-13 起按用户要求统一迁入专题条文）：第六节按分类引用库内既有条款，**引用处即真值来源**，不重新定规则、不重复登记数值；第七节「封面格式要求」为已详细化条文；第八节起为全文迁入的专题格式条文（已迁入：字体与版式），原专题文件已删除（迁入前全文另存归档）。其他文件里的「按本轮基线／按已确认基线／按项目情况调整」等表述，在其已确认类别范围内仍按对应专题条款执行。
+- **格式要求的主文件是 `yjt/PEMS/reference-document-format-and-diagram-requirements.md`**（2026-11-12 起登记，2026-11-13 起按用户要求统一迁入专题条文）：第六节按分类引用库内既有条款，**引用处即真值来源**，不重新定规则、不重复登记数值；第七节「封面格式要求」为已详细化条文；第八节为全文迁入的字体与版式专题；第九节起按格式类型分类管理（封面结构／目录与正文分页／各节页面尺寸／空白页五步），由专题文件拆分删减而来，原专题文件已删除（迁入前全文另存归档）。其他文件里的「按本轮基线／按已确认基线／按项目情况调整」等表述，在其已确认类别范围内仍按对应专题条款执行。
 
 - 开工冻结各文档的格式基线；保留封面、目录、分节、页眉页脚、编号、表格结构及图片定位。新增内容仍按该基线排版，不以 AI 审美或方便导出为由另造格式。
 - 结构修复前保存副本并记录已确认动作；渲染通道失败不等于模板结构不可用，不得为使导出成功直接删分节、合并所有节或重建眉脚。确有结构变更需要时登记依据和影响；已有明确授权可直接复用，不逐阶段索取批准。
@@ -64,7 +64,7 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
      （不要用抽文字字数判空白页：中文 PDF 缺 ToUnicode 会双向误判，见 pitfalls.md §41）
 3b) pagination_audit(doc, cover_texts=[封面文档名]) 按流程 S7 **分三类处置**：缺陷键清零，toc_field 只记录，redundant_breaks/numbered_not_in_tree/body_page_break 逐项结合结构与渲染分诊，修复或登记有证据的保留依据；不得要求全部返回键为空或写死键数；
     需修复时只用同源的 pagination_repair(..., apply=[本轮已确认的动作])，改完复跑 audit 并重渲染核账页数
-    （流程见 cover-pagination-and-sections.md §8，终检项见 dod-checklist.md F 组，阶段编排见 authoring-workflow-and-experience-index.md S7）
+    （流程见 `reference-document-format-and-diagram-requirements.md` 第十二节，终检项见 `dod-checklist.md` F 组，阶段编排见 `authoring-workflow-and-experience-index.md` S7）
 4) 人工核对：图（图文一致）、签署栏、交叉引用文件名、他项目残留
 5) **用 Word 只读打开每一份产物并记录页数**（LibreOffice 与 python-docx 都不报的损坏，Word 会报；
    典型诱因见 `pitfalls.md` 第 6/7 节）
@@ -81,8 +81,7 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
 | `template-format-audit-2026-10.md` | 模板自身的格式符合性审计（哪些是模板缺陷要在生成时修、哪些是原样保留、哪些要注册人裁决） |
 | `templates/<版号>/<件名>_基线.md` | 与基线件同目录的变更清单：逐条列出删除/替换/改写/保留的原文、位置与复核判据；`template-baseline-deletions.md` 是这些清单的总表与指针 |
 | `template-baseline-rdXXX-<版号>.md` + `templates/<版号>/*.docx` | 各文档各版号的独立基线档案与基线件；一份只描述一个版号，判据互不通用；不得按旧版骨架补回新版已删除的章节、目录或表格 |
-| `reference-document-format-and-diagram-requirements.md` | **格式要求主文件**：格式深度、必备图示、全页验收；第六节分类索引、第七节封面详细条文、第八节起统一迁入的专题条文 |
-| `cover-pagination-and-sections.md` | 封面/分页/分节三大风险点 |
+| `reference-document-format-and-diagram-requirements.md` | **格式要求主文件**：格式深度、必备图示、全页验收；第六节分类索引、第七节封面详细条文、第八节字体与版式、第九～十二节按类型分类管理 |
 | `consistency-gate.md` | 多文档一致性对账 + 说明书/代码/注意事项**三方收口** |
 | `iteration-and-versioning.md` | 迭代与版本管理 |
 | `pitfalls.md` | 环境/格式坑 |

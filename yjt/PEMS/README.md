@@ -15,8 +15,7 @@
 | `template-baseline-rdXXX-<版号>.md` | 各文档各版号的独立版式基线档案（已建：026 2.0/2.1、028 2.1、029 2.1、030 2.1、032 1.0/2.1、057 1.0/3.0、068 1.0、069 1.0）；一份只描述一个版号，判据互不通用 |
 | `template-baseline-deletions.md` | 基线件总表与指针：九份模板的原件/基线件双哈希、档级、通用残留计数口径；逐条变更清单在基件同目录的 `…_基线.md` |
 | `templates/<版号>/*.docx` | 基线件（按版号分子目录，**模板库共 9 份**；交付族为 8 份、不含 RD-057，每份配同目录 `…_基线.md` 变更清单）。空白档仅 `2.1/RD-026_软件确认计划_2.1_基线.docx`；其余为格式档案档（含残留，不得当空白模板用）。两档均登记基线件与来源原件的 SHA-256 |
-| `reference-document-format-and-diagram-requirements.md` | **格式要求主文件**：参考文档格式深度、必备图示、全页验收；第六节按分类引用库内既有条款（引用处即真值来源），第七节封面硬要求，第八节起为统一迁入的专题格式条文（已迁入：字体与版式） |
-| `cover-pagination-and-sections.md` | 封面/分页/分节高风险点（含"目录后垫片空段""各节页宽不一致"；§8 空白页与段前冒点的「定位—修复—复验」五步流程） |
+| `reference-document-format-and-diagram-requirements.md` | **格式要求主文件**：第六节分类索引；第七节封面 14 条；第八节字体与版式；第九～十二节按类型管理（封面结构／目录与正文分页／各节页面尺寸／空白页五步），均由专题文件拆分删减迁入 |
 | `docx-fields-and-toc-repair.md` | 域（Field）与目录修复：TOC 坏的三形态、诊断、补壳、"更新目录"会拍平域壳的教训 |
 | `consistency-gate.md` | 多文档同数据一致性对账 + 说明书/代码/注意事项三方收口 |
 | `iteration-and-versioning.md` | 迭代机制与版本管理 |
@@ -48,7 +47,7 @@
 
 - `one-pass-quality-gate.md`：事实基线、自动质量闸门、证据/签署状态与发布归档。
 - `reference-format-profile-template.md`：项目模板格式档案的空白文字模板。
-- `reference-document-format-and-diagram-requirements.md`：格式要求主文件，含参考文档格式深度、必备框图、第六节分类规则出处索引、第七节封面详细要求，以及第八节起统一迁入的专题格式条文。
+- `reference-document-format-and-diagram-requirements.md`：格式要求主文件，含参考文档格式深度、必备框图、第六节分类索引、第七节封面详细要求、第八节字体与版式，以及第九～十二节按类型分类管理的封面结构／目录分页／页面设置／空白页五步。
 - `diagram-generation-and-figure-insertion.md`：配图怎么画才不重叠/不指错，以及插图替换进 Word 的坑与校验。
 
 ## 工具使用边界

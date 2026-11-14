@@ -769,7 +769,7 @@ def convert_doc_to_docx(src, dst, prefer=('Word.Application', 'KWPS.Application'
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 域（Field）/ 目录（TOC）修复与分页一致性（详见 docx-fields-and-toc-repair.md、
-# cover-pagination-and-sections.md 第 5/6 节）。四个函数互相独立，可单独调用。
+# reference-document-format-and-diagram-requirements.md 第十节／第十一节）。四个函数互相独立，可单独调用。
 # ─────────────────────────────────────────────────────────────────────────────
 
 def toc_diagnose(doc):
