@@ -100,7 +100,7 @@ for el in list(body):
 |---|---|
 | `.doc` 与 `.docx` 混放 | 按后缀分流，`.doc` 先转 `.docx` |
 | 合并单元格计数 | `row.cells` 对合并区域会重复返回同一 cell，拼文本会重复，写值无碍 |
-| 目录（TOC） | 多为「超链接 + `PAGEREF` 域」，替换要**避开含域代码的段落**；域壳破损有三种形态，见 `docx-fields-and-toc-repair.md` |
+| 目录（TOC） | 多为「超链接 + `PAGEREF` 域」，替换要**避开含域代码的段落**；域壳破损有四种形态，见「分类规则 -- 目录」的「目录域形态与修复判据」 |
 | 目录后垫片空段 | 「目录 → 正文」之间几十个纯空段是**靠空段顶页**，脆且常顶不准（正文标题掉到目录页），要改成显式分页符 |
 | 各节页宽不一致 | 模板可能把某节设成**横向**（`pgSz@orient="landscape"`）→ 后面页宽和前面不同，检测/修法见 `reference-document-format-and-diagram-requirements.md` 「分类规则 -- 页面设置」 |
 | 页眉编号 | 页眉常含 `<编号> <版本>`，换项目时它也要改 |
@@ -239,7 +239,7 @@ ok = td1['healthy'] and (ntok0 - 1) <= ntok1 <= ntok0 + 2
 if not ok: shutil.copy2(bak, path)      # 宁可用旧页码，也不交一份 47 条的错目录
 ```
 
-> 与 `docx-fields-and-toc-repair.md` 第 4 节合起来看：**刷新可能拍平域壳，也可能过收**，
+> 与「分类规则 -- 目录」的「目录刷新与复诊」合起来看：**刷新可能拍平域壳，也可能过收**，
 > 两种都得复诊；"刷完就交付"从来不成立。
 
 ## 13. Word 保存会顺手重写 `styles.xml`，把等价的样式字号规掉
@@ -509,7 +509,7 @@ WINWORD 仍在后台开着产物文档，下一轮生成器写同名文件就是
 
 ## 33. 无域静态目录的页码在 `w:hyperlink` 里：整段替换会把文字写两遍
 
-形态 C（纯文本目录，见 `docx-fields-and-toc-repair.md` §5）常仍带着**超链接**：条目文字与页码
+形态 C（纯文本目录，见「分类规则 -- 目录」的「目录域形态与修复判据」）常仍带着**超链接**：条目文字与页码
 分处 hyperlink 内的多个 `w:r`，段落直接子级没有 `w:r`。此时 `p.runs` 为空（python-docx 不取
 hyperlink 内的 run），`set_paragraph` 走 `p.add_run(text)` 分支 → **新文字追加在旧文字后面**，
 目录条目变成"5. 结论55. 结论4"。而 `toc_diagnose` 的 `entry_has_field=False` 让人以为这是纯文本段，

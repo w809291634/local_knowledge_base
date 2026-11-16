@@ -47,13 +47,13 @@
 | 类别 | 详细要求所在分类节 | 引用出处（库内既有条款） |
 |---|---|---|
 | 封面 | **见「分类规则 -- 封面」** | `dod-checklist.md` 43（封面留白）；`pitfalls.md` §52 |
-| 目录 | **见「分类规则 -- 目录」** | `dod-checklist.md` 16/17/18、`docx-fields-and-toc-repair.md` §5/§6/§9；目录形态按 `template-baselines.md` 对应版号基线件确定 |
-| 标题树 | **见「分类规则 -- 标题树」** | `AGENTS.md`「分页与导航补充」及「四条追加纪律」、`dod-checklist.md` F37、`pitfalls.md` §25/§89/§97、`docx-fields-and-toc-repair.md` §9；标题字号见「分类规则 -- 字体与版式」§10 |
+| 目录 | **见「分类规则 -- 目录」** | `dod-checklist.md` 16/17/18；目录形态按 `template-baselines.md` 对应版号基线件确定；域形态与刷新已详细化见本分类节 |
+| 标题树 | **见「分类规则 -- 标题树」** | `AGENTS.md`「分页与导航补充」及「四条追加纪律」、`dod-checklist.md` F37、`pitfalls.md` §25/§89/§97；补齐标题树后的目录刷新护栏已详细化见本分类节；标题字号见「分类规则 -- 字体与版式」§10 |
 | 正文 | **见「分类规则 -- 正文」** | `AGENTS.md`「段落基线补充」、`dod-checklist.md` 45d/45e/45j、`pitfalls.md` §90/§95；字体与段落基线见「分类规则 -- 字体与版式」§6~§9 |
 | 字体颜色 | **见「分类规则 -- 字体颜色」** | `template-baseline-rd052-2.1.md` §5（红字转黑）、`one-pass-quality-gate.md` §5（批注与占位残留）；字体统一见「分类规则 -- 字体与版式」§6/§7 |
 | 表格 | **见「分类规则 -- 表格」** | `dod-checklist.md` G 组 40~43 与 13b、`pitfalls.md` §51/§96；几何与边框原语见 `tools/docx_ops.py` |
 | 单元格对齐 | **见「分类规则 -- 单元格对齐」** | `dod-checklist.md` 13b、`pitfalls.md` §95（段落角色分类）与 §83（判据反向测试）；逐份默认值由项目格式档案登记 |
-| 页眉页脚 | **见「分类规则 -- 页眉页脚」** | `dod-checklist.md` 12、`pitfalls.md` §85、`docx-fields-and-toc-repair.md` §6；扫描原语见 `tools/docx_ops.py:header_footer_text_audit` |
+| 页眉页脚 | **见「分类规则 -- 页眉页脚」** | `dod-checklist.md` 12、`pitfalls.md` §85；目录刷新与复诊见「分类规则 -- 目录」；扫描原语见 `tools/docx_ops.py:header_footer_text_audit` |
 | 分页 | **见「分类规则 -- 分页」** | `dod-checklist.md` F 组 32~39、`AGENTS.md`「分页与标题树的四条追加纪律」；封面与目录分页另见「分类规则 -- 封面」「分类规则 -- 目录」 |
 | 页面设置 | **见「分类规则 -- 页面设置」** | 逐份真值按 `reference-format-profile-template.md` 与 `template-baselines.md` 取，两版判据不互用 |
 | 图示图题 | **见「分类规则 -- 图示图题」** | 本文件「四、必备图示」、`diagram-generation-and-figure-insertion.md`、`dod-checklist.md` 14/14b/14c |
@@ -114,7 +114,7 @@
 五、清理纯空段的三个实现细节（原语见 `tools/docx_ops.py`）：
 
 1. 遇到非段落元素（`bookmarkEnd` 等）必须 `continue` 而不是 `break`，否则循环提前结束、空段清不干净；
-2. 判「空段」不能只看文本为空：只含域标记（`w:fldChar`／`w:instrText`）的段落同样无文字，删掉会破坏域闭合、使目录指令裸露，必须排除（见 `docx-fields-and-toc-repair.md` §7）；
+2. 判「空段」不能只看文本为空：只含域标记（`w:fldChar`／`w:instrText`）的段落同样无文字，删掉会破坏域闭合、使目录指令裸露，必须排除（域禁忌见「分类规则 -- 目录」的「目录域形态与修复判据」第四条）；
 3. 含 `sectPr`、含分页符 `w:br`、含图形 `drawing`/`pict` 的段落一律不删。
 
 六、若必须脚本重建正文（不推荐，仅模板结构不可用时）：保留第一个含 `sectPr` 的段落（清空文字、保留分节符），其余分节符段落删除；文档末尾的 `body/sectPr` 不动。禁止为导出成功合并所有节或改变首页设置（第五节）。
@@ -142,16 +142,62 @@
 
 六、目录页码必须等于最终渲染实测页（S7／`pitfalls.md` §54）：自动目录域刷新后核对域健康与条目；静态点线目录逐条核对，改页码只改 `w:hyperlink` 内最后一个 `w:t`。判据与形态按 `dod-checklist.md` 16/17/18。
 
+### 目录域形态与修复判据
+
+一、目录页不得出现裸露域代码（`TOC \o`、`PAGEREF` 等字样）；出现即判域壳破损。**判定只看 XML，不用渲染**：把全文 `w:fldChar`／`w:instrText` 按文档顺序拉成序列，核 ① `begin/end` 是否配平、② TOC 指令有没有被 `begin … separate` 包裹、③ 目录条目里有没有域。
+
+二、四种形态与处置（先判形态再动手，否则会修错）：
+
+| 形态 | 结构特征 | 判据 | 处置 |
+|---|---|---|---|
+| A 未闭合 | 有 `begin`+`instrText`+`separate`，缺 `end` | `begin − end > 0` | 在目录末条目段落末尾补 `end`（个数＝差值） |
+| B 域壳被拍平 | 指令在 `instrText` 但前面没有 `begin`；或指令直接落在 `w:t` | `toc_has_begin == False` 或 `text_has_toc == True` | 补 `begin`；`w:t` 改名为 `w:instrText`；再补 `separate` 与 `end` |
+| C 目录无域 | 条目是纯文本＋硬编码页码，全文无 TOC 指令 | `toc_instr == False` 且 `entry_has_field == False` | 只能在 Word/WPS 里用「引用→目录→自动目录」或 COM 的 `TablesOfContents.Add` 重建；**脚本禁止硬造 `PAGEREF`** |
+| D 无目录 | 全文既无 TOC 指令也无目录条目 | 目录样式段落数为 0 | 按模板口径**不补目录**；先查版式基线档案确认是模板有意删除，再决定是否新建 |
+
+三、两个判定陷阱：① 一份文档可能有多个 TOC 域，全局 `begin/separate/end` 计数会把「一条链断了、另一条链多一个 `end`」抵成 `balance == 0` 的假健康，多目录文档必须**按域链分组**分别核配平；② `begin == end` 不代表正常——形态 B 可能是平衡的（每个 `PAGEREF`／`HYPERLINK` 自带 `begin/end`，而外层 TOC 连 `begin` 都没有），必须再查 `toc_has_begin`／`text_has_toc`。
+
+四、域相关禁忌：**不得对含 `fldChar`／`instrText` 的段落做 run 合并或整段重写文本**（会把域拍平成普通文字）；删「空段」时必须排除含 `fldChar` 的段落；**不得试图用脚本重算 `PAGEREF` 的结果值**；补 `end` 只补外层，不动成对闭合的内层 `PAGEREF`／`HYPERLINK`。
+
+五、形态 C 只想改页码时的最小动作：条目文字与页码常包在 `w:hyperlink` 内，段落直接子级没有 `w:r`，`python-docx` 的 `p.runs` 为空；此时用 `add_run` 会把新文字**追加**在旧文字后面，条目变成「5. 结论55. 结论4」。正确做法是只改 `w:hyperlink` 内**最后一个 `w:t`**（页码），其余不动；含 `w:hyperlink` 的段落与含域段落一并列入整段替换的排除名单。页码值按最终渲染实测页回填。
+
+诊断与补壳原语见 `tools/docx_ops.py:toc_diagnose`；判据按 `dod-checklist.md` 16/17/18。
+
+### 目录刷新与复诊
+
+一、正确顺序：**先修复域壳 → 用 Word 刷新（F9／更新目录）→ 回读复诊 → 复诊不通过就再补壳**，**绝不能「刷新完就直接交付」**。刷新（等价于 Word 里按 F9）可能把本来健康的域壳拍平、把 TOC 指令变成可见文字，后果无法预知，因此「刷新后必须复诊」是硬性要求。
+
+二、排查收口：改完域 → `toc_diagnose()` 通过 → 渲染 PDF 看目录首行没有 `TOC \o` → 才算完成。
+
+三、形态 C 重建目录的前提是正文小标题确实用了 Heading 样式，否则自动目录抓不到标题；书签字形与条目顺序不保证对应，禁止脚本硬塞 `PAGEREF`。
+
+四、目录页码必须等于最终渲染实测页；静态点线目录逐条核对，改页码只改 `w:hyperlink` 内最后一个 `w:t`（见本节「目录与正文分页」第六条）。
+
 ### 规则出处
 
-`dod-checklist.md` 16/17/18、`docx-fields-and-toc-repair.md` §5/§6/§9；目录形态按 `template-baselines.md` 对应版号基线件确定（域目录／静态点线／无目录页），两版判据不互用。
+`dod-checklist.md` 16/17/18；目录形态按 `template-baselines.md` 对应版号基线件确定；域形态与刷新已详细化见本分类节（域目录／静态点线／无目录页），两版判据不互用。
 
 
 ## 分类规则 -- 标题树
 
+### 补齐标题树后的目录刷新护栏
+
+一、**条目数不能只按「±2」判**。给文档补了标题树（`outlineLvl`）之后，Word 刷新会把以前收不到的真标题收进来，条目数增加是**正确结果**；继续用「±2」会把好结果还原掉、退回旧页码。改成按内容判：
+
+```
+可收录标题数 = 文档里「有文字 + 大纲级别 0~8 + 不在表格单元格内」的段落数
+通过条件     = 域健康 且 旧条目数-1 ≤ 新条目数 ≤ max(旧条目数+2, 可收录标题数+1)
+```
+
+二、**表格单元格段落必须先降为正文级**（`w:outlineLvl val="9"`）。模板表格常整片继承带 `outlineLvl` 的段落样式，Word 更新目录时会把单元格当标题收进去，造成条目数暴涨、只能整份还原放弃刷新；生成阶段统一降级后，刷新可正常成功。
+
+三、**刷新之后还要再清一次空标题段**。Word 重写目录区时会新造「带大纲级别的空段」（发生在刷新之后，生成阶段清不掉），导航窗格会出现空白条目。刷新脚本的收尾顺序：更新目录 → 复诊／补壳 → 重新统一字体 → **降级空标题段** → 保存。
+
+判据按 `dod-checklist.md` F37、`AGENTS.md`「分页与标题树的四条追加纪律」。
+
 ### 规则出处
 
-`AGENTS.md`「分页与导航补充」及「分页与标题树的四条追加纪律」、`dod-checklist.md` F37、`pitfalls.md` §25/§89/§97、`docx-fields-and-toc-repair.md` §9；标题字号见「分类规则 -- 字体与版式」§10。
+`AGENTS.md`「分页与导航补充」及「分页与标题树的四条追加纪律」、`dod-checklist.md` F37、`pitfalls.md` §25/§89/§97；补齐标题树后的目录刷新护栏已详细化见本分类节；标题字号见「分类规则 -- 字体与版式」§10。
 
 
 ## 分类规则 -- 正文
@@ -186,7 +232,7 @@
 
 ### 规则出处
 
-`dod-checklist.md` 12、`pitfalls.md` §85、`docx-fields-and-toc-repair.md` §6；扫描原语见 `tools/docx_ops.py:header_footer_text_audit`。
+`dod-checklist.md` 12、`pitfalls.md` §85；目录刷新与复诊见「分类规则 -- 目录」；扫描原语见 `tools/docx_ops.py:header_footer_text_audit`。
 
 
 ## 分类规则 -- 分页

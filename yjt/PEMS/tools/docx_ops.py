@@ -768,8 +768,9 @@ def convert_doc_to_docx(src, dst, prefer=('Word.Application', 'KWPS.Application'
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 域（Field）/ 目录（TOC）修复与分页一致性（详见 docx-fields-and-toc-repair.md、
-# reference-document-format-and-diagram-requirements.md 「分类规则 -- 目录」「分类规则 -- 页面设置」）。四个函数互相独立，可单独调用。
+# 域（Field）/ 目录（TOC）修复与分页一致性（详见格式主文件
+# reference-document-format-and-diagram-requirements.md 的「分类规则 -- 目录」
+# 与「分类规则 -- 页面设置」）。四个函数互相独立，可单独调用。
 # ─────────────────────────────────────────────────────────────────────────────
 
 def toc_diagnose(doc):
