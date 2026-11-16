@@ -151,11 +151,11 @@ S7 负责目录刷新后的必要版式收口、自然重排复核与页码同�
 - 停手条件：锚点原句在模板里找不到（版号对不上或模板被改） → 停，不猜序号。
 
 ### S5 配图
-- **格式执行依据**：按照 `yjt/PEMS/diagram-generation-and-figure-insertion.md` 及本轮已确认的图示字体、尺寸、图题和定位要求，完成本步骤配图与插入。
+- **格式执行依据**：按照 `yjt/PEMS/reference-document-format-and-diagram-requirements.md` 的「分类规则 -- 图示图题」及本轮已确认的图示字体、尺寸、图题和定位要求，完成本步骤配图与插入。
 - 动作：按章节需要画图（架构/流程/拓扑/硬件关系），图内文字字体与正文一致，走机器自检。
 - 完成判据：文本宽度预警为空；图有哈希与宽高比校验；文档内嵌图哈希与本项目图一致；必备图示不缺项；
   闸门有图片白名单与图题检查（图题只收真正引用图片部件的段，形状图例不算配图，`pitfalls.md` §69）。
-- 该读：`diagram-generation-and-figure-insertion.md`、`reference-document-format-and-diagram-requirements.md`、`pitfalls.md` §73、§74、§69（图片清理条件别挂在"要插图"上）。
+- 该读：`reference-document-format-and-diagram-requirements.md` 的「四、必备图示」与「分类规则 -- 图示图题」、`pitfalls.md` §73、§74、§69（图片清理条件别挂在"要插图"上）。
 - 停手条件：图内文字机器读不到，需目检 → 交人工，不自行宣布"图正确"。
 
 ### S6 生成
@@ -201,7 +201,7 @@ S7 负责目录刷新后的必要版式收口、自然重排复核与页码同�
   旧项目词、敏感串、代填结果列、自加措辞，确认逐项命中且退出码非零，随后删除副本；④上一轮报告过的缺陷重新核对一遍。
 - 完成判据：每份最终文件的每一页复核有结论，按 §1.3 关联最终 DOCX 与渲染哈希；抽检不能代替全页验收。每份页数已记录并核账（仅删空白页且正文／其他版式未变时按旧页数减空白页数；内容或受控版式变化另记重排依据），页数写进 manifest 或生成记录；
   注入样本全部命中，未命中的判据当轮就补上并复跑 S8（`pitfalls.md` §48、§57、§58、§68、§83）。
-- 该读：`dod-checklist.md`、`one-pass-quality-gate.md` §7、`diagram-generation-and-figure-insertion.md`、`pitfalls.md` §83。
+- 该读：`dod-checklist.md`、`one-pass-quality-gate.md` §7、`reference-document-format-and-diagram-requirements.md` 的「分类规则 -- 图示图题」、`pitfalls.md` §83。
 - 停手条件：图内文字、观感、签署状态只能人判 → 明确写"待人核"，并给出用户自己能跑的验证入口；
   反向测试没命中就是判据缺失，禁止改用更宽阈值放行。
 

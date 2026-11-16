@@ -86,7 +86,6 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
 | `iteration-and-versioning.md` | 迭代与版本管理 |
 | `pitfalls.md` | 环境/格式坑 |
 | `dod-checklist.md` | 交付质量清单（DoD） |
-| `diagram-generation-and-figure-insertion.md` | 配图生成与插图替换（绘图三原则、插图五坑、自检与校验） |
 | `tools/docx_ops.py` | 通用原语库（统一封装，跨项目复用；标题文字一致性 `heading_text_sequence` / `check_heading_text_against_template`、字体统一判据 `non_baseline_font_runs`（含表格内段落，私用区 run 除外）） |
 | `tools/fig_tools.py` | 配图绘制原语（框图/流程图；边界精确、箭头端点自动算） |
 | `tools/build_docs.py` / `config.example.json` | 配置驱动的生成入口 |
@@ -121,7 +120,7 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
   `reference-document-format-and-diagram-requirements.md` 「分类规则 -- 字体与版式」§8）。闸门两条：无重复正文段、本轮正文段版式与锚点一致。
 - 同锚点多段插入必须按顺序 `append`；闸门校验承接段先后与来源版一致（`pitfalls.md` §17）。
 - 渲染复用只在"PDF 不比 docx 旧"时成立；页码补丁必须在渲染之后跑（`pitfalls.md` §19）。
-- 详细规则见 `one-pass-quality-gate.md`、`reference-format-profile-template.md`、`reference-document-format-and-diagram-requirements.md` 和 `diagram-generation-and-figure-insertion.md`。
+- 详细规则见 `one-pass-quality-gate.md`、`reference-format-profile-template.md` 与格式主文件 `reference-document-format-and-diagram-requirements.md`（图示要求见「分类规则 -- 图示图题」）。
 
 ## 通用性边界
 

@@ -92,7 +92,7 @@ for el in list(body):
 > ⚠️ **只认 `a:blip` 会删掉 VML 图**：判定"图片是否被引用"若漏了 `v:imagedata@r:id`，
 > 瘦身函数会把仍被 VML 引用的图当孤立件删除（实测 RD-030：media 7→3、4 处引用悬空、丢 4 张图）。
 > 另：python-docx 的 nsmap 无 `v` 前缀，写 `qn('v:imagedata')` 会 `KeyError`，须用 Clark 记法。
-> 详见 `diagram-generation-and-figure-insertion.md` 第 3.4 节。
+> 详见「分类规则 -- 图示图题」的「绘图与插图替换要求」第四条。
 
 ## 5. 其他零碎
 
