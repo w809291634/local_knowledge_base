@@ -100,7 +100,7 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
 - 未命中的替换槽位、事实冲突、旧项目残留、缺少必要图示或未提供实测证据时，必须阻断发布。
 - `build_docs.py` 默认拒绝覆盖已有输出；仅在确认同一版本目录需要重建时才显式使用 `--force`。每次交付保留生成的 `manifest.json` 与一致性检查报告。
 - 草稿、待执行、待审核和受控发布分开管理；无证据不填通过结论、签署人或测试日期。
-- 适用文档的**必备图示类型、图题格式、绘图与插图机器自检、逐张人工看 PNG 与逐页渲染核对**一律见格式主文件 `reference-document-format-and-diagram-requirements.md` 的「四、必备图示」与「分类规则 -- 图示图题」；本文件不重复登记格式条文。
+- 适用文档的**必备图示类型、图题格式、绘图与插图机器自检、逐张人工看 PNG 与逐页渲染核对**一律见格式主文件 `reference-document-format-and-diagram-requirements.md` 的「分类规则 -- 图示图题」及其「必备图示类型与要素」；本文件不重复登记格式条文。
 - **字体基线「分区 + 二遍」、目录刷新后再跑一遍、四处覆盖与配图重绘**一律见格式主文件 `reference-document-format-and-diagram-requirements.md` 「分类规则 -- 字体与版式」§6/§7/§9，执行原语见 `tools/docx_ops.py:unify_document_fonts`；本文件不重复登记格式条文。
 - 承接旧稿做块对齐时：空段先剔除、封面区与目录域禁止插入、刷新后比对目录条目数，
   超阈值还原备份（`pitfalls.md` §11/§12）。
@@ -118,7 +118,7 @@ PEMS 必须严格按当前明确的格式要求、已确认模板版号及受控
 
 - 通用经验库不得写入具体项目名称、项目号、型号、芯片、版本、阈值、人员、测试结果或结论。
 - 案例、历史文档和格式档案仅用于方法与版式参考，不能作为新项目事实来源。
-- 事实来源、证据边界和发布条件遵循 `generality-boundaries-and-precedence.md`；**必备图示与图示格式要求见格式主文件 `reference-document-format-and-diagram-requirements.md` 的「四、必备图示」与「分类规则 -- 图示图题」**。
+- 事实来源、证据边界和发布条件遵循 `generality-boundaries-and-precedence.md`；**必备图示与图示格式要求见格式主文件 `reference-document-format-and-diagram-requirements.md` 的「分类规则 -- 图示图题」及其「必备图示类型与要素」**。
 
 ## 格式执行与证据纪律索引（非格式条文）
 
