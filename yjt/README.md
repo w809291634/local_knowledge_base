@@ -1,7 +1,7 @@
 # yjt/ — 按芯片/项目归档的经验库索引
 
 > 与 `embedded/` 的分工：**这里放"换一颗芯片就不成立"的经验**，跨项目可复用的方法论与工具进 `embedded/`。
-> 判据和落库规矩见仓库根 `AGENTS.md` 与本文件末尾第 8 节。最后更新：2026-11-02。
+> 判据和落库规矩见仓库根 `AGENTS.md` 与本文件末尾第 8 节。最后更新：2026-11-17。
 
 ## 1. `PEMS/` — 模板化 Word 文档族方法论（体量最大，单独有入口）
 
@@ -26,7 +26,7 @@
 |---|---|
 | `board-config-three-layer-switches.md` | `board_config.h` 三层开关架构与编译期静态检查 |
 | `drv-tm1650-software-i2c.md` | TM1650 数码管为何必须软件 I2C，影子寄存器与逐位验证做法 |
-| `keil-c51-language-pitfalls.md` | C51 语言层坑：变参 3 字节通用指针 / `data` 关键字 / 指针存储区限定 / CONST 段 / tick 撕裂 |
+| `keil-c51-language-pitfalls.md` | C51 语言层坑：变参 3 字节通用指针 / ★ `?_kprintf?BYTE` 变参区仅 15 字节（单条日志超长写穿相邻 DATA，尾部字段固定乱码）/ `data` 关键字 / 指针存储区限定 / CONST 段 / tick 撕裂 |
 | `keil-c51-overlay-function-pointer.md` | ★ OVERLAY 优化看不见函数指针调用 ⇒ 回调局部变量覆盖调用方（严重） |
 | `keil-c51-pdata-overlay.md` | COMPACT 模型下 `L18 pdata 跨页` 与 `L15 Overlay 重入` 是两类独立问题（2026-10-15 自 `embedded/` 移入） |
 | `stc8h-rom-budget-and-keil-optimize.md` | 8 KB Flash 容量怎么看、Keil 编译/链接选项怎么选（含实测） |
