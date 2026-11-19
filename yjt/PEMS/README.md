@@ -29,7 +29,9 @@
 | `tools/config.example.json` | 配置模板 |
 | `tools/consistency_check.py` | 配置驱动的一致性检查 |
 | `tools/check_personnel.py` | 人员清单门禁：内容性人员表必填、签署类按状态、跨文档姓名一致 |
-| `tools/check_code_lines.py` | 代码行数门禁：052 §2.1.7 须为实际行数，禁占位话术，可与台账比对 |
+| `tools/check_quant_items.py` | 052 量化项门禁：§2.1.5 人员数／§2.1.6 时间工作量／§2.1.7 代码行数，禁占位 |
+| `tools/check_conclusion_results.py` | 结论↔结果联动门禁：032／069 有结论必须有结果且不矛盾 |
+| `tools/check_refs.py` | 编号引用门禁：正文禁 QR/RD 模板编号，052 追溯矩阵验证报告→069、确认报告→032 |
 | `tools/release_ops.py` | 全 XML 文本扫描、页眉页脚/文本框受控替换、哈希与发布清单原语 |
 
 ## 一句话总纲

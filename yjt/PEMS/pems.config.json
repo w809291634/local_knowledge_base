@@ -128,20 +128,57 @@
     "note": "拿不到构建产物就停手索取；文档未标算法时只写“软件哈希值：<值>”，不得把 32 位值标成 SHA-256"
   },
   "code_metrics_policy": {
-    "_说明": "052 §2.1.7 写法；注册人 2026-11-19 定：必须写实际行数并纳入门禁，不得用占位话术。",
+    "_说明": "052 §2.1.5~2.1.7 量化项写法；注册人 2026-11-19 定：必须写实际值并纳入门禁，不得用占位话术。",
     "unit": "行",
     "exclude_vendor_sdk": true,
     "statement_template": "主控固件源代码共 {files} 个文件、约 {lines} 行（不含芯片厂商 SDK 与外设驱动库）",
     "must_record": "manifest 的 code_metrics 分层明细（自研/SDK/库头/全树）",
     "must_obtain_at": "S1",
-    "landing_point": "052 §2.1.7 软件代码行数",
+    "sections": [
+      "§2.1.5 开发人员数量（须含 n 人）",
+      "§2.1.6 时间和工作量（须含天/周/月/小时/人月）",
+      "§2.1.7 软件代码行数（须含 n 行）"
+    ],
+    "landing_point": "052 §2.1.5~2.1.7",
     "placeholder_ban": [
       "以受控",
       "见受控",
+      "以项目受控记录为准",
+      "待补",
       "待定",
       "待确认"
     ],
-    "gate_script": "tools/check_code_lines.py"
+    "gate_script": "tools/check_quant_items.py"
+  },
+  "reference_policy": {
+    "_说明": "注册人 2026-11-19 定：正文与表格统一项目编号，模板编号只留在页眉。",
+    "ban_in_body": "QR/RD/\\d{3}",
+    "project_id_pattern": "^\\d{3}-[A-Za-z0-9]{8,}-\\d{3}$",
+    "trace_map": {
+      "软件验证报告": "069",
+      "软件确认报告": "032"
+    },
+    "gate_script": "tools/check_refs.py"
+  },
+  "conclusion_result_policy": {
+    "_说明": "注册人 2026-11-19 定：有结论必须有结果，结果不得与结论相反。",
+    "documents": [
+      "RD-032",
+      "RD-069"
+    ],
+    "conclusion_heads": [
+      "评价",
+      "结论"
+    ],
+    "result_cols": [
+      "是否通过",
+      "测试结果",
+      "结果"
+    ],
+    "result_required_for": [
+      "RD-032"
+    ],
+    "gate_script": "tools/check_conclusion_results.py"
   },
   "page_count_policy": {
     "channel": "Microsoft Word（只读打开 ComputeStatistics(2)）",
@@ -225,5 +262,25 @@
     "skip_lock_files": true,
     "fail_on_empty_result_columns": true,
     "require_heading_set_equal_to_template": true
+  },
+  "ai_label_policy": {
+    "_说明": "注册人 2026-11-19：交付文档不得出现任何 AI 生成标识；生成侧不得主动写入。",
+    "forbidden": true,
+    "markers": [
+      "含 AI 生成",
+      "AI 生成",
+      "AI生成",
+      "AILabel",
+      "AIGC",
+      "人工智能生成",
+      "生成式人工智能",
+      "ChatGPT",
+      "DeepSeek",
+      "大模型生成"
+    ],
+    "scope": "word/*.xml 全部部件（正文、表格、页眉页脚、文本框）",
+    "cleanup": "只删除含 AILabel 的 w:drawing 及其空 run，不删除段落，避免丢失 bookmark/sectPr",
+    "gate": "gate_11.py FORBID「AI 生成痕迹」；交付前扫描必须为 0",
+    "note": "本地 Office 插件可能在打开/保存时写入 AILabel；同一文件被多次保存会出现多个同名图形，重复 ID 会让 Word 判为损坏"
   }
 }
