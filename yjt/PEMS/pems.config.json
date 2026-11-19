@@ -128,11 +128,20 @@
     "note": "拿不到构建产物就停手索取；文档未标算法时只写“软件哈希值：<值>”，不得把 32 位值标成 SHA-256"
   },
   "code_metrics_policy": {
-    "_说明": "052 §2.1.7 写法。",
+    "_说明": "052 §2.1.7 写法；注册人 2026-11-19 定：必须写实际行数并纳入门禁，不得用占位话术。",
     "unit": "行",
     "exclude_vendor_sdk": true,
     "statement_template": "主控固件源代码共 {files} 个文件、约 {lines} 行（不含芯片厂商 SDK 与外设驱动库）",
-    "must_record": "manifest 的 code_metrics 分层明细（自研/SDK/库头/全树）"
+    "must_record": "manifest 的 code_metrics 分层明细（自研/SDK/库头/全树）",
+    "must_obtain_at": "S1",
+    "landing_point": "052 §2.1.7 软件代码行数",
+    "placeholder_ban": [
+      "以受控",
+      "见受控",
+      "待定",
+      "待确认"
+    ],
+    "gate_script": "tools/check_code_lines.py"
   },
   "page_count_policy": {
     "channel": "Microsoft Word（只读打开 ComputeStatistics(2)）",
