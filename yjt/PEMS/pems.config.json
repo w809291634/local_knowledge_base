@@ -2,20 +2,29 @@
   "_说明": "PEMS 通用口径的唯一可改处。会变化的默认值都集中在这里；其余 md 只做解释与判据，不再各自写死版号/页数/清单。项目事实（型号、编号、人名、测试结论）不进本文件，写在各项目的 work/facts.yaml。",
   "_更新纪律": "改本文件后，重跑受影响脚本与闸门；md 里的实测快照与本文件冲突时，以本文件为准并在对应 md 里改快照。",
   "_version": "2026-11-19",
-
   "paths": {
     "pems_root": "C:/Users/yjt54/Desktop/local_knowledge_base/yjt/PEMS",
-    "templates": "C:/Users/yjt54/Desktop/local_knowledge_base/yjt/PEMS/templates"
+    "templates": "C:/Users/yjt54/Desktop/local_knowledge_base/yjt/PEMS/templates",
+    "content_templates": "C:/Users/yjt54/Desktop/local_knowledge_base/yjt/PEMS/content_templates"
   },
-
   "delivery_family": {
-    "members": ["026", "028", "029", "030", "032", "052", "068", "069"],
+    "members": [
+      "026",
+      "028",
+      "029",
+      "030",
+      "032",
+      "052",
+      "068",
+      "069"
+    ],
     "count": 8,
-    "excluded": {"057": "注册人 2026-11-10 定：另行规定，不由本流程生成"},
+    "excluded": {
+      "057": "注册人 2026-11-10 定：另行规定，不由本流程生成"
+    },
     "template_library_count": 9,
     "template_library_note": "模板库含 057 共 9 份；交付族是报送清单，两者不矛盾"
   },
-
   "template_version": {
     "_说明": "项目未显式指定时按此取；项目配置必须显式写 template_version，不靠脚本默认推断。",
     "026": "2.0",
@@ -28,7 +37,6 @@
     "069": "1.0",
     "057": "3.0"
   },
-
   "template_baseline": {
     "026": {
       "version": "2.0",
@@ -46,24 +54,79 @@
       "note": "仅供历史对账，不得用于新项目"
     }
   },
-
+  "content_structure": {
+    "_说明": "生成时照本件章节结构与文字句式；事实按项目 facts.yaml 替换。文件含项目残留，不提供新项目事实。content_templates/ 与模板库 templates/ 分开，不参与模板库九份计数。",
+    "026": {
+      "version": "2.0",
+      "file": "templates/2.0/RD-026_软件确认计划_2.0_格式档案（YJT-1222）.docx",
+      "sha256": "15e9d953820f58e890b93a696034200dfd5bdf87d6377c6ffb8a8452867af61f",
+      "archive_md": "content_templates/RD-026_软件确认计划_2.0_内容结构模板（YJT-1222）.md",
+      "docx_note": "与默认模板同一份文件，content_templates 内不重复存 docx",
+      "headings": 4,
+      "tables": "2 张（6x4 / 13x4，计划表按分类纵向合并）",
+      "residues": [
+        "026-03GSR2609010-001",
+        "半导体激光治疗仪YJT-1222",
+        "03GSR2609010"
+      ],
+      "rule": "不新增标题；计划表序号与验证条款按组纵向合并；结果列计划阶段留空"
+    },
+    "032": {
+      "version": "2.1",
+      "file": "content_templates/RD-032_软件确认报告_2.1_内容结构模板（YJT-1225）.docx",
+      "sha256": "eb3bac23ed678f906fdf54311878b345ea80d264748bc3c64b55c89e6bb8ecfd",
+      "archive_md": "content_templates/RD-032_软件确认报告_2.1_内容结构模板（YJT-1225）.md",
+      "headings": 21,
+      "tables": "6 张（6x4 / 5x2 / 15x3 / 11x3 / 6x3 / 4x3）",
+      "residues": [
+        "03GSR2609015",
+        "YJT-1225",
+        "秦艳慧",
+        "2026年10月23日"
+      ],
+      "rule": "三张测试表只用 3 列；不新增标题；结果表三行是否通过"
+    },
+    "069": {
+      "version": "1.0",
+      "file": "content_templates/RD-069_软件验证报告_1.0_内容结构模板（YJT-1225）.docx",
+      "sha256": "7f9730fc1236ab3f8ccb3bc30f95c9d9635f3c62f345d10f21e428d47bf220c0",
+      "archive_md": "content_templates/RD-069_软件验证报告_1.0_内容结构模板（YJT-1225）.md",
+      "headings": 8,
+      "tables": "4 张（6x4 / 15x3 / 11x3 / 6x3）",
+      "residues": [
+        "03GSR2609015",
+        "YJT-1225"
+      ],
+      "rule": "一级标题不带“一、二、”；末章原文为“5、结论”（顿号），照原样；测试表只 3 列"
+    }
+  },
   "software_version_policy": {
     "_说明": "注册人 2026-11-17 定；项目另有书面口径时以项目为准，并在项目 facts.yaml 记 provenance。",
     "release_version_rule": "嵌入式 PEMS 发布版本只写 V1（如 V1），不写 E V1 / M V1",
     "letter_meaning": "E=嵌入式、M=移动端，均为内部标识，正文不体现移动端版本",
-    "landing_points": ["052 §1.1", "052 §4.4.2", "052 §4.4.3", "032 §1.2", "029 两张表软件版本格", "030 版本描述章"]
+    "landing_points": [
+      "052 §1.1",
+      "052 §4.4.2",
+      "052 §4.4.3",
+      "032 §1.2",
+      "029 两张表软件版本格",
+      "030 版本描述章"
+    ]
   },
-
   "software_hash_policy": {
     "_说明": "注册人 2026-11-17 定：HASH 属开工前置事实，S1 台账必须建 software_hash 字段。",
     "algorithm_default": "SHA-256",
     "hex_length": 64,
     "must_obtain_at": "S1",
     "landing_point": "052 §1.1",
-    "forbidden": ["见受控的构建与版本记录", "待补", "TBD", "占位"],
+    "forbidden": [
+      "见受控的构建与版本记录",
+      "待补",
+      "TBD",
+      "占位"
+    ],
     "note": "拿不到构建产物就停手索取；文档未标算法时只写“软件哈希值：<值>”，不得把 32 位值标成 SHA-256"
   },
-
   "code_metrics_policy": {
     "_说明": "052 §2.1.7 写法。",
     "unit": "行",
@@ -71,25 +134,26 @@
     "statement_template": "主控固件源代码共 {files} 个文件、约 {lines} 行（不含芯片厂商 SDK 与外设驱动库）",
     "must_record": "manifest 的 code_metrics 分层明细（自研/SDK/库头/全树）"
   },
-
   "page_count_policy": {
     "channel": "Microsoft Word（只读打开 ComputeStatistics(2)）",
     "note": "WPS / LibreOffice 分页可差 1 页；比较页数必须同程序，并把程序名写进证据"
   },
-
   "doc_numbering": {
     "_说明": "文件编号格式，项目编号取 facts.yaml 的 project.code。",
     "pattern": "{rd}-{project_code}-001",
     "example": "026-03GSR2609010-001"
   },
-
   "test_case_numbering": {
     "_说明": "026/032/068/069 共用一套用例编号；跨文档必须逐条相等。",
     "pattern": "2.2.{n}",
     "start": 1,
-    "cross_check": ["026", "032", "068", "069"]
+    "cross_check": [
+      "026",
+      "032",
+      "068",
+      "069"
+    ]
   },
-
   "gate_defaults": {
     "residue_scan_scope": "正文段 + 表格单元格 + 页眉页脚 + 文本框/形状",
     "lock_file_prefix": "~$",
