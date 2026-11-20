@@ -1747,7 +1747,7 @@ def set_cover_spacers(doc, n=3, first_cell_text='文件编号', body_style=None)
 
 
 def set_cover_top_spacers(doc, n=9, first_cell_text='文件编号', body_style=None):
-    """把"封面标题之前的空段"统一成 n 行 —— 让封面整块落在版心**居中偏上**。
+    """把"封面标题之前的空段"统一成 n 行 —— 让封面整块在版心里**居中**（A 第三条：上下差 ≤3pt）。
 
     为什么不用 `w:vAlign` + 分节（两条都实测踩过）：
       1. vAlign 是**节**属性。想让封面单独居中就得让封面单独成节，而新建节的 sectPr 只要
@@ -1806,6 +1806,9 @@ def set_cover_top_spacers(doc, n=9, first_cell_text='文件编号', body_style=N
 def set_cover_block_valign(doc, valign='center', first_cell_text='文件编号', below_spacers=0,
                            body_style=None, raise_pt=0):
     """让封面整块（标题文字＋封面信息表）在版心里**居中**，并用"表后空段"把可视块顶到**偏上**。
+
+    ⚠ A 方案（2026-11-20）要求上下留白差 ≤3pt，**"偏上"不再合规**；本函数仅保留给
+    注册人明确允许偏上的历史项目，A 方案用 `set_cover_top_spacers()` 纯空行居中。
 
     为什么不用"标题前空段"定位：那要数准每行行高，字号／行距／软件（Word、WPS、LibreOffice）
     一变就漂；`w:vAlign` 由排版引擎按实际内容高度居中，天然稳。
