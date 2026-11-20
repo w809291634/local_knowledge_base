@@ -7,9 +7,10 @@
 判据（注册人 2026-11-19）：
 1. 内容性人员表（表头含「姓名」）逐行非空；RD-052 必须存在该表，且职责列覆盖
    需求与设计／软件编程／黑盒测试／白盒测试／风险管理五类。
-2. 签署类（「确认人员／测试人员／测试人」列、封面「编制／审核／批准」行、
-   068/069/026 首行合并签署格、032「测试组：」段落）：草稿态允许留空，
-   受控发布态必须填写；填了人员没填日期视为半填。
+2. 签署类（「确认人员／测试人员／测试人」列、068/026 首行合并签署格、032「测试组：」段落）：
+   草稿态允许留空，受控发布态必须填写；填了人员没填日期视为半填。
+   026/069 不得保留「测试人员/测试时间」行，命中即失败。
+   封面「编制／审核／批准」由注册人线下签署，空值不作失败项，只拦半填。
 3. 跨文档同一测试角色姓名不一致 → 失败。
 
 人员清单属 S1 开工前置事实（authoring-workflow-and-experience-index.md），
@@ -77,8 +78,8 @@ def check_doc(path: Path, status: str):
             continue
         first = row_text(rows[0])
 
-        # 0) 069 三张测试表不得出现「测试人员/测试时间」行（注册人 2026-11-20 定）
-        if path.name.startswith("RD-069"):
+        # 0) 026/069 不得出现「测试人员/测试时间」行（注册人 2026-11-20 定）
+        if path.name.startswith(("RD-026", "RD-069")):
             for ri, row in enumerate(rows):
                 txt = " ".join(row_text(row))
                 if "测试时间" in txt and ("测试人员" in txt or "测试人" in txt):
@@ -142,13 +143,12 @@ def check_doc(path: Path, status: str):
                         errors.append("%s 表%d 行%d「%s」为空" % (path.name, ti, ri, col))
 
         # 5) 封面签署行：编制／审核／批准 | 值 | 日期 | 值
+        #    封面签署由注册人线下完成（2026-11-20 定），空值不作门禁失败项；只拦半填
         for ri, row in enumerate(rows):
             cells = row_text(row)
             if len(cells) >= 4 and cells[0] in COVER_LABELS and "日期" in cells[2]:
                 if cells[1]:
                     names.add(pick_name(cells[1]))
-                if released and not cells[1]:
-                    errors.append("%s 表%d 行%d「%s」为空" % (path.name, ti, ri, cells[0]))
                 if cells[1] and not cells[3]:
                     errors.append("%s 表%d 行%d「%s」填了签名但日期为空" % (path.name, ti, ri, cells[0]))
 

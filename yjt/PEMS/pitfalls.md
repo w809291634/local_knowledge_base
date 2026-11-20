@@ -34,7 +34,7 @@ for prog in ('Word.Application', 'KWPS.Application'):   # 先 Word，失败退 W
 - 通道要选一个当主、另一个只做交叉核对，别混用：LibreOffice 与 WPS 转出的渲染逐页一致，但 XML 不等价
   —— LibreOffice 会给封面大标题多挂 `numPr`、把 `w:jc` 写成 `start`、丢掉 `.doc` 的左缩进。
 - 判"能不能用"以 Word 只读打开为准：转出稿必须能开、页数对得上，否则这份模板不能进生成链。
-- 模板件本身要登记哈希与版式判据，见 `template-baseline-rd026-2.1-v2.md`（RD-026 默认模板＝2.1_v2，2026-11-20 定；v1 仅历史对账）。
+- 模板件本身要登记哈希与版式判据，见 `templates/2.1/RD-026_软件确认计划_2.1_格式档案（YJT-1222）_v3.md`（RD-026 默认模板＝2.1_v3，2026-11-20 定；v1/v2 仅历史对账）。
 
 ## 2. LibreOffice 转 PDF
 
