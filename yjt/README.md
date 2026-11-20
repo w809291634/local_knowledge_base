@@ -1,7 +1,7 @@
 # yjt/ — 按芯片/项目归档的经验库索引
 
 > 与 `embedded/` 的分工：**这里放"换一颗芯片就不成立"的经验**，跨项目可复用的方法论与工具进 `embedded/`。
-> 判据和落库规矩见仓库根 `AGENTS.md` 与本文件末尾第 8 节。最后更新：2026-11-17。
+> 判据和落库规矩见仓库根 `AGENTS.md` 与本文件末尾第 8 节。最后更新：2026-11-20。
 
 ## 1. `PEMS/` — 模板化 Word 文档族方法论（体量最大，单独有入口）
 
@@ -20,10 +20,11 @@
 - 可复用脚本在 `yjt/PEMS/tools/`：`docx_ops.py`（封面/分节/目录域/插图/校验原语）、`fig_tools.py`（框图绘制，1 单位=1 英寸）、
   `build_docs.py`、`consistency_check.py`、`release_ops.py`。**用 `sys.path.insert` 直接 import，别再写第二份。**
 
-## 2. `STC8H_8G/` — Keil C51 / STC8G-8H 全系列（10 篇）
+## 2. `STC8H_8G/` — Keil C51 / STC8G-8H 全系列（11 篇）
 
 | 文件 | 一句话 |
 |---|---|
+| `stc8h-app-framework-template.md` | 前后台 + 软定时器 + 单状态机框架模板：目录、启动、主循环、g_state、状态机、上报、配置与验收 |
 | `board-config-three-layer-switches.md` | `board_config.h` 三层开关架构与编译期静态检查 |
 | `drv-tm1650-software-i2c.md` | TM1650 数码管为何必须软件 I2C，影子寄存器与逐位验证做法 |
 | `keil-c51-language-pitfalls.md` | C51 语言层坑：变参 3 字节通用指针 / ★ `?_kprintf?BYTE` 变参区仅 15 字节（单条日志超长写穿相邻 DATA，尾部字段固定乱码）/ `data` 关键字 / 指针存储区限定 / CONST 段 / tick 撕裂 |
