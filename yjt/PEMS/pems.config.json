@@ -164,6 +164,19 @@
     },
     "gate_script": "tools/check_refs.py"
   },
+  "version_history_policy": {
+    "_说明": "注册人 2026-11-20 定：052 §4.3 更新历史必须保留「首次发布」记录。",
+    "landing_point": "052 §4.3 更新历史",
+    "tables": [
+      "完整版本｜修订日期｜修订类型（重大/轻微修订）｜修订内容",
+      "序号｜软件版本｜日期｜修订类型｜变更内容描述"
+    ],
+    "must_contain": "首次发布",
+    "required_columns": [
+      "修订类型"
+    ],
+    "gate_script": "tools/check_version_history.py"
+  },
   "conclusion_result_policy": {
     "_说明": "注册人 2026-11-19 定：有结论必须有结果，结果不得与结论相反。",
     "documents": [
