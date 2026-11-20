@@ -1082,8 +1082,8 @@ def iter_zone_paragraphs(doc, cover_first_cell='文件编号'):
     """按版式分区产出 (paragraph, zone)：
     cover / head / caption / table / body / hf（页眉页脚）。
 
-    分区是字号统一的前提——标题、封面、页眉**只该改字体不该改字号**，
-    否则章标题会和正文一样大、封面版式塌陷。
+    分区是字号统一的前提——标题、封面、页眉各有独立字号档，不能一律套正文档；
+    套错会把章标题压成正文号、封面版式塌陷。
     """
     sect_i = next((i for i, p in enumerate(doc.paragraphs) if has_section_break(p)), 0)
     cover = find_cover_table(doc.element.body, cover_first_cell)
@@ -1126,6 +1126,7 @@ def unify_document_fonts(doc, east_asia='宋体', latin='Times New Roman',
                          cover_first_cell='文件编号'):
     """统一整份文档字体，并按分区设字号（字号单位=半磅，None 表示该分区不动）。
 
+    封面标题/标签/值格的 36/14/12pt（72/28/24）不在本函数内，按 A 档另行写入。
     返回 (改字体的 run 数, 设字号的 run 数, 改的样式数)。文本框内的 run 一律跳过：
     那是表单/示意图的排版，改字号会撑破框。
     """
@@ -1496,7 +1497,7 @@ def pagination_repair(doc, cover_texts=(), apply=None):
     """按 pagination_audit 的判据**就地修复**分页与标题树缺陷，返回 {项: 处置数}。
 
     与 pagination_audit 共用同一套判据，避免"查的是一套、改的是另一套"。
-    `apply` 可传子集限定动作；默认全开。所有动作都不改文字内容、不改 pStyle、不改字号。
+    `apply` 可传子集限定动作；默认全开。所有动作都不改文字内容、不改 pStyle、不改字号（字号由字号统一环节按 A 档处理）。
 
     动作：
       drop_hard_break   段前分页已存在时删掉段内 `w:br type=page`（§39 空白页根因）；
@@ -2337,11 +2338,15 @@ def _cover_end_index(doc, first_cell_text='文件编号'):
     return len(kids)
 
 
+A_HEADING_SZ = {0: '32', 1: '28', 2: '24'}  # 16/14/12pt，见「分类规则 -- 字号」
+
+
 def heading_format_profile_from(doc, levels=(0, 1, 2), first_cell_text='文件编号'):
     """从参照文档统计正文区各级标题的"多数派"格式 -> {级别: {sz,ea,latin,bold,votes}}。
 
     取多数派而非首段或平均值：参照文档自身常有一两段偏离（实测某份 22 段一致、1 段漏加粗），
     多数派才能把这些也纠正过来。封面区与引导句都不参与投票。
+    `sz` 仅作对账；应用时由 `normalize_heading_format` 按「分类规则 -- 字号」固定档覆盖。
     """
     S = _style_outline_map(doc)
     kids = list(doc.element.body.iterchildren())
@@ -2372,10 +2377,11 @@ def heading_format_profile_from(doc, levels=(0, 1, 2), first_cell_text='文件�
 
 def normalize_heading_format(doc, profile, levels=(0, 1, 2), first_cell_text='文件编号',
                              demote_lead_in=True, also_style=True):
-    """把正文区各级标题统一到 profile 的字号/字体/加粗。
+    """把正文区各级标题统一到 A 固定字号档（16/14/12pt）+ profile 的字体/加粗。
 
     profile 由 heading_format_profile_from(参照文档) 得到，形如
     {0: {'sz':'24','ea':'宋体','latin':'Times New Roman','bold':True}, 1: {...}, 2: {...}}
+    其中 sz 仅作对账，应用时一律用 A 档（32/28/24 半磅）覆盖。
 
     四条硬护栏：
       1. 只动封面表之后的段落。封面大标题也是 outlineLvl=0（实测 sz=72），
@@ -2453,6 +2459,8 @@ def normalize_heading_format(doc, profile, levels=(0, 1, 2), first_cell_text='�
         spec = profile.get(lv)
         if not spec:
             continue
+        spec = dict(spec)
+        spec['sz'] = A_HEADING_SZ.get(lv, spec.get('sz'))
         for r in c.findall(qn('w:r')):
             if not ''.join(x.text or '' for x in r.iter(qn('w:t'))).strip():
                 continue
@@ -2478,11 +2486,13 @@ def normalize_heading_format(doc, profile, levels=(0, 1, 2), first_cell_text='�
             lv = next((k for k, v in want.items() if v == n), None)
             if lv is None or lv not in profile:
                 continue
+            spec = dict(profile[lv])
+            spec['sz'] = A_HEADING_SZ.get(lv, spec.get('sz'))
             rPr = s.find(qn('w:rPr'))
             if rPr is None:
                 rPr = OxmlElement('w:rPr')
                 s.append(rPr)
-            set_rPr(rPr, profile[lv])
+            set_rPr(rPr, spec)
 
     return {'changed': changed, 'demoted_lead_in': demoted}
 
@@ -2793,6 +2803,7 @@ def normalize_numbering_glyphs(doc, spec_by_level, list_spec=None,
         变成别的字符，一律不动，只在返回值里登记；
       * 只改本文档用到的 (numId, ilvl)。
     spec_by_level: {大纲级别: {'sz': 半磅, 'ea': 中文字体, 'latin': 西文字体}}；
+    `sz` 仅作对账，应用时按 A 档（32/28/24）覆盖。
     list_spec 给正文列表编号（a) / (1) / 1)）套正文档。"""
     root, part = _numbering_part(doc)
     if root is None:
@@ -2801,7 +2812,9 @@ def normalize_numbering_glyphs(doc, spec_by_level, list_spec=None,
     want = {}
     for key, lv in used.items():
         if spec_by_level.get(lv):
-            want[key] = spec_by_level[lv]
+            spec = dict(spec_by_level[lv])
+            spec['sz'] = A_HEADING_SZ.get(lv, spec.get('sz'))
+            want[key] = spec
     if list_spec:
         for key in lists:
             want.setdefault(key, list_spec)
