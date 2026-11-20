@@ -77,7 +77,15 @@ def check_doc(path: Path, status: str):
             continue
         first = row_text(rows[0])
 
-        # 1) 首行合并签署格（026 / 068 / 069）：测试人员／测试人 + 测试时间
+        # 0) 069 三张测试表不得出现「测试人员/测试时间」行（注册人 2026-11-20 定）
+        if path.name.startswith("RD-069"):
+            for ri, row in enumerate(rows):
+                txt = " ".join(row_text(row))
+                if "测试时间" in txt and ("测试人员" in txt or "测试人" in txt):
+                    errors.append("%s 表%d 行%d 不应保留「测试人员/测试时间」行"
+                                  % (path.name, ti, ri))
+
+        # 1) 首行合并签署格（026 / 068）：测试人员／测试人 + 测试时间
         merged = first[0] if len(set(first)) == 1 else ""
         labels = parse_labels(merged) if merged else {}
         if any(k in labels for k in SIGN_LABELS):
