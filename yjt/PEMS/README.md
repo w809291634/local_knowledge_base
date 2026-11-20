@@ -33,6 +33,7 @@
 | `tools/check_quant_items.py` | 052 量化项门禁：§2.1.5 人员数／§2.1.6 时间工作量／§2.1.7 代码行数，禁占位 |
 | `tools/check_version_history.py` | 052 更新历史门禁：§4.3 必须含「首次发布」（日期取《注意事项》软件发布时间、描述只写「软件首次发布」），修订类型不得为空 |
 | `tools/check_rd030_revision.py` | 030 修订记录门禁：表头+1 行首次发布、固定布局、列宽总宽 ≤ 版心，防 V1/日期折行 |
+| `tools/check_052_verification_table.py` | 052 §2.5.6 验证报告表门禁：与 069 逐条同源（行数/序号/类别/名称/结果/是） |
 | `tools/check_conclusion_results.py` | 结论↔结果联动门禁：032／069 有结论必须有结果且不矛盾 |
 | `tools/check_refs.py` | 编号引用门禁：正文禁 QR/RD 模板编号，052 追溯矩阵验证报告→069、确认报告→032 |
 | `tools/release_ops.py` | 全 XML 文本扫描、页眉页脚/文本框受控替换、哈希与发布清单原语 |
