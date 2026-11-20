@@ -211,7 +211,34 @@
     "required_columns": [
       "修订类型"
     ],
+    "first_release_date": "必填，取《注意事项》「一、样品信息」的 software_release_date（软件发布时间；本项目 2025.12.16 → 2025-12-16），两张表都要填；不得用生产日期/收样日期/说明书日期替代",
+    "first_release_desc": "只写「软件首次发布」，与软件版本策略一致，不得含「移动端」",
     "gate_script": "tools/check_version_history.py"
+  },
+  "rd030_revision_policy": {
+    "_说明": "注册人 2026-11-20 定：030 第六章修订记录表只保留表头+1 行首次发布，并固定列宽，避免 V1/日期折行。",
+    "landing_point": "030 第六章 修订记录表",
+    "rows": "2 行（表头 + 1 行数据）",
+    "values": [
+      "V1",
+      "首次发布",
+      "首次发布",
+      "软件发布日期（取自《注意事项》软件发布时间，20xx-xx-xx）",
+      "空",
+      "空"
+    ],
+    "layout": "w:tblLayout=fixed",
+    "widths_dxa": [
+      900,
+      1950,
+      1920,
+      1800,
+      900,
+      1530
+    ],
+    "width_limit": 9072,
+    "toc_note": "表格缩短后第七章随之上移，须同步目录第七章页码（本项目 13→12）",
+    "gate_script": "tools/check_rd030_revision.py"
   },
   "conclusion_result_policy": {
     "_说明": "注册人 2026-11-19 定：有结论必须有结果，结果不得与结论相反。",
