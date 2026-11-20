@@ -165,7 +165,7 @@ python tools/consistency_check.py --config <project-config.json>
 ### 10.3 参考结构（下次直接照用）
 
 - 三类命名的示例：`显示与提示测试` / `功能与控制测试` / `安全与保护测试`（可按产品调整名称，但**两份必须同名同序**）；
-- 报告侧写作骨架见 `content_templates/RD-032_软件确认报告_2.1_内容结构模板（YJT-1225）.md`；计划侧见 `content_templates/RD-026_软件确认计划_2.0_内容结构模板（YJT-1222）.md`；
+- 报告侧写作骨架见 `content_templates/RD-032_软件确认报告_2.1_内容结构模板（YJT-1225）.md`；计划侧见 `content_templates/RD-026_软件确认计划_2.1_内容结构模板（YJT-1222）_v2.md`；
 - 机器可读规则登记在 `pems.config.json` → `pairing_rules`，脚本按此对账，不要在项目里另写一套。
 
 ### 10.4 验证对（RD-068 ↔ RD-069）同法，差异只有三点

@@ -1,7 +1,7 @@
 {
   "_说明": "PEMS 通用口径的唯一可改处。会变化的默认值都集中在这里；其余 md 只做解释与判据，不再各自写死版号/页数/清单。项目事实（型号、编号、人名、测试结论）不进本文件，写在各项目的 work/facts.yaml。",
   "_更新纪律": "改本文件后，重跑受影响脚本与闸门；md 里的实测快照与本文件冲突时，以本文件为准并在对应 md 里改快照。",
-  "_version": "2026-11-19",
+  "_version": "2026-11-20",
   "paths": {
     "pems_root": "C:/Users/yjt54/Desktop/local_knowledge_base/yjt/PEMS",
     "templates": "C:/Users/yjt54/Desktop/local_knowledge_base/yjt/PEMS/templates",
@@ -27,7 +27,7 @@
   },
   "template_version": {
     "_说明": "项目未显式指定时按此取；项目配置必须显式写 template_version，不靠脚本默认推断。",
-    "026": "2.0",
+    "026": "2.1",
     "028": "2.1",
     "029": "2.1",
     "030": "2.1",
@@ -39,28 +39,32 @@
   },
   "template_baseline": {
     "026": {
-      "version": "2.0",
-      "file": "templates/2.0/RD-026_软件确认计划_2.0_格式档案（YJT-1222）.docx",
+      "version": "2.1",
+      "variant": "v2",
+      "file": "templates/2.1/RD-026_软件确认计划_2.1_格式档案（YJT-1222）_v2.docx",
       "tier": "格式档案",
-      "sha256": "15e9d953820f58e890b93a696034200dfd5bdf87d6377c6ffb8a8452867af61f",
-      "archive_md": "templates/2.0/RD-026_软件确认计划_2.0_格式档案（YJT-1222）.md",
-      "note": "含项目残留，生成时按档案 §3 残留清单替换，不得当空白模板"
+      "sha256": "3bb96554ffaf4c578c169cc25bdda79ec34fa79affd64e70ccaad82c81940125",
+      "archive_md": "templates/2.1/RD-026_软件确认计划_2.1_格式档案（YJT-1222）_v2.md",
+      "note": "2.1 的首选版本（4 章＋13×4 测试计划表＋静态目录）；含项目残留，生成时按档案 §3 残留清单替换，不得当空白模板"
     },
     "026_superseded": {
       "version": "2.1",
-      "file": "templates/2.1/RD-026_软件确认计划_2.1_基线.docx",
-      "tier": "空白件（已停用）",
+      "variant": "v1",
+      "file": "templates/2.1/RD-026_软件确认计划_2.1_基线_v1.docx",
+      "tier": "空白件（2.1_v1，非首选）",
       "sha256": "b99444762cdaff5b7e82115db4b30bb78446bda2c42d3e3905bdd012327243ee",
-      "note": "仅供历史对账，不得用于新项目"
+      "archive_md": "templates/2.1/RD-026_软件确认计划_2.1_基线_v1.md",
+      "note": "无章节、无目录、6×3 确认小组表；仅供历史对账，不得用于新项目"
     }
   },
   "content_structure": {
     "_说明": "生成时照本件章节结构与文字句式；事实按项目 facts.yaml 替换。文件含项目残留，不提供新项目事实。content_templates/ 与模板库 templates/ 分开，不参与模板库九份计数。",
     "026": {
-      "version": "2.0",
-      "file": "templates/2.0/RD-026_软件确认计划_2.0_格式档案（YJT-1222）.docx",
-      "sha256": "15e9d953820f58e890b93a696034200dfd5bdf87d6377c6ffb8a8452867af61f",
-      "archive_md": "content_templates/RD-026_软件确认计划_2.0_内容结构模板（YJT-1222）.md",
+      "version": "2.1",
+      "variant": "v2",
+      "file": "templates/2.1/RD-026_软件确认计划_2.1_格式档案（YJT-1222）_v2.docx",
+      "sha256": "3bb96554ffaf4c578c169cc25bdda79ec34fa79affd64e70ccaad82c81940125",
+      "archive_md": "content_templates/RD-026_软件确认计划_2.1_内容结构模板（YJT-1222）_v2.md",
       "docx_note": "与默认模板同一份文件，content_templates 内不重复存 docx",
       "headings": 4,
       "tables": "2 张（6x4 / 13x4，计划表按分类纵向合并）",
