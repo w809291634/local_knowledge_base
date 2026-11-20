@@ -311,7 +311,7 @@
     "skip_lock_files": true,
     "fail_on_empty_result_columns": true,
     "require_heading_set_equal_to_template": true,
-    "conclusion_default": "通过（注册人 2026-11-20：032/069 结论默认写测试通过，不再逐项询问；032 结果表三行填“是”，069 结论写“测试通过”）"
+    "conclusion_default": "通过（注册人 2026-11-20：032/069 结论默认写测试通过，不再逐项询问；032 结果表三行填“是”，069 结论只写“<产品>软件系统的单元、集成与系统测试均通过。”；结论不引用需求规范/技术要求/验证计划，不写过程说明，不赘述）"
   },
   "ai_label_policy": {
     "_说明": "注册人 2026-11-19：交付文档不得出现任何 AI 生成标识；生成侧不得主动写入。",
