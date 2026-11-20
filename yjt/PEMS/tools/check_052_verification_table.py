@@ -18,8 +18,10 @@ import sys
 from pathlib import Path
 
 from docx import Document
+from docx.oxml.ns import qn
 
 CATS = ["单元测试", "集成测试", "系统测试"]
+WIDTH_LIMIT = 9072
 
 
 def read_069(path: Path):
@@ -91,6 +93,26 @@ def check(p052: Path, p069: Path):
         if cells[j_ok] != "是":
             errors.append("%s 表行%d「是/否通过」应为「是」，实际「%s」"
                           % (p052.name, i, cells[j_ok]))
+
+    # 渲染约束：数据行不得残留纵向合并（会吞掉序号/类别列文字）；列宽需合理
+    tbl = target._tbl
+    merged = 0
+    for tr in tbl.findall(qn("w:tr"))[1:]:
+        for tc in tr.findall(qn("w:tc")):
+            tcpr = tc.find(qn("w:tcPr"))
+            if tcpr is not None and tcpr.find(qn("w:vMerge")) is not None:
+                merged += 1
+    if merged:
+        errors.append("%s 验证报告表数据行残留 %d 个 vMerge 合并标记，渲染会吞掉序号/类别"
+                      % (p052.name, merged))
+    grid = tbl.tblGrid
+    widths = [int(g.get(qn("w:w")) or 0) for g in grid.findall(qn("w:gridCol"))]
+    if widths and widths[0] < 800:
+        errors.append("%s 验证报告表序号列宽 %d < 800，2.2.x 会折行"
+                      % (p052.name, widths[0]))
+    if sum(widths) > WIDTH_LIMIT:
+        errors.append("%s 验证报告表总宽 %d 超过版心 %d"
+                      % (p052.name, sum(widths), WIDTH_LIMIT))
     return errors
 
 
