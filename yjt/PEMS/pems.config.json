@@ -319,6 +319,12 @@
       "note": "所有项目共用此形态，不各写一套"
     },
     "truth_source_rule": "不一致先定真值再改另一份，并写进版本说明；项目 08 以《软件确认计划》为准统一报告",
+    "category_merge": {
+      "_说明": "注册人 2026-11-21 定：一张表混排多个测试大类的，按大类纵向合并；独立三表的不加类别列。",
+      "apply": ["026 测试计划表：测试类别列按单元/集成/系统 vMerge=restart/continue"],
+      "no_category_column": ["032", "068", "069"],
+      "exception": ["052 §2.5.6 验证报告表：check_052_verification_table 禁止 vMerge，类别逐行写值"]
+    },
     "052_verification_table": {
       "_说明": "注册人 2026-11-20 定：052 §2.5.6 验证报告表必须与 069 用例表同源；细则见 consistency-gate.md §10.5。",
       "document": "052",
