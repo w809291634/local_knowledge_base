@@ -19,6 +19,7 @@ from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 from docx.shared import Inches, Pt, Emu
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.table import WD_ALIGN_VERTICAL
 from docx.text.run import Run
 
 
@@ -2014,7 +2015,7 @@ def set_table_borders_six_way(doc, first_cell_text='文件编号', sz=4, val='si
                               color='auto', skip_cover=True):
     """独立工具：给每张表补齐六向实线（top/left/bottom/right/insideH/insideV）。
 
-    默认管线不调用本函数；仅在项目明确要求"每张表六向边框"时显式使用。
+    默认管线对除封面表外的正文表格调用本函数；封面表跳过。
     同时清掉单元格级 `w:tcBorders` 里 `val="nil|none"` 的边。
     返回 {表号: [处置]}。
     """
@@ -2068,6 +2069,33 @@ def set_table_borders_six_way(doc, first_cell_text='文件编号', sz=4, val='si
         if acts:
             res[i + 1] = acts
     return res
+
+
+def center_table_text(doc, first_cell_text='文件编号', skip_cover=True,
+                      horizontal=True, vertical=True):
+    """正文表格文字默认居中：水平居中，vertical=True 时同时垂直居中。
+
+    封面表（含 first_cell_text 的那张）按 skip_cover 跳过；返回处理的段落数。
+    项目登记的左对齐例外列，在本函数之后覆盖。
+    """
+    body = doc.element.body
+    kids = list(body.iterchildren())
+    etxt = lambda el: ''.join(x.text or '' for x in el.iter(qn('w:t')))
+    cover_tbl = next((c for c in kids
+                      if c.tag.split('}')[-1] == 'tbl' and first_cell_text in etxt(c)), None)
+    n = 0
+    for table in doc.tables:
+        if skip_cover and table._tbl is cover_tbl:
+            continue
+        for row in table.rows:
+            for cell in row.cells:
+                if vertical:
+                    cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                for p in cell.paragraphs:
+                    if horizontal:
+                        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    n += 1
+    return n
 
 
 def normalize_table_geometry(doc, first_cell_text='文件编号', keep_cover_float=True,
@@ -2267,7 +2295,7 @@ def audit_table_geometry(doc, first_cell_text='文件编号'):
                 if e is None or v in ('single', 'thick', 'double', 'dotted', 'dashed'):
                     first_col_has = True
                     break
-            # 表级与样式都没有任何可见框线的，是设计上无框线的表，不是缺陷
+            # 封面表或项目显式例外才允许无框线；正文表格按 42 补六向边框
             other_sides = [x for x in ('right', 'top', 'bottom', 'insideH', 'insideV')
                            if b is not None
                            and b.find(qn('w:' + x)) is not None
