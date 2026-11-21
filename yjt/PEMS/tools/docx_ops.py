@@ -2098,6 +2098,31 @@ def center_table_text(doc, first_cell_text='文件编号', skip_cover=True,
     return n
 
 
+def audit_table_borders(doc, first_cell_text='文件编号', body_sz=4, cover_sz=2):
+    """检查表格六向框线：正文表 0.5pt（sz=4），封面表 0.25pt（sz=2）。
+
+    返回问题列表；封面表按 first_cell_text 定位，找不到时全部按正文表判。
+    """
+    body = doc.element.body
+    kids = list(body.iterchildren())
+    etxt = lambda el: ''.join(x.text or '' for x in el.iter(qn('w:t')))
+    cover_tbl = next((c for c in kids
+                      if c.tag.split('}')[-1] == 'tbl' and first_cell_text in etxt(c)), None)
+    issues = []
+    for i, tbl in enumerate(doc.tables, 1):
+        is_cover = tbl._tbl is cover_tbl
+        exp = cover_sz if is_cover else body_sz
+        bds = tbl._tbl.tblPr.find(qn('w:tblBorders'))
+        for side in _SIDES:
+            el = bds.find(qn('w:' + side)) if bds is not None else None
+            val = (el.get(qn('w:val')) or '') if el is not None else ''
+            sz = (el.get(qn('w:sz')) or '') if el is not None else ''
+            if val not in ('single', 'thick', 'double') or str(sz) != str(exp):
+                issues.append({'table': i, 'cover': is_cover, 'side': side,
+                               'expected_sz': exp, 'actual_sz': sz, 'val': val})
+    return issues
+
+
 def normalize_table_geometry(doc, first_cell_text='文件编号', keep_cover_float=True,
                              border_sz=4, apply=('indent', 'float', 'grid'),
                              grid_overrides=None, verbose=False):
@@ -2295,7 +2320,7 @@ def audit_table_geometry(doc, first_cell_text='文件编号'):
                 if e is None or v in ('single', 'thick', 'double', 'dotted', 'dashed'):
                     first_col_has = True
                     break
-            # 封面表或项目显式例外才允许无框线；正文表格按 42 补六向边框
+            # 只有封面表允许保持无框线原值；其余正文表格按 42 补六向边框
             other_sides = [x for x in ('right', 'top', 'bottom', 'insideH', 'insideV')
                            if b is not None
                            and b.find(qn('w:' + x)) is not None
