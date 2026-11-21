@@ -10,6 +10,7 @@ personnel_rosters/
   普莱/     员工花名册-普莱-YYYYMMDD.xlsx
   泽生康/   泽生康花名册-YYYYMMDD.xlsx
   益健堂/   益健堂花名册-YYYYMMDD.xls
+  元良/     元良花名册-YYYYMMDD.xlsx（含 `元良-选人约定.md`）
   INDEX.md  当前版本、历史版本、哈希
 ```
 
