@@ -2076,8 +2076,9 @@ def set_table_borders_six_way(doc, first_cell_text='文件编号', sz=4, val='si
 
 def center_table_text(doc, first_cell_text='文件编号', skip_cover=True,
                       horizontal=True, vertical=True, skip_table_texts=()):
-    """正文表格文字默认居中：水平居中，vertical=True 时同时垂直居中。
+    """正文表格文字整表居中：水平居中，vertical=True 时同时垂直居中。
 
+    仅用于确需整表居中的场景；正文表默认按列判定（align_table_columns_by_wrap），不调本函数。
     封面表（含 first_cell_text 的那张）按 skip_cover 跳过；返回处理的段落数。
     skip_table_texts：表内文字含任一标记时整表跳过（RD-029/030 例外表）。
     """
