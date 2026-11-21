@@ -406,9 +406,9 @@ build / 收口 / 闸门 / 渲染 / 反向测试 的命令与实测数字；页�
 | S3/S7 目录域健康 | `ops.toc_diagnose(doc)` → `applicable / healthy / toc_instr / balance / toc_has_begin / toc_has_separate / text_has_toc`（按 S3 的目录类型分别判定）；修复用 `ops.close_toc_field` / `ops.fix_stray_toc_instruction` / `ops.normalize_toc_page_break` |
 | S7 域刷新 | `ops.refresh_toc_via_word(...)`（Word 通道，配 §44/§50 的实例回收与退避重试） |
 | S7 分页与标题树 | `ops.pagination_audit(doc, cover_texts=[封面文档名])`，**按 S7 的三类键分档处置**（缺陷键清空 / 形态位只记录 / 分诊键修或豁免）；修复只走 `ops.pagination_repair(doc, cover_texts, apply=[本轮动作])`；共用判据 `ops.chapter_pad_map` / `ops.sect_breaks_page_el` |
-| S7 字体分区 | `ops.unify_document_fonts(doc, east_asia, latin, body_sz, table_sz, caption_sz, styles, cover_first_cell)`（按 A 档传 `body_sz=24`、`table_sz=21`、`caption_sz=21`）；封面标题 36、标签 14、值 12（72/28/24）另按 A 档写入并复核（暂无共享原语，项目侧薄封装）；核查 `ops.non_baseline_font_runs(doc, baseline=(...))`（含表格段，私用区 run 除外） |
-| S7 标题字号族内统一 | 字号按主文件「分类规则 -- 字号」固定档（16/14/12）；`ops.heading_format_profile_from(参照)` 只取字体与加粗，再 `ops.normalize_heading_format(...)` 设固定档并改样式默认值（护栏见「分类规则 -- 字体与版式」§10） |
-| S7 编号字形 | `ops.heading_numbering_mechanisms` / `ops.numbering_glyph_audit(doc, first_cell_text='文件编号', levels=(0,1,2))` / `ops.normalize_numbering_glyphs`（编号字号按 A 档 32/28/24 覆盖） |
+| S7 字体分区 | `ops.unify_document_fonts(doc, east_asia, latin, body_sz, table_sz, caption_sz, styles, cover_first_cell)`（`body_sz`/`table_sz`/`caption_sz` 由「分类规则 -- 字号」总表对应档换算为半磅传入；封面标题、标签、值同表封面档）；核查 `ops.non_baseline_font_runs(doc, baseline=(...))`（含表格段，私用区 run 除外） |
+| S7 标题字号族内统一 | 字号按主文件「分类规则 -- 字号」的标题各级档；`ops.heading_format_profile_from(参照)` 只取字体与加粗，再 `ops.normalize_heading_format(...)` 设固定档并改样式默认值（护栏见「分类规则 -- 字体与版式」§10） |
+| S7 编号字形 | `ops.heading_numbering_mechanisms` / `ops.numbering_glyph_audit(doc, first_cell_text='文件编号', levels=(0,1,2))` / `ops.normalize_numbering_glyphs`（编号字号按「分类规则 -- 字号」的标题各级档覆盖） |
 | S7 表格几何 | `ops.normalize_table_geometry(doc, ..., apply=('indent','float','grid'), grid_overrides=...)` + `ops.audit_table_geometry` |
 | S7 表格边框与文字居中 | `ops.set_table_borders_six_way(doc, skip_cover=True)` + `ops.center_table_text(doc, skip_cover=True)`（除封面表外六向边框；文字水平+垂直居中；项目登记的例外列在此之后覆盖） |
 | S7 封面留白 | `ops.set_cover_spacers(doc, n=3, first_cell_text='文件编号')`（n 固定 3，主文件第八条；幂等：先 `ops.trim_cover_spacers` 再补；补完按渲染墨区复核上下差 ≤3pt） |
