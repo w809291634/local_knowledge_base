@@ -187,7 +187,7 @@
 - [ ] 50c. **每节页脚的 `PAGE`／`NUMPAGES` 各恰好一个域**（`pitfalls.md` §98）：同段里重复几组域，
       域结果会串联成「1 / 31 / 3」；总页数写成硬文本「 / 3」则增页不跟；页码挂到
       `even_page_footer` 但 `settings.xml` 无 `evenAndOddHeaders` 则整页不显示。
-      闸门：逐节统计页脚部件内 `instrText` 的 PAGE/NUMPAGES 计数 == 1，并核 `footerReference` 的 type
+      闸门：逐节统计页脚部件内 PAGE/NUMPAGES 域计数 == 1（口径按 `pitfalls.md` §98：`mc:Choice`/`mc:Fallback` 只数一份，`w:fldSimple/@w:instr` 计入），并核 `footerReference` 的 type
 - [ ] 50d. **正文字号按「生效值」判，不按显式 `sz` 判**（`pitfalls.md` §99）：`run.font.size` 为 `None`
       不等于不适用——新建段常常不写 `sz`，靠段落样式 → `Normal` 继承。判据改用
       `docx_ops._effective_sz(p_el, doc)`，并单独核 `Normal` 样式自身的 `sz`。
