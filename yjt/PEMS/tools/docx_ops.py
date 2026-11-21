@@ -2427,7 +2427,6 @@ def audit_table_geometry(doc, first_cell_text='文件编号', skip_table_texts=(
                 if e is None or v in ('single', 'thick', 'double', 'dotted', 'dashed'):
                     first_col_has = True
                     break
-            # 只有封面表允许保持无框线原值；其余正文表格按 42 补六向边框
             other_sides = [x for x in ('right', 'top', 'bottom', 'insideH', 'insideV')
                            if b is not None
                            and b.find(qn('w:' + x)) is not None
