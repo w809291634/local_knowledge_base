@@ -524,13 +524,19 @@ def find_body_heading(doc, text):
 
 
 def clear_figures(doc, caption_prefix='图 '):
-    """删除所有内联图片段落 + 紧随其后的居中图题段落，返回删除条数"""
+    """删除所有内联图片段落 + 紧随其后的图题段落，返回删除条数。
+
+    图题按「前缀+编号」识别（如 图1／图 1-1），不依赖是否已居中——
+    模板图题常未写 `w:jc`，按居中判会漏删并残留旧图题。
+    """
+    cap_re = re.compile(r'^' + re.escape(caption_prefix.strip()) + r'\s*\d')
     doomed = []
     for p in doc.paragraphs:
         if has_inline_image(p):
             doomed.append(p)
-        elif paragraph_text(p).strip().startswith(caption_prefix) \
-                and p.alignment == WD_ALIGN_PARAGRAPH.CENTER:
+            continue
+        t = paragraph_text(p).strip()
+        if len(t) <= 60 and cap_re.match(t):
             doomed.append(p)
     for p in doomed:
         p._p.getparent().remove(p._p)
