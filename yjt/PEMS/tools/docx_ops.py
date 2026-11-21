@@ -2012,14 +2012,10 @@ _SIDES = ('top', 'left', 'bottom', 'right', 'insideH', 'insideV')
 
 def set_table_borders_six_way(doc, first_cell_text='文件编号', sz=4, val='single',
                               color='auto', skip_cover=True):
-    """给每张表补齐**六向**实线（top/left/bottom/right/insideH/insideV）。
+    """独立工具：给每张表补齐六向实线（top/left/bottom/right/insideH/insideV）。
 
-    这是一条"项目/用户显式排版要求"，按 `generality-boundaries-and-precedence.md` 第一节
-    的优先级高于 §51 的通用默认（§51 通用默认是"表级与样式都无框线属设计，什么都不加；
-    只补 left、绝不补 inside*"）。经验库里保留 §51 原语不动，另设本函数，
-    需要六向边框的项目显式调用，两边都不污染对方。
-
-    同时清掉单元格级 `w:tcBorders` 里 `val="nil|none"` 的边——不摘的话表级补了线也照样缺边。
+    默认管线不调用本函数；仅在项目明确要求"每张表六向边框"时显式使用。
+    同时清掉单元格级 `w:tcBorders` 里 `val="nil|none"` 的边。
     返回 {表号: [处置]}。
     """
     body = doc.element.body
@@ -2075,20 +2071,17 @@ def set_table_borders_six_way(doc, first_cell_text='文件编号', sz=4, val='si
 
 
 def normalize_table_geometry(doc, first_cell_text='文件编号', keep_cover_float=True,
-                             border_sz=4, apply=('indent', 'borders', 'float', 'grid'),
+                             border_sz=4, apply=('indent', 'float', 'grid'),
                              grid_overrides=None, verbose=False):
-    """修表格"左边框丢失/像被隐藏"的四类根因，返回 {表号: 处置列表}。
+    """修表格几何异常，返回 {表号: 处置列表}。
 
-    四类根因症状相同、成因不同，必须分开判：
-      indent  负 `w:tblInd` 把整表左推出对齐线 -> 归 0，左边框回到版心左沿
-      borders 表级 `w:tblBorders/w:left` 缺失，或单元格 `w:tcBorders/w:left val="nil"`
-              把左边框显式删掉 -> 只补"其他边有框线、唯独左边没有"的真缺失；
-              设计上无框线的表（四边皆 nil 且表级/样式无框线）不动，避免加出线来
-      float   正文表格继承了封面模板的 `w:tblpPr`（浮动 + `horzAnchor=page` +
-              `tblpX` 小于左页边距）-> 去浮动改回行内；封面表按 §2 保留浮动
-      grid    `w:tblGrid` 列宽总和大于版心 -> 按原比例缩放到版心宽，并同步 tcW/tblW；
+    默认只处理三类几何问题：
+      indent  负 `w:tblInd` 把整表左推出对齐线 -> 归 0
+      float   正文表格继承了封面模板的 `w:tblpPr` -> 去浮动改回行内
+      grid    `w:tblGrid` 列宽总和大于版心 -> 按比例缩放到版心宽，并同步 tcW/tblW；
               超过版心 2 倍者判为**列宽数据污染**（等比缩放后首列仍是一字宽），
               只报不改，除非在 `grid_overrides` 里给出该表的显式列宽
+    `borders` 不再属于默认管线；调用方显式传入时才执行历史边框分支。
     `grid_overrides`: {表号(1 基): [各列 twips]}，长度须等于列数，总和自动等比归一到版心宽。
     """
     is_p = lambda c: c.tag.split('}')[-1] == 'p'
@@ -2274,7 +2267,7 @@ def audit_table_geometry(doc, first_cell_text='文件编号'):
                 if e is None or v in ('single', 'thick', 'double', 'dotted', 'dashed'):
                     first_col_has = True
                     break
-            # §51 规则 D：表级与样式都没有任何可见框线的，是设计上无框线的表，不是缺陷
+            # 表级与样式都没有任何可见框线的，是设计上无框线的表，不是缺陷
             other_sides = [x for x in ('right', 'top', 'bottom', 'insideH', 'insideV')
                            if b is not None
                            and b.find(qn('w:' + x)) is not None

@@ -353,7 +353,7 @@ build / 收口 / 闸门 / 渲染 / 反向测试 的命令与实测数字；页�
 | 看到/遇到 | 先读 |
 |---|---|
 | 交付后才发现旧项目词、旧主体、旧参数还在 | `one-pass-quality-gate.md` §6、`pitfalls.md` §35、§49、§70、§83 |
-| 表格某列把标签盖掉，或值留着模板旧值 | `pitfalls.md` §82、§78、§51 |
+| 表格某列把标签盖掉，或值留着模板旧值 | `pitfalls.md` §82、§78 |
 | 图片前面冒出分页标记、正文被粘成大块 | `pitfalls.md` §38、§39 |
 | 封面后多一张空白页 / 中间冒出整页空白 | `reference-document-format-and-diagram-requirements.md` 「分类规则 -- 封面」「分类规则 -- 分页」、`pitfalls.md` §45~§48、§56、§61、§63 |
 | 中文页被判成空白页 | `pitfalls.md` §41、§77（渲染墨占比分级，别数文字） |
@@ -363,7 +363,7 @@ build / 收口 / 闸门 / 渲染 / 反向测试 的命令与实测数字；页�
 | 正文里混进标题样式段（两条链路都放过） | `pitfalls.md` §67、§21、§34 |
 | 编号后跟一整句正文却挂着大纲级、标题正文没分开；只改了被点名的一处别处还有 | `pitfalls.md` §89（全族统一判据扫描 + 标题/正文同文档供体克隆） |
 | 标题字号忽大忽小、封面大标题被压成正文 | `reference-document-format-and-diagram-requirements.md` 「分类规则 -- 字体与版式」§10、`pitfalls.md` §55、§66 |
-| 表格左边框像丢了 / 列宽超出版心 / 表宽三处不一致 | `pitfalls.md` §51、§76、§80、§60 |
+| 表格左边框像丢了 / 列宽超出版心 / 表宽三处不一致 | `pitfalls.md` §76、§80 |
 | Word 判"文件可能已损坏" | `pitfalls.md` §6/§7、§63 |
 | LibreOffice/Word 无头转换失败或静默不出 PDF | `pitfalls.md` §50、§77、§44 |
 | 改完反而更糟、内容莫名少了一章 | `pitfalls.md` §69 |
@@ -409,7 +409,7 @@ build / 收口 / 闸门 / 渲染 / 反向测试 的命令与实测数字；页�
 | S7 字体分区 | `ops.unify_document_fonts(doc, east_asia, latin, body_sz, table_sz, caption_sz, styles, cover_first_cell)`（按 A 档传 `body_sz=24`、`table_sz=21`、`caption_sz=21`）；封面标题 36、标签 14、值 12（72/28/24）另按 A 档写入并复核（暂无共享原语，项目侧薄封装）；核查 `ops.non_baseline_font_runs(doc, baseline=(...))`（含表格段，私用区 run 除外） |
 | S7 标题字号族内统一 | 字号按主文件「分类规则 -- 字号」固定档（16/14/12）；`ops.heading_format_profile_from(参照)` 只取字体与加粗，再 `ops.normalize_heading_format(...)` 设固定档并改样式默认值（护栏见「分类规则 -- 字体与版式」§10） |
 | S7 编号字形 | `ops.heading_numbering_mechanisms` / `ops.numbering_glyph_audit(doc, first_cell_text='文件编号', levels=(0,1,2))` / `ops.normalize_numbering_glyphs`（编号字号按 A 档 32/28/24 覆盖） |
-| S7 表格几何与六向框线 | `ops.normalize_table_geometry(doc, ..., apply=('indent','float','grid','borders'), grid_overrides=...)` + `ops.audit_table_geometry` + `ops.set_table_borders_six_way` |
+| S7 表格几何 | `ops.normalize_table_geometry(doc, ..., apply=('indent','float','grid'), grid_overrides=...)` + `ops.audit_table_geometry` |
 | S7 封面留白 | `ops.set_cover_spacers(doc, n=3, first_cell_text='文件编号')`（n 固定 3，主文件第八条；幂等：先 `ops.trim_cover_spacers` 再补；补完按渲染墨区复核上下差 ≤3pt） |
 | S7 正文段版式与重复段 | `po.effective_para_format / para_format_sig / align_para_formats / dedupe_paragraphs`；判定 `po.dup_kind`（exact/near/same-lead/contained）与 `find_duplicate_paragraphs(doc, allow=[(A,B)])` |
 | S4/S8 "文字正文·样式标题" | `ops.new_body_paragraph()`、`ops.demote_paragraph_to_body()`、`ops.body_paragraphs_with_heading_style()` |
