@@ -260,6 +260,12 @@
     ],
     "gate_script": "tools/check_conclusion_results.py"
   },
+  "required_inputs": {
+    "_说明": "注册人 2026-11-21 定：型号与软件 MD5 属生成前必须向注册人索取的材料，与项目编号同级；开工前主动询问，未取得答复不得推测或留空，门禁兜底判失败。",
+    "model": {"required": true, "pattern": "^YJT-\\d{5}$", "example": "YJT-12204", "reject_prefixes": ["JG-", "YL-"], "note": "以注册人书面确认为准；注意事项/说明书/送检 PDF 的其他型号一律作废"},
+    "software_md5": {"required": true, "pattern": "^[0-9a-fA-F]{32}$", "write_to": "052 §1.1", "note": "与发布包实际哈希一致"},
+    "gate_impl": "tools/check_required_inputs.py（已并入内容闸门）"
+  },
   "page_count_policy": {
     "channel": "Microsoft Word（只读打开 ComputeStatistics(2)）",
     "note": "WPS / LibreOffice 分页可差 1 页；页数以最终渲染产物与页脚 NUMPAGES 为准，跨程序差异不作判据，程序名只作记录"

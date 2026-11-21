@@ -35,6 +35,7 @@
 | `tools/check_rd030_revision.py` | 030 修订记录门禁：表头+1 行首次发布、固定布局、列宽总宽 ≤ 版心，防 V1/日期折行 |
 | `tools/check_052_verification_table.py` | 052 §2.5.6 验证报告表门禁：与 069 逐条同源（行数/类别/名称/结果/是），序号列可选 |
 | `tools/table_category_rules.py` | 表分类合并门禁：026 测试类别按大类合并、032/068/069 用例表无类别列、052 四列无序号且仅类别列合并（表头 tblHeader、keepNext） |
+| `tools/check_required_inputs.py` | 必供材料门禁：型号须 `YJT-` + 5 位（如 YJT-12204）、软件 MD5 须 32 位并写入 052，缺失/占位即失败 |
 | `tools/check_conclusion_results.py` | 结论↔结果联动门禁：032／069 有结论必须有结果且不矛盾 |
 | `tools/check_refs.py` | 编号引用门禁：正文禁 QR/RD 模板编号，052 追溯矩阵验证报告→069、确认报告→032 |
 | `tools/release_ops.py` | 全 XML 文本扫描、页眉页脚/文本框受控替换、哈希与发布清单原语 |
