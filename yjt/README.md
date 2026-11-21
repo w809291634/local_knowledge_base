@@ -20,11 +20,12 @@
 - 可复用脚本在 `yjt/PEMS/tools/`：`docx_ops.py`（封面/分节/目录域/插图/校验原语）、`fig_tools.py`（框图绘制，1 单位=1 英寸）、
   `build_docs.py`、`consistency_check.py`、`release_ops.py`。**用 `sys.path.insert` 直接 import，别再写第二份。**
 
-## 2. `STC8H_8G/` — Keil C51 / STC8G-8H 全系列（11 篇）
+## 2. `STC8H_8G/` — Keil C51 / STC8G-8H 全系列（12 篇）
 
 | 文件 | 一句话 |
 |---|---|
 | `stc8h-app-framework-template.md` | 前后台 + 软定时器 + 单状态机框架模板：目录、启动、主循环、g_state、状态机、上报、配置与验收 |
+| `stc8h-uart-driver-and-app-dataflow.md` | UART 驱动框架与应用层数据流：ISR 环形缓冲、5ms 空闲判帧、主循环拉取、帧队列与阻塞发送 |
 | `board-config-three-layer-switches.md` | `board_config.h` 三层开关架构与编译期静态检查 |
 | `drv-tm1650-software-i2c.md` | TM1650 数码管为何必须软件 I2C，影子寄存器与逐位验证做法 |
 | `keil-c51-language-pitfalls.md` | C51 语言层坑：变参 3 字节通用指针 / ★ `?_kprintf?BYTE` 变参区仅 15 字节（单条日志超长写穿相邻 DATA，尾部字段固定乱码）/ `data` 关键字 / 指针存储区限定 / CONST 段 / tick 撕裂 |
