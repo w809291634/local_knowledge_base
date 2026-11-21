@@ -43,7 +43,7 @@
       "variant": "v3",
       "file": "templates/2.1/RD-026_软件确认计划_2.1_格式档案（YJT-1222）_v3.docx",
       "tier": "格式档案",
-      "sha256": "4c65effeaa5a62bfb96b4c5949d6450765df8cf04134bf049d45fe17df531aca",
+      "sha256": "d6d6b7bc709c8998082b61c04c6edf01d9635d6c27c7fd9e0991ba5862ceb2db",
       "archive_md": "templates/2.1/RD-026_软件确认计划_2.1_格式档案（YJT-1222）_v3.md",
       "note": "2026-11-20：删除测试计划表首行「测试人／测试时间」签署行；删除封面节尾部 5 个空段（7→2，原版在当前 Word 下导出会偶发多 1 页空白）；2026-11-21：两节 default 页脚补 NUMPAGES（footer2 原空一并补）；其余同 v2。v2 保留历史对账，不得用于新项目。生成时按 A 继续删除剩余 2 个纯空段"
     },
@@ -70,7 +70,7 @@
       "variant": "v2",
       "file": "templates/2.1/RD-052_软件描述文档_2.1_基线_v2.docx",
       "tier": "格式档案",
-      "sha256": "e90c878b9bb0ed724173d61cf958788090508d6f01220a45065e1542ad2f4785",
+      "sha256": "32aa080e52cab607dc9107d03b41a3ce4c9920038112eecf4379c9fbfe64c17e",
       "archive_md": "templates/2.1/RD-052_软件描述文档_2.1_基线_v2.md",
       "note": "2026-11-20：仅 §1.2 在 B 级结论后增加《医疗器械软件注册审查指导原则（2022年修订）》判定依据句，其余同 2.1；原件 2.1 保留历史对账"
     },
@@ -79,7 +79,7 @@
       "variant": "v2",
       "file": "templates/1.0/RD-068_软件验证计划_1.0_基线_v2.docx",
       "tier": "格式档案",
-      "sha256": "7f550ef857e72dec16cd184ca8ded5940f5e9870cf54b707fbad8370aaf3ee27",
+      "sha256": "2a28d6f04c9e3a6283dc3608102eaa7a787b59f37f88e0d0abd8568c191b1969",
       "archive_md": "templates/1.0/RD-068_软件验证计划_1.0_基线_v2.md",
       "note": "2026-11-20：删除三张验证记录表首行「测试人员／测试时间」合并行；封面节尾部空段 15→2（避免导出空白页）；2026-11-21：两节页脚统一补 NUMPAGES；其余同 1.0。原 1.0 保留历史对账。生成时按 A 继续删除剩余 2 个纯空段"
     },
@@ -88,7 +88,7 @@
       "variant": "v2",
       "file": "templates/1.0/RD-069_软件验证报告_1.0_基线_v2.docx",
       "tier": "格式档案",
-      "sha256": "c52b227d064a0fe1940cb2d6a06485f6248646d951704673a6a129c26cf1385c",
+      "sha256": "3b87be14ab2e98402054d3981d00022b397b034b7cad864997af8c06d255b561",
       "archive_md": "templates/1.0/RD-069_软件验证报告_1.0_基线_v2.md",
       "note": "2026-11-20：仅删除三张测试表首行「测试人员/测试时间」合并行；2026-11-21：两节页脚统一补 NUMPAGES；其余同 1.0；原 1.0 保留历史对账"
     }
@@ -99,7 +99,7 @@
       "version": "2.1",
       "variant": "v3",
       "file": "templates/2.1/RD-026_软件确认计划_2.1_格式档案（YJT-1222）_v3.docx",
-      "sha256": "4c65effeaa5a62bfb96b4c5949d6450765df8cf04134bf049d45fe17df531aca",
+      "sha256": "d6d6b7bc709c8998082b61c04c6edf01d9635d6c27c7fd9e0991ba5862ceb2db",
       "archive_md": "content_templates/RD-026_软件确认计划_2.1_内容结构模板（YJT-1222）_v2.md",
       "docx_note": "与默认模板同一份文件，content_templates 内不重复存 docx",
       "headings": 4,

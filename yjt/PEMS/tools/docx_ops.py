@@ -2098,6 +2098,99 @@ def center_table_text(doc, first_cell_text='文件编号', skip_cover=True,
     return n
 
 
+def align_table_columns_by_wrap(doc, first_cell_text='文件编号', skip_cover=True,
+                                default_half_pt=21, cjk_ratio=1.0, latin_ratio=0.5,
+                                skip_table_texts=()):
+    """按列判定表格文字水平对齐：超出单元格一行的列左对齐，否则居中。
+
+    规则（主文件「分类规则 -- 单元格对齐」第二条）：
+      - 该列任一「未合并」单元格文本估算宽度 > 列可用宽度 → 整列左对齐；
+      - 能单行放下 → 水平居中；所有单元格垂直居中；
+      - 封面表（含 first_cell_text 的表）跳过；合并单元格保持居中，不用它判定列。
+      - 项目登记的例外表（RD-029「软件异常报告表」、RD-030「软件开发计划」表）由调用方
+        先/后单独保持模板原样，本函数不按表名识别。
+    估算：CJK/全角按 1em、其余按 0.5em，em = 字号（半磅）×10 twips；可用宽度取
+    tblGrid 列宽减 tblCellMar 左右边距（默认 108 twips）。返回 {表号: {left, center}}。
+    """
+    import unicodedata
+    from docx.table import _Cell
+
+    body = doc.element.body
+    etxt = lambda el: ''.join(x.text or '' for x in el.iter(qn('w:t')))
+    cover_tbl = next((c for c in body.iterchildren()
+                      if c.tag.split('}')[-1] == 'tbl' and first_cell_text in etxt(c)), None)
+
+    def span_of(tc):
+        pr = tc.find(qn('w:tcPr'))
+        if pr is not None:
+            g = pr.find(qn('w:gridSpan'))
+            if g is not None:
+                return int(g.get(qn('w:val')) or 1)
+        return 1
+
+    res = {}
+    for ti, table in enumerate(doc.tables, 1):
+        tbl = table._tbl
+        if skip_cover and tbl is cover_tbl:
+            continue
+        if any(m in etxt(tbl) for m in skip_table_texts):
+            continue
+        grid = tbl.find(qn('w:tblGrid'))
+        widths = [int(g.get(qn('w:w')) or 0) for g in grid.findall(qn('w:gridCol'))] \
+            if grid is not None else []
+        if not widths:
+            continue
+        lm = rm = 108
+        mar = tbl.find(qn('w:tblPr') + '/' + qn('w:tblCellMar'))
+        if mar is not None:
+            for tag in ('left', 'right'):
+                e = mar.find(qn('w:' + tag))
+                if e is not None and e.get(qn('w:w')):
+                    if tag == 'left':
+                        lm = int(e.get(qn('w:w')))
+                    else:
+                        rm = int(e.get(qn('w:w')))
+
+        long_cols = set()
+        for row in table.rows:
+            gi = 0
+            for tc in row._tr.tc_lst:
+                sp = span_of(tc)
+                txt = ''.join(t.text or '' for t in tc.iter(qn('w:t'))).strip()
+                if txt and sp == 1 and 0 <= gi < len(widths):
+                    avail = max(1, widths[gi] - lm - rm)
+                    sz = default_half_pt
+                    for e in tc.iter(qn('w:sz')):
+                        try:
+                            sz = max(sz, int(e.get(qn('w:val')) or default_half_pt))
+                        except ValueError:
+                            pass
+                    em = sz * 10.0
+                    need = sum(em * (cjk_ratio if unicodedata.east_asian_width(ch) in ('W', 'F')
+                                     else latin_ratio) for ch in txt)
+                    if need > avail:
+                        long_cols.add(gi)
+                gi += sp
+
+        left = center = 0
+        for row in table.rows:
+            gi = 0
+            for tc in row._tr.tc_lst:
+                sp = span_of(tc)
+                cell = _Cell(tc, table)
+                is_long = sp == 1 and gi in long_cols
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                for p in cell.paragraphs:
+                    p.alignment = WD_ALIGN_PARAGRAPH.LEFT if is_long else WD_ALIGN_PARAGRAPH.CENTER
+                if is_long:
+                    left += 1
+                else:
+                    center += 1
+                gi += sp
+        res[ti] = {'left': left, 'center': center}
+    return res
+
+
 def audit_table_borders(doc, first_cell_text='文件编号', body_sz=4, cover_sz=2):
     """检查表格六向框线：正文表 0.5pt（sz=4），封面表 0.25pt（sz=2）。
 
@@ -2278,8 +2371,11 @@ def normalize_table_geometry(doc, first_cell_text='文件编号', keep_cover_flo
     return res
 
 
-def audit_table_geometry(doc, first_cell_text='文件编号'):
-    """只读体检：返回 {表号: [问题]}，供 dod-checklist 的表格项核对。"""
+def audit_table_geometry(doc, first_cell_text='文件编号', skip_table_texts=()):
+    """只读体检：返回 {表号: [问题]}，供 dod-checklist 的表格项核对。
+
+    skip_table_texts：表内文字含任一标记时整表跳过（项目登记的模板原样表）。
+    """
     etxt = lambda el: ''.join(t.text or '' for t in el.iter(qn('w:t')))
     kids = list(doc.element.body.iterchildren())
     cover_tbl = next((c for c in kids
@@ -2289,6 +2385,8 @@ def audit_table_geometry(doc, first_cell_text='文件编号'):
     text_w = sec.page_width.twips - lm - sec.right_margin.twips
     bad = {}
     for i, t in enumerate(doc.tables):
+        if any(m in etxt(t._tbl) for m in skip_table_texts):
+            continue
         tbl = t._tbl
         tblPr = tbl.find(qn('w:tblPr'))
         p = []
@@ -3189,11 +3287,18 @@ def check_heading_text_against_template(template_doc, out_doc):
             "template_count": len(a), "output_count": len(b)}
 
 
-def non_baseline_font_runs(doc, baseline=("宋体",), skip_private=True):
-    """非基线字体的 run 数（含表格内段落）。私用区字符 run 默认排除：改字体会变方块。"""
+def non_baseline_font_runs(doc, baseline=("宋体",), skip_private=True, skip_tables_text=()):
+    """非基线字体的 run 数（含表格内段落）。私用区字符 run 默认排除：改字体会变方块。
+
+    skip_tables_text：表内文字含任一标记时整表跳过（项目登记的模板原样表，如
+    RD-029「软件异常报告表」、RD-030「软件开发计划」表）。
+    """
     bad = []
     parts = [doc.paragraphs]
     for tb in doc.tables:
+        ttxt = ''.join(t.text or '' for t in tb._tbl.iter(qn('w:t')))
+        if any(m in ttxt for m in skip_tables_text):
+            continue
         for row in tb.rows:
             for cell in row.cells:
                 parts.append(cell.paragraphs)
