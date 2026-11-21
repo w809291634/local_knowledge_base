@@ -8,8 +8,8 @@
 判据（pems.config.json → pairing_rules.052_verification_table）：
 1. 052 必须存在表头含「测试功能或项目名称」「测试结果」「是/否通过」的表；
 2. 数据行数 = 069 三张用例表数据行之和；
-3. 逐行「序号」= 069 用例编号、「测试功能或项目名称」= 069 测试项目名称、
-   「测试类别」与 069 三表类别（单元/集成/系统）一致；
+3. 逐行「测试功能或项目名称」= 069 测试项目名称、「测试类别」与 069 三表类别（单元/集成/系统）一致；
+   表内不设「序号」列（2026-11-21 注册人要求），若存在则同时校验其与 069 编号一致；
 4. 「测试结果」逐行非空；「是/否通过」必须为「是」。
 """
 from __future__ import annotations
@@ -67,13 +67,14 @@ def check(p052: Path, p069: Path):
 
     heads = [c.text.strip() for c in target.rows[0].cells]
     try:
-        j_no = heads.index("序号")
+        j_no = heads.index("序号") if "序号" in heads else None
         j_cat = heads.index("测试类别")
         j_name = heads.index("测试功能或项目名称")
         j_res = heads.index("测试结果")
         j_ok = heads.index("是/否通过")
     except ValueError:
-        return ["%s 验证报告表缺列：序号/测试类别/测试功能或项目名称/测试结果/是/否通过" % p052.name]
+        return ["%s 验证报告表缺列：测试类别/测试功能或项目名称/测试结果/是/否通过（序号可选）"
+                % p052.name]
 
     data = [r for r in target.rows[1:] if any(c.text.strip() for c in r.cells)]
     if len(data) != len(rows069):
@@ -82,7 +83,7 @@ def check(p052: Path, p069: Path):
 
     for i, (row, (no, cat, name)) in enumerate(zip(data, rows069), start=2):
         cells = [c.text.strip() for c in row.cells]
-        if cells[j_no] != no:
+        if j_no is not None and cells[j_no] != no:
             errors.append("%s 表行%d 序号「%s」≠ 069「%s」" % (p052.name, i, cells[j_no], no))
         if cells[j_cat] != cat:
             errors.append("%s 表行%d 类别「%s」≠ 069「%s」" % (p052.name, i, cells[j_cat], cat))
@@ -94,20 +95,27 @@ def check(p052: Path, p069: Path):
             errors.append("%s 表行%d「是/否通过」应为「是」，实际「%s」"
                           % (p052.name, i, cells[j_ok]))
 
-    # 渲染约束：数据行不得残留纵向合并（会吞掉序号/类别列文字）；列宽需合理
+    # 渲染约束：允许「测试类别」列按大类纵向合并（2026-11-21），其余列（尤其序号）不得残留 vMerge
     tbl = target._tbl
     merged = 0
     for tr in tbl.findall(qn("w:tr"))[1:]:
+        col = 0
         for tc in tr.findall(qn("w:tc")):
             tcpr = tc.find(qn("w:tcPr"))
-            if tcpr is not None and tcpr.find(qn("w:vMerge")) is not None:
+            span = 1
+            if tcpr is not None:
+                gs = tcpr.find(qn("w:gridSpan"))
+                if gs is not None:
+                    span = int(gs.get(qn("w:val")) or 1)
+            if tcpr is not None and tcpr.find(qn("w:vMerge")) is not None and col != j_cat:
                 merged += 1
+            col += span
     if merged:
-        errors.append("%s 验证报告表数据行残留 %d 个 vMerge 合并标记，渲染会吞掉序号/类别"
+        errors.append("%s 验证报告表除「测试类别」外的列残留 %d 个 vMerge 合并标记，渲染会吞掉序号/结果"
                       % (p052.name, merged))
     grid = tbl.tblGrid
     widths = [int(g.get(qn("w:w")) or 0) for g in grid.findall(qn("w:gridCol"))]
-    if widths and widths[0] < 800:
+    if j_no is not None and widths and widths[0] < 800:
         errors.append("%s 验证报告表序号列宽 %d < 800，2.2.x 会折行"
                       % (p052.name, widths[0]))
     if sum(widths) > WIDTH_LIMIT:
