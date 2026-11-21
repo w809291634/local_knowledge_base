@@ -2012,10 +2012,11 @@ _SIDES = ('top', 'left', 'bottom', 'right', 'insideH', 'insideV')
 
 
 def set_table_borders_six_way(doc, first_cell_text='文件编号', sz=4, val='single',
-                              color='auto', skip_cover=True):
+                              color='auto', skip_cover=True, skip_table_texts=()):
     """独立工具：给每张表补齐六向实线（top/left/bottom/right/insideH/insideV）。
 
     默认管线对除封面表外的正文表格调用本函数；封面表跳过。
+    skip_table_texts：表内文字含任一标记时整表跳过（RD-029/030 例外表）。
     同时清掉单元格级 `w:tcBorders` 里 `val="nil|none"` 的边。
     返回 {表号: [处置]}。
     """
@@ -2028,6 +2029,8 @@ def set_table_borders_six_way(doc, first_cell_text='文件编号', sz=4, val='si
     for i, tbl in enumerate(doc.tables):
         el = tbl._tbl
         if skip_cover and el is cover_tbl:
+            continue
+        if any(m in etxt(el) for m in skip_table_texts):
             continue
         acts = []
         tblPr = el.find(qn('w:tblPr'))
@@ -2072,11 +2075,11 @@ def set_table_borders_six_way(doc, first_cell_text='文件编号', sz=4, val='si
 
 
 def center_table_text(doc, first_cell_text='文件编号', skip_cover=True,
-                      horizontal=True, vertical=True):
+                      horizontal=True, vertical=True, skip_table_texts=()):
     """正文表格文字默认居中：水平居中，vertical=True 时同时垂直居中。
 
     封面表（含 first_cell_text 的那张）按 skip_cover 跳过；返回处理的段落数。
-    项目登记的左对齐例外列，在本函数之后覆盖。
+    skip_table_texts：表内文字含任一标记时整表跳过（RD-029/030 例外表）。
     """
     body = doc.element.body
     kids = list(body.iterchildren())
@@ -2086,6 +2089,8 @@ def center_table_text(doc, first_cell_text='文件编号', skip_cover=True,
     n = 0
     for table in doc.tables:
         if skip_cover and table._tbl is cover_tbl:
+            continue
+        if any(m in etxt(table._tbl) for m in skip_table_texts):
             continue
         for row in table.rows:
             for cell in row.cells:
@@ -2191,9 +2196,11 @@ def align_table_columns_by_wrap(doc, first_cell_text='文件编号', skip_cover=
     return res
 
 
-def audit_table_borders(doc, first_cell_text='文件编号', body_sz=4, cover_sz=2):
+def audit_table_borders(doc, first_cell_text='文件编号', body_sz=4, cover_sz=2,
+                        skip_table_texts=()):
     """检查表格六向框线：正文表 0.5pt（sz=4），封面表 0.25pt（sz=2）。
 
+    skip_table_texts：表内文字含任一标记时整表跳过（RD-029/030 例外表）。
     返回问题列表；封面表按 first_cell_text 定位，找不到时全部按正文表判。
     """
     body = doc.element.body
@@ -2203,6 +2210,8 @@ def audit_table_borders(doc, first_cell_text='文件编号', body_sz=4, cover_sz
                       if c.tag.split('}')[-1] == 'tbl' and first_cell_text in etxt(c)), None)
     issues = []
     for i, tbl in enumerate(doc.tables, 1):
+        if any(m in etxt(tbl._tbl) for m in skip_table_texts):
+            continue
         is_cover = tbl._tbl is cover_tbl
         exp = cover_sz if is_cover else body_sz
         bds = tbl._tbl.tblPr.find(qn('w:tblBorders'))

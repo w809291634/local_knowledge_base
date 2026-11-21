@@ -410,7 +410,7 @@ build / 收口 / 闸门 / 渲染 / 反向测试 的命令与实测数字；页�
 | S7 标题字号族内统一 | 字号按主文件「分类规则 -- 字号」的标题各级档；`ops.heading_format_profile_from(参照)` 只取字体与加粗，再 `ops.normalize_heading_format(...)` 设固定档并改样式默认值（护栏见「分类规则 -- 字体与版式」§10） |
 | S7 编号字形 | `ops.heading_numbering_mechanisms` / `ops.numbering_glyph_audit(doc, first_cell_text='文件编号', levels=(0,1,2))` / `ops.normalize_numbering_glyphs`（编号字号按「分类规则 -- 字号」的标题各级档覆盖） |
 | S7 表格几何 | `ops.normalize_table_geometry(doc, ..., apply=('indent','float','grid'), grid_overrides=...)` + `ops.audit_table_geometry` |
-| S7 表格边框与文字对齐 | `ops.set_table_borders_six_way(doc, skip_cover=True)` + `ops.align_table_columns_by_wrap(doc, skip_cover=True, skip_table_texts=(...))` + `ops.audit_table_borders(doc)`（除封面表外六向 0.5pt；封面表 0.25pt；超出单元格一行的列左对齐、单行列水平居中、垂直居中；**RD-029「软件异常报告表」、RD-030「软件开发计划」表通过 `skip_table_texts` 保持模板原样**） |
+| S7 表格边框与文字对齐 | `ops.set_table_borders_six_way(doc, skip_cover=True, skip_table_texts=(...))` + `ops.align_table_columns_by_wrap(doc, skip_cover=True, skip_table_texts=(...))` + `ops.audit_table_borders(doc, skip_table_texts=(...))`（除封面表外六向 0.5pt；封面表 0.25pt；超出单元格一行的列左对齐、单行列水平居中、垂直居中；**RD-029「软件异常报告表」、RD-030「软件开发计划」表通过 `skip_table_texts` 保持模板原样**） |
 | S7 封面留白 | `ops.set_cover_spacers(doc, n=3, first_cell_text='文件编号')`（n 固定 3，主文件第八条；幂等：先 `ops.trim_cover_spacers` 再补；补完按渲染墨区复核上下差 ≤14pt，约 ±半个空行） |
 | S7 正文段版式与重复段 | `po.effective_para_format / para_format_sig / align_para_formats / dedupe_paragraphs`；判定 `po.dup_kind`（exact/near/same-lead/contained）与 `find_duplicate_paragraphs(doc, allow=[(A,B)])` |
 | S4/S8 "文字正文·样式标题" | `ops.new_body_paragraph()`、`ops.demote_paragraph_to_body()`、`ops.body_paragraphs_with_heading_style()` |
