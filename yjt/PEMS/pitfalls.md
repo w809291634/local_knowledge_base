@@ -1800,6 +1800,11 @@ cantSplit, trHeight, tblHeader, tblCellSpacing, jc, hidden…`），顺手 appen
 与 `NUMPAGES` 的出现次数——每组必须**恰好 1 次**；同时要求本节的 `sectPr` 确实引用了该页脚部件
 （`footerReference` 的 `w:type` 与「奇偶页不同」设置匹配），否则域写了也不显示。
 
+**计数口径（2026-11-21 补）**：① Word 保存时会把复杂域收成 `w:fldSimple`，其 `w:instr` 属性同样要计入；
+② 页脚字段放在文本框里时，`mc:Choice`（wps）与 `mc:Fallback`（vml）是**同一份内容的两种表示**，
+按分支各数一次会翻倍 —— 应只数 `mc:Choice` 分支（无 `mc:AlternateContent` 时数全文），
+同一分支内仍必须各恰好 1 次。实测 068/069 两节页脚即为此形态。
+
 **另外两条同源坑**：
 - 页码挂到 `even_page_footer`，但 `settings.xml` 没开 `<w:evenAndOddHeaders/>` → 页码整页不显示；
 - 把 `PAGE` 段直接删掉、用文本 ` / 4` 顶替 → 页码是死的。
