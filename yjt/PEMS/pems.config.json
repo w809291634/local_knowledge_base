@@ -436,5 +436,13 @@
     "cleanup": "只删除含 AILabel 的 w:drawing 及其空 run，不删除段落，避免丢失 bookmark/sectPr",
     "gate": "tools/check_cover_center.py（AILabel 图形 0 + word/*.xml 无 AI 标记）",
     "note": "本地 Office 插件可能在打开/保存时写入 AILabel；同一文件被多次保存会出现多个同名图形，重复 ID 会让 Word 判为损坏"
+  },
+  "toolchain_defaults": {
+    "_说明": "开发环境默认值（注册人 2026-11-23 定）。029 §2.2 开发环境表按此填写，项目另有受控记录时以受控记录为准并改本文件。",
+    "开发平台": "KEIL 5 集成开发环境",
+    "版本管理工具": "Git",
+    "开发语言": "C",
+    "开发模式": "瀑布模型",
+    "note": "版本管理工具全公司后期统一用 Git；历史项目写 SVN 的按实际保留，新项目不得再写 SVN。"
   }
 }
