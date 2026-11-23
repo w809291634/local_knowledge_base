@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-"""必供材料门禁：型号、软件 MD5、外包装标签（注册人 2026-11-21 / 2026-11-23 定）。
+"""必供材料门禁：项目编号、型号、软件 MD5、外包装标签。
 
 必供材料缺一不得生成/交付：
-1. 型号必须存在、带 YJT- 前缀（YJT-12204 形式），不得为空、占位或旧前缀（JG-/YL-）；
-2. 软件 MD5 必须为 32 位十六进制，不得为空或占位；
-3. 052 正文必须出现该 MD5，且全族型号唯一；
-4. 项目目录必须提供外包装标签/铭牌（Word/PDF），052 §1.1 的注册人、受托生产企业、
+1. 项目编号：`facts.yaml` 的 `project.code` 必须存在，且不得用型号、软件版本或纯数字目录名代替；
+   产物 8 份封面「项目编号」必须与之一致，文件编号必须含该项目编号（如 `026-03GSR2609023-001`）；
+2. 型号必须存在、带 YJT- 前缀（YJT-12204 形式），不得为空、占位或旧前缀（JG-/YL-）；
+3. 软件 MD5 必须为 32 位十六进制，不得为空或占位；
+4. 052 正文必须出现该 MD5，且全族型号唯一；
+5. 项目目录必须提供外包装标签/铭牌（Word/PDF），052 §1.1 的注册人、受托生产企业、
    生产地址必须与标签一致；生产地址不得拿注册人住所顶替（委托生产时两者常不同市）。
 
 用法：
@@ -19,6 +21,7 @@ from pathlib import Path
 
 MODEL_RE = re.compile(r"YJT-\d{5}")
 MD5_RE = re.compile(r"^[0-9a-fA-F]{32}$")
+CODE_RE = re.compile(r"^\d{2}[A-Z][A-Z0-9]{4,18}$")
 PLACEHOLDER = ("", "待补", "待定", "待核", "TBD", "todo", "无", "-")
 
 
@@ -28,6 +31,19 @@ def read_facts(path: Path):
     md5 = re.search(r"^\s*hash_md5:\s*([^\s#]+)", text, re.M)
     return (model.group(1).strip('"\'') if model else "",
             md5.group(1).strip('"\'') if md5 else "")
+
+
+def read_project_code(text: str) -> str:
+    """取 `project:` 段下的 `code.value`（不引入 yaml 依赖）。"""
+    block = re.search(r"^project:\s*\n((?:[ \t]+.*(?:\n|$))+)", text, re.M)
+    if not block:
+        return ""
+    b = block.group(1)
+    m = re.search(r"^[ \t]+code:[ \t]*\n[ \t]+value:[ \t]*[\"']?([^\"'\s#]+)", b, re.M)
+    if m:
+        return m.group(1).strip()
+    m = re.search(r"^[ \t]+code:[ \t]*[\"']?([^\"'\s#]+)", b, re.M)
+    return m.group(1).strip() if m else ""
 
 
 def find_facts(p: Path):
@@ -75,6 +91,26 @@ def label_fields(path: Path):
     return out
 
 
+def cover_fields(path: Path):
+    """读封面信息表里的「文件编号」「项目编号」值。"""
+    from docx import Document
+    d = Document(str(path))
+    out = {}
+    for t in d.tables:
+        if not t.rows:
+            continue
+        hdr = [c.text.strip() for c in t.rows[0].cells]
+        if "文件编号" not in hdr:
+            continue
+        for r in t.rows:
+            cells = [c.text.strip() for c in r.cells]
+            if len(cells) >= 2 and cells[0] in ("文件编号", "项目编号") \
+                    and cells[0] not in out:
+                out[cells[0]] = cells[1]
+        break
+    return out
+
+
 def _norm(s: str) -> str:
     return re.sub(r"[\s\u3000]+", "", s or "")
 
@@ -86,6 +122,14 @@ def check(p: Path):
     if facts is None:
         return ["未找到 facts.yaml，型号与软件 MD5 无法核对（必供材料）"]
     model, md5 = read_facts(facts)
+    code = read_project_code(facts.read_text(encoding="utf-8", errors="ignore"))
+    if not code or code.lower() in [x.lower() for x in PLACEHOLDER]:
+        errs.append("项目编号未提供（必供材料：用户给定或项目资料核实，不得用型号/软件版本/目录数字代替）")
+    else:
+        if not CODE_RE.fullmatch(code):
+            errs.append("项目编号「%s」格式不合规：应为 2 位数字开头＋字母/数字（如 03GSR2609023）" % code)
+        if code == model or code.upper() == "V1" or code.isdigit():
+            errs.append("项目编号「%s」不得用型号/软件版本/纯数字代替" % code)
     if not model or model.lower() in [x.lower() for x in PLACEHOLDER]:
         errs.append("型号未提供（必供材料：YJT-XXXXX）")
     elif not MODEL_RE.fullmatch(model):
@@ -128,6 +172,22 @@ def check(p: Path):
                 val = fields.get(key)
                 if val and _norm(val) not in body:
                     errs.append("052 §1.1 与标签不一致：缺少%s「%s」" % (label_cn, val))
+
+    # 产物封面：项目编号、文件编号必须与 facts.yaml 一致
+    if docs and code:
+        for f in docs:
+            try:
+                cf = cover_fields(f)
+            except Exception:
+                continue
+            v = cf.get("项目编号", "")
+            if not v:
+                errs.append("%s 封面未填项目编号" % f.name)
+            elif v != code:
+                errs.append("%s 封面项目编号「%s」≠ facts.yaml「%s」" % (f.name, v, code))
+            fn = cf.get("文件编号", "")
+            if fn and code not in fn:
+                errs.append("%s 文件编号「%s」未含项目编号「%s」" % (f.name, fn, code))
     return errs
 
 
@@ -141,7 +201,7 @@ def main(argv):
         for e in errs:
             print("  -", e)
         return 1
-    print("必供材料检查通过：型号 YJT- 前缀合规、软件 MD5 为 32 位且已写入 052、外包装标签身份字段与 052 §1.1 一致")
+    print("必供材料检查通过：项目编号与 8 份封面一致、型号 YJT- 前缀合规、软件 MD5 为 32 位且已写入 052、外包装标签身份字段与 052 §1.1 一致")
     return 0
 
 
