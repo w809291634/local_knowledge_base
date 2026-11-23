@@ -2,8 +2,8 @@
 """空章节检查：标题后至下一标题前必须有一段正文、一张表或一张图。
 
 判定口径（注册人 2026-11-23 定）：
-- 章/节标题若紧跟更深一级标题，视为容器标题，允许自身无正文；
-- 若下一标题同级或更浅，且中间没有正文/表/图，则判为空章节；
+- **每个标题都必须有正文/表/图**，包括章标题和容器章；
+- 容器章（下接更深一级节标题）也至少要有 1 句引导语，否则判空；
 - 目录条目（toc 样式）、空标题段、封面文档名不参与判定。
 
 用法：python tools/check_empty_sections.py <产物目录或 docx...>
@@ -74,9 +74,6 @@ def check_doc(path):
                 break
         if content:
             continue
-        next_lvl = heads[n + 1][1] if n + 1 < len(heads) else None
-        if next_lvl is not None and next_lvl > lvl:
-            continue  # 容器标题：正文由其下级节承载
         errs.append((os.path.basename(path), t, lvl))
     return errs
 
