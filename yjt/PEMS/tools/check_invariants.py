@@ -38,7 +38,8 @@ def blocks(doc):
             t = "".join(x.text or "" for x in el.iter(qn("w:t"))).strip()
             txbx = el.find(".//" + qn("w:txbxContent")) is not None
             pic = (el.find(".//" + qn("w:drawing")) is not None
-                   or (el.find(".//" + qn("w:pict")) is not None and not txbx))
+                   or (el.find(".//" + qn("w:pict")) is not None and not txbx)
+                   or el.find(".//" + qn("w:object")) is not None)
             out.append(("pic", "") if (pic and not t) else (("txt", t) if t else ("blank", "")))
         elif el.tag == qn("w:tbl"):
             out.append(("tbl", ""))
