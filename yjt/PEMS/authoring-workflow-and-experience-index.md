@@ -313,6 +313,15 @@ S7 负责目录刷新后的必要版式收口、自然重排复核与页码同�
   专项门禁同时为 0：052 量化项（`check_quant_items.py`）、052 更新历史（`check_version_history.py`）、
   030 修订记录表（`check_rd030_revision.py`）、052 验证报告表（`check_052_verification_table.py`）、
   表分类合并（`table_category_rules.py`）、结论↔结果联动（`check_conclusion_results.py`）、文档编号引用（`check_refs.py`）、人员清单（`check_personnel.py`）、
+  **不变量六条（`check_invariants.py`，2026-11-23 定，一次枚举不再逐项打补丁）**：
+  ①样式合法——正文不得出现「列出段落」「List Paragraph」等意外列表样式（会顶格、缩进错乱）；
+  ②图文配对——图题必有图、图必有题、图题文字唯一、编号从 1 连续；
+  ③无占位符——`—`／`-`／`待定`／`待补`／`TBD` 计数为 0，冒号后只写破折号视同未填；
+  ④空段受控——正文区连续空段 ≤1；
+  ⑤标签行有值——「XX：」后必须有内容，或以图表承载；
+  ⑥标题样式一致——同级编号标题样式名必须相同。
+  **三条执行纪律（同样重要）**：改完必须**重读文件确认落盘**（`d.save()` 抛 `PermissionError` 时不得报告"已修复"）；
+  插图后必须确认**没有重复插**（同一图题出现 >1 次即失败）；清空段时必须**跳过含 `w:sectPr` 的段落**（否则分节丢失）。
   **结构缺失（`check_structure_baseline.py`，2026-11-23 定）**、
   **模板原样表（`check_template_tables_intact.py`，2026-11-23 定）**；
   **结构缺失门禁与版式门禁并列，属“数量下限”判据**：产物 tables／headings／sections／vml_shapes／inline_images／nonempty_paras／table_chars
