@@ -8,7 +8,9 @@
 1. 正文段与表格中不得出现 `QR/RD/0xx` 模板编号（页眉页脚沿用模板版号，不在扫描范围）；
 2. 052 追溯矩阵「软件验证报告/文件编号」必须指向 069，「软件确认报告」必须指向 032，
    两者互串即失败；
-3. 052 追溯矩阵中的文件编号必须为项目编号格式（如 052-03GSR2609010-001），不得留模板编号。
+3. 052 追溯矩阵中的文件编号必须为项目编号格式（如 052-03GSR2609010-001），不得留模板编号；
+4. 「参考资料」清单不得列《风险管理文档》（注册人 2026-11-23：风险管理资料另行提交，不进软件文档参考资料；
+   清单只列本项目软件文档族与产品说明书／技术要求）。
 """
 from __future__ import annotations
 
@@ -21,6 +23,9 @@ from docx import Document
 QR_RD = re.compile(r"QR/RD/\d{3}")
 PROJECT_ID = re.compile(r"^\d{3}-[A-Za-z0-9]{8,}-\d{3}$")
 MAP = (("验证报告", "069"), ("确认报告", "032"))
+REF_ITEM = re.compile(r"^(?:\d+[)）.、]|[（(]\d+[)）])\s*(?:《[^》]+》[；;。、,，]?\s*)+$")
+RISK_DOC = re.compile(r"《?风险(?:管理|管控)文档》?")
+REF_HEAD = re.compile(r"^(?:\d+(?:\.\d+)*\s*)?参考资料$")
 
 
 def doc_texts(doc):
@@ -67,9 +72,31 @@ def check_trace_matrix(path, doc):
     return errors
 
 
+def check_reference_list(path, doc):
+    """「参考资料」清单不得列《风险管理文档》；兼容编号条目与章节内任意行两种形态。"""
+    errors, in_ref = [], False
+    for para in doc.paragraphs:
+        t = para.text.strip()
+        if not t:
+            continue
+        if REF_HEAD.match(t):
+            in_ref = True
+            continue
+        if in_ref and (re.match(r"^第[一二三四五六七八九十]+[章部分]", t)
+                       or re.match(r"^\d+(?:\.\d+)+\s*\S", t)
+                       or re.match(r"^[一二三四五六七八九十]+、", t)):
+            in_ref = False
+        if RISK_DOC.search(t) and (in_ref or REF_ITEM.match(t)):
+            msg = "%s 「参考资料」不得列《风险管理文档》：%s" % (path.name, t[:40])
+            if msg not in errors:
+                errors.append(msg)
+    return errors
+
+
 def check_doc(path: Path):
     doc = Document(str(path))
     errors = check_qr_rd(path, doc)
+    errors += check_reference_list(path, doc)
     if path.name.startswith("RD-052"):
         errors += check_trace_matrix(path, doc)
     return errors
