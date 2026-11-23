@@ -1,0 +1,154 @@
+{
+  "project": {
+    "name": "半导体激光治疗仪",
+    "code": "03GSR2609011",
+    "model": "YJT-12204",
+    "manufacturer": "湖南元良健康科技有限公司",
+    "manufacturer_addr": "湖南省长沙市宁乡经开区谐园路（玉屏山产业园）D5栋"
+  },
+  "doc_round": "V10",
+  "generated": "2026-11-21T14:55:44",
+  "output_dir": "D:\\current_work\\我的工作资料汇总\\注册文档\\08-03GSR2609011-半导体激光治疗仪JG-13N   Q款激光腕表（增补元良）\\PEMS_文档族_V10",
+  "replaces": "PEMS_文档族_V1",
+  "facts": {
+    "path": "D:\\current_work\\我的工作资料汇总\\注册文档\\08-03GSR2609011-半导体激光治疗仪JG-13N   Q款激光腕表（增补元良）\\work\\facts.yaml",
+    "sha256": "dd1fa0bffbf6e3e286d761c21a0138d1e5728c0b7fe832e422e81fa0bde1eb59"
+  },
+  "ifu": [
+    {
+      "path": "D:\\current_work\\我的工作资料汇总\\注册文档\\08-03GSR2609011-半导体激光治疗仪JG-13N   Q款激光腕表（增补元良）\\2.4.01.01.165905R 产品说明书,60x100mm(成品尺寸),彩印覆哑膜,80g铜版纸,8折页,益健堂Q款激光腕表JG-03N(元良注册),V5.0,RoHS.pdf",
+      "sha256": "a3c4d51ff30c0dff0b58f2c9df06266da6a28221dfe636bddd58ab6192315ed6"
+    }
+  ],
+  "templates": {
+    "026": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\templates\\2.1\\RD-026_软件确认计划_2.1_格式档案（YJT-1222）_v3.docx",
+      "version": "2.1_v3",
+      "sha256": "d6d6b7bc709c8998082b61c04c6edf01d9635d6c27c7fd9e0991ba5862ceb2db"
+    },
+    "028": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\templates\\2.1\\RD-028_软件体系构架_2.1_基线.docx",
+      "version": "2.1",
+      "sha256": "42073dc55eca0c707e094b38b16666289e4e1b9112695a05d37654aca9561941"
+    },
+    "029": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\templates\\2.1\\RD-029_软件需求说明书_2.1_基线.docx",
+      "version": "2.1",
+      "sha256": "9afbc00580606b1e61fb64eedd9d4f26e7dff8ccd26f0338a52fb022c57ce3df"
+    },
+    "030": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\templates\\2.1\\RD-030_软件详细设计说明_2.1_基线.docx",
+      "version": "2.1",
+      "sha256": "0461c122f851c37c0216ae269688339949e3a0b9742626f6bdae53c2aa4ba14b"
+    },
+    "032": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\content_templates\\RD-032_软件确认报告_2.1_内容结构模板（YJT-1225）.docx",
+      "version": "2.1_内容结构",
+      "sha256": "eb3bac23ed678f906fdf54311878b345ea80d264748bc3c64b55c89e6bb8ecfd"
+    },
+    "052": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\templates\\2.1\\RD-052_软件描述文档_2.1_基线_v2.docx",
+      "version": "2.1_v2",
+      "sha256": "32aa080e52cab607dc9107d03b41a3ce4c9920038112eecf4379c9fbfe64c17e"
+    },
+    "068": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\templates\\1.0\\RD-068_软件验证计划_1.0_基线_v2.docx",
+      "version": "1.0_v2",
+      "sha256": "7e710d9dbc79230ee5aadf7413cbd301e345147a8887818899314954c7b5abcd"
+    },
+    "069": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\content_templates\\RD-069_软件验证报告_1.0_内容结构模板（YJT-1225）.docx",
+      "version": "1.0_内容结构",
+      "sha256": "7f9730fc1236ab3f8ccb3bc30f95c9d9635f3c62f345d10f21e428d47bf220c0"
+    }
+  },
+  "outputs": {
+    "RD-026 软件确认计划_V10.docx": {
+      "sha256": "328b54107ae75a9fe281a69dc497ed699d159ab4a702b65add78cf284724d47d",
+      "pages": 3
+    },
+    "RD-028 软件体系构架_V10.docx": {
+      "sha256": "b16cdc8bd6ea9634f57a117b171b7433d2c614fbb62d938e373b67cbf0ae3714",
+      "pages": 3
+    },
+    "RD-029 软件需求说明书_V10.docx": {
+      "sha256": "945a9f454f5ae198b5ef8c94c58ac79f432dafc839a674252524132ad6e551fa",
+      "pages": 11
+    },
+    "RD-030 软件详细设计说明_V10.docx": {
+      "sha256": "3191c7eafe8f123cc30208a7eb3fc73430dbabcf27532e94aaa8b37b599f2f18",
+      "pages": 13
+    },
+    "RD-032 软件确认报告_V10.docx": {
+      "sha256": "e45f396b14f46c3a062c3b402b24eaa785830e8fe040949ed93d950af7f8d9c6",
+      "pages": 6
+    },
+    "RD-052 软件描述文档_V10.docx": {
+      "sha256": "f9ecd110d562af477ec3758e6b0259b4721d9132547e40c5fa266bcc0cadbdbf",
+      "pages": 18
+    },
+    "RD-068 软件验证计划_V10.docx": {
+      "sha256": "44332b756cefb5f1ab9c8fd134117ca3696d6cb2b3cdfacd368e1f264fb37133",
+      "pages": 4
+    },
+    "RD-069 软件验证报告_V10.docx": {
+      "sha256": "49d8004b8d4254de7cadfdff92e9cdb94a813866d114c916fa0df53eb7ed4566",
+      "pages": 4
+    }
+  },
+  "figures": {
+    "fig_arch.png": {
+      "sha256": "5e2ba82444f76da0532aa6d887e64a596db4ad3dde0b1e86c50f672ef00921ba"
+    },
+    "fig_flow.png": {
+      "sha256": "e8906dfa580417c8ced311107b2e13980bc8256b8ee510bb84ab3106a1901f9b"
+    },
+    "fig_hw.png": {
+      "sha256": "a64a8e4e4b6db2ac024b349e7f22d9a68a41badf6893fbcce13222db965d3226"
+    },
+    "fig_sys.png": {
+      "sha256": "33d0d162819fa8a7993553b107453352d76257adf991aeea67d135d98a51b3eb"
+    }
+  },
+  "personnel_version": "泽生康花名册-20260722（候选，待注册人确认）",
+  "code_metrics": {
+    "code_lines": 400,
+    "unit": "行",
+    "dev_people": 2,
+    "dev_period": "15 天",
+    "workload": "约 30 人天（1.4 人月）",
+    "basis": "无源码，按 hex 映像 2870 字节估算；不含厂商 SDK 与外设驱动库"
+  },
+  "software_hash": {
+    "algorithm": "MD5",
+    "value": "14a81e3bd98945b5fce475f64e5b78a1",
+    "file": "034801R_Q款激光腕表3_6_V.hex",
+    "size": 8136,
+    "build_date": "2026-11-21"
+  },
+  "gates": {
+    "gate_report.md": {
+      "sha256": "8234b92ba09ec60e1af922e4feaa40d006af1368e156ff13fbbab791593de998",
+      "path": "D:\\current_work\\我的工作资料汇总\\注册文档\\08-03GSR2609011-半导体激光治疗仪JG-13N   Q款激光腕表（增补元良）\\work\\gate_report.md"
+    },
+    "gate_format_report.md": {
+      "sha256": "43dca2be1381ba9aa63b2f786068e480d089d9979195b945656eddbcf352e0ad",
+      "path": "D:\\current_work\\我的工作资料汇总\\注册文档\\08-03GSR2609011-半导体激光治疗仪JG-13N   Q款激光腕表（增补元良）\\work\\gate_format_report.md"
+    },
+    "render_report.json": {
+      "sha256": "4b65288d82078416b260df7bee23bbc263e1919ede97ffe5b9416e449e725581",
+      "path": "D:\\current_work\\我的工作资料汇总\\注册文档\\08-03GSR2609011-半导体激光治疗仪JG-13N   Q款激光腕表（增补元良）\\work\\render_report.json"
+    }
+  },
+  "page_counts": {
+    "RD-026 软件确认计划_V10.docx": 3,
+    "RD-028 软件体系构架_V10.docx": 3,
+    "RD-029 软件需求说明书_V10.docx": 11,
+    "RD-030 软件详细设计说明_V10.docx": 13,
+    "RD-032 软件确认报告_V10.docx": 6,
+    "RD-052 软件描述文档_V10.docx": 18,
+    "RD-068 软件验证计划_V10.docx": 4,
+    "RD-069 软件验证报告_V10.docx": 4
+  },
+  "declared": "本版 8 份交付文档；族成员应有 8 / 实有 8 / 不含 RD-057"
+}
