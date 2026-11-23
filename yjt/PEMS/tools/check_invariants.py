@@ -18,12 +18,17 @@
 """
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
 
 from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import docx_ops as _ops
 
 BAD_STYLE = ("列出段落", "List Paragraph")
 PLACEHOLDER = ("待定", "待补", "待确认", "TBD", "XXX", "××", "以受控为准", "见受控")
@@ -168,6 +173,43 @@ def check(path: Path):
     for lv, styles in by_lv.items():
         if len(styles) > 1:
             errs.append(("标题样式不一致", "%d级标题出现样式 %s" % (lv, sorted(styles))))
+
+    # 7 标题版式：真标题左对齐、零缩进（编号写在文字里，不能再套正文首行缩进）
+    pre = set()
+    for el in d.element.body.iterchildren():
+        if el.tag == qn("w:tbl"):
+            txt = "".join(t.text or "" for t in el.iter(qn("w:t")))
+            if "文件编号" in txt:
+                break
+        if el.tag == qn("w:p"):
+            pre.add(el)
+    for x in paras:
+        if x._p in pre:
+            continue
+        t = x.text.strip()
+        if not t:
+            continue
+        if (re.fullmatch(r"目\s*录", t) or (x.style.name or "").lower().startswith("toc")
+                or re.search(r"\.{3,}\s*\d+\s*$", t)):
+            continue
+        lv = _ops.effective_outline_level(x)
+        if lv is None or lv > 2:
+            continue
+        if not (x.style.name or "").lower().startswith("heading") and len(t) > 30:
+            continue
+        bad = []
+        if x.alignment not in (None, WD_ALIGN_PARAGRAPH.LEFT):
+            bad.append("对齐=%s" % x.alignment)
+        pPr = x._p.find(qn("w:pPr"))
+        ind = pPr.find(qn("w:ind")) if pPr is not None else None
+        if ind is not None:
+            for a in ("w:firstLine", "w:firstLineChars", "w:left", "w:leftChars",
+                      "w:hanging", "w:hangingChars"):
+                v = ind.get(qn(a))
+                if v and v != "0":
+                    bad.append("%s=%s" % (a.split("}")[-1], v))
+        if bad:
+            errs.append(("标题版式", "%s（%s）" % (t[:24], "，".join(bad))))
     return errs
 
 

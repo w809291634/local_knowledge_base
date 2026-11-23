@@ -150,7 +150,10 @@
   例程：`python work/check_figure_pairing.py <产物目录>`（图题/图/编号）+ `check_invariants.py`（六条不变量），均已并入 `check_all`。
 - **标题树按有效级别判定（2026-11-23 定）**：Word 保存会删除与样式同级的直接 `outlineLvl`，030/032/069 的 Heading 1/2 实测会丢直接级别；
   门禁必须按「直接→样式链→Heading N」取有效级别，目录标题/条目以有效级别为空或 9 视为不进导航。
-  例程：`python tools/check_outline_tree.py <产物目录>`（已并入 `check_all.py` 4f 段）。
+  **标题必须带序号**（按目录/模板编号，如 026/068/069 的 1.～4.），标题段左对齐、左右缩进与首行缩进为 0；
+  编号写进标题文字，不能再挂自动编号，也不能被正文基线套上 2 字符首行缩进（否则右移、不像标题）。
+  例程：`python tools/check_outline_tree.py <产物目录>` + `python tools/check_invariants.py <产物目录>`
+  （后者第 7 条检查标题版式；两者均已并入 `check_all.py` 4e/4f 段）。
 - **封面居中按渲染迭代**：上下留白差 ≤14pt，不得用固定空行数；`python tools/check_cover_center.py <产物目录> --pdf <渲染目录>`
   已并入 `check_all.py` 4d 段；连续空段判据以封面信息表为界，封面前导空行不参与。
 - **模板基线必须先自检残留，模板也纳入核对范围**（注册人 2026-11-17 要求）：开工前扫一遍 `templates/<版号>/*_基线.docx`，

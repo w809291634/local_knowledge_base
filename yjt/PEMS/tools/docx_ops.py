@@ -2409,6 +2409,30 @@ def table_section_caps(doc):
     return caps
 
 
+def effective_outline_level(p):
+    """段落有效大纲级别：直接 `pPr/outlineLvl` → 样式链 → `Heading N` 名称兜底。
+
+    Word 保存会归一与样式同级的直接级别（030/032/069 的 Heading 1/2 实测），
+    只读直接属性会把有标题树的文档误判为空；判据与收口都必须走这条链。
+    """
+    pPr = p._p.find(qn('w:pPr'))
+    e = pPr.find(qn('w:outlineLvl')) if pPr is not None else None
+    if e is not None:
+        return int(e.get(qn('w:val')))
+    st, guard = p.style, 0
+    while st is not None and guard < 10:
+        m = re.match(r'heading\s*(\d)', (st.name or '').lower())
+        if m:
+            return int(m.group(1)) - 1
+        sp = st.element.find(qn('w:pPr'))
+        se = sp.find(qn('w:outlineLvl')) if sp is not None else None
+        if se is not None:
+            return int(se.get(qn('w:val')))
+        st = st.base_style
+        guard += 1
+    return None
+
+
 def audit_table_geometry(doc, first_cell_text='文件编号', skip_table_texts=()):
     """只读体检：返回 {表号: [问题]}，供 dod-checklist 的表格项核对。
 

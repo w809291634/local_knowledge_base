@@ -13,12 +13,16 @@
 """
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
 
 from docx import Document
 from docx.oxml.ns import qn
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import docx_ops as _ops
 
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 P_PART = re.compile(r"^第[一二三四五六七八九十]+(部分|章)")
@@ -44,21 +48,7 @@ def eff_lvl(p):
     Word 保存时会把与样式同级的直接 `outlineLvl` 归一掉（实测 030/032/069
     的 Heading 1/2 标题因此丢失直接级别），只读直接属性会误判为“无标题树”。
     """
-    lv = lvl(p)
-    if lv is not None:
-        return lv
-    st, guard = p.style, 0
-    while st is not None and guard < 10:
-        m = re.match(r"heading\s*(\d)", (st.name or "").lower())
-        if m:
-            return int(m.group(1)) - 1
-        pPr = st.element.find(qn("w:pPr"))
-        e = pPr.find(qn("w:outlineLvl")) if pPr is not None else None
-        if e is not None:
-            return int(e.get(qn("w:val")))
-        st = st.base_style
-        guard += 1
-    return None
+    return _ops.effective_outline_level(p)
 
 
 def size_of(p):
