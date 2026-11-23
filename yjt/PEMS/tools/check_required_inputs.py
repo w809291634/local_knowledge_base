@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-"""必供材料门禁：型号 与 软件 MD5（注册人 2026-11-21 定）。
+"""必供材料门禁：型号、软件 MD5、外包装标签（注册人 2026-11-21 / 2026-11-23 定）。
 
-型号与软件哈希属生成前必须提供的材料，缺一不得生成/交付：
+必供材料缺一不得生成/交付：
 1. 型号必须存在、带 YJT- 前缀（YJT-12204 形式），不得为空、占位或旧前缀（JG-/YL-）；
 2. 软件 MD5 必须为 32 位十六进制，不得为空或占位；
-3. 052 正文必须出现该 MD5，且全族型号唯一。
+3. 052 正文必须出现该 MD5，且全族型号唯一；
+4. 项目目录必须提供外包装标签/铭牌（Word/PDF），052 §1.1 的注册人、受托生产企业、
+   生产地址必须与标签一致；生产地址不得拿注册人住所顶替（委托生产时两者常不同市）。
 
 用法：
     python check_required_inputs.py <项目目录 或 facts.yaml 或 产物目录>
@@ -37,6 +39,47 @@ def find_facts(p: Path):
     return None
 
 
+def find_label(p: Path):
+    """在项目目录/产物目录的上级找外包装标签或铭牌。"""
+    p = p.resolve()
+    for d in (p, p.parent):
+        for pat in ("*标签*.docx", "*铭牌*.docx"):
+            hit = sorted(d.glob(pat))
+            if hit:
+                return hit[0]
+    return None
+
+
+def label_fields(path: Path):
+    """读出标签里的身份字段（注册人/受托生产企业/生产地址）。"""
+    from docx import Document
+    texts = []
+    d = Document(str(path))
+    for para in d.paragraphs:
+        texts.append(para.text)
+    for t in d.tables:
+        for row in t.rows:
+            for c in row.cells:
+                texts.append(c.text)
+    out = {}
+    for raw in "\n".join(texts).splitlines():
+        line = raw.strip()
+        for key, name in (("注册人：", "registrant"),
+                          ("受托生产企业：", "manufacturer"),
+                          ("生产地址：", "production_address"),
+                          ("住所：", "address")):
+            if key in line and name not in out:
+                val = line.split(key, 1)[1].strip()
+                if val:
+                    out[name] = val
+    return out
+
+
+def _norm(s: str) -> str:
+    return re.sub(r"[\s\u3000]+", "", s or "")
+
+
+
 def check(p: Path):
     errs = []
     facts = find_facts(p)
@@ -56,6 +99,7 @@ def check(p: Path):
     docs = sorted(p.glob("*.docx")) if p.is_dir() else []
     if docs and model and md5:
         hit_md5 = False
+        doc052 = ""
         for f in docs:
             from docx import Document
             txt = "\n".join(x.text for x in Document(str(f)).paragraphs)
@@ -65,10 +109,25 @@ def check(p: Path):
             if md5.lower() in txt.lower():
                 hit_md5 = True
             if f.name.startswith("RD-052"):
+                doc052 = txt
                 if md5.lower() not in txt.lower():
                     errs.append("052 正文未写入软件 MD5「%s」" % md5)
         if not hit_md5:
             errs.append("全族未见软件 MD5「%s」" % md5)
+
+        # 外包装标签/铭牌（注册人 2026-11-23 定，必供）
+        label = find_label(p)
+        if label is None:
+            errs.append("未提供外包装标签/铭牌（必供材料）：项目目录未找到 *标签*.docx / *铭牌*.docx")
+        else:
+            fields = label_fields(label)
+            body = _norm(doc052)
+            for key, label_cn in (("registrant", "注册人"),
+                                  ("manufacturer", "受托生产企业"),
+                                  ("production_address", "生产地址")):
+                val = fields.get(key)
+                if val and _norm(val) not in body:
+                    errs.append("052 §1.1 与标签不一致：缺少%s「%s」" % (label_cn, val))
     return errs
 
 
@@ -82,7 +141,7 @@ def main(argv):
         for e in errs:
             print("  -", e)
         return 1
-    print("必供材料检查通过：型号 YJT- 前缀合规、软件 MD5 为 32 位且已写入 052")
+    print("必供材料检查通过：型号 YJT- 前缀合规、软件 MD5 为 32 位且已写入 052、外包装标签身份字段与 052 §1.1 一致")
     return 0
 
 
