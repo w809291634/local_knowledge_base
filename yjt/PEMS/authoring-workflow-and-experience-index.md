@@ -384,7 +384,7 @@ S7 负责目录刷新后的必要版式收口、自然重排复核与页码同�
   专项门禁同时为 0：052 量化项（`check_quant_items.py`）、052 更新历史（`check_version_history.py`）、
   030 修订记录表（`check_rd030_revision.py`）、052 验证报告表（`check_052_verification_table.py`）、
   表分类合并（`table_category_rules.py`）、结论↔结果联动（`check_conclusion_results.py`）、文档编号引用（`check_refs.py`）、人员清单（`check_personnel.py`）、
-  **标题树（`check_outline_tree.py`，2026-11-23 定：所有文档无例外，正文 ≥1 个 0 级且总数 ≥2、层级与编号一致、同名不重复、不断层）**、
+  **标题树（`check_outline_tree.py`，2026-11-23 定：所有文档无例外，正文 ≥1 个 0 级且总数 ≥2、层级与编号一致、同名不重复、不断层；「目录」标题与目录条目必须直接写 9 级，目录区不得进导航）**、
   **表格越界（`check_table_overflow.py`，2026-11-23 定：fixed 表宽＋缩进 ≤ 版心、禁止负缩进、渲染层文字不得越过左右版心）**、
   **空章（`check_empty_sections.py`，2026-11-23 定）**、
   **不变量六条（`check_invariants.py`，2026-11-23 定，一次枚举不再逐项打补丁）**：
@@ -535,6 +535,7 @@ build / 收口 / 闸门 / 渲染 / 反向测试 的命令与实测数字；页�
 | 封面后多一张空白页 / 中间冒出整页空白 | `reference-document-format-and-diagram-requirements.md` 「分类规则 -- 封面」「分类规则 -- 分页」、`pitfalls.md` §45~§48、§56、§61、§63 |
 | 中文页被判成空白页 | `pitfalls.md` §41、§77（渲染墨占比分级，别数文字） |
 | 目录刷新后指令裸露、超链接失效 | 「分类规则 -- 标题树」的「补齐标题树后的目录刷新护栏」、`pitfalls.md` §47 |
+| 导航窗格多出「目录」或目录条目 | 「分类规则 -- 标题树」判据④、`pitfalls.md` §113（目录区必须直接写 9 级，缺省留空不算通过） |
 | 目录页码与实际页不一致 | `pitfalls.md` §54、§33 |
 | 同一文档页眉出现两个模板版号（首页眉留旧版号） | `pitfalls.md` §85、`dod-checklist.md` B12 |
 | 正文里混进标题样式段（两条链路都放过） | `pitfalls.md` §67、§21、§34 |
@@ -588,7 +589,7 @@ build / 收口 / 闸门 / 渲染 / 反向测试 的命令与实测数字；页�
 | S7 编号字形 | `ops.heading_numbering_mechanisms` / `ops.numbering_glyph_audit(doc, first_cell_text='文件编号', levels=(0,1,2))` / `ops.normalize_numbering_glyphs`（编号字号按「分类规则 -- 字号」的标题各级档覆盖） |
 | S7 表格几何 | `ops.normalize_table_geometry(doc, ..., apply=('indent','float','grid'), grid_overrides=...)` + `ops.audit_table_geometry` |
 | S7 表格边框与文字对齐 | `ops.set_table_borders_six_way(doc, skip_cover=True, skip_table_texts=(...))` + `ops.align_table_columns_by_wrap(doc, skip_cover=True, skip_table_texts=(...))` + `ops.audit_table_borders(doc, skip_table_texts=(...))`（除封面表外六向 0.5pt；封面表 0.25pt；超出单元格一行的列左对齐、单行列水平居中、垂直居中；**RD-029「软件异常报告表」、RD-030「软件开发计划」表通过 `skip_table_texts` 保持模板原样**） |
-| S7 封面留白 | 顶部居中：`ops.set_cover_top_spacers(doc, n)`（主文件第三条，按渲染墨区复核上下差 ≤14pt）；**n 不得写死**（固定 19 行实测偏下 220~380pt，§106），按渲染实测补/删 12pt 定长空段迭代；标题与表之间：`ops.set_cover_spacers(doc, n=3, first_cell_text='文件编号')`（n 固定 3，主文件第八条；幂等：先 `ops.trim_cover_spacers` 再补）；终检 `tools/check_cover_center.py <产物目录> --pdf <渲染目录>`（同时查 AI 标签 0） |
+| S7 封面留白 | 顶部居中：`ops.set_cover_top_spacers(doc, n)`（主文件第三条，按渲染墨区复核上下差 ≤14pt）；**n 不得写死**（固定 19 行实测偏下 220~380pt，§106），按渲染实测补/删 12pt 定长空段迭代；**测量前必须先剥离 AI 标签**（含 AILabel 时首行墨迹是标签，会假通过，§114），顺序 strip → 导出 → 迭代；标题与表之间：`ops.set_cover_spacers(doc, n=3, first_cell_text='文件编号')`（n 固定 3，主文件第八条；幂等：先 `ops.trim_cover_spacers` 再补）；终检 `tools/check_cover_center.py <产物目录> --pdf <渲染目录>`（同时查 AI 标签 0） |
 | S7 正文段版式与重复段 | `po.effective_para_format / para_format_sig / align_para_formats / dedupe_paragraphs`；判定 `po.dup_kind`（exact/near/same-lead/contained）与 `find_duplicate_paragraphs(doc, allow=[(A,B)])` |
 | S4/S8 "文字正文·样式标题" | `ops.new_body_paragraph()`、`ops.demote_paragraph_to_body()`、`ops.body_paragraphs_with_heading_style()` |
 | S5 图组核对 | `ops.verify_figures(doc, expected_pngs)` → `(ok, rows)`：数量+顺序、二进制哈希、显示宽高比（VML 图只核二进制） |

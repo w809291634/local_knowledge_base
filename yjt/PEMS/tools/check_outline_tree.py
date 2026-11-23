@@ -55,8 +55,12 @@ def check_doc(path: Path):
         lv = lvl(p)
         t = p.text.strip()
         toc = (p.style.name or "").lower().startswith("toc") or bool(TOC_DOTS.search(t))
-        if toc and lv is not None and lv < 9:
-            errs.append("%s 静态目录条目仍为 %d 级：%s" % (path.name, lv, norm(t)[:30]))
+        if re.fullmatch(r"目\s*录", t):
+            if lv != 9:
+                errs.append("%s 目录标题不得进标题树（须直接写 9 级，当前 %s）" % (path.name, lv))
+            continue
+        if toc and lv != 9:
+            errs.append("%s 静态目录条目须直接写 9 级（当前 %s）：%s" % (path.name, lv, norm(t)[:30]))
             continue
         if not t or lv is None or lv >= 9:
             continue
