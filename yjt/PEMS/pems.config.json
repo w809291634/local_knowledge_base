@@ -200,7 +200,43 @@
       "软件验证报告": "069",
       "软件确认报告": "032"
     },
-    "gate_script": "tools/check_refs.py"
+    "gate_script": "tools/check_refs.py",
+    "forbid_in_reference_list": [
+      "《风险管理文档》",
+      "《风险管控文档》"
+    ],
+    "reference_list_rule": "参考资料（RD-030 1.4 等）只列本项目软件文档族与《产品说明书》《产品技术要求》；风险管理资料另行提交，不得列入参考资料清单（注册人 2026-11-23，pitfalls §115）"
+  },
+  "reference_outputs": {
+    "_说明": "成品参考集：完整输出文档族，供章节结构、句式、表格形态与版式参考；含原项目残留，不得作为新项目事实来源，也不参与模板库九份计数。",
+    "03GSR2606016_V12": {
+      "product": "紫外线治疗仪",
+      "model": "YJT-1601、YJT-1602",
+      "doc_round": "V12",
+      "source": "D:/current_work/我的工作资料汇总/注册文档/11-03GSR2606016紫外线治疗仪【益健堂】/PEMS-嵌入式_V12",
+      "backup_dir": "content_templates/成品参考_紫外线治疗仪_嵌入式_V12",
+      "index_md": "content_templates/成品参考_紫外线治疗仪_嵌入式_V12/INDEX.md",
+      "backed_up_on": "2026-11-23",
+      "documents": 8,
+      "excludes": "RD-057",
+      "pages_total": 66,
+      "files": {
+        "RD-026 软件确认计划_V12.docx": {"pages": 4, "sha256": "0fbf116b5cc39e1094c639ee770bdb6dc9b8c3712c9f7c8e27e0b391a630ac9b"},
+        "RD-028 软件体系构架_V12.docx": {"pages": 3, "sha256": "8443c7366c8cea11b7095613340a37d0318e1785a5a98b35a826eeeaabe70fb8"},
+        "RD-029 软件需求说明书_V12.docx": {"pages": 11, "sha256": "c4827d4add1a2e655fb54c0528fa5cc33726a4a8ee4411a6b8769707d76d391e"},
+        "RD-030 软件详细设计说明_V12.docx": {"pages": 13, "sha256": "a20ab319f1c2daaf09ede06ce097d88c029af3a30e9655d5fbdfc7f366ab8da2"},
+        "RD-032 软件确认报告_V12.docx": {"pages": 7, "sha256": "6d6703aba1a49d8a8af1eb0f438ca4b75b8ed461f0f5d079f2099a472a4113f1"},
+        "RD-052 软件描述文档_V12.docx": {"pages": 19, "sha256": "2c969e1a37c6e26d20c09bde5eab4e297cc3181c6bc6816987c8dd3393964b95"},
+        "RD-068 软件验证计划_V12.docx": {"pages": 4, "sha256": "d2835bac79c4764eef6007516c661f7b13415705da56b8c09179d95a5406663f"},
+        "RD-069 软件验证报告_V12.docx": {"pages": 5, "sha256": "367883a082694ef6b8b5f8de960f445b60ab10d1bf0948bd93261dac33c6b584"}
+      },
+      "caveats": [
+        "含原项目公司名、产品名、型号、项目号、日期与人员，使用前全量替换并跑残留词扫描",
+        "RD-030 1.4 第7项《风险管理文档》必须删除（pitfalls §115）",
+        "源 manifest 已滞后：026/052 生成后被修改，哈希与页数以本登记为准",
+        "签核栏为空；032/069 实测原始记录随附受控记录"
+      ]
+    }
   },
   "version_history_policy": {
     "_说明": "注册人 2026-11-20 定：052 §4.3 更新历史必须保留「首次发布」记录。",

@@ -1,0 +1,187 @@
+{
+  "generated": "2026-11-19T17:09:55",
+  "doc_round": "V12",
+  "version": "V12",
+  "supersedes": "PEMS-嵌入式_V11（2026-11-19 补 052 人数/工作量），V11 及更早版本保留未动",
+  "project_code": "03GSR2606016",
+  "product_name": "紫外线治疗仪",
+  "model": "YJT-1601、YJT-1602",
+  "software_name": "紫外线治疗仪",
+  "software_model": "YJT-160",
+  "software_release_version": "V1",
+  "software_full_version": "V1.0.0",
+  "software_hash": "7FB55128412C47D3E409B72C6B8F19FE",
+  "software_hash_note": "注册人 2026-11-19 提供；32 位十六进制，未声明算法。正文只写 HASH值：<值>，不标注 SHA-256。",
+  "personnel": [
+    {
+      "name": "向阳",
+      "stage": "需求规范和设计规范阶段",
+      "position": "研发工程师"
+    },
+    {
+      "name": "吴攀攀",
+      "stage": "软件编程阶段（源代码）",
+      "position": "研发工程师"
+    },
+    {
+      "name": "许亚萍",
+      "stage": "软件测试阶段（黑盒）",
+      "position": "测试工程师"
+    },
+    {
+      "name": "许亚萍",
+      "stage": "软件测试阶段（白盒）",
+      "position": "测试工程师"
+    },
+    {
+      "name": "柴明星",
+      "stage": "风险管理阶段",
+      "position": "管代"
+    }
+  ],
+  "personnel_count": 4,
+  "personnel_note": "注册人 2026-11-19 提供；落点 RD-052 §2.4.4.2 需求分析人员表。S1 必须先取得名单；姓名列留空时门禁判失败。",
+  "workload_note": "自需求分析至软件首次发布 2026-04-25，由 4 人完成各阶段工作",
+  "template_version": {
+    "026": "2.0",
+    "028": "2.1",
+    "029": "2.1",
+    "030": "2.1",
+    "032": "2.1",
+    "052": "2.1",
+    "068": "1.0",
+    "069": "1.0"
+  },
+  "templates": {
+    "026": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\templates\\2.0\\RD-026_软件确认计划_2.0_格式档案（YJT-1222）.docx",
+      "sha256": "15e9d953820f58e890b93a696034200dfd5bdf87d6377c6ffb8a8452867af61f",
+      "version": "2.0",
+      "tier": "格式档案（含项目残留）"
+    },
+    "032": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\content_templates\\RD-032_软件确认报告_2.1_内容结构模板（YJT-1225）.docx",
+      "sha256": "eb3bac23ed678f906fdf54311878b345ea80d264748bc3c64b55c89e6bb8ecfd",
+      "version": "2.1",
+      "tier": "内容结构模板（含项目残留）"
+    },
+    "028": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\templates\\2.1/RD-028_软件体系构架_2.1_基线.docx",
+      "sha256": "ff3d27a8296e71e3e7b07a3a1eb8b9cb71e91e65769d2d4b0a07071e191e7adf",
+      "version": "2.1"
+    },
+    "029": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\templates\\2.1/RD-029_软件需求说明书_2.1_基线.docx",
+      "sha256": "58fd1d7c101e9ff7287663088ef0b90c15b4fc5aa99ef5424b1cacc6417fb058",
+      "version": "2.1"
+    },
+    "030": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\templates\\2.1/RD-030_软件详细设计说明_2.1_基线.docx",
+      "sha256": "46dd12bcbbde35ccce97c1463e045a3809e5664d82260da427dceb1463991a07",
+      "version": "2.1"
+    },
+    "052": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\templates\\2.1/RD-052_软件描述文档_2.1_基线.docx",
+      "sha256": "7633fa2d905dc33aac5449ef238baeefff64f0a02c176760cca59bf993912554",
+      "version": "2.1"
+    },
+    "068": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\templates\\1.0/RD-068_软件验证计划_1.0_基线.docx",
+      "sha256": "f9d1f3437a0600c097121a81861abff0013de21023843f324ebe1392a2c794d4",
+      "version": "1.0"
+    },
+    "069": {
+      "path": "C:\\Users\\yjt54\\Desktop\\local_knowledge_base\\yjt\\PEMS\\content_templates\\RD-069_软件验证报告_1.0_内容结构模板（YJT-1225）.docx",
+      "sha256": "7f9730fc1236ab3f8ccb3bc30f95c9d9635f3c62f345d10f21e428d47bf220c0",
+      "version": "1.0",
+      "tier": "内容结构模板（含项目残留）",
+      "note": "4 章＋结论、三张 3 列表；结果列不进入报告"
+    }
+  },
+  "facts_sha": "337dff490cf49ee02477f35319adc3058256ee7841746fb5bd77d88cbb93bdfe",
+  "ifu_sha": "be12da7a3ca61698b1e28465095241993a76e4f298774ab3b93fcba368ed978c",
+  "trs_sha": "b940d28e570151bbc713b75c7adc1390a85c45dc21e45bb0c1d267eed8f79cdb",
+  "outputs": {
+    "RD-026 软件确认计划_V12.docx": "f07a9379b7b5b016723251314d222a01758ae469ff45322b0839f1166b6d4e84",
+    "RD-028 软件体系构架_V12.docx": "8443c7366c8cea11b7095613340a37d0318e1785a5a98b35a826eeeaabe70fb8",
+    "RD-029 软件需求说明书_V12.docx": "c4827d4add1a2e655fb54c0528fa5cc33726a4a8ee4411a6b8769707d76d391e",
+    "RD-030 软件详细设计说明_V12.docx": "a20ab319f1c2daaf09ede06ce097d88c029af3a30e9655d5fbdfc7f366ab8da2",
+    "RD-032 软件确认报告_V12.docx": "6d6703aba1a49d8a8af1eb0f438ca4b75b8ed461f0f5d079f2099a472a4113f1",
+    "RD-052 软件描述文档_V12.docx": "6f1b42d5db891fb2c1bf24b1eac34bbae8d30e3f867f24f723a85f8b189e95ee",
+    "RD-068 软件验证计划_V12.docx": "d2835bac79c4764eef6007516c661f7b13415705da56b8c09179d95a5406663f",
+    "RD-069 软件验证报告_V12.docx": "a9ca701edc89fa3dd172646f5e9af4aeea958c4aff54428c9bc7ef23d4b4b8b3"
+  },
+  "pages": {
+    "026": 4,
+    "028": 3,
+    "029": 11,
+    "030": 13,
+    "032": 7,
+    "052": 18,
+    "068": 4,
+    "069": 5
+  },
+  "page_channel": "Microsoft Word ComputeStatistics(2)",
+  "case_library": {
+    "groups": [
+      "单元测试 7 项",
+      "集成测试 9 项",
+      "系统测试 2 项"
+    ],
+    "numbering": "2.2.1~2.2.18（026/032/068/069 同一集合）",
+    "equality": "068 与 069 三张表 18 行编号/名称/描述逐条相等（脚本核对通过）"
+  },
+  "pairing_026_032": {
+    "大类": [
+      "01 单元测试",
+      "02 集成测试",
+      "03 系统测试"
+    ],
+    "小类": "18 条 2.2.x 编号/名称/描述逐条相等",
+    "方法句": "026/032/068/069 同文",
+    "结果表": "032 四、测试结果 4×3，三行均为「是」"
+  },
+  "pairing_068_069": {
+    "chapters": "两份均 4 章；069 末章「5、结论」",
+    "tables": "各三张 3 列表（用例编号｜测试项目名称｜描述与要求）；068 保留基线签署行，069 严格照内容模板不另加行",
+    "result": "069 不设结果列，结论句给出判定；068 不写结果",
+    "method": "026/032/068/069 方法句同文"
+  },
+  "format_baseline": "068：沿用 1.0 基线（页眉 QR/RD/068 1.0、四章＋目录、三张 3 列表）；069：按 1.0 内容模板（页眉 QR/RD/069 1.0、五章＋目录、三张 3 列表、结论含产品技术要求）",
+  "template_sha": {
+    "026": "15e9d953820f58e890b93a696034200dfd5bdf87d6377c6ffb8a8452867af61f",
+    "032": "eb3bac23ed678f906fdf54311878b345ea80d264748bc3c64b55c89e6bb8ecfd",
+    "028": "ff3d27a8296e71e3e7b07a3a1eb8b9cb71e91e65769d2d4b0a07071e191e7adf",
+    "029": "58fd1d7c101e9ff7287663088ef0b90c15b4fc5aa99ef5424b1cacc6417fb058",
+    "030": "46dd12bcbbde35ccce97c1463e045a3809e5664d82260da427dceb1463991a07",
+    "052": "7633fa2d905dc33aac5449ef238baeefff64f0a02c176760cca59bf993912554",
+    "068": "f9d1f3437a0600c097121a81861abff0013de21023843f324ebe1392a2c794d4",
+    "069": "7f9730fc1236ab3f8ccb3bc30f95c9d9635f3c62f345d10f21e428d47bf220c0"
+  },
+  "gates": {
+    "gate_11": "215 通过 / 0 失败",
+    "check_personnel": "tools/check_personnel.py：8 份通过（草稿态）",
+    "pairing_check": "026↔032、068↔069 小类逐条相等；四份方法句同文；AI 标识 0",
+    "render": "Word 只读页数：052=18、069=5；目录已刷新"
+  },
+  "checklist_xlsx": {
+    "source": "C:/Users/yjt54/Desktop/PEMS软件文档专项检查报告.xlsx",
+    "item3_069结论": "结论句已补「验证通过」",
+    "item7_量化项": "052 §2.1.5 开发人员 4 人；§2.1.6 自需求分析至首次发布 2026-04-25；§2.1.7 代码行数已填",
+    "item8_追溯编号": "052 追溯矩阵五项统一为 029/030/003/054/069-03GSR2606016-001",
+    "item10_电流矛盾": "V10 已统一为适配器 AC100-240V 50/60Hz、0.8A Max",
+    "item12_空白项": "052 缺陷表 5 行补解决时间 2026-04-25；版本表日期已有"
+  },
+  "pending": [
+    "026 确认组：2.0 模板无成员表，GB 9706.1 14.11 的确认组信息仍无落点，待定补正文说明或另附名单",
+    "8 份签核栏（编制/审核/批准及日期）仍空，需签字时填写",
+    "032/069 逐条实测原始记录需随附受控记录，文档内不代填",
+    "052 §1.1 的 HASH 为注册人提供的 32 位值，未声明算法；如需 SHA-256 需 64 位值"
+  ],
+  "changed_docs": [
+    "RD-052 软件描述文档_V12.docx",
+    "RD-069 软件验证报告_V12.docx",
+    "RD-032 软件确认报告_V12.docx"
+  ],
+  "change_summary": "本轮按专项检查截图收口：①RD-069「5、结论」补「验证通过」；②RD-052 追溯矩阵 QR/RD/029、030、003、054、069 全部改为「编号-03GSR2606016-001」；③RD-052 缺陷表 5 行补解决时间 2026-04-25（发布前关闭）；④RD-032 内容同 V11，仅清理 AI 标识；其余 5 份与 V11 字节一致。签核栏与逐条原始记录属受控签署/证据，未代填。"
+}
