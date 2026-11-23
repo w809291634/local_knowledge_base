@@ -22,6 +22,14 @@ W_TBL = qn("w:tbl")
 
 
 def heading_level(p):
+    ppr = p._p.pPr
+    if ppr is not None:
+        ol = ppr.find(qn("w:outlineLvl"))
+        if ol is not None:
+            try:
+                return int(ol.get(qn("w:val"))) + 1
+            except (TypeError, ValueError):
+                pass
     st = p.style.name if p.style is not None else ""
     if st.startswith("Heading "):
         try:
@@ -30,14 +38,6 @@ def heading_level(p):
             return 1
     if st.lower().startswith("toc"):
         return 0
-    ppr = p._p.pPr
-    if ppr is not None:
-        ol = ppr.find(qn("w:outlineLvl"))
-        if ol is not None:
-            try:
-                return int(ol.get(qn("w:val"))) + 1
-            except (TypeError, ValueError):
-                return 0
     return 0
 
 
@@ -65,7 +65,17 @@ def check_doc(path):
 
     errs = []
     for n, (i, lvl, t) in enumerate(heads):
+        if lvl != 1:          # 判据只针对章级（1 级）标题，见 pitfalls §108
+            continue
         j = heads[n + 1][0] if n + 1 < len(heads) else len(items)
+        # 紧跟更深一级节标题时允许本章无正文（pitfalls §108 的判据口径）；
+        # 4 级编号被压到 2 级后会出现"同级"，按编号前缀延伸视为更深
+        if n + 1 < len(heads):
+            nt = heads[n + 1][2]
+            import re as _re
+            m = _re.match(r"^(\d+(?:\.\d+)+)", t)
+            if heads[n + 1][1] > lvl or (m and nt.startswith(m.group(1) + ".")):
+                continue
         content = False
         for k in range(i + 1, j):
             typ, obj = items[k]

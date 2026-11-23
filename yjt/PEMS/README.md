@@ -43,6 +43,7 @@
 | `tools/check_structure_baseline.py` | 结构基线门禁：产物各项不得少于基线、相邻表必须为 0、表内字数 ≥ 基线 60%；豁免走 `work/structure-allow.json` |
 | `tools/check_template_tables_intact.py` | 模板原样表正校验：封面表、RD-029 第九章两张表单、RD-030 开发计划表须逐项等于模板 |
 | `tools/check_cover_center.py` | 封面居中与 AI 标签门禁：第 1 页上下留白差 ≤14pt（页高 9%~91% 去眉脚带）、`AILabel` 图形 0 且无 AI 生成标记 |
+| `tools/check_outline_tree.py` | 标题树门禁（2026-11-23 定为所有文档必须）：正文 ≥1 个 0 级且总数 ≥2、层级与编号一致、同名不重复、层级不断层、目录条目与表格单元格降 9 |
 | `tools/release_ops.py` | 全 XML 文本扫描、页眉页脚/文本框受控替换、哈希与发布清单原语 |
 
 ## 一句话总纲

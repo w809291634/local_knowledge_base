@@ -415,7 +415,8 @@
     "cover_signature": "留空（注册人 2026-11-20：8 份封面「编制／审核／批准」姓名与日期由注册人线下签署，生成阶段不作门禁失败项，不再追问）",
     "structure_baseline_policy": "缺失型判据（2026-11-23）：先由 tools/baseline_fingerprint.py 生成 work/reports/baseline-fingerprint.json（tables/table_rows/vml_shapes/inline_images/headings/nonempty_paras/table_chars/sections），产物各项不得少于基线；相邻表格必须为 0、表格内字数不低于基线 60%；确需删除的在 work/structure-allow.json 登记 n 与 reason（只减不加）；tools/check_structure_baseline.py 非零退出即失败；由项目侧 work/closeout.py（项目自行编排）统一调用。背景：VML 表单/图不在 doc.tables 里，只比表数会把“形状被删、文字被压平”判成通过（pitfalls §104）。",
     "template_tables_policy": "模板原样表正校验（2026-11-23）：封面信息表、RD-029 第九章两张表单、RD-030 开发计划表必须逐项等于模板（rows/cols/borders/grid/shd/fonts），清单见 work/template-tables.json 与 authoring S3 附表；tools/check_template_tables_intact.py 非零退出即失败；由项目侧 work/closeout.py 统一调用。跳过规则（SKIP_TBL/SKIP_MARKS 含 项目里程碑计划／软件异常报告／测试异常描述）与正校验缺一不可；封面表边框按各自模板原值，不得一律写 0.25pt。",
-    "cover_center_policy": "封面整块垂直居中按渲染墨区实测（2026-11-23）：第 1 页取页高 9%~91% 去页眉页脚带，上留白与下留白差 ≤14pt；不得用固定空行数（固定 19 行实测上留白 46~55%、下 10~20%），须逐份补/删标题前 12pt 定长空段迭代收敛；标题与封面表之间固定 3 个空行；tools/check_cover_center.py <产物目录> --pdf <渲染目录> 非零退出即失败，并同时校验 AI 标记为 0。"
+    "cover_center_policy": "封面整块垂直居中按渲染墨区实测（2026-11-23）：第 1 页取页高 9%~91% 去页眉页脚带，上留白与下留白差 ≤14pt；不得用固定空行数（固定 19 行实测上留白 46~55%、下 10~20%），须逐份补/删标题前 12pt 定长空段迭代收敛；标题与封面表之间固定 3 个空行；tools/check_cover_center.py <产物目录> --pdf <渲染目录> 非零退出即失败，并同时校验 AI 标记为 0。",
+    "outline_tree_policy": "标题树（注册人 2026-11-23 收紧为所有文档、无例外）：每份文档正文（非封面大标题、非表格、非目录条目）至少 1 个 outlineLvl=0 且标题总数 ≥2；层级按编号形态 第X部分/第X章/一、→0、X.X→1、X.X.X 及更深→2；同名标题同层级只出现一次；静态目录条目（点线或 toc 样式）、表格单元格段落、空段一律降 9 级；首个正文标题必须 0 级且层级不断层。生成侧用项目 work/outline_tree.py 补齐（只写 outlineLvl，不改 pStyle 与字号），判据 tools/check_outline_tree.py <产物目录> 非零退出即失败。此前 026/028 豁免与『不加 outlineLvl 除非注册人要求』的表述作废。"
   },
   "ai_label_policy": {
     "_说明": "注册人 2026-11-19：交付文档不得出现任何 AI 生成标识；生成侧不得主动写入。",
