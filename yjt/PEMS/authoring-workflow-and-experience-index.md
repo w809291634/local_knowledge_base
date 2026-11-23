@@ -385,6 +385,7 @@ S7 负责目录刷新后的必要版式收口、自然重排复核与页码同�
   030 修订记录表（`check_rd030_revision.py`）、052 验证报告表（`check_052_verification_table.py`）、
   表分类合并（`table_category_rules.py`）、结论↔结果联动（`check_conclusion_results.py`）、文档编号引用（`check_refs.py`）、人员清单（`check_personnel.py`）、
   **标题树（`check_outline_tree.py`，2026-11-23 定：所有文档无例外，正文 ≥1 个 0 级且总数 ≥2、层级与编号一致、同名不重复、不断层）**、
+  **表格越界（`check_table_overflow.py`，2026-11-23 定：fixed 表宽＋缩进 ≤ 版心、禁止负缩进、渲染层文字不得越过左右版心）**、
   **空章（`check_empty_sections.py`，2026-11-23 定）**、
   **不变量六条（`check_invariants.py`，2026-11-23 定，一次枚举不再逐项打补丁）**：
   ①样式合法——正文不得出现「列出段落」「List Paragraph」等意外列表样式（会顶格、缩进错乱）；
