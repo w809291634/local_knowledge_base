@@ -2457,10 +2457,21 @@ def audit_table_geometry(doc, first_cell_text='文件编号', skip_table_texts=(
         if nilc:
             p.append('%d 个单元格左边框被设为 nil' % nilc)
         grid = tbl.find(qn('w:tblGrid'))
+        tot = None
         if grid is not None:
             tot = sum(int(c.get(qn('w:w')) or 0) for c in grid.findall(qn('w:gridCol')))
             if tot > int(text_w * 1.05):
                 p.append('列宽和 %d > 版心 %d（首列会被压窄、整表溢出）' % (tot, text_w))
+        # tblW 才是 Word 渲染依据；它和列宽和不一致时，列宽和正常也会溢出
+        if tblPr is not None:
+            tw = tblPr.find(qn('w:tblW'))
+            ty = (tw.get(qn('w:type')) or 'dxa') if tw is not None else None
+            if tw is not None and ty == 'dxa':
+                wv = int(tw.get(qn('w:w')) or 0)
+                if wv > int(text_w * 1.05):
+                    p.append('表宽 tblW=%d > 版心 %d（整表溢出）' % (wv, text_w))
+                if tot and abs(wv - tot) > max(50, int(tot * 0.02)):
+                    p.append('tblW=%d 与列宽和 %d 不一致（Word 按 tblW 渲染）' % (wv, tot))
         if p:
             bad[i + 1] = p
     return bad
