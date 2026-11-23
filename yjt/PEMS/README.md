@@ -38,6 +38,11 @@
 | `tools/check_required_inputs.py` | 必供材料门禁：型号须 `YJT-` + 5 位（如 YJT-12204）、软件 MD5 须 32 位并写入 052，缺失/占位即失败 |
 | `tools/check_conclusion_results.py` | 结论↔结果联动门禁：032／069 有结论必须有结果且不矛盾 |
 | `tools/check_refs.py` | 编号引用门禁：正文禁 QR/RD 模板编号，052 追溯矩阵验证报告→069、确认报告→032 |
+| `tools/check_table_header_shading.py` | 表格底纹门禁：表头 D9D9D9、数据行无 `w:shd`、文字黑色；封面表与 RD-029/030 例外表除外 |
+| `tools/baseline_fingerprint.py` | 生成模板结构基线指纹（tables/rows/VML 形状/内联图/标题/非空段/表内字数/节数），供产物做"缺失型"判据 |
+| `tools/check_structure_baseline.py` | 结构基线门禁：产物各项不得少于基线、相邻表必须为 0、表内字数 ≥ 基线 60%；豁免走 `work/structure-allow.json` |
+| `tools/check_template_tables_intact.py` | 模板原样表正校验：封面表、RD-029 第九章两张表单、RD-030 开发计划表须逐项等于模板 |
+| `tools/check_cover_center.py` | 封面居中与 AI 标签门禁：第 1 页上下留白差 ≤14pt（页高 9%~91% 去眉脚带）、`AILabel` 图形 0 且无 AI 生成标记 |
 | `tools/release_ops.py` | 全 XML 文本扫描、页眉页脚/文本框受控替换、哈希与发布清单原语 |
 
 ## 一句话总纲

@@ -202,4 +202,4 @@ python tools/consistency_check.py --config <project-config.json>
 - **已打印时优先保页**：结果列文字控制在单行（约 8~10 字），使整表仍落在同一页，
   项目 11 V13 实测 §2.5.6 仍在第 16 页、总页数不变，可只替换该页；
 - 机器可读规则见 `pems.config.json` → `pairing_rules.052_verification_table`，
-  项目侧门禁实现见 `work/gate_11.py` 的 `if key == "052"` 段。
+  判据直接用 `tools/check_052_verification_table.py <产物目录>`（052↔069 逐条同源），项目侧只做调用编排。

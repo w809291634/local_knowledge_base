@@ -130,9 +130,11 @@
   公司名/项目号是最常见漏网项，且必须由生成器作为独立槽位写入，不能只靠 raw XML 串替换（`pitfalls.md` §35）。
 - **AI 生成标识不得进入交付件（注册人 2026-11-19 要求）**：扫描范围同残留词，命中 `含 AI 生成`／`AI 生成`／
   `AI生成`／`AIGC`／`AILabel`／`人工智能生成`／`ChatGPT`／`DeepSeek`／`大模型生成` 一律判失败。
-  Word 插件会在**保存时**向正文第一个段落插入名为 `AILabel` 的内联文本框（`w:txbxContent` 内写“含 AI 生成”），
-  python-docx 的 `paragraphs` 遍历不到，须按 `wp:docPr/@name="AILabel"` 或文本框文字删掉整个 `<w:p>`；
-  删除后只用 Word **只读**重算页数，不要再保存，否则标识会被重新写回。
+  Word 插件会在**保存时**向正文第一个段落插入名为 `AILabel` 的内联图形（`w:drawing` 内写“含 AI 生成”），
+  python-docx 的 `paragraphs` 遍历不到，须按 `wp:docPr/@name="AILabel"` **只删该 `w:drawing` 及其空 run，
+  保留所在 `<w:p>`**——删整段会连带丢掉 bookmark/sectPr，Word 会判损坏或丢分节（pitfalls §105）；
+  删除后只用 Word **只读**重算页数/导出 PDF，不要再保存，否则标识会被重新写回。
+  判据：`tools/check_cover_center.py <产物目录> --pdf <渲染目录>`（AI 标记 0 + 封面居中）。
 - **模板基线必须先自检残留，模板也纳入核对范围**（注册人 2026-11-17 要求）：开工前扫一遍 `templates/<版号>/*_基线.docx`，
   把命中的他产品/他公司词并入本项目 FORBID 词表，再扫产物。实测模板自带别产品内容：
   029 基线「彩超」2、030 基线「红蓝光」8、032 基线「鼻炎」6／「血糖」1／`HYM1.1`／`HYE1.1`、052 基线「红蓝光」36／「465nm」2、

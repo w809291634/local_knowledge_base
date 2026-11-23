@@ -411,8 +411,9 @@
     "require_heading_set_equal_to_template": true,
     "conclusion_default": "通过（注册人 2026-11-20：032/069 结论默认写测试通过，不再逐项询问；032 结果表三行填“是”，069 结论只写“<产品>软件系统的单元、集成与系统测试均通过。”；结论不引用需求规范/技术要求/验证计划，不写过程说明，不赘述）",
     "cover_signature": "留空（注册人 2026-11-20：8 份封面「编制／审核／批准」姓名与日期由注册人线下签署，生成阶段不作门禁失败项，不再追问）",
-    "structure_baseline_policy": "缺失型判据（2026-11-23）：先由 tools/baseline_fingerprint.py 生成 work/reports/baseline-fingerprint.json（tables/table_rows/vml_shapes/inline_images/headings/nonempty_paras/table_chars/sections），产物各项不得少于基线；相邻表格必须为 0、表格内字数不低于基线 60%；确需删除的在 work/structure-allow.json 登记 n 与 reason（只减不加）；tools/check_structure_baseline.py 非零退出即失败，已并入 work/closeout.py。背景：VML 表单/图不在 doc.tables 里，只比表数会把“形状被删、文字被压平”判成通过（pitfalls §104）。",
-    "template_tables_policy": "模板原样表正校验（2026-11-23）：封面信息表、RD-029 第九章两张表单、RD-030 开发计划表必须逐项等于模板（rows/cols/borders/grid/shd/fonts），清单见 work/template-tables.json 与 authoring S3 附表；tools/check_template_tables_intact.py 非零退出即失败，已并入 work/closeout.py。跳过规则（SKIP_TBL/SKIP_MARKS 含 项目里程碑计划／软件异常报告／测试异常描述）与正校验缺一不可；封面表边框按各自模板原值，不得一律写 0.25pt。"
+    "structure_baseline_policy": "缺失型判据（2026-11-23）：先由 tools/baseline_fingerprint.py 生成 work/reports/baseline-fingerprint.json（tables/table_rows/vml_shapes/inline_images/headings/nonempty_paras/table_chars/sections），产物各项不得少于基线；相邻表格必须为 0、表格内字数不低于基线 60%；确需删除的在 work/structure-allow.json 登记 n 与 reason（只减不加）；tools/check_structure_baseline.py 非零退出即失败；由项目侧 work/closeout.py（项目自行编排）统一调用。背景：VML 表单/图不在 doc.tables 里，只比表数会把“形状被删、文字被压平”判成通过（pitfalls §104）。",
+    "template_tables_policy": "模板原样表正校验（2026-11-23）：封面信息表、RD-029 第九章两张表单、RD-030 开发计划表必须逐项等于模板（rows/cols/borders/grid/shd/fonts），清单见 work/template-tables.json 与 authoring S3 附表；tools/check_template_tables_intact.py 非零退出即失败；由项目侧 work/closeout.py 统一调用。跳过规则（SKIP_TBL/SKIP_MARKS 含 项目里程碑计划／软件异常报告／测试异常描述）与正校验缺一不可；封面表边框按各自模板原值，不得一律写 0.25pt。",
+    "cover_center_policy": "封面整块垂直居中按渲染墨区实测（2026-11-23）：第 1 页取页高 9%~91% 去页眉页脚带，上留白与下留白差 ≤14pt；不得用固定空行数（固定 19 行实测上留白 46~55%、下 10~20%），须逐份补/删标题前 12pt 定长空段迭代收敛；标题与封面表之间固定 3 个空行；tools/check_cover_center.py <产物目录> --pdf <渲染目录> 非零退出即失败，并同时校验 AI 标记为 0。"
   },
   "ai_label_policy": {
     "_说明": "注册人 2026-11-19：交付文档不得出现任何 AI 生成标识；生成侧不得主动写入。",
@@ -431,7 +432,7 @@
     ],
     "scope": "word/*.xml 全部部件（正文、表格、页眉页脚、文本框）",
     "cleanup": "只删除含 AILabel 的 w:drawing 及其空 run，不删除段落，避免丢失 bookmark/sectPr",
-    "gate": "gate_11.py FORBID「AI 生成痕迹」；交付前扫描必须为 0",
+    "gate": "tools/check_cover_center.py（AILabel 图形 0 + word/*.xml 无 AI 标记）",
     "note": "本地 Office 插件可能在打开/保存时写入 AILabel；同一文件被多次保存会出现多个同名图形，重复 ID 会让 Word 判为损坏"
   }
 }
