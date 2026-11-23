@@ -115,10 +115,18 @@ def check(path: Path):
         if re.search(r"[：:]\s*[—–\-]+\s*$", t):
             errs.append(("占位符", "P%d %s" % (i, t[:24])))
 
-    # 4 空段受控
+    # 4 空段受控（封面区跳过：以封面信息表为界，不只按固定段数）
+    cover_idx = -1
+    for i, el in enumerate(d.element.body.iterchildren()):
+        if el.tag == qn("w:tbl"):
+            txt = "".join(t.text or "" for t in el.iter(qn("w:t")))
+            if "文件编号" in txt:
+                cover_idx = i
+                break
+    skip_until = max(20, cover_idx)
     run = 0
     for i, (k, t) in enumerate(bl):
-        if i < 20:
+        if i <= skip_until:
             continue
         if k == "blank":
             run += 1

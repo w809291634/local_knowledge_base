@@ -43,7 +43,7 @@
 | `tools/check_structure_baseline.py` | 结构基线门禁：产物各项不得少于基线、相邻表必须为 0、表内字数 ≥ 基线 60%；豁免走 `work/structure-allow.json` |
 | `tools/check_template_tables_intact.py` | 模板原样表正校验：封面表、RD-029 第九章两张表单、RD-030 开发计划表须逐项等于模板 |
 | `tools/check_cover_center.py` | 封面居中与 AI 标签门禁：第 1 页上下留白差 ≤14pt（页高 9%~91% 去眉脚带）、`AILabel` 图形 0 且无 AI 生成标记 |
-| `tools/check_outline_tree.py` | 标题树门禁（2026-11-23 定为所有文档必须）：正文 ≥1 个 0 级且总数 ≥2、层级与编号一致、同名不重复、层级不断层、**「目录」标题与目录条目必须直接写 9 级（缺省即失败），目录区不得进导航**；表格单元格不得有 0~8 级 |
+| `tools/check_outline_tree.py` | 标题树门禁（2026-11-23 定为所有文档必须）：按**有效级别**（直接→样式链→Heading N）判断，正文 ≥1 个 0 级且总数 ≥2、层级与编号一致、同名不重复、层级不断层；目录标题/条目以有效级别为空或 9 视为不进导航（Word 会归一直接 `outlineLvl`）；表格单元格不得有 0~8 级 |
 | `tools/check_table_overflow.py` | 表格越界门禁（结构＋渲染）：结构层按**表格所属节**取版心，`tblW`(dxa) 与 fixed 表「列宽和＋缩进」均 ≤ 版心＋12pt、`tblW` 与列宽和一致、禁止负缩进；渲染层任一页文字不得越过该页左右页边距（容差 12pt）。封面信息表跳过 |
 | `tools/release_ops.py` | 全 XML 文本扫描、页眉页脚/文本框受控替换、哈希与发布清单原语 |
 

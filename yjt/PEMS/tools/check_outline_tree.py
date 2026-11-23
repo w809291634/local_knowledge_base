@@ -38,6 +38,29 @@ def lvl(p):
     return int(e.get(qn("w:val"))) if e is not None else None
 
 
+def eff_lvl(p):
+    """有效大纲级别：直接格式优先，其次样式链，最后 Heading N 名称兜底。
+
+    Word 保存时会把与样式同级的直接 `outlineLvl` 归一掉（实测 030/032/069
+    的 Heading 1/2 标题因此丢失直接级别），只读直接属性会误判为“无标题树”。
+    """
+    lv = lvl(p)
+    if lv is not None:
+        return lv
+    st, guard = p.style, 0
+    while st is not None and guard < 10:
+        m = re.match(r"heading\s*(\d)", (st.name or "").lower())
+        if m:
+            return int(m.group(1)) - 1
+        pPr = st.element.find(qn("w:pPr"))
+        e = pPr.find(qn("w:outlineLvl")) if pPr is not None else None
+        if e is not None:
+            return int(e.get(qn("w:val")))
+        st = st.base_style
+        guard += 1
+    return None
+
+
 def size_of(p):
     ss = [r.font.size.pt for r in p.runs if r.font.size]
     return max(ss) if ss else 0
@@ -52,15 +75,17 @@ def check_doc(path: Path):
     d = Document(str(path))
     heads = []
     for p in d.paragraphs:
-        lv = lvl(p)
+        lv = eff_lvl(p)
         t = p.text.strip()
         toc = (p.style.name or "").lower().startswith("toc") or bool(TOC_DOTS.search(t))
         if re.fullmatch(r"目\s*录", t):
-            if lv != 9:
-                errs.append("%s 目录标题不得进标题树（须直接写 9 级，当前 %s）" % (path.name, lv))
+            if lv is not None and lv < 9:
+                errs.append("%s 目录标题不得进标题树（有效级别 %d）" % (path.name, lv))
             continue
-        if toc and lv != 9:
-            errs.append("%s 静态目录条目须直接写 9 级（当前 %s）：%s" % (path.name, lv, norm(t)[:30]))
+        if toc:
+            if lv is not None and lv < 9:
+                errs.append("%s 目录条目不得进标题树（有效级别 %d）：%s"
+                            % (path.name, lv, norm(t)[:30]))
             continue
         if not t or lv is None or lv >= 9:
             continue
@@ -71,7 +96,7 @@ def check_doc(path: Path):
         for r in t.rows:
             for c in r.cells:
                 for p in c.paragraphs:
-                    lv = lvl(p)
+                    lv = eff_lvl(p)
                     if lv is not None and lv < 9:
                         errs.append("%s 表格单元格内出现 %d 级大纲：%s"
                                     % (path.name, lv, norm(p.text)[:20]))

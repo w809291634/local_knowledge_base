@@ -2118,3 +2118,36 @@ docx 属性回读取到 0，审计与兜底同时跳过，交付件的封面标�
 **反向验证**：把 052 标题改成 12pt 导出 PDF，门禁必须报「最大字号 14pt（应 36pt）」与「标题≠文档名」；修复后 8 份全过。
 
 **来源**：2026-11-23 注册人截图（RD-052 封面）；同轮修复 `work/format_052_v6.py` 边界、`closeout.audit` 有效字号、新增 `check_cover_title.py`。
+
+## 119. ★★ Word 保存会归一直接 outlineLvl：标题树门禁必须读“有效级别”
+
+**现象**：030/032/069 在 python-docx 里写了大纲级别，收口前 `check_outline_tree` 通过；经 Word 刷新保存后，标题全部变回“无大纲级别”，
+门禁报「正文没有一级标题／标题总数 0」，但 Word 导航窗格实际仍能看到标题。
+
+**根因**：这几份正文标题使用 `Heading 1/2` 样式，样式本身已带大纲级别；Word 保存时把**与样式同级**的直接 `w:outlineLvl` 视为冗余格式删除。
+目录条目同理：`outlineLvl=9`（正文级）也会被归一为空。只读 `w:pPr/w:outlineLvl` 的判据因此误判。
+
+**处置**：
+1. 门禁取**有效级别**：直接格式 → 样式链 `pPr/outlineLvl` → `Heading N` 名称兜底；
+2. 目录标题/条目按“有效级别为空或 ≥9”判为不在导航，不再要求必须显式写 9；
+3. 写级别用 `pPr.get_or_add_outlineLvl()`（按 OOXML 顺序插入），不要 `append` 到 `pPr` 末尾——顺序错误时 Word 也会丢弃。
+
+**来源**：2026-11-23 V7 收口；同轮修 `tools/check_outline_tree.py`、`dod-checklist.md` 第 37 项。
+
+## 120. ★★ 图必须是“图”：VML 文本框形状组不算配图，图题必须紧邻
+
+**现象**：052 图 1/图 2 只有图题、没有图；图 7 的图题漂到下一页表格之后；概念设计流程图独占一页且无图题。
+`check_figure_pairing` 报 4 项，但该工具当时**没有并入 `check_all`**，所以全量门禁仍显示通过。
+
+**根因**：
+1. V5 按“段落序号”补图，V6 重建后序号漂移，替换未命中（图 1/图 2 的两张 PNG 从未插入）；
+2. 测试验证流程图是 VML 文本框形状组，配图判据只认 `w:drawing`/`w:pict`（且排除文本框），形状组被当成正文；
+3. 图形与图题之间插入表格或分页后，图题和图的块距离超过判据窗口（3 块）。
+
+**处置**：
+1. 架构/拓扑/流程类图统一落 **PNG 图片部件**（`w:drawing`）；OLE 图按 `w:object` 计为图；VML 文本框形状组不算图，需转 PNG；
+2. 图题必须紧跟图（≤3 块），中间不得插表；图题编号连续 1..N；
+3. `check_figure_pairing.py`、`check_invariants.py` 与 `check_cover_center`／`check_outline_tree` 一并纳入 `check_all`，禁止“报告里 PASS、实际没跑”。
+
+**来源**：2026-11-23 注册人截图（052 §1.3.1/§1.4 图题无图）；同轮修复 `work/make_v7.py`、`work/check_figure_pairing.py`、`tools/check_invariants.py`。
+
