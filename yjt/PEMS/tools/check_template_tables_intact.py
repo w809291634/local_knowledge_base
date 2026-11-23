@@ -42,7 +42,7 @@ def _find_table(doc, marker):
     return None
 
 
-def sig(t):
+def sig(t, allow_fill=()):
     tblPr = t._tbl.find(qn("w:tblPr"))
     borders, grid_len, shd = {}, [], []
     if tblPr is not None:
@@ -79,7 +79,14 @@ def sig(t):
         if explicit:
             dom = max(set(explicit), key=explicit.count)
             fonts = {(f[0] or dom, f[1]) for f in fonts}
+    texts = []
+    for r in t.rows[1:]:
+        cells = [c.text.strip() for c in r.cells]
+        if allow_fill and cells and cells[0] in allow_fill:
+            cells = [cells[0]] + ["<允许填写>"] * max(0, len(cells) - 1)
+        texts.append(cells)
     return {
+        "text": texts,
         "rows": len(t.rows),
         "cols": len(t.columns),
         "borders": borders,
@@ -132,7 +139,9 @@ def main(argv):
             if md is None:
                 errs.append("%s 缺「%s」（模板有、产物无）" % (f.name, rule["name"]))
                 continue
-            d = diff(sig(md), sig(mt), rule.get("compare", ["rows", "cols", "borders", "grid", "shd"]))
+            af = tuple(rule.get("allow_fill", ()))
+            d = diff(sig(md, af), sig(mt, af),
+                     rule.get("compare", ["rows", "cols", "borders", "grid", "shd"]))
             if d:
                 errs.append("%s「%s」与模板不一致：\n      - %s"
                             % (f.name, rule["name"], "\n      - ".join(d)))
