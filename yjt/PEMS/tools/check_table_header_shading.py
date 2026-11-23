@@ -21,7 +21,7 @@ from docx import Document
 from docx.oxml.ns import qn
 
 COVER_KEY = "文件编号"
-SKIP_MARKS = ("项目里程碑计划", "软件异常报告")
+SKIP_MARKS = ("项目里程碑计划", "软件异常报告", "测试异常描述")
 OK_COLORS = ("", "000000", "auto")
 
 

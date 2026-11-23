@@ -159,6 +159,16 @@
       同页字宽不一致是"这段字体不对"的真因，而字体名与字号两项查的都是对的——只看属性名会漏
 - [ ] 45k. **表后连续空段 ≤ 配置上限**（§69）：空段审计为空。模板习惯在表格与下一标题间留 2~12 个回车，
       清完后"表格下面一大片空白"才消失；压缩与清理要按元素身份删，不能按索引删
+- [ ] 45m. **结构量不少于模板基线**（`one-pass-quality-gate.md` §6「结构缺失检查」，2026-11-23 定）：
+      `tools/check_structure_baseline.py <产物目录>` 非零退出即失败。VML 表单/图不在 `doc.tables` 里，
+      只比表数抓不到"形状被删、文字被压平"（`pitfalls.md` §104）。按 `baseline-fingerprint.json` 逐项比对
+      tables／headings／sections／vml_shapes／inline_images／nonempty_paras／table_chars；
+      另判相邻表格必须为 0、表格内字数 ≥ 基线 60%。确需删除的登记 `work/structure-allow.json`（`n`＋`reason`，只减不加）。
+      **判据本身要用四种坏样本验过**（删表、删形状、两表相邻、清空单元格），各自退出非零才算成立。
+- [ ] 45n. **模板原样表正校验**（`one-pass-quality-gate.md`「模板原样表正校验」，2026-11-23 定）：
+      `tools/check_template_tables_intact.py <产物目录>` 非零退出即失败。封面信息表、RD-029 第九章两张表单、
+      RD-030 开发计划表须逐项等于模板（rows／cols／borders／grid／shd／fonts）；"跳过不改"不等于"保持一致"。
+      清单与比对项见 `authoring-workflow-and-experience-index.md` S3 附表与 `work/template-tables.json`。
 - [ ] 45l. **把"留空"改成"实值"之后的三项自查**（§70）：①新值有没有命中残留扫描词（尤其"无××/没有××"
       这类否定说明写进标签行时）；②同一短语是否在同一句里出现两次；③带括注的组合值是否正文与表格各说一遍。
       改申报口径时，**残留扫描词表与台账里的禁用值列表必须成对更新**，更新后复扫必须 0 命中，
