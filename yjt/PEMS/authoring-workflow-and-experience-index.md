@@ -364,6 +364,10 @@ S7 负责目录刷新后的必要版式收口、自然重排复核与页码同�
   它按固定顺序（clean → Word 刷新 → 字体 → 标题分档（跳过封面区）→ 封面大标题兜底 → 正文基线 →
   **表格几何 → 边框 → 底纹** → 页脚 → **再刷新 → 再补字体与边框**）执行，并在末尾同时跑版式审计、结构缺失门禁与模板原样表门禁。
   顺序不可换：几何会重写 `tblPr`、Word 刷新会抹 `tblBorders`，这两处都实测把边框“修好又丢”。
+- **封面实测（2026-11-23 定）**：收口后以 **PDF 第 1 页**验收封面：最大字号 36pt（35.5~36.5）且该字号文字=文件名中的文档名；
+  不得用 docx 的 `w:sz` 回读代替——run 可以是“无显式字号”（继承 Normal 12pt），属性为空会被误判为通过。
+  判据 `tools/check_cover_title.py <产物目录> <渲染目录>`，已并入 `check_all`。
+  任何批量套正文/目录格式的脚本，区间边界只能是「目录标题 → 正文起点」，**封面区（目录标题之前）必须显式跳过**（`pitfalls.md` §118）。
 - 完成判据：`tools/docx_ops.py:pagination_audit(doc, cover_texts=[...])` 的返回键要**分三类处置**，不得笼统要求"全部为空"：
   - **缺陷键，必须为空**：`hard_page_breaks`、`stacked_breaks`、`keep_on_body`、`chapter_pad`、`outline_anomaly`；
   - **形态位，只记录不阻断**：`toc_field`（True 只说明本文有 TOC 域，健康与否由 `toc_diagnose` 判）；
@@ -385,7 +389,7 @@ S7 负责目录刷新后的必要版式收口、自然重排复核与页码同�
   030 修订记录表（`check_rd030_revision.py`）、052 验证报告表（`check_052_verification_table.py`）、
   表分类合并（`table_category_rules.py`）、结论↔结果联动（`check_conclusion_results.py`）、文档编号引用与参考资料清单（`check_refs.py`，**参考资料不得列《风险管理文档》**）、人员清单（`check_personnel.py`）、
   **标题树（`check_outline_tree.py`，2026-11-23 定：所有文档无例外，正文 ≥1 个 0 级且总数 ≥2、层级与编号一致、同名不重复、不断层；「目录」标题与目录条目必须直接写 9 级，目录区不得进导航）**、
-  **表格越界（`check_table_overflow.py`，2026-11-23 定：fixed 表宽＋缩进 ≤ 版心、禁止负缩进、渲染层文字不得越过左右版心）**、
+  **表格越界（`check_table_overflow.py`，2026-11-23 定：按表格所属节取版心；`tblW`(dxa) 与 fixed 表「列宽和＋缩进」≤ 版心＋12pt；`tblW` 必须等于列宽和；禁止负缩进；渲染层文字不得越过该页页边距）**、
   **空章（`check_empty_sections.py`，2026-11-23 定）**、
   **不变量六条（`check_invariants.py`，2026-11-23 定，一次枚举不再逐项打补丁）**：
   ①样式合法——正文不得出现「列出段落」「List Paragraph」等意外列表样式（会顶格、缩进错乱）；

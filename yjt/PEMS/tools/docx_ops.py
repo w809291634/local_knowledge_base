@@ -2387,6 +2387,28 @@ def normalize_table_geometry(doc, first_cell_text='文件编号', keep_cover_flo
     return res
 
 
+def table_section_caps(doc):
+    """按 body 顺序返回每张表所属节的版心宽（twips）。
+
+    归属规则：表格之后出现的第一个 `w:sectPr` 所结束的那一节；
+    混合横竖版文档（如 RD-028 正文横版）必须按节取版心，不能一律用第 1 节。
+    """
+    caps_by_sec = [int(s.page_width.twips - s.left_margin.twips - s.right_margin.twips)
+                   for s in doc.sections]
+    if not caps_by_sec:
+        return []
+    caps, idx = [], 0
+    for el in doc.element.body.iterchildren():
+        tag = el.tag.split('}')[-1]
+        if tag == 'tbl':
+            caps.append(caps_by_sec[min(idx, len(caps_by_sec) - 1)])
+        elif tag == 'p':
+            pPr = el.find(qn('w:pPr'))
+            if pPr is not None and pPr.find(qn('w:sectPr')) is not None:
+                idx += 1
+    return caps
+
+
 def audit_table_geometry(doc, first_cell_text='文件编号', skip_table_texts=()):
     """只读体检：返回 {表号: [问题]}，供 dod-checklist 的表格项核对。
 
@@ -2399,10 +2421,13 @@ def audit_table_geometry(doc, first_cell_text='文件编号', skip_table_texts=(
     sec = doc.sections[0]
     lm = sec.left_margin.twips
     text_w = sec.page_width.twips - lm - sec.right_margin.twips
+    caps = table_section_caps(doc)
     bad = {}
     for i, t in enumerate(doc.tables):
         if any(m in etxt(t._tbl) for m in skip_table_texts):
             continue
+        # 按该表所属节取版心（横版节的表不能用竖版版心判断）
+        cap = caps[i] if i < len(caps) else text_w
         tbl = t._tbl
         tblPr = tbl.find(qn('w:tblPr'))
         p = []
@@ -2460,16 +2485,16 @@ def audit_table_geometry(doc, first_cell_text='文件编号', skip_table_texts=(
         tot = None
         if grid is not None:
             tot = sum(int(c.get(qn('w:w')) or 0) for c in grid.findall(qn('w:gridCol')))
-            if tot > int(text_w * 1.05):
-                p.append('列宽和 %d > 版心 %d（首列会被压窄、整表溢出）' % (tot, text_w))
+            if tot > int(cap * 1.05):
+                p.append('列宽和 %d > 版心 %d（首列会被压窄、整表溢出）' % (tot, cap))
         # tblW 才是 Word 渲染依据；它和列宽和不一致时，列宽和正常也会溢出
         if tblPr is not None:
             tw = tblPr.find(qn('w:tblW'))
             ty = (tw.get(qn('w:type')) or 'dxa') if tw is not None else None
             if tw is not None and ty == 'dxa':
                 wv = int(tw.get(qn('w:w')) or 0)
-                if wv > int(text_w * 1.05):
-                    p.append('表宽 tblW=%d > 版心 %d（整表溢出）' % (wv, text_w))
+                if wv > int(cap * 1.05):
+                    p.append('表宽 tblW=%d > 版心 %d（整表溢出）' % (wv, cap))
                 if tot and abs(wv - tot) > max(50, int(tot * 0.02)):
                     p.append('tblW=%d 与列宽和 %d 不一致（Word 按 tblW 渲染）' % (wv, tot))
         if p:
