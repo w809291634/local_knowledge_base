@@ -429,7 +429,8 @@ S7 负责目录刷新后的必要版式收口、自然重排复核与页码同�
   **模板原样表（`check_template_tables_intact.py`，2026-11-23 定）**、
   **模板载体（`check_template_carriers.py`，2026-11-24 定：`w:tbl` 总数含文本框内嵌表、含表文本框数不得少于模板；词替换后必跑）**、
   **私有区字形（`check_private_glyphs.py`）**、**正文连续性（`check_text_continuity.py`）**、
-  **渲染重叠（`check_text_overlap.py`，文字行包围盒互压即失败）**；
+  **渲染重叠（`check_text_overlap.py`，文字行包围盒互压即失败）**、
+  **标题排版（`check_heading_typography.py`，16/14/12pt、加粗、左对齐、编号后一个空格，目录条目同口径）**；
   **结构缺失门禁与版式门禁并列，属“数量下限”判据**：产物 tables／headings／sections／vml_shapes／inline_images／nonempty_paras／table_chars
   不得少于 `baseline-fingerprint.json`，且相邻表格必须为 0；豁免只在 `work/structure-allow.json` 写 `n`＋`reason`，`n` 只减不加。
   这条专拦“表还是 3 张、但其中一张其实是形状被压平后剩下的文字串”这类伪通过。

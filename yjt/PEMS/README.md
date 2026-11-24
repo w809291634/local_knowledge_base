@@ -50,6 +50,7 @@
 | `tools/check_private_glyphs.py` | 私有区字形门禁：`w:t` 不得含 U+E000~U+F8FF（Wingdings/Symbol 项目符号），否则 PDF 行首空白（`pitfalls.md` §124） |
 | `tools/check_text_continuity.py` | 正文连续性门禁：上一正文段无句末标点、下一段以汉字开头且两段够长即判定为“句子被拆成两段”（`pitfalls.md` §124） |
 | `tools/check_text_overlap.py` | 渲染重叠门禁：同一页任意两行文字包围盒纵向重叠 >50%、横向 >30% 即失败；专拦浮动表单与正文压叠 |
+| `tools/check_heading_typography.py` | 标题排版门禁：一级16pt/二级14pt/三级12pt、加粗、左对齐、编号后**一个半角空格**（含目录条目） |
 | `tools/check_cover_center.py` | 封面居中与 AI 标签门禁：第 1 页上下留白差 ≤14pt（页高 9%~91% 去眉脚带）、`AILabel` 图形 0 且无 AI 生成标记 |
 | `tools/check_outline_tree.py` | 标题树门禁（2026-11-23 定为所有文档必须）：按**有效级别**（直接→样式链→Heading N）判断，正文 ≥1 个 0 级且总数 ≥2、层级与编号一致、同名不重复、层级不断层；目录标题/条目以有效级别为空或 9 视为不进导航（Word 会归一直接 `outlineLvl`）；表格单元格不得有 0~8 级 |
 | `tools/check_table_overflow.py` | 表格越界门禁（结构＋渲染）：结构层按**表格所属节**取版心，`tblW`(dxa) 与 fixed 表「列宽和＋缩进」均 ≤ 版心＋12pt、`tblW` 与列宽和一致、禁止负缩进；渲染层任一页文字不得越过该页左右页边距（容差 12pt）。封面信息表跳过 |
