@@ -49,6 +49,23 @@ def is_bold(p):
     return False
 
 
+def eff_line(p):
+    """标题有效行距：段落直接 -> 样式链，返回 (line, rule)。"""
+    pPr = p._p.find(qn("w:pPr"))
+    sp = pPr.find(qn("w:spacing")) if pPr is not None else None
+    if sp is not None and sp.get(qn("w:line")) is not None:
+        return sp.get(qn("w:line")), sp.get(qn("w:lineRule"))
+    st, seen = p.style, 0
+    while st is not None and seen < 10:
+        spp = st.element.find(qn("w:pPr"))
+        s2 = spp.find(qn("w:spacing")) if spp is not None else None
+        if s2 is not None and s2.get(qn("w:line")) is not None:
+            return s2.get(qn("w:line")), s2.get(qn("w:lineRule"))
+        st = st.base_style
+        seen += 1
+    return None, None
+
+
 def check_doc(path: Path):
     errs = []
     d = docx.Document(str(path))
@@ -87,6 +104,11 @@ def check_doc(path: Path):
                         % (path.name, lv, sz, SZ[lv], t[:24]))
         if not is_bold(p):
             errs.append("%s %d级标题未加粗：%s" % (path.name, lv, t[:24]))
+        line, rule = eff_line(p)
+        if line and ((rule in (None, "auto") and int(line) > 260)
+                     or (rule in ("exact", "atLeast") and int(line) > 320)):
+            errs.append("%s %d级标题行距过大（line=%s %s，应单倍 240）：%s"
+                        % (path.name, lv, line, rule or "auto", t[:24]))
         m = NUM_SPACE.match(t)
         if m and bad_gap(m):
             errs.append("%s 编号与标题间应为一个半角空格：%s" % (path.name, t[:24]))
