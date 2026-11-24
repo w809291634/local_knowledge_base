@@ -57,6 +57,8 @@
 | `tools/release_ops.py` | 全 XML 文本扫描、页眉页脚/文本框受控替换、哈希与发布清单原语 |
 | `tools/word_session.py` | **Word 后台自动化方案**：独立隐藏实例、整轮单会话、`ScreenUpdating=False`、只关自开文档、`~$` 锁预检；`refresh_fields()` / `export_pdf()` 直接复用，不接管用户 Word（`pitfalls.md` §128/§130） |
 
+> Word 后台自动化的完整说明（原理、API、接入步骤、后台命令、验收清单、排查表）见 `word-background-automation.md`。
+
 ## 一句话总纲
 
 **先定基线 → 以模板就地替换生成 → 脚本对账 + 渲染对拍 → 人工核对图与签署 → 版本快照归档。**

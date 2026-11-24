@@ -386,7 +386,7 @@ S7 负责目录刷新后的必要版式收口、自然重排复核与页码同�
 - **Word 运行方式（2026-11-24 定）**：统一用 `tools/word_session.py`——`DispatchEx` 独立隐藏实例（实测为新进程、`Visible=False`、0 文档），
   **不接管用户可见的 Word**；整轮只保留一个会话、`ScreenUpdating=False`，导出只读、只关自己打开的文档；
   收口进程以隐藏窗口启动（`python.exe` ＋ `Start-Process -WindowStyle Hidden`，不用 pythonw），避免窗口与控制台反复闪现。
-  目标目录存在 `~$` 锁文件时先提示关闭、不硬改（`pitfalls.md` §128、§130）。
+  目标目录存在 `~$` 锁文件时先提示关闭、不硬改（`pitfalls.md` §128、§130；完整方案见 `word-background-automation.md`）。
 - **收尾出口唯一化（2026-11-23 定）**：本项目一律用 `python work/closeout.py --dir <版本目录>` 收口，
   它按固定顺序（clean → Word 刷新 → 字体 → 标题分档（跳过封面区）→ 封面大标题兜底 → 正文基线 →
   **表格几何 → 边框 → 底纹** → 页脚 → **再刷新 → 再补字体与边框**）执行，并在末尾同时跑版式审计、结构缺失门禁与模板原样表门禁。
