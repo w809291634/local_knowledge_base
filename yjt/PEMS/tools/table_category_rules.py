@@ -107,7 +107,7 @@ def check_052(path: Path):
     tbl, heads = find_table(doc, "测试功能或项目名称", "测试结果")
     if tbl is None:
         return ["%s 缺 §2.5.6 验证报告表" % path.name]
-    expect = ["测试类别", "测试功能或项目名称", "测试结果", "是/否通过"]
+    expect = ["测试类别", "测试功能或项目名称", "测试结果", "是否通过"]
     if heads != expect:
         errs.append("%s 验证报告表表头应为%s，实际%s" % (path.name, expect, heads))
     if "序号" in heads:

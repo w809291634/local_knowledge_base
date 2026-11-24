@@ -6,7 +6,8 @@
     目录时自动配对 RD-052 与 RD-069；也可直接传 052 与 069 两个文件。
 
 判据（pems.config.json → pairing_rules.052_verification_table）：
-1. 052 必须存在表头含「测试功能或项目名称」「测试结果」「是/否通过」的表；
+1. 052 必须存在表头含「测试功能或项目名称」「测试结果」「是否通过」的表
+   （兼容旧写法「是/否通过」）；
 2. 数据行数 = 069 三张用例表数据行之和；
 3. 逐行「测试功能或项目名称」= 069 测试项目名称、「测试类别」与 069 三表类别（单元/集成/系统）一致；
    表内不设「序号」列（2026-11-21 注册人要求），若存在则同时校验其与 069 编号一致；
@@ -71,9 +72,12 @@ def check(p052: Path, p069: Path):
         j_cat = heads.index("测试类别")
         j_name = heads.index("测试功能或项目名称")
         j_res = heads.index("测试结果")
-        j_ok = heads.index("是/否通过")
+        if "是否通过" in heads:
+            j_ok = heads.index("是否通过")
+        else:
+            j_ok = heads.index("是/否通过")
     except ValueError:
-        return ["%s 验证报告表缺列：测试类别/测试功能或项目名称/测试结果/是/否通过（序号可选）"
+        return ["%s 验证报告表缺列：测试类别/测试功能或项目名称/测试结果/是否通过（序号可选）"
                 % p052.name]
 
     data = [r for r in target.rows[1:] if any(c.text.strip() for c in r.cells)]

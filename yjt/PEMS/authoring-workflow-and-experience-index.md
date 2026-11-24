@@ -369,6 +369,7 @@ S7 负责目录刷新后的必要版式收口、自然重排复核与页码同�
   同时对照「不需要补全」清单确认没有误填（模板原样表、空白记录表、预留行）。
   每次修复、纠错或需求变更均生成下一版本，并保留本版独立修改记录；禁止以同版重建覆盖旧产物，执行`iteration-and-versioning.md`第10节（2026-11-24用户确认）。
 - 完成判据：生成日志打印每条槽位命中段号；ERRORS 为空；残留词全包扫描（document + 眉脚 + 文本框）0 命中；
+  **模板载体门禁通过**（`tools/check_template_carriers.py <产物目录> --map=work/template-map.json`：`w:tbl` 总数含文本框内嵌表、含表文本框数 ≥ 模板，词替换后必跑）；
   输出目录按 `<族名>_V{n}` 命名，目录号、文件名后缀、`manifest.doc_round` 三处同号；默认轮次由扫描既有目录推导并打印出来，不写死在代码里（`iteration-and-versioning.md` §8~§9）；备份件可一键回退。
   **产物内容不体现文档族轮次**：封面、页眉页脚、目录、正文、表格与文本框内不得出现 `_V{n}`、`V{n}`、"第 n 版／轮／次修改"或"共改过 n 个版本"；轮次只记在目录名、文件名后缀、manifest、生成记录与版本说明（判据见 `one-pass-quality-gate.md` §6「文档族轮次不进正文」）。
   **内容克制**：每段只写与本节条款直接相关的内容，不引用无关资料的条款、参数、图例或示例；同一事实不在多处重复展开。资料越杂越易出错，正文以简洁、可追溯为准。
@@ -425,7 +426,10 @@ S7 负责目录刷新后的必要版式收口、自然重排复核与页码同�
   **三条执行纪律（同样重要）**：改完必须**重读文件确认落盘**（`d.save()` 抛 `PermissionError` 时不得报告"已修复"）；
   插图后必须确认**没有重复插**（同一图题出现 >1 次即失败）；清空段时必须**跳过含 `w:sectPr` 的段落**（否则分节丢失）。
   **结构缺失（`check_structure_baseline.py`，2026-11-23 定）**、
-  **模板原样表（`check_template_tables_intact.py`，2026-11-23 定）**；
+  **模板原样表（`check_template_tables_intact.py`，2026-11-23 定）**、
+  **模板载体（`check_template_carriers.py`，2026-11-24 定：`w:tbl` 总数含文本框内嵌表、含表文本框数不得少于模板；词替换后必跑）**、
+  **私有区字形（`check_private_glyphs.py`）**、**正文连续性（`check_text_continuity.py`）**、
+  **渲染重叠（`check_text_overlap.py`，文字行包围盒互压即失败）**；
   **结构缺失门禁与版式门禁并列，属“数量下限”判据**：产物 tables／headings／sections／vml_shapes／inline_images／nonempty_paras／table_chars
   不得少于 `baseline-fingerprint.json`，且相邻表格必须为 0；豁免只在 `work/structure-allow.json` 写 `n`＋`reason`，`n` 只减不加。
   这条专拦“表还是 3 张、但其中一张其实是形状被压平后剩下的文字串”这类伪通过。
