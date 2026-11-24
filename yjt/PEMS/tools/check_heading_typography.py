@@ -19,7 +19,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import docx_ops as ops
 
 SZ = {0: "32", 1: "28", 2: "24"}
-NUM_SPACE = re.compile(r"^(第[一二三四五六七八九十]+(?:章|部分)|\d+(?:\.\d+)*)(\s*)(\S)")
+NUM_SPACE = re.compile(r"^(第[一二三四五六七八九十]+(?:章|部分)|[0-9]+(?:\.[0-9]+)*\.?)(\s*)(\S)")
+TOC_LEAD = re.compile(r"^(.*?)(?:\t|\.{3,})")
+
+
+def toc_head(t):
+    """取目录条目在制表符/点线之前的标题文字（页码与域不受影响）。"""
+    m = TOC_LEAD.match(t)
+    return (m.group(1) if m else t).strip()
+
+
+def bad_gap(m):
+    """编号与标题之间必须恰好一个半角空格；编号后紧跟标点（如「1》」）不算缺空格。"""
+    gap, nxt = m.group(2), m.group(3)
+    if gap == " ":
+        return False
+    return bool(gap.strip()) or bool(re.match(r"[\u4e00-\u9fa5A-Za-z0-9]", nxt))
 
 
 def is_bold(p):
@@ -49,9 +64,17 @@ def check_doc(path: Path):
         if id(p._p) in pre:
             continue
         t = p.text.strip()
-        if not t or "\t" in p.text or re.fullmatch(r"目\s*录", t):
+        if not t or re.fullmatch(r"目\s*录", t):
             continue
-        if (p.style.name or "").lower().startswith("toc") or re.search(r"\.{3,}\s*\d+\s*$", t):
+        if ("\t" in p.text or (p.style.name or "").lower().startswith("toc")
+                or re.search(r"\.{3,}\s*\d+\s*$", t)
+                or ops.effective_outline_level(p) == 9):
+            # 目录条目：只校验编号后空格，页码/域不参与
+            head = toc_head(t)
+            m = NUM_SPACE.match(head)
+            if m and bad_gap(m):
+                errs.append("%s 目录条目编号与标题间应为一个半角空格：%s"
+                            % (path.name, head[:24]))
             continue
         lv = ops.effective_outline_level(p)
         if lv is None or lv > 2:
@@ -65,7 +88,7 @@ def check_doc(path: Path):
         if not is_bold(p):
             errs.append("%s %d级标题未加粗：%s" % (path.name, lv, t[:24]))
         m = NUM_SPACE.match(t)
-        if m and m.group(2) != " ":
+        if m and bad_gap(m):
             errs.append("%s 编号与标题间应为一个半角空格：%s" % (path.name, t[:24]))
         if p.alignment not in (None, 0):
             errs.append("%s 标题应左对齐：%s" % (path.name, t[:24]))
