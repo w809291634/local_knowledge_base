@@ -2288,4 +2288,6 @@ docx 属性回读取到 0，审计与兜底同时跳过，交付件的封面标�
 
 **处置**：①整轮收口只保留**一个** Word 会话（模块级缓存 + `atexit` 统一收尾），按需复用，文档处理完只关文档不关实例；②会话建立后设 `ScreenUpdating=False`，结束时恢复；③自己启动的实例始终 `Visible=False`，复用用户实例时不动其可见性；④收口进程用隐藏窗口方式启动（`pythonw`／`Start-Process -WindowStyle Hidden`），避免每步脚本弹控制台。验收：用户开着可见 Word 跑完整轮收口，期间无新窗口闪现，结束后原文档仍打开、仍可见。
 
+**复用**：已抽成 `tools/word_session.py`（`get_app`／`open_doc`／`close_doc`／`refresh_fields`／`export_pdf`／`has_lock_files`），后续项目直接 `import word_session`，不要再各自写 `DispatchEx`＋`Quit`。注意 `pythonw` 下 `sys.stdout=None`，会 `print` 报错导致脚本退出码 1；要隐藏运行请用 `python.exe` ＋ `-WindowStyle Hidden`。
+
 **来源**：2026-11-24 用户反馈“屏幕会一直闪，要避免这个问题，你可以后台吗”。

@@ -55,6 +55,7 @@
 | `tools/check_outline_tree.py` | 标题树门禁（2026-11-23 定为所有文档必须）：按**有效级别**（直接→样式链→Heading N）判断，正文 ≥1 个 0 级且总数 ≥2、层级与编号一致、同名不重复、层级不断层；目录标题/条目以有效级别为空或 9 视为不进导航（Word 会归一直接 `outlineLvl`）；表格单元格不得有 0~8 级 |
 | `tools/check_table_overflow.py` | 表格越界门禁（结构＋渲染）：结构层按**表格所属节**取版心，`tblW`(dxa) 与 fixed 表「列宽和＋缩进」均 ≤ 版心＋12pt、`tblW` 与列宽和一致、禁止负缩进；渲染层任一页文字不得越过该页左右页边距（容差 12pt）。封面信息表跳过 |
 | `tools/release_ops.py` | 全 XML 文本扫描、页眉页脚/文本框受控替换、哈希与发布清单原语 |
+| `tools/word_session.py` | **Word 后台自动化方案**：独立隐藏实例、整轮单会话、`ScreenUpdating=False`、只关自开文档、`~$` 锁预检；`refresh_fields()` / `export_pdf()` 直接复用，不接管用户 Word（`pitfalls.md` §128/§130） |
 
 ## 一句话总纲
 
