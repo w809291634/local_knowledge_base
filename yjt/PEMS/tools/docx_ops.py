@@ -125,6 +125,19 @@ def apply_substitutions(p, subs):
     """
     if not paragraph_text(p).strip():
         return
+    # 含图形/文本框/嵌入对象的段落：只改 w:t，绝不整段合并。
+    # Run.text 赋值会清空该 run 的全部内容，实测会把承载「文本框+嵌套表格」的表单整块删掉。
+    if any(p._p.find(".//" + qn(t)) is not None
+           for t in ("w:drawing", "w:pict", "w:object")):
+        for t in p._p.iter(qn("w:t")):
+            if not t.text:
+                continue
+            s = t.text
+            for old, new in subs:
+                if old:
+                    s = s.replace(old, new)
+            t.text = s
+        return
     for old, new in subs:
         if old and old in paragraph_text(p):
             for r in p.runs:
