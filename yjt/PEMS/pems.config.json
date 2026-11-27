@@ -70,7 +70,7 @@
       "variant": "v2",
       "file": "templates/2.1/RD-052_软件描述文档_2.1_基线_v2.docx",
       "tier": "格式档案",
-      "sha256": "32aa080e52cab607dc9107d03b41a3ce4c9920038112eecf4379c9fbfe64c17e",
+      "sha256": "e6be9cb3263fed2e714e4844bcc7c9c48a94e46c73a5f6aad3e3ab12b8cba644",
       "archive_md": "templates/2.1/RD-052_软件描述文档_2.1_基线_v2.md",
       "note": "2026-11-20：仅 §1.2 在 B 级结论后增加《医疗器械软件注册审查指导原则（2022年修订）》判定依据句，其余同 2.1；原件 2.1 保留历史对账"
     },
@@ -114,7 +114,7 @@
     "032": {
       "version": "2.1",
       "file": "content_templates/RD-032_软件确认报告_2.1_内容结构模板（YJT-1225）.docx",
-      "sha256": "eb3bac23ed678f906fdf54311878b345ea80d264748bc3c64b55c89e6bb8ecfd",
+      "sha256": "f640132917d0f3f837d9d5504d9ea554461b3a9b99cae7ec1f28770f6f271d25",
       "archive_md": "content_templates/RD-032_软件确认报告_2.1_内容结构模板（YJT-1225）.md",
       "headings": 21,
       "tables": "6 张（6x4 / 5x2 / 15x3 / 11x3 / 6x3 / 4x3）",
