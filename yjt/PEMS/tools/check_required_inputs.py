@@ -128,7 +128,7 @@ def check(p: Path):
     else:
         if not CODE_RE.fullmatch(code):
             errs.append("项目编号「%s」格式不合规：应为 2 位数字开头＋字母/数字（如 03GSR2609023）" % code)
-        if code == model or code.upper() == "V1" or code.isdigit():
+        if code == model or re.fullmatch(r"V\d+(?:\.\d+)*", code, flags=re.IGNORECASE) or code.isdigit():
             errs.append("项目编号「%s」不得用型号/软件版本/纯数字代替" % code)
     if not model or model.lower() in [x.lower() for x in PLACEHOLDER]:
         errs.append("型号未提供（必供材料：YJT-XXXXX）")

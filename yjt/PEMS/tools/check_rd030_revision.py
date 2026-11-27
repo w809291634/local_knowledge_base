@@ -7,9 +7,9 @@
 判据（注册人 2026-11-20 定）：
 1. RD-030 必须存在修订记录表（表头含「变更原因」与「对应硬件版本」）；
 2. 表只保留表头 + 1 行数据（2 行），不保留多余空行；
-3. 数据行为 `V1`｜`首次发布`｜`首次发布`｜软件发布日期（20xx-xx-xx）｜责任人空｜硬件版本空；
+3. 数据行为 `V1.0.0.0`｜`首次发布`｜`首次发布`｜软件发布日期（20xx-xx-xx）｜责任人空｜硬件版本空；
 4. 表格必须为固定布局（w:tblLayout=fixed），tblGrid 总宽 ≤ 版心可用宽度 9072 dxa；
-   否则 Word 会自动压窄列宽，把 `V1` 与日期折行。
+   否则 Word 会自动压窄列宽，把 `V1.0.0.0` 与日期折行。
 """
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ from pathlib import Path
 from docx import Document
 from docx.oxml.ns import qn
 
+RELEASE_VERSION = "V1.0.0.0"
 WIDTH_LIMIT = 9072
 DATE_RE = re.compile(r"^20\d{2}-\d{2}-\d{2}$")
 
@@ -47,8 +48,8 @@ def check_doc(path: Path):
     if len(rows) >= 2:
         cells = [c.text.strip() for c in rows[1].cells]
         if len(cells) >= 6:
-            if cells[0] != "V1":
-                errors.append("%s 修订记录第 1 列应为「V1」，实际「%s」" % (path.name, cells[0]))
+            if cells[0] != RELEASE_VERSION:
+                errors.append("%s 修订记录第 1 列应为「%s」，实际「%s」" % (path.name, RELEASE_VERSION, cells[0]))
             for j, name in ((1, "变更原因"), (2, "变更内容")):
                 if "首次发布" not in cells[j]:
                     errors.append("%s 修订记录「%s」应为「首次发布」，实际「%s」"
